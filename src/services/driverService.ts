@@ -1,0 +1,46 @@
+import apiClient from './api';
+
+export interface DriverProfile {
+  id: string;
+  driverCode: string;
+  username: string;
+  employeeId: string;
+  fullName: string;
+  nic: string;
+  mobileNumber: string;
+  email?: string;
+  address?: string;
+  licenseNumber?: string;
+  licenseExpiryDate?: string;
+  dateOfBirth?: string;
+  emergencyContactName?: string;
+  emergencyContactNumber?: string;
+  profilePhoto?: string;
+  vehicleNumber?: string;
+  status: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export const driverService = {
+  async getProfile(): Promise<DriverProfile> {
+    const response = await apiClient.get<DriverProfile>('/drivers/me');
+    return response.data;
+  },
+
+  async getDriverById(id: string): Promise<DriverProfile> {
+    const response = await apiClient.get<DriverProfile>(`/drivers/${id}`);
+    return response.data;
+  },
+
+  async getAllDrivers(status?: string): Promise<DriverProfile[]> {
+    const params = status ? { status } : {};
+    const response = await apiClient.get<DriverProfile[]>('/drivers', { params });
+    return response.data;
+  },
+
+  async updateStatus(id: string, status: string): Promise<DriverProfile> {
+    const response = await apiClient.patch<DriverProfile>(`/drivers/${id}/status`, { status });
+    return response.data;
+  },
+};
