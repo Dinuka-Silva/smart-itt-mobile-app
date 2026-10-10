@@ -762,8 +762,7 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     color: '#00e5ff',
     letterSpacing: 0.8,
-    fontFamily: 'monospace',
-  },
+      },
   hero: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -792,8 +791,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#849396',
     letterSpacing: 0.8,
-    fontFamily: 'monospace',
-    marginTop: 2,
+        marginTop: 2,
   },
   noticeBox: {
     flexDirection: 'row',
@@ -866,8 +864,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 13,
     color: '#dde2f0',
-    fontFamily: 'monospace',
-    height: 48,
+        height: 48,
     ...(Platform.OS === 'web' ? { outlineStyle: 'none' } : {}),
   } as any,
   rulesList: {
@@ -885,8 +882,7 @@ const styles = StyleSheet.create({
   ruleText: {
     fontSize: 10,
     color: '#849396',
-    fontFamily: 'monospace',
-  },
+      },
   ruleTextOk: {
     color: '#22ef7e',
     fontWeight: '700',
@@ -1011,8 +1007,7 @@ const styles = StyleSheet.create({
     fontSize: 9,
     fontWeight: '900',
     color: '#00363d',
-    fontFamily: 'monospace',
-  },
+      },
   cardHeaderBox: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1076,8 +1071,7 @@ const styles = StyleSheet.create({
     fontSize: 9,
     fontWeight: '800',
     color: '#22ef7e',
-    fontFamily: 'monospace',
-    letterSpacing: 0.6,
+        letterSpacing: 0.6,
   },
 
   // Big Glowing Box
@@ -1108,8 +1102,7 @@ const styles = StyleSheet.create({
     fontSize: 32,
     fontWeight: '900',
     color: '#00e5ff',
-    fontFamily: 'monospace',
-    letterSpacing: 2,
+        letterSpacing: 2,
   },
   copyIdBtn: {
     flexDirection: 'row',
@@ -1126,8 +1119,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '900',
     color: '#00e5ff',
-    fontFamily: 'monospace',
-  },
+      },
   idHighlightSub: {
     fontSize: 10,
     color: '#bac9cc',
@@ -1180,8 +1172,7 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '900',
     color: '#dde2f0',
-    fontFamily: 'monospace',
-    marginTop: 1,
+        marginTop: 1,
   },
 
   // Vehicle Section
@@ -1210,14 +1201,12 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '800',
     color: '#dde2f0',
-    fontFamily: 'monospace',
-  },
+      },
   vehicleValGreen: {
     fontSize: 10,
     fontWeight: '800',
     color: '#22ef7e',
-    fontFamily: 'monospace',
-  },
+      },
 
   // Login Creds Box
   loginCredsBox: {
@@ -1250,13 +1239,11 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '900',
     color: '#00e5ff',
-    fontFamily: 'monospace',
-  },
+      },
   credValWhite: {
     fontSize: 10,
     color: '#dde2f0',
-    fontFamily: 'monospace',
-  },
+      },
 
   // Modal Actions
   modalActionButtons: {

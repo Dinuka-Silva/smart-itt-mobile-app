@@ -371,8 +371,7 @@ const styles = StyleSheet.create({
   dateText: {
     color: '#849396',
     fontSize: 9,
-    fontFamily: 'monospace',
-    fontWeight: '700',
+        fontWeight: '700',
   },
   pendingBadgeHeader: {
     flexDirection: 'row',
@@ -389,8 +388,7 @@ const styles = StyleSheet.create({
     fontSize: 9,
     fontWeight: '800',
     color: '#feb300',
-    fontFamily: 'monospace',
-    letterSpacing: 0.6,
+        letterSpacing: 0.6,
   },
 
   // ─── SECTION WRAPS ───
@@ -453,8 +451,7 @@ const styles = StyleSheet.create({
     color: '#feb300',
     fontSize: 13,
     fontWeight: '900',
-    fontFamily: 'monospace',
-  },
+      },
   driverSubText: {
     color: '#849396',
     fontSize: 10,
@@ -519,8 +516,7 @@ const styles = StyleSheet.create({
   },
   containerNumberText: {
     color: '#00e5ff',
-    fontFamily: 'monospace',
-    fontSize: 11,
+        fontSize: 11,
     fontWeight: '800',
   },
   containerSizeText: {
@@ -531,8 +527,7 @@ const styles = StyleSheet.create({
     color: '#22ef7e',
     fontSize: 9,
     marginLeft: 'auto',
-    fontFamily: 'monospace',
-  },
+      },
 
   btnRow: {
     flexDirection: 'row',

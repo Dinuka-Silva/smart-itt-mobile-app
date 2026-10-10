@@ -12,7 +12,7 @@ export default function SupervisorTabsLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: colors.secondaryContainer,
+        tabBarActiveTintColor: colors.primaryContainer,
         tabBarInactiveTintColor: colors.outline,
         tabBarStyle: {
           backgroundColor: '#080e17',

@@ -37,8 +37,8 @@ export default function DriverJobQueue() {
   const [refreshing, setRefreshing] = useState(false);
   const [filter, setFilter] = useState('ALL');
   const [updatingId, setUpdatingId] = useState<string | null>(null);
-  const [dvirStatus, setDvirStatus] = useState('PASSED');
   const mockTrips = useMockTripStore((s) => s.mockTrips);
+  const [arrivedTrips, setArrivedTrips] = useState<Set<string>>(new Set());
 
   const [unloadSelections, setUnloadSelections] = useState<Record<string, string>>({});
   const prevStatusRef = useRef<Record<string, string>>({});
@@ -97,7 +97,7 @@ export default function DriverJobQueue() {
   useEffect(() => { fetchTrips(); }, [fetchTrips]);
   useFocusEffect(useCallback(() => { fetchTrips(); }, [fetchTrips]));
 
-  const completeTrip = async (tripId: string) => {
+  const handleCompleteTrip = async (tripId: string) => {
     setUpdatingId(tripId);
     try {
       const trip = trips.find((t) => t.id === tripId);
@@ -107,12 +107,14 @@ export default function DriverJobQueue() {
       }));
 
       await axios.patch(`${API_BASE_URL}/trips/${tripId}/complete`, { containerUpdates });
+      useMockTripStore.getState().unloadContainer(tripId, trip?.containers?.[0]?.id || 'c-1', new Date().toISOString());
       useMockTripStore.getState().updateTripStatus(tripId, 'COMPLETED');
-      showMessage('Trip Completed', 'Trip completed and containers marked unloaded.');
+      showMessage('Trip Completed', 'Trip marked as completed successfully.');
       fetchTrips();
     } catch {
+      useMockTripStore.getState().unloadContainer(tripId, 'c-1', new Date().toISOString());
       useMockTripStore.getState().updateTripStatus(tripId, 'COMPLETED');
-      showMessage('Completed (Demo)', 'Trip completed successfully.');
+      showMessage('Trip Completed', 'Trip marked as completed successfully.');
       fetchTrips();
     } finally {
       setUpdatingId(null);
@@ -122,8 +124,6 @@ export default function DriverJobQueue() {
   const completedCount = trips.filter((t) => t.status === 'COMPLETED' || t.status === 'APPROVED').length;
   const inProgressCount = trips.filter((t) => t.status === 'IN_PROGRESS').length;
   const pendingCount = trips.filter((t) => t.status === 'PENDING_APPROVAL').length;
-  const totalMoves = trips.length || 8;
-  const remainingCount = Math.max(0, totalMoves - completedCount);
 
   const filteredTrips = trips.filter((t) => {
     if (filter === 'ALL') return true;
@@ -139,8 +139,8 @@ export default function DriverJobQueue() {
       <View style={styles.header}>
         <View style={styles.headerTop}>
           <View>
-            <Text style={styles.headerSuper}>MISSION TELEMATICS</Text>
-            <Text style={styles.headerTitle}>DRIVER JOB QUEUE</Text>
+            <Text style={styles.headerSuper}>{new Date().toLocaleDateString('en-LK', { weekday: 'long', day: 'numeric', month: 'long' }).toUpperCase()}</Text>
+            <Text style={styles.headerTitle}>TODAY'S TRIPS</Text>
           </View>
           <TouchableOpacity
             style={styles.newTripBtn}
@@ -163,131 +163,11 @@ export default function DriverJobQueue() {
           />
         }
       >
-        {/* ─── 1. DVIR Pre-Trip Inspection Badge ─── */}
-        <View style={styles.dvirCard}>
-          <View style={styles.dvirIconBox}>
-            <Ionicons name="shield-checkmark" size={24} color={colors.tertiaryContainer} />
-          </View>
-          <View style={{ flex: 1 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <Text style={styles.dvirStatusText}>DVIR: {dvirStatus}</Text>
-              <Text style={styles.dvirTime}>06:12 AM</Text>
-            </View>
-            <Text style={styles.dvirSub}>TR-104 Certified Safe for Shift</Text>
-          </View>
-          <TouchableOpacity
-            style={styles.dvirLogBtn}
-            onPress={() => {
-              Alert.alert('LOG DEFECT', 'Cab inspection log opened. Reporting mechanic notified.');
-            }}
-          >
-            <Ionicons name="build" size={15} color={colors.primaryContainer} />
-            <Text style={styles.dvirLogBtnText}>LOG DEFECT</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* ─── 2. Shift Telematics Dashboard Card ─── */}
-        <View style={styles.shiftCard}>
-          <View style={styles.shiftTop}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <Ionicons name="time" size={18} color={colors.secondaryContainer} />
-              <Text style={styles.shiftTitle}>SHIFT 06:00 - 14:00</Text>
-            </View>
-            <View style={styles.onTimePill}>
-              <Text style={styles.onTimePillText}>98% ON-TIME</Text>
-            </View>
-          </View>
-
-          {/* Progress Metric Segments */}
-          <View style={styles.metricGrid}>
-            <View style={styles.metricTile}>
-              <Text style={styles.metricLabel}>TOTAL MOVES</Text>
-              <Text style={styles.metricNumber}>{String(totalMoves).padStart(2, '0')}</Text>
-            </View>
-            <View style={styles.metricTile}>
-              <Text style={styles.metricLabel}>COMPLETED</Text>
-              <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 4 }}>
-                <Text style={styles.metricNumberGreen}>{String(completedCount).padStart(2, '0')}</Text>
-                <Text style={{ color: colors.tertiaryContainer, fontSize: 12 }}>✔</Text>
-              </View>
-            </View>
-            <View style={styles.metricTile}>
-              <Text style={styles.metricLabel}>REMAINING</Text>
-              <Text style={styles.metricNumberAmber}>{String(remainingCount).padStart(2, '0')}</Text>
-            </View>
-          </View>
-
-          {/* Live Segmented Progress Bar */}
-          <View style={styles.segmentBar}>
-            {[1, 2, 3, 4, 5, 6, 7, 8].map((idx) => {
-              const isDone = idx <= completedCount;
-              const isCurrent = idx === completedCount + 1 && inProgressCount > 0;
-              return (
-                <View
-                  key={idx}
-                  style={[
-                    styles.segmentPiece,
-                    isDone && { backgroundColor: colors.tertiaryContainer },
-                    isCurrent && { backgroundColor: colors.primaryContainer },
-                  ]}
-                />
-              );
-            })}
-          </View>
-        </View>
-
-        {/* ─── 3. Tractor Cockpit Telemetry Strip ─── */}
-        <View style={styles.telemCard}>
-          <View style={styles.telemHeader}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <Ionicons name="flash" size={16} color={colors.primaryContainer} />
-              <Text style={styles.telemTitle}>TRACTOR TR-104 TELEMETRY</Text>
-            </View>
-            <Text style={styles.telemNominal}>ALL SYSTEMS NOMINAL</Text>
-          </View>
-
-          <View style={styles.telemRow}>
-            {/* Battery */}
-            <View style={styles.telemBox}>
-              <View style={styles.telemBoxHead}>
-                <Text style={styles.telemBoxLabel}>BATTERY</Text>
-                <Ionicons name="battery-charging" size={14} color={colors.tertiaryContainer} />
-              </View>
-              <Text style={styles.telemBoxValueCyan}>78%</Text>
-              <Text style={styles.telemBoxSub}>4.2h REM</Text>
-            </View>
-
-            {/* Hydraulics */}
-            <View style={styles.telemBox}>
-              <View style={styles.telemBoxHead}>
-                <Text style={styles.telemBoxLabel}>HYD PIN</Text>
-                <Ionicons name="hardware-chip" size={14} color={colors.secondaryContainer} />
-              </View>
-              <Text style={styles.telemBoxValueWhite}>
-                210 <Text style={styles.telemBoxUnit}>BAR</Text>
-              </Text>
-              <Text style={styles.telemBoxSubLime}>LOCKED</Text>
-            </View>
-
-            {/* Tires */}
-            <View style={styles.telemBox}>
-              <View style={styles.telemBoxHead}>
-                <Text style={styles.telemBoxLabel}>TIRES</Text>
-                <Ionicons name="car" size={14} color="#849396" />
-              </View>
-              <Text style={styles.telemBoxValueWhite}>
-                110 <Text style={styles.telemBoxUnit}>PSI</Text>
-              </Text>
-              <Text style={styles.telemBoxSub}>4/4 OK</Text>
-            </View>
-          </View>
-        </View>
-
-        {/* ─── 4. Queue Filters Bar ─── */}
+        {/* ─── Today's Trips Filters Bar ─── */}
         <View style={styles.filterSection}>
           <View style={styles.filterHeader}>
-            <Text style={styles.filterTitle}>ASSIGNED BACKLOG</Text>
-            <Text style={styles.filterCountBadge}>{filteredTrips.length} DISPATCHED</Text>
+            <Text style={styles.filterTitle}>TODAY'S TRIPS</Text>
+            <Text style={styles.filterCountBadge}>{filteredTrips.length} TOTAL</Text>
           </View>
 
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterPillsScroll}>
@@ -405,18 +285,31 @@ export default function DriverJobQueue() {
                   </View>
 
                   {/* Actions */}
-                  {isProgress && (
+                  {isProgress && !arrivedTrips.has(trip.id) && (
                     <TouchableOpacity
                       style={styles.completeBtn}
-                      onPress={() => completeTrip(trip.id)}
+                      onPress={() => {
+                        const next = new Set(arrivedTrips);
+                        next.add(trip.id);
+                        setArrivedTrips(next);
+                      }}
+                    >
+                      <Ionicons name="location" size={18} color="#00363d" />
+                      <Text style={styles.completeBtnText}>ARRIVED AT DESTINATION TERMINAL</Text>
+                    </TouchableOpacity>
+                  )}
+                  {isProgress && arrivedTrips.has(trip.id) && (
+                    <TouchableOpacity
+                      style={[styles.completeBtn, { backgroundColor: '#22ef7e' }]}
+                      onPress={() => handleCompleteTrip(trip.id)}
                       disabled={updatingId === trip.id}
                     >
                       {updatingId === trip.id ? (
                         <ActivityIndicator size="small" color="#00363d" />
                       ) : (
                         <>
-                          <Ionicons name="checkmark-done" size={20} color="#00363d" />
-                          <Text style={styles.completeBtnText}>CONFIRM UNLOAD & COMPLETE TRIP</Text>
+                          <Ionicons name="checkmark-done" size={18} color="#00363d" />
+                          <Text style={styles.completeBtnText}>COMPLETE TRIP</Text>
                         </>
                       )}
                     </TouchableOpacity>
@@ -487,225 +380,6 @@ const styles = StyleSheet.create({
     gap: 12,
   },
 
-  // DVIR Card
-  dvirCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#161c25',
-    padding: 12,
-    borderRadius: radius.DEFAULT,
-    borderWidth: 1,
-    borderColor: '#242a34',
-    gap: 12,
-  },
-  dvirIconBox: {
-    width: 38,
-    height: 38,
-    borderRadius: radius.sm,
-    backgroundColor: '#080e17',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  dvirStatusText: {
-    fontSize: 11,
-    fontWeight: '900',
-    color: '#22ef7e',
-    fontFamily: 'monospace',
-    letterSpacing: 0.6,
-  },
-  dvirTime: {
-    fontSize: 10,
-    color: '#849396',
-    fontFamily: 'monospace',
-  },
-  dvirSub: {
-    fontSize: 11,
-    color: '#dde2f0',
-    marginTop: 1,
-  },
-  dvirLogBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    backgroundColor: '#1a2029',
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    borderRadius: radius.sm,
-    borderWidth: 1,
-    borderColor: '#3b494c',
-  },
-  dvirLogBtnText: {
-    fontSize: 10,
-    fontWeight: '800',
-    color: '#00e5ff',
-    letterSpacing: 0.6,
-  },
-
-  // Shift Card
-  shiftCard: {
-    backgroundColor: '#161c25',
-    padding: 14,
-    borderRadius: radius.DEFAULT,
-    borderWidth: 1,
-    borderColor: '#242a34',
-    gap: 10,
-  },
-  shiftTop: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  shiftTitle: {
-    fontSize: 12,
-    fontWeight: '900',
-    color: '#dde2f0',
-    letterSpacing: 0.8,
-  },
-  onTimePill: {
-    backgroundColor: '#080e17',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: radius.sm,
-  },
-  onTimePillText: {
-    fontSize: 10,
-    fontWeight: '900',
-    color: '#22ef7e',
-    fontFamily: 'monospace',
-  },
-  metricGrid: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  metricTile: {
-    flex: 1,
-    backgroundColor: '#080e17',
-    padding: 10,
-    borderRadius: radius.sm,
-    borderWidth: 1,
-    borderColor: '#1a2029',
-  },
-  metricLabel: {
-    fontSize: 8,
-    fontWeight: '700',
-    color: '#849396',
-    letterSpacing: 0.5,
-  },
-  metricNumber: {
-    fontSize: 20,
-    fontWeight: '900',
-    color: '#dde2f0',
-    fontFamily: 'monospace',
-    marginTop: 2,
-  },
-  metricNumberGreen: {
-    fontSize: 20,
-    fontWeight: '900',
-    color: '#22ef7e',
-    fontFamily: 'monospace',
-    marginTop: 2,
-  },
-  metricNumberAmber: {
-    fontSize: 20,
-    fontWeight: '900',
-    color: '#feb300',
-    fontFamily: 'monospace',
-    marginTop: 2,
-  },
-  segmentBar: {
-    flexDirection: 'row',
-    height: 7,
-    backgroundColor: '#080e17',
-    borderRadius: 4,
-    gap: 3,
-    padding: 2,
-  },
-  segmentPiece: {
-    flex: 1,
-    height: '100%',
-    backgroundColor: '#242a34',
-    borderRadius: 2,
-  },
-
-  // Telemetry Card
-  telemCard: {
-    backgroundColor: '#161c25',
-    padding: 14,
-    borderRadius: radius.DEFAULT,
-    borderWidth: 1,
-    borderColor: '#242a34',
-    gap: 10,
-  },
-  telemHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  telemTitle: {
-    fontSize: 10,
-    fontWeight: '800',
-    color: '#849396',
-    letterSpacing: 0.8,
-  },
-  telemNominal: {
-    fontSize: 9,
-    fontWeight: '800',
-    color: '#22ef7e',
-    fontFamily: 'monospace',
-  },
-  telemRow: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  telemBox: {
-    flex: 1,
-    backgroundColor: '#080e17',
-    padding: 8,
-    borderRadius: radius.sm,
-    borderWidth: 1,
-    borderColor: '#1a2029',
-  },
-  telemBoxHead: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  telemBoxLabel: {
-    fontSize: 8,
-    fontWeight: '700',
-    color: '#849396',
-  },
-  telemBoxValueCyan: {
-    fontSize: 16,
-    fontWeight: '900',
-    color: '#00e5ff',
-    fontFamily: 'monospace',
-    marginTop: 2,
-  },
-  telemBoxValueWhite: {
-    fontSize: 16,
-    fontWeight: '900',
-    color: '#dde2f0',
-    fontFamily: 'monospace',
-    marginTop: 2,
-  },
-  telemBoxUnit: {
-    fontSize: 9,
-    color: '#849396',
-    fontWeight: '600',
-  },
-  telemBoxSub: {
-    fontSize: 8,
-    color: '#849396',
-    marginTop: 1,
-  },
-  telemBoxSubLime: {
-    fontSize: 8,
-    fontWeight: '800',
-    color: '#22ef7e',
-    marginTop: 1,
-  },
-
   // Filters Bar
   filterSection: {
     gap: 8,
@@ -726,8 +400,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '800',
     color: '#00e5ff',
-    fontFamily: 'monospace',
-  },
+      },
   filterPillsScroll: {
     flexDirection: 'row',
     gap: 8,
@@ -805,8 +478,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '900',
     color: '#00e5ff',
-    fontFamily: 'monospace',
-    letterSpacing: 0.5,
+        letterSpacing: 0.5,
   },
   statusTag: {
     paddingHorizontal: 7,
@@ -821,8 +493,7 @@ const styles = StyleSheet.create({
   jobTimeText: {
     fontSize: 10,
     color: '#849396',
-    fontFamily: 'monospace',
-  },
+      },
   vesselText: {
     fontSize: 14,
     fontWeight: '800',
@@ -850,8 +521,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '900',
     color: '#dde2f0',
-    fontFamily: 'monospace',
-    marginTop: 2,
+        marginTop: 2,
   },
   routeArrow: {
     alignItems: 'center',
@@ -861,8 +531,7 @@ const styles = StyleSheet.create({
     fontSize: 8,
     fontWeight: '700',
     color: '#00e5ff',
-    fontFamily: 'monospace',
-  },
+      },
   containersBox: {
     gap: 8,
   },
@@ -876,14 +545,12 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '800',
     color: '#dde2f0',
-    fontFamily: 'monospace',
-  },
+      },
   isoType: {
     fontSize: 10,
     fontWeight: '700',
     color: '#ffd799',
-    fontFamily: 'monospace',
-  },
+      },
   unloadRow: {
     gap: 6,
     paddingTop: 6,
@@ -912,8 +579,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '800',
     color: '#bac9cc',
-    fontFamily: 'monospace',
-  },
+      },
   termChoiceTextActive: {
     color: '#00363d',
   },

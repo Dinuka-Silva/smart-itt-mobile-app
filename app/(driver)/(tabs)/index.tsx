@@ -53,6 +53,11 @@ export default function DriverHomeDashboard() {
   const [damageDescription, setDamageDescription] = useState('');
   const [damageSuccessMsg, setDamageSuccessMsg] = useState<string | null>(null);
 
+  // HUD Interactive Controls State
+  const [bayArrived, setBayArrived] = useState(false);
+  const [hookConfirmed, setHookConfirmed] = useState(false);
+  const [towerAck, setTowerAck] = useState(false);
+
   const mockTrips = useMockTripStore((s) => s.mockTrips);
 
   // Fetch live dashboard & trips
@@ -268,94 +273,261 @@ export default function DriverHomeDashboard() {
           </View>
         </View>
 
-        {/* ─── C. ACTIVE TRIP CARD ─── */}
+        {/* ─── C. STITCH ACTIVE MISSION & TACTICAL HUD ─── */}
         {activeTrip ? (
-          <View style={styles.activeTripCard}>
-            <View style={styles.activeTripHeader}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <View style={styles.pulseLive} />
-                <Text style={styles.activeTripIdText}>
-                  {activeTrip.tripNumber || `ITT-${activeTrip.id?.slice(0, 6)}`}
+          <View style={styles.stitchHudContainer}>
+            {/* 1. Container Telematics Banner */}
+            <View style={styles.hudTelematicsBanner}>
+              <View style={styles.hudBannerTop}>
+                <View style={styles.hudMissionBadge}>
+                  <Text style={styles.hudMissionBadgeText}>MISSION ACTIVE</Text>
+                </View>
+                <Text style={styles.hudMissionIdText}>
+                  #{activeTrip.tripNumber || `MSN-${activeTrip.id?.slice(0, 6)}`}
+                </Text>
+                <View style={styles.hudTransmittingBadge}>
+                  <View style={styles.pingDot} />
+                  <Text style={styles.hudTransmittingText}>TRANSMITTING</Text>
+                </View>
+              </View>
+
+              <View style={styles.hudContainerTitleRow}>
+                <Text style={styles.hudContainerId}>
+                  {activeTrip.containers?.[0]?.containerNumber || 'MSKU-982412-0'}
+                </Text>
+                <Text style={styles.hudContainerSize}>
+                  {activeTrip.containers?.[0]?.size || '40FT HC'}
                 </Text>
               </View>
-              <View style={styles.tripStatusPill}>
-                <Text style={styles.tripStatusPillText}>{activeTrip.status}</Text>
-              </View>
-            </View>
 
-            {/* Route row */}
-            <View style={styles.routeRow}>
-              <View style={styles.terminalBox}>
-                <Text style={styles.terminalLabel}>ORIGIN</Text>
-                <Text style={styles.terminalCode}>{activeTrip.sourceTerminal || 'CICT'}</Text>
-              </View>
-
-              <View style={styles.routeArrowBox}>
-                <Ionicons name="arrow-forward" size={18} color="#00e5ff" />
-                <Text style={styles.routeDistText}>INTER-TERMINAL</Text>
-              </View>
-
-              <View style={styles.terminalBox}>
-                <Text style={styles.terminalLabel}>DESTINATION</Text>
-                <Text style={styles.terminalCode}>{activeTrip.destTerminal || 'JCT'}</Text>
-              </View>
-            </View>
-
-            {/* Trip Specs */}
-            <View style={styles.specsGrid}>
-              <View style={styles.specItem}>
-                <Text style={styles.specLabel}>VESSEL</Text>
-                <Text style={styles.specValue}>{activeTrip.vesselName || 'MV Colombo Star'}</Text>
-              </View>
-              <View style={styles.specItem}>
-                <Text style={styles.specLabel}>CHAI NO.</Text>
-                <Text style={styles.specValueMono}>{activeTrip.chassisNumber || 'CHAI-102'}</Text>
-              </View>
-              <View style={styles.specItem}>
-                <Text style={styles.specLabel}>CONTAINERS</Text>
-                <Text style={styles.specValue}>
-                  {count20Ft}×20FT · {count40Ft}×40FT
-                </Text>
-              </View>
-              <View style={styles.specItem}>
-                <Text style={styles.specLabel}>START TIME</Text>
-                <Text style={styles.specValueMono}>
-                  {activeTrip.startTime ? new Date(activeTrip.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '08:30 AM'}
-                </Text>
-              </View>
-            </View>
-
-            {/* Containers List inside Active Trip */}
-            {activeTrip.containers && activeTrip.containers.length > 0 && (
-              <View style={styles.loadedContainersSection}>
-                <Text style={styles.loadedTitle}>LOADED MANIFEST ({activeTrip.containers.length})</Text>
-                {activeTrip.containers.map((c: any, idx: number) => (
-                  <View key={c.id || idx} style={styles.loadedContainerRow}>
-                    <Ionicons name="cube-outline" size={14} color="#00e5ff" />
-                    <Text style={styles.loadedCode}>{c.containerNumber}</Text>
-                    <Text style={styles.loadedSize}>{c.size}</Text>
-                    <Text style={styles.loadedStatus}>{c.status}</Text>
+              <View style={styles.hudSpecChipsGrid}>
+                <View style={styles.hudSpecChip}>
+                  <Text style={styles.hudSpecLabel}>PAYLOAD TYPE</Text>
+                  <Text style={styles.hudSpecValCyan}>REEFER ISO</Text>
+                </View>
+                <View style={styles.hudSpecChip}>
+                  <Text style={styles.hudSpecLabel}>CORE TEMP</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                    <Ionicons name="snow" size={12} color="#22ef7e" />
+                    <Text style={styles.hudSpecValLime}>-18.2°C</Text>
                   </View>
-                ))}
+                </View>
+                <View style={styles.hudSpecChip}>
+                  <Text style={styles.hudSpecLabel}>STABILITY</Text>
+                  <Text style={styles.hudSpecValLime}>LOCKED</Text>
+                </View>
               </View>
-            )}
+            </View>
 
-            {/* Action Buttons for Active Trip */}
-            <View style={styles.activeTripActions}>
+            {/* 2. Turn-by-Turn Guidance Banner */}
+            <View style={styles.hudTurnGuidanceBanner}>
+              <View style={styles.hudTurnIconBox}>
+                <Ionicons name="arrow-redo" size={22} color="#00363d" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Text style={styles.hudDistLabel}>IN 120 METRES</Text>
+                  <View style={styles.routeCodeTag}>
+                    <Text style={styles.routeCodeTagText}>RTE-04</Text>
+                  </View>
+                </View>
+                <Text style={styles.hudTurnInstruction}>
+                  TURN RIGHT ONTO TERMINAL SPINE AVE
+                </Text>
+              </View>
+            </View>
+
+            {/* 3. Tactical Yard Radar / Route Display */}
+            <View style={styles.hudYardRadarCard}>
+              <View style={styles.radarSimulationBox}>
+                {/* Yard Bay Overlay Labels */}
+                <View style={styles.radarBayLabel1}>
+                  <Text style={styles.radarBayText}>BAY B-02</Text>
+                </View>
+                <View style={styles.radarBayLabel2}>
+                  <Text style={styles.radarBayTextActive}>BAY B-03 (ACTIVE)</Text>
+                </View>
+                <View style={styles.radarBayLabel3}>
+                  <Text style={styles.radarBayText}>BAY B-04</Text>
+                </View>
+
+                {/* Active Tractor Beacon */}
+                <View style={styles.tractorBeaconWrap}>
+                  <View style={styles.tractorBeaconPulse}>
+                    <Ionicons name="navigate" size={18} color="#00363d" />
+                  </View>
+                  <Text style={styles.tractorBeaconTag}>TR-104</Text>
+                </View>
+
+                {/* Radar Corner Telemetry Badges */}
+                <View style={styles.radarCornerTopLeft}>
+                  <View style={styles.radarBadgePill}>
+                    <Ionicons name="location" size={11} color="#00e5ff" />
+                    <Text style={styles.radarBadgeText}>RTLS ACC: ±0.2M</Text>
+                  </View>
+                  <View style={styles.radarBadgePill}>
+                    <Ionicons name="compass" size={11} color="#feb300" />
+                    <Text style={styles.radarBadgeText}>HDG 084° E</Text>
+                  </View>
+                </View>
+
+                {/* Live Speed HUD Badge */}
+                <View style={styles.radarSpeedHud}>
+                  <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 2 }}>
+                    <Text style={styles.speedValueText}>18</Text>
+                    <Text style={styles.speedUnitText}>KM/H</Text>
+                  </View>
+                  <Text style={styles.speedLimitText}>LIMIT 25 KM/H</Text>
+                </View>
+
+                {/* Destination Target Tag */}
+                <View style={styles.radarDestTargetBar}>
+                  <Ionicons name="flag" size={16} color="#feb300" />
+                  <View style={{ flex: 1, marginHorizontal: 6 }}>
+                    <Text style={styles.radarDestSubLabel}>ASSIGNED DESTINATION</Text>
+                    <Text style={styles.radarDestTitle}>
+                      {activeTrip.destTerminal || 'JCT'} · SLOT C-12 (CRANE QC-07)
+                    </Text>
+                  </View>
+                  <Text style={styles.radarDestDist}>340m</Text>
+                </View>
+              </View>
+            </View>
+
+            {/* 4. Waypoint Progress Pipeline */}
+            <View style={styles.hudWaypointsCard}>
+              <View style={styles.hudWaypointsHeader}>
+                <Text style={styles.hudWaypointsTitle}>MISSION WAYPOINTS</Text>
+                <Text style={styles.hudWaypointsStep}>STEP 2 OF 3</Text>
+              </View>
+
+              <View style={styles.waypointsList}>
+                {/* Step 1 */}
+                <View style={styles.waypointRowDone}>
+                  <View style={styles.wpIconDone}>
+                    <Ionicons name="checkmark" size={14} color="#00363d" />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.wpTitleDone}>1. GATE-IN CLEARANCE</Text>
+                    <Text style={styles.wpSub}>Auth Station Alpha · Verified</Text>
+                  </View>
+                  <Text style={styles.wpTimeDone}>08:14</Text>
+                </View>
+
+                {/* Step 2 (Active) */}
+                <View style={styles.waypointRowActive}>
+                  <View style={styles.wpIconActive}>
+                    <Text style={styles.wpIconActiveText}>2</Text>
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <Text style={styles.wpTitleActive}>
+                        TRANSFER BAY {activeTrip.destTerminal || 'B-03'}
+                      </Text>
+                      <View style={styles.activeTagMini}>
+                        <Text style={styles.activeTagMiniText}>ACTIVE</Text>
+                      </View>
+                    </View>
+                    <Text style={styles.wpSubActive}>Align chassis under hoist guide</Text>
+                  </View>
+                  <Text style={styles.wpTimeActive}>CURRENT</Text>
+                </View>
+
+                {/* Step 3 */}
+                <View style={styles.waypointRowUpcoming}>
+                  <View style={styles.wpIconUpcoming}>
+                    <Text style={styles.wpIconUpcomingText}>3</Text>
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.wpTitleUpcoming}>3. VESSEL BERTHING BAY 2</Text>
+                    <Text style={styles.wpSub}>Crane QC-07 · Slot C-12</Text>
+                  </View>
+                  <Text style={styles.wpTimeUpcoming}>ETA 08:35</Text>
+                </View>
+              </View>
+            </View>
+
+            {/* 5. Tractor Telemetry Strip */}
+            <View style={styles.hudTelemetryStripGrid}>
+              <View style={styles.hudTelemBox}>
+                <Text style={styles.hudTelemLabel}>5TH-WHEEL PIN</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                  <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#22ef7e' }} />
+                  <Text style={styles.hudTelemValLime}>SECURED</Text>
+                </View>
+                <Text style={styles.hudTelemSub}>Lock Force 32kN</Text>
+              </View>
+
+              <View style={styles.hudTelemBox}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                  <Text style={styles.hudTelemLabel}>TRACTOR EV</Text>
+                  <Text style={styles.hudTelemValCyan}>78%</Text>
+                </View>
+                <View style={styles.batteryProgressBar}>
+                  <View style={[styles.batteryProgressFill, { width: '78%' }]} />
+                </View>
+                <Text style={styles.hudTelemSub}>5.4h Shift Rem.</Text>
+              </View>
+
+              <View style={styles.hudTelemBox}>
+                <Text style={styles.hudTelemLabel}>PNEUMATICS</Text>
+                <Text style={styles.hudTelemValWhite}>8.4 <Text style={{ fontSize: 9, color: '#849396' }}>BAR</Text></Text>
+                <Text style={styles.hudTelemSubLime}>NORMAL PRESS</Text>
+              </View>
+            </View>
+
+            {/* 6. Glove-Optimized Mission Critical Large Controls (56px) */}
+            <View style={{ gap: 8 }}>
+              {/* Primary Confirmation Button */}
               <TouchableOpacity
-                style={styles.continueTripBtn}
-                onPress={() => router.push('/(driver)/(tabs)/trips')}
+                style={[styles.glovePrimaryBtn, bayArrived && { backgroundColor: '#22ef7e' }]}
+                onPress={() => setBayArrived(!bayArrived)}
+                activeOpacity={0.88}
               >
-                <Ionicons name="navigate" size={16} color="#00363d" />
-                <Text style={styles.continueTripBtnText}>CONTINUE MISSION HUD</Text>
+                <Ionicons name="checkmark-done-circle" size={24} color="#00363d" />
+                <Text style={styles.glovePrimaryBtnText}>
+                  {bayArrived ? 'BAY POSITION CONFIRMED' : `ARRIVED AT BAY ${activeTrip.destTerminal || 'B-03'}`}
+                </Text>
               </TouchableOpacity>
 
+              {/* Secondary & Safety Row */}
+              <View style={{ flexDirection: 'row', gap: 8 }}>
+                <TouchableOpacity
+                  style={[styles.gloveSecondaryBtn, hookConfirmed && { backgroundColor: '#22ef7e' }]}
+                  onPress={() => setHookConfirmed(!hookConfirmed)}
+                  activeOpacity={0.88}
+                >
+                  <Ionicons name="link" size={20} color={hookConfirmed ? '#00363d' : '#feb300'} />
+                  <Text style={[styles.gloveSecondaryBtnText, hookConfirmed && { color: '#00363d' }]}>
+                    {hookConfirmed ? 'HOOK LOCKED & ENGAGED' : 'CONFIRM HOOKED'}
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.gloveHazardBtn}
+                  onPress={() => Alert.alert('SAFETY DISPATCH', 'Hazard alert broadcasted to Tower Bay-7 console.')}
+                  activeOpacity={0.88}
+                >
+                  <Ionicons name="warning" size={20} color="#ff5252" />
+                  <Text style={styles.gloveHazardBtnText}>ALERT</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* 7. Yard Marshal Tower Comms Toast */}
+            <View style={styles.hudTowerCommsToast}>
+              <Ionicons name="headset" size={18} color="#00e5ff" />
+              <View style={{ flex: 1, marginHorizontal: 6 }}>
+                <Text style={styles.towerCommsLabel}>YARD MARSHAL TOWER:</Text>
+                <Text style={styles.towerCommsMsg}>"TR-104 prioritize Reefer drop off"</Text>
+              </View>
               <TouchableOpacity
-                style={styles.addContBtnSmall}
-                onPress={() => router.push('/(driver)/trips/new')}
+                style={[styles.ackBtn, towerAck && { backgroundColor: '#22ef7e' }]}
+                onPress={() => setTowerAck(!towerAck)}
               >
-                <Ionicons name="add-circle" size={16} color="#00e5ff" />
-                <Text style={styles.addContBtnSmallText}>NEW TRIP</Text>
+                <Text style={[styles.ackBtnText, towerAck && { color: '#00363d' }]}>
+                  {towerAck ? 'ACKED' : 'ACK'}
+                </Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -786,8 +958,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
     paddingVertical: 1,
     color: '#00e5ff',
-    fontFamily: 'monospace',
-    fontSize: 10,
+        fontSize: 10,
     fontWeight: '800',
   },
   vehiclePill: {
@@ -801,8 +972,7 @@ const styles = StyleSheet.create({
   },
   vehiclePillText: {
     color: '#feb300',
-    fontFamily: 'monospace',
-    fontSize: 10,
+        fontSize: 10,
     fontWeight: '700',
   },
   headerRight: {
@@ -904,8 +1074,7 @@ const styles = StyleSheet.create({
   summaryCardValue: {
     fontSize: 22,
     fontWeight: '900',
-    fontFamily: 'monospace',
-    marginTop: 2,
+        marginTop: 2,
   },
   summaryCardSub: {
     color: '#849396',
@@ -939,8 +1108,7 @@ const styles = StyleSheet.create({
     color: '#00e5ff',
     fontWeight: '900',
     fontSize: 14,
-    fontFamily: 'monospace',
-  },
+      },
   tripStatusPill: {
     backgroundColor: 'rgba(0, 229, 255, 0.12)',
     paddingHorizontal: 8,
@@ -976,8 +1144,7 @@ const styles = StyleSheet.create({
     color: '#00e5ff',
     fontSize: 16,
     fontWeight: '900',
-    fontFamily: 'monospace',
-    marginTop: 2,
+        marginTop: 2,
   },
   routeArrowBox: {
     alignItems: 'center',
@@ -986,8 +1153,7 @@ const styles = StyleSheet.create({
   routeDistText: {
     color: '#849396',
     fontSize: 7,
-    fontFamily: 'monospace',
-    letterSpacing: 0.8,
+        letterSpacing: 0.8,
   },
   specsGrid: {
     flexDirection: 'row',
@@ -1015,8 +1181,7 @@ const styles = StyleSheet.create({
     color: '#feb300',
     fontSize: 11,
     fontWeight: '700',
-    fontFamily: 'monospace',
-  },
+      },
   loadedContainersSection: {
     backgroundColor: '#080e17',
     borderRadius: radius.sm,
@@ -1036,15 +1201,13 @@ const styles = StyleSheet.create({
   },
   loadedCode: {
     color: '#dde2f0',
-    fontFamily: 'monospace',
-    fontSize: 11,
+        fontSize: 11,
     fontWeight: '700',
     flex: 1,
   },
   loadedSize: {
     color: '#00e5ff',
-    fontFamily: 'monospace',
-    fontSize: 10,
+        fontSize: 10,
   },
   loadedStatus: {
     color: '#22ef7e',
@@ -1347,8 +1510,7 @@ const styles = StyleSheet.create({
   modalInput: {
     flex: 1,
     color: '#dde2f0',
-    fontFamily: 'monospace',
-    fontSize: 13,
+        fontSize: 13,
     ...(Platform.OS === 'web' ? { outlineStyle: 'none' } : {}),
   } as any,
 
@@ -1438,8 +1600,7 @@ const styles = StyleSheet.create({
     color: '#849396',
     fontSize: 10,
     fontWeight: '800',
-    fontFamily: 'monospace',
-  },
+      },
   terminalChipTextActive: {
     color: '#00e5ff',
   },
@@ -1512,14 +1673,12 @@ const styles = StyleSheet.create({
     color: '#22ef7e',
     fontSize: 22,
     fontWeight: '900',
-    fontFamily: 'monospace',
-  },
+      },
   allowanceValuePending: {
     color: '#feb300',
     fontSize: 22,
     fontWeight: '900',
-    fontFamily: 'monospace',
-  },
+      },
   allowanceSub: {
     color: '#849396',
     fontSize: 9,
@@ -1546,5 +1705,583 @@ const styles = StyleSheet.create({
     color: '#849396',
     fontSize: 9,
     marginTop: 2,
+  },
+
+  // ─── STITCH HUD STYLES ───
+  stitchHudContainer: {
+    gap: 12,
+  },
+  hudTelematicsBanner: {
+    backgroundColor: '#161c25',
+    borderRadius: radius.DEFAULT,
+    borderWidth: 1,
+    borderColor: '#242a34',
+    padding: 14,
+    gap: 10,
+    overflow: 'hidden',
+  },
+  hudBannerTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  hudMissionBadge: {
+    backgroundColor: '#00e5ff',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 4,
+  },
+  hudMissionBadgeText: {
+    color: '#00363d',
+    fontSize: 9,
+    fontWeight: '900',
+    letterSpacing: 0.6,
+  },
+  hudMissionIdText: {
+    color: '#00e5ff',
+    fontSize: 12,
+    fontWeight: '900',
+    letterSpacing: 0.8,
+  },
+  hudTransmittingBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: '#080e17',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: '#242a34',
+  },
+  pingDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#22ef7e',
+  },
+  hudTransmittingText: {
+    color: '#22ef7e',
+    fontSize: 8,
+    fontWeight: '900',
+    letterSpacing: 0.8,
+  },
+  hudContainerTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    justifyContent: 'space-between',
+  },
+  hudContainerId: {
+    color: '#dde2f0',
+    fontSize: 22,
+    fontWeight: '900',
+    letterSpacing: 0.5,
+  },
+  hudContainerSize: {
+    color: '#feb300',
+    fontSize: 13,
+    fontWeight: '900',
+  },
+  hudSpecChipsGrid: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  hudSpecChip: {
+    flex: 1,
+    backgroundColor: '#080e17',
+    padding: 8,
+    borderRadius: radius.sm,
+    borderWidth: 1,
+    borderColor: '#1a2029',
+  },
+  hudSpecLabel: {
+    color: '#849396',
+    fontSize: 8,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
+  hudSpecValCyan: {
+    color: '#00e5ff',
+    fontSize: 11,
+    fontWeight: '900',
+    marginTop: 2,
+  },
+  hudSpecValLime: {
+    color: '#22ef7e',
+    fontSize: 11,
+    fontWeight: '900',
+    marginTop: 2,
+  },
+
+  // Turn Guidance Banner
+  hudTurnGuidanceBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#00e5ff',
+    borderRadius: radius.DEFAULT,
+    padding: 12,
+    gap: 12,
+  },
+  hudTurnIconBox: {
+    width: 42,
+    height: 42,
+    borderRadius: radius.sm,
+    backgroundColor: '#080e17',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  hudDistLabel: {
+    color: '#00363d',
+    fontSize: 9,
+    fontWeight: '900',
+    letterSpacing: 0.8,
+  },
+  routeCodeTag: {
+    backgroundColor: 'rgba(0, 54, 61, 0.2)',
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    borderRadius: 4,
+  },
+  routeCodeTagText: {
+    color: '#00363d',
+    fontSize: 8,
+    fontWeight: '900',
+  },
+  hudTurnInstruction: {
+    color: '#00363d',
+    fontSize: 12,
+    fontWeight: '900',
+    letterSpacing: 0.5,
+    marginTop: 2,
+  },
+
+  // Yard Radar Card
+  hudYardRadarCard: {
+    backgroundColor: '#161c25',
+    borderRadius: radius.DEFAULT,
+    borderWidth: 1,
+    borderColor: '#242a34',
+    overflow: 'hidden',
+  },
+  radarSimulationBox: {
+    height: 180,
+    backgroundColor: '#080e17',
+    position: 'relative',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  radarBayLabel1: {
+    position: 'absolute',
+    left: 20,
+    top: 20,
+    backgroundColor: '#161c25',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+  },
+  radarBayLabel2: {
+    position: 'absolute',
+    left: 20,
+    top: 70,
+    backgroundColor: 'rgba(0, 229, 255, 0.15)',
+    borderWidth: 1,
+    borderColor: '#00e5ff',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+  },
+  radarBayLabel3: {
+    position: 'absolute',
+    left: 20,
+    top: 120,
+    backgroundColor: '#161c25',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+  },
+  radarBayText: {
+    color: '#849396',
+    fontSize: 9,
+    fontWeight: '700',
+  },
+  radarBayTextActive: {
+    color: '#00e5ff',
+    fontSize: 9,
+    fontWeight: '900',
+  },
+  tractorBeaconWrap: {
+    position: 'absolute',
+    right: 70,
+    top: 50,
+    alignItems: 'center',
+  },
+  tractorBeaconPulse: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#00e5ff',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  tractorBeaconTag: {
+    color: '#00e5ff',
+    fontSize: 9,
+    fontWeight: '900',
+    marginTop: 2,
+    backgroundColor: '#080e17',
+    paddingHorizontal: 4,
+    borderRadius: 2,
+  },
+  radarCornerTopLeft: {
+    position: 'absolute',
+    top: 8,
+    left: 8,
+    gap: 4,
+  },
+  radarBadgePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(8, 14, 23, 0.9)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  radarBadgeText: {
+    color: '#dde2f0',
+    fontSize: 8,
+    fontWeight: '800',
+  },
+  radarSpeedHud: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    alignItems: 'flex-end',
+    backgroundColor: 'rgba(8, 14, 23, 0.9)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+  },
+  speedValueText: {
+    color: '#00e5ff',
+    fontSize: 20,
+    fontWeight: '900',
+  },
+  speedUnitText: {
+    color: '#849396',
+    fontSize: 8,
+    fontWeight: '800',
+  },
+  speedLimitText: {
+    color: '#feb300',
+    fontSize: 7,
+    fontWeight: '900',
+  },
+  radarDestTargetBar: {
+    position: 'absolute',
+    bottom: 8,
+    left: 8,
+    right: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(8, 14, 23, 0.95)',
+    padding: 8,
+    borderRadius: radius.sm,
+    borderWidth: 1,
+    borderColor: '#242a34',
+  },
+  radarDestSubLabel: {
+    color: '#849396',
+    fontSize: 7,
+    fontWeight: '800',
+  },
+  radarDestTitle: {
+    color: '#dde2f0',
+    fontSize: 10,
+    fontWeight: '900',
+  },
+  radarDestDist: {
+    color: '#00e5ff',
+    fontSize: 12,
+    fontWeight: '900',
+  },
+
+  // Waypoints Pipeline
+  hudWaypointsCard: {
+    backgroundColor: '#161c25',
+    borderRadius: radius.DEFAULT,
+    borderWidth: 1,
+    borderColor: '#242a34',
+    padding: 12,
+    gap: 10,
+  },
+  hudWaypointsHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  hudWaypointsTitle: {
+    color: '#dde2f0',
+    fontSize: 11,
+    fontWeight: '900',
+    letterSpacing: 0.6,
+  },
+  hudWaypointsStep: {
+    color: '#22ef7e',
+    fontSize: 9,
+    fontWeight: '900',
+  },
+  waypointsList: {
+    gap: 6,
+  },
+  waypointRowDone: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#080e17',
+    padding: 8,
+    borderRadius: radius.sm,
+  },
+  wpIconDone: {
+    width: 24,
+    height: 24,
+    borderRadius: 4,
+    backgroundColor: '#22ef7e',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  wpTitleDone: {
+    color: '#dde2f0',
+    fontSize: 10,
+    fontWeight: '800',
+  },
+  wpSub: {
+    color: '#849396',
+    fontSize: 9,
+  },
+  wpTimeDone: {
+    color: '#22ef7e',
+    fontSize: 9,
+    fontWeight: '800',
+  },
+  waypointRowActive: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#1f2733',
+    borderWidth: 1,
+    borderColor: '#00e5ff',
+    padding: 8,
+    borderRadius: radius.sm,
+  },
+  wpIconActive: {
+    width: 24,
+    height: 24,
+    borderRadius: 4,
+    backgroundColor: '#00e5ff',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  wpIconActiveText: {
+    color: '#00363d',
+    fontSize: 11,
+    fontWeight: '900',
+  },
+  wpTitleActive: {
+    color: '#00e5ff',
+    fontSize: 10,
+    fontWeight: '900',
+  },
+  wpSubActive: {
+    color: '#dde2f0',
+    fontSize: 9,
+  },
+  wpTimeActive: {
+    color: '#00e5ff',
+    fontSize: 9,
+    fontWeight: '900',
+  },
+  activeTagMini: {
+    backgroundColor: 'rgba(0, 229, 255, 0.2)',
+    paddingHorizontal: 4,
+    borderRadius: 2,
+  },
+  activeTagMiniText: {
+    color: '#00e5ff',
+    fontSize: 7,
+    fontWeight: '900',
+  },
+  waypointRowUpcoming: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#080e17',
+    padding: 8,
+    borderRadius: radius.sm,
+    opacity: 0.7,
+  },
+  wpIconUpcoming: {
+    width: 24,
+    height: 24,
+    borderRadius: 4,
+    backgroundColor: '#242a34',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  wpIconUpcomingText: {
+    color: '#849396',
+    fontSize: 11,
+    fontWeight: '900',
+  },
+  wpTitleUpcoming: {
+    color: '#bac9cc',
+    fontSize: 10,
+    fontWeight: '700',
+  },
+  wpTimeUpcoming: {
+    color: '#feb300',
+    fontSize: 9,
+    fontWeight: '800',
+  },
+
+  // Telemetry Strip Grid
+  hudTelemetryStripGrid: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  hudTelemBox: {
+    flex: 1,
+    backgroundColor: '#161c25',
+    padding: 10,
+    borderRadius: radius.DEFAULT,
+    borderWidth: 1,
+    borderColor: '#242a34',
+    gap: 2,
+  },
+  hudTelemLabel: {
+    color: '#849396',
+    fontSize: 7,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
+  hudTelemValLime: {
+    color: '#22ef7e',
+    fontSize: 11,
+    fontWeight: '900',
+  },
+  hudTelemValCyan: {
+    color: '#00e5ff',
+    fontSize: 11,
+    fontWeight: '900',
+  },
+  hudTelemValWhite: {
+    color: '#dde2f0',
+    fontSize: 12,
+    fontWeight: '900',
+  },
+  hudTelemSub: {
+    color: '#849396',
+    fontSize: 8,
+  },
+  hudTelemSubLime: {
+    color: '#22ef7e',
+    fontSize: 8,
+    fontWeight: '800',
+  },
+  batteryProgressBar: {
+    height: 4,
+    backgroundColor: '#080e17',
+    borderRadius: 2,
+    marginVertical: 3,
+    overflow: 'hidden',
+  },
+  batteryProgressFill: {
+    height: '100%',
+    backgroundColor: '#00e5ff',
+  },
+
+  // Glove-Optimized Controls
+  glovePrimaryBtn: {
+    height: 56,
+    backgroundColor: '#00e5ff',
+    borderRadius: radius.DEFAULT,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    elevation: 3,
+  },
+  glovePrimaryBtnText: {
+    color: '#00363d',
+    fontSize: 13,
+    fontWeight: '900',
+    letterSpacing: 0.8,
+  },
+  gloveSecondaryBtn: {
+    flex: 4,
+    height: 52,
+    backgroundColor: '#161c25',
+    borderRadius: radius.DEFAULT,
+    borderWidth: 1,
+    borderColor: '#feb300',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+  },
+  gloveSecondaryBtnText: {
+    color: '#feb300',
+    fontSize: 10,
+    fontWeight: '900',
+    letterSpacing: 0.6,
+  },
+  gloveHazardBtn: {
+    flex: 1,
+    height: 52,
+    backgroundColor: 'rgba(255, 82, 82, 0.15)',
+    borderRadius: radius.DEFAULT,
+    borderWidth: 1,
+    borderColor: '#ff5252',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  gloveHazardBtnText: {
+    color: '#ff5252',
+    fontSize: 8,
+    fontWeight: '900',
+  },
+
+  // Tower Comms Toast
+  hudTowerCommsToast: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#161c25',
+    borderRadius: radius.DEFAULT,
+    borderWidth: 1,
+    borderColor: '#242a34',
+    padding: 10,
+  },
+  towerCommsLabel: {
+    color: '#849396',
+    fontSize: 8,
+    fontWeight: '800',
+  },
+  towerCommsMsg: {
+    color: '#dde2f0',
+    fontSize: 10,
+    fontWeight: '700',
+  },
+  ackBtn: {
+    backgroundColor: '#080e17',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: '#00e5ff',
+  },
+  ackBtnText: {
+    color: '#00e5ff',
+    fontSize: 9,
+    fontWeight: '900',
   },
 });

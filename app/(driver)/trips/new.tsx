@@ -98,20 +98,20 @@ function TerminalPicker({
 
 const tp = StyleSheet.create({
   wrapper: { marginBottom: 12 },
-  label: { fontSize: 13, fontWeight: '700', color: colors.textSecondary, marginBottom: 8 },
+  label: { fontSize: 13, fontWeight: '700', color: '#849396', marginBottom: 8 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   btn: {
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: radius.md,
-    backgroundColor: colors.surfaceContainerHighest,
+    backgroundColor: '#080e17',
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: '#242a34',
   },
-  btnText: { fontSize: 13, fontWeight: '700', color: colors.textSecondary },
-  btnTextActive: { color: colors.navy },
+  btnText: { fontSize: 13, fontWeight: '700', color: '#849396' },
+  btnTextActive: { color: '#00363d' },
   btnDisabled: { opacity: 0.4 },
-  btnTextDisabled: { color: colors.textMuted },
+  btnTextDisabled: { color: '#849396' },
 });
 
 // ────────────────────────────────────────────────────────────────
@@ -283,7 +283,7 @@ function ContainerCard({
           <TextInput
             style={cc.input}
             placeholder="e.g. MSCU7721892"
-            placeholderTextColor="#9AA5B1"
+            placeholderTextColor="#849396"
             autoCapitalize="characters"
             value={entry.containerNumber}
             onChangeText={(v) => onChange('containerNumber', normalizeContainerNumber(v))}
@@ -297,7 +297,7 @@ function ContainerCard({
           <TextInput
             style={cc.input}
             placeholder="e.g. TCKU3456789"
-            placeholderTextColor="#9AA5B1"
+            placeholderTextColor="#849396"
             autoCapitalize="characters"
             value={entry.containerNumber2}
             onChangeText={(v) => onChange('containerNumber2', normalizeContainerNumber(v))}
@@ -313,7 +313,7 @@ function ContainerCard({
           <TextInput
             style={cc.input}
             placeholder="e.g. MSCU7721892"
-            placeholderTextColor="#9AA5B1"
+            placeholderTextColor="#849396"
             autoCapitalize="characters"
             value={entry.containerNumber}
             onChangeText={(v) => onChange('containerNumber', normalizeContainerNumber(v))}
@@ -330,50 +330,104 @@ function ContainerCard({
         label="Destination Terminal *"
         selected={entry.destTerminal}
         onSelect={(t) => onChange('destTerminal', t)}
-        accentColor={colors.primaryContainer}
+        accentColor="#00e5ff"
         exclude={loadingTerminal}
       />
+
+      {/* Damage Status */}
+      <Text style={cc.fieldLabel}>Damage Status</Text>
+      <View style={cc.damageRow}>
+        {(['NONE', 'DAMAGED'] as const).map((ds) => {
+          const isDamaged = ds === 'DAMAGED';
+          const isActive = (entry.damageStatus || 'NONE') === ds;
+          return (
+            <TouchableOpacity
+              key={ds}
+              style={[
+                cc.damageBtn,
+                isActive && (isDamaged ? cc.damageBtnDamaged : cc.damageBtnNone),
+              ]}
+              onPress={() => onChange('damageStatus', ds)}
+            >
+              <Ionicons
+                name={isDamaged ? 'warning' : 'checkmark-circle'}
+                size={14}
+                color={isActive ? (isDamaged ? '#ff5252' : '#22ef7e') : '#849396'}
+              />
+              <Text style={[cc.damageTxt, isActive && (isDamaged ? cc.damageTxtDamaged : cc.damageTxtNone)]}>
+                {isDamaged ? '⚠ DAMAGED CONTAINER' : '✓ NO DAMAGE'}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+
+      {/* Damage alert strip */}
+      {(entry.damageStatus === 'DAMAGED') && (
+        <View style={cc.damageAlert}>
+          <Ionicons name="alert-circle" size={15} color="#ff5252" />
+          <Text style={cc.damageAlertText}>DAMAGE TANK — Supervisor will be notified of container damage</Text>
+        </View>
+      )}
     </View>
   );
 }
 
 const cc = StyleSheet.create({
   card: {
-    backgroundColor: colors.surfaceContainer,
+    backgroundColor: '#161c25',
     borderRadius: radius.lg,
     padding: spacing.md,
     marginBottom: spacing.md,
     borderWidth: 1,
-    borderColor: colors.border,
-    ...shadow.card,
+    borderColor: '#242a34',
   },
-  fieldLabel: { fontSize: 13, fontWeight: '600', color: colors.textSecondary, marginBottom: 6 },
+  fieldLabel: { fontSize: 13, fontWeight: '600', color: '#849396', marginBottom: 6 },
   input: {
-    backgroundColor: colors.surfaceContainerHighest,
+    backgroundColor: '#080e17',
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: '#242a34',
     borderRadius: radius.md,
     paddingHorizontal: 14,
     paddingVertical: 12,
     fontSize: 15,
-    color: colors.text,
+    color: '#dde2f0',
     marginBottom: 12,
     ...(Platform.OS === 'web' && { outlineStyle: 'none', cursor: 'text' } as any),
   },
   sizeRow: { flexDirection: 'row', gap: 8, marginBottom: 12 },
   sizeBtn: {
     flex: 1,
-    backgroundColor: colors.surfaceContainerHighest,
+    backgroundColor: '#080e17',
     paddingVertical: 12,
     borderRadius: radius.md,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: '#242a34',
   },
-  sizeBtnActive: { backgroundColor: colors.primaryContainer, borderColor: colors.primaryContainer },
-  sizeTxt: { fontSize: 14, fontWeight: '700', color: colors.textSecondary },
-  sizeTxtActive: { color: colors.navy },
+  sizeBtnActive: { backgroundColor: 'rgba(0, 229, 255, 0.15)', borderColor: '#00e5ff' },
+  sizeTxt: { fontSize: 14, fontWeight: '700', color: '#849396' },
+  sizeTxtActive: { color: '#00e5ff' },
   row: { flexDirection: 'row', alignItems: 'flex-start' },
+
+  // Damage status
+  damageRow: { flexDirection: 'row', gap: 8, marginBottom: 8 },
+  damageBtn: {
+    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    gap: 6, paddingVertical: 10, borderRadius: radius.md,
+    backgroundColor: '#080e17', borderWidth: 1, borderColor: '#242a34',
+  },
+  damageBtnNone: { backgroundColor: 'rgba(34, 239, 126, 0.1)', borderColor: '#22ef7e' },
+  damageBtnDamaged: { backgroundColor: 'rgba(255, 82, 82, 0.12)', borderColor: '#ff5252' },
+  damageTxt: { fontSize: 12, fontWeight: '700', color: '#849396' },
+  damageTxtNone: { color: '#22ef7e' },
+  damageTxtDamaged: { color: '#ff5252' },
+  damageAlert: {
+    flexDirection: 'row', alignItems: 'center', gap: 8,
+    backgroundColor: 'rgba(255, 82, 82, 0.12)', borderWidth: 1, borderColor: '#ff5252',
+    borderRadius: radius.md, padding: 10, marginBottom: 4,
+  },
+  damageAlertText: { fontSize: 12, fontWeight: '700', color: '#ff5252', flex: 1 },
 });
 
 // ────────────────────────────────────────────────────────────────
@@ -625,7 +679,7 @@ export default function NewTripScreen() {
           <TextInput
             style={styles.input}
             placeholder="e.g. MSC Aurora"
-            placeholderTextColor="#9AA5B1"
+            placeholderTextColor="#849396"
             value={vesselName}
             onChangeText={setVesselName}
           />
@@ -650,14 +704,14 @@ export default function NewTripScreen() {
                 prev.map((c) => (c.destTerminal === t ? { ...c, destTerminal: '' } : c))
               );
             }}
-            accentColor={colors.primaryContainer}
+            accentColor="#00e5ff"
           />
 
           <Text style={styles.fieldLabel}>Operation Date</Text>
           <TextInput
             style={styles.input}
             placeholder="YYYY-MM-DD"
-            placeholderTextColor="#9AA5B1"
+            placeholderTextColor="#849396"
             value={operationDate}
             onChangeText={setOperationDate}
           />
@@ -666,7 +720,7 @@ export default function NewTripScreen() {
           <TextInput
             style={styles.input}
             placeholder="HH:MM"
-            placeholderTextColor="#9AA5B1"
+            placeholderTextColor="#849396"
             value={operationTime}
             onChangeText={setOperationTime}
           />
@@ -695,11 +749,20 @@ export default function NewTripScreen() {
           <TextInput
             style={[styles.input, { height: 70, textAlignVertical: 'top' }]}
             placeholder="Special instructions, gate lane, cargo notes..."
-            placeholderTextColor="#9AA5B1"
+            placeholderTextColor="#849396"
             multiline
             value={notes}
             onChangeText={setNotes}
           />
+          {/* Auto-detect damage keywords in notes */}
+          {/damage/i.test(notes) && (
+            <View style={styles.damageNoteAlert}>
+              <Ionicons name="warning" size={16} color="#ff5252" />
+              <Text style={styles.damageNoteAlertText}>
+                ⚠ DAMAGE TANK DETECTED — This trip will be flagged as a damage report. Supervisor will receive a damage alert.
+              </Text>
+            </View>
+          )}
         </View>
 
         {/* Summary row */}
@@ -723,6 +786,13 @@ export default function NewTripScreen() {
             <Text style={styles.summaryKey}>Vessel</Text>
             <Text style={styles.summaryVal}>{vesselName || '—'}</Text>
           </View>
+          {/* Show damage summary if any container flagged or notes has damage */}
+          {(containers.some((c) => c.damageStatus === 'DAMAGED') || /damage/i.test(notes)) && (
+            <View style={styles.summaryDamageRow}>
+              <Ionicons name="alert-circle" size={14} color="#ff5252" />
+              <Text style={styles.summaryDamageText}>⚠ DAMAGE TANK — Supervisor alert will be raised</Text>
+            </View>
+          )}
           <View style={styles.summaryRow}>
             <Text style={styles.summaryKey}>Vehicle / Chai</Text>
             <Text style={styles.summaryVal}>{user?.vehicleNumber || 'WP-DA-4521'} / {user?.chaiNumber || '—'}</Text>
@@ -731,11 +801,11 @@ export default function NewTripScreen() {
 
         {/* Action Buttons */}
         <View style={{ flexDirection: 'row', gap: 8, marginBottom: 20 }}>
-          <TouchableOpacity style={[styles.startBtn, { flex: 1, backgroundColor: colors.surfaceContainerHighest }]} onPress={() => router.back()}>
-            <Text style={[styles.startBtnText, { color: colors.textSecondary }]}>Cancel</Text>
+          <TouchableOpacity style={[styles.startBtn, { flex: 1, backgroundColor: '#080e17', borderColor: '#242a34', borderWidth: 1 }]} onPress={() => router.back()}>
+            <Text style={[styles.startBtnText, { color: '#849396' }]}>Cancel</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.startBtn, { flex: 1, backgroundColor: colors.secondaryContainer }]}>
-            <Text style={[styles.startBtnText, { color: colors.onSecondaryContainer }]}>Save Draft</Text>
+          <TouchableOpacity style={[styles.startBtn, { flex: 1, backgroundColor: 'rgba(34, 239, 126, 0.15)', borderColor: '#22ef7e', borderWidth: 1 }]}>
+            <Text style={[styles.startBtnText, { color: '#22ef7e' }]}>Save Draft</Text>
           </TouchableOpacity>
         </View>
 
@@ -760,11 +830,21 @@ export default function NewTripScreen() {
           destTerminals={[...new Set(containers.map((c) => c.destTerminal))].join(', ')}
           vehicleNumber={user?.vehicleNumber}
           driverName={user?.name}
-          containers={containers.map((c) => ({
-            containerNumber: c.containerNumber.trim().toUpperCase(),
-            size: c.size,
-            destTerminal: c.destTerminal,
-          }))}
+          containers={containers.flatMap((c) => {
+            const list = [{
+              containerNumber: c.containerNumber.trim().toUpperCase(),
+              size: c.size,
+              destTerminal: c.destTerminal,
+            }];
+            if (c.size === '20FT' && c.containerNumber2 && c.containerNumber2.trim()) {
+              list.push({
+                containerNumber: c.containerNumber2.trim().toUpperCase(),
+                size: '20FT',
+                destTerminal: c.destTerminal,
+              });
+            }
+            return list;
+          })}
           notes={notes.trim() || undefined}
           submitting={loading}
           onCancel={() => setShowVerify(false)}
@@ -777,7 +857,7 @@ export default function NewTripScreen() {
           mode="sent"
           tripNumber={sentTripNumber}
           vesselName={vesselName}
-          containerCount={containers.length}
+          containerCount={containers.reduce((acc, c) => acc + (c.size === '20FT' && c.containerNumber2 && c.containerNumber2.trim() ? 2 : 1), 0)}
           onDone={goHomeAfterSend}
         />
       )}
@@ -786,74 +866,104 @@ export default function NewTripScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
+  container: { flex: 1, backgroundColor: '#0e141d' },
   header: {
-    backgroundColor: colors.surfaceContainerLowest,
+    backgroundColor: '#161c25',
     padding: spacing.lg, paddingTop: 60, paddingBottom: spacing.lg,
     borderBottomLeftRadius: radius.xl, borderBottomRightRadius: radius.xl,
-    ...shadow.card,
+    borderWidth: 1, borderColor: '#242a34', borderTopWidth: 0,
   },
   backBtn: { paddingVertical: 4, marginBottom: spacing.sm, alignSelf: 'flex-start' },
-  backText: { color: colors.primaryContainer, fontSize: 15, fontWeight: '700' },
-  headerTitle: { color: colors.text, fontSize: 24, fontWeight: '800' },
-  headerSub: { color: colors.textSecondary, fontSize: 13, marginTop: 4 },
+  backText: { color: '#00e5ff', fontSize: 15, fontWeight: '700' },
+  headerTitle: { color: '#dde2f0', fontSize: 24, fontWeight: '800' },
+  headerSub: { color: '#849396', fontSize: 13, marginTop: 4 },
 
   content: { padding: spacing.md, paddingBottom: 50 },
 
   infoCard: {
-    backgroundColor: colors.surfaceContainer, borderRadius: radius.lg, padding: spacing.md,
-    marginBottom: spacing.md, borderWidth: 1, borderColor: colors.border,
-    ...shadow.card,
+    backgroundColor: '#161c25', borderRadius: radius.lg, padding: spacing.md,
+    marginBottom: spacing.md, borderWidth: 1, borderColor: '#242a34',
   },
   infoRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  infoLabel: { fontSize: 11, color: colors.textSecondary },
-  infoValue: { fontSize: 17, fontWeight: '800', color: colors.text, marginTop: 2 },
-  infoSub: { fontSize: 11, color: colors.textMuted, marginTop: 2 },
+  infoLabel: { fontSize: 11, color: '#849396' },
+  infoValue: { fontSize: 17, fontWeight: '800', color: '#dde2f0', marginTop: 2 },
+  infoSub: { fontSize: 11, color: '#849396', marginTop: 2 },
   truckBadge: {
-    backgroundColor: colors.surfaceContainerHighest, paddingHorizontal: 14, paddingVertical: 8,
-    borderRadius: radius.md, alignItems: 'center', borderWidth: 1, borderColor: colors.borderLight,
+    backgroundColor: '#080e17', paddingHorizontal: 14, paddingVertical: 8,
+    borderRadius: radius.md, alignItems: 'center', borderWidth: 1, borderColor: '#242a34',
   },
-  truckLabel: { fontSize: 10, fontWeight: '800', color: colors.primaryContainer },
-  truckValue: { fontSize: 14, fontWeight: '700', color: colors.text, marginTop: 2 },
+  truckLabel: { fontSize: 10, fontWeight: '800', color: '#00e5ff' },
+  truckValue: { fontSize: 14, fontWeight: '700', color: '#dde2f0', marginTop: 2 },
 
   section: {
-    backgroundColor: colors.surfaceContainer, borderRadius: radius.lg, padding: spacing.md,
-    marginBottom: spacing.md, borderWidth: 1, borderColor: colors.border,
-    ...shadow.card,
+    backgroundColor: '#161c25', borderRadius: radius.lg, padding: spacing.md,
+    marginBottom: spacing.md, borderWidth: 1, borderColor: '#242a34',
   },
-  sectionTitle: { fontSize: 16, fontWeight: '800', color: colors.text, marginBottom: 2 },
-  sectionSub: { fontSize: 13, color: colors.textSecondary, marginBottom: 12 },
-  fieldLabel: { fontSize: 13, fontWeight: '600', color: colors.textSecondary, marginBottom: 6 },
+  sectionTitle: { fontSize: 16, fontWeight: '800', color: '#dde2f0', marginBottom: 2 },
+  sectionSub: { fontSize: 13, color: '#849396', marginBottom: 12 },
+  fieldLabel: { fontSize: 13, fontWeight: '600', color: '#849396', marginBottom: 6 },
 
   input: {
-    backgroundColor: colors.surfaceContainerHighest, borderWidth: 1, borderColor: colors.border,
+    backgroundColor: '#080e17', borderWidth: 1, borderColor: '#242a34',
     borderRadius: radius.md, paddingHorizontal: 14, paddingVertical: 12,
-    fontSize: 15, color: colors.text, marginBottom: 12,
+    fontSize: 15, color: '#dde2f0', marginBottom: 12,
     ...(Platform.OS === 'web' && { outlineStyle: 'none', cursor: 'text' } as any),
   },
   chipsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 4 },
   chip: {
-    backgroundColor: colors.surfaceContainerHighest, paddingHorizontal: 14, paddingVertical: 8,
-    borderRadius: radius.pill, borderWidth: 1, borderColor: colors.border,
+    backgroundColor: '#080e17', paddingHorizontal: 14, paddingVertical: 8,
+    borderRadius: radius.pill, borderWidth: 1, borderColor: '#242a34',
   },
-  chipActive: { backgroundColor: colors.primaryContainer, borderColor: colors.primaryContainer },
-  chipText: { fontSize: 13, color: colors.textSecondary, fontWeight: '600' },
-  chipTextActive: { color: colors.navy, fontWeight: '800' },
+  chipActive: { backgroundColor: 'rgba(0, 229, 255, 0.15)', borderColor: '#00e5ff' },
+  chipText: { fontSize: 13, color: '#849396', fontWeight: '600' },
+  chipTextActive: { color: '#00e5ff', fontWeight: '800' },
+
+  damageNoteAlert: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 82, 82, 0.15)',
+    borderWidth: 1,
+    borderColor: '#ff5252',
+    borderRadius: radius.md,
+    padding: spacing.sm,
+    marginTop: spacing.sm,
+    gap: 8,
+  },
+  damageNoteAlertText: {
+    color: '#ff5252',
+    fontSize: 12,
+    fontWeight: '700',
+    flex: 1,
+  },
+  summaryDamageRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 82, 82, 0.15)',
+    borderRadius: radius.md,
+    padding: spacing.sm,
+    marginBottom: 8,
+    gap: 8,
+  },
+  summaryDamageText: {
+    color: '#ff5252',
+    fontSize: 12,
+    fontWeight: '700',
+    flex: 1,
+  },
 
   summaryBox: {
-    backgroundColor: colors.surfaceContainerLowest, borderRadius: radius.lg, padding: spacing.lg, marginBottom: spacing.md,
-    borderWidth: 1, borderColor: colors.border,
+    backgroundColor: '#161c25', borderRadius: radius.lg, padding: spacing.lg, marginBottom: spacing.md,
+    borderWidth: 1, borderColor: '#00e5ff',
   },
-  summaryTitle: { color: colors.text, fontSize: 15, fontWeight: '800', marginBottom: 14, textTransform: 'uppercase', letterSpacing: 1 },
+  summaryTitle: { color: '#00e5ff', fontSize: 15, fontWeight: '800', marginBottom: 14, textTransform: 'uppercase', letterSpacing: 1 },
   summaryRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
-  summaryKey: { color: colors.textSecondary, fontSize: 14 },
-  summaryVal: { color: colors.primary, fontSize: 14, fontWeight: '700' },
+  summaryKey: { color: '#849396', fontSize: 14 },
+  summaryVal: { color: '#dde2f0', fontSize: 14, fontWeight: '700' },
 
   startBtn: {
-    backgroundColor: colors.primaryContainer, paddingVertical: 18, borderRadius: radius.lg,
+    backgroundColor: '#00e5ff', paddingVertical: 18, borderRadius: radius.lg,
     alignItems: 'center', marginTop: spacing.sm,
-    ...shadow.glow,
   },
   startBtnDisabled: { opacity: 0.5 },
-  startBtnText: { color: colors.navy, fontSize: 16, fontWeight: '800', letterSpacing: 0.5 },
+  startBtnText: { color: '#00363d', fontSize: 16, fontWeight: '900', letterSpacing: 0.5 },
 });

@@ -836,8 +836,7 @@ const styles = StyleSheet.create({
   dateText: {
     color: '#849396',
     fontSize: 9,
-    fontFamily: 'monospace',
-    fontWeight: '700',
+        fontWeight: '700',
   },
   headerRight: {
     flexDirection: 'row',
@@ -904,8 +903,7 @@ const styles = StyleSheet.create({
   metricValue: {
     fontSize: 20,
     fontWeight: '900',
-    fontFamily: 'monospace',
-    marginTop: 2,
+        marginTop: 2,
   },
   metricSub: {
     color: '#849396',
@@ -971,8 +969,7 @@ const styles = StyleSheet.create({
     color: '#feb300',
     fontSize: 13,
     fontWeight: '900',
-    fontFamily: 'monospace',
-  },
+      },
   pendingDriver: {
     color: '#dde2f0',
     fontSize: 10,
@@ -1020,8 +1017,7 @@ const styles = StyleSheet.create({
   },
   pendingContNum: {
     color: '#00e5ff',
-    fontFamily: 'monospace',
-    fontSize: 11,
+        fontSize: 11,
     fontWeight: '700',
   },
   pendingContSize: {
@@ -1086,8 +1082,7 @@ const styles = StyleSheet.create({
     flex: 1,
     color: '#dde2f0',
     fontSize: 11,
-    fontFamily: 'monospace',
-    ...(Platform.OS === 'web' ? { outlineStyle: 'none' } : {}),
+        ...(Platform.OS === 'web' ? { outlineStyle: 'none' } : {}),
   } as any,
   filterChipsScroll: {
     gap: 6,
@@ -1112,8 +1107,7 @@ const styles = StyleSheet.create({
     color: '#849396',
     fontSize: 9,
     fontWeight: '800',
-    fontFamily: 'monospace',
-  },
+      },
   filterChipTextActive: {
     color: '#feb300',
   },
@@ -1137,8 +1131,7 @@ const styles = StyleSheet.create({
   },
   monTripId: {
     color: '#00e5ff',
-    fontFamily: 'monospace',
-    fontSize: 12,
+        fontSize: 12,
     fontWeight: '900',
   },
   monStatusBadge: {
@@ -1168,8 +1161,7 @@ const styles = StyleSheet.create({
   monTime: {
     color: '#849396',
     fontSize: 9,
-    fontFamily: 'monospace',
-  },
+      },
   monSpecsRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -1194,8 +1186,7 @@ const styles = StyleSheet.create({
   monContainersText: {
     color: '#00e5ff',
     fontSize: 9,
-    fontFamily: 'monospace',
-  },
+      },
 
   // ─── DRIVERS ROW ───
   driverRowCard: {
@@ -1274,14 +1265,12 @@ const styles = StyleSheet.create({
     color: '#00e5ff',
     fontWeight: '900',
     fontSize: 12,
-    fontFamily: 'monospace',
-  },
+      },
   termGridCount: {
     color: '#dde2f0',
     fontWeight: '900',
     fontSize: 16,
-    fontFamily: 'monospace',
-  },
+      },
   termGridSub: {
     color: '#849396',
     fontSize: 8,
@@ -1380,8 +1369,7 @@ const styles = StyleSheet.create({
   modalInput: {
     color: '#dde2f0',
     fontSize: 11,
-    fontFamily: 'monospace',
-    ...(Platform.OS === 'web' ? { outlineStyle: 'none' } : {}),
+        ...(Platform.OS === 'web' ? { outlineStyle: 'none' } : {}),
   } as any,
   modalSubmitBtn: {
     height: 44,
@@ -1406,8 +1394,7 @@ const styles = StyleSheet.create({
   repVal: {
     color: '#00e5ff',
     fontWeight: '800',
-    fontFamily: 'monospace',
-  },
+      },
   notifItem: {
     flexDirection: 'row',
     alignItems: 'flex-start',

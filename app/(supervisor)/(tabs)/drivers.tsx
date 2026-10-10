@@ -271,8 +271,7 @@ const styles = StyleSheet.create({
   dateText: {
     color: '#849396',
     fontSize: 9,
-    fontFamily: 'monospace',
-    fontWeight: '700',
+        fontWeight: '700',
   },
   countPill: {
     flexDirection: 'row',
@@ -289,8 +288,7 @@ const styles = StyleSheet.create({
     fontSize: 9,
     fontWeight: '800',
     color: '#00e5ff',
-    fontFamily: 'monospace',
-    letterSpacing: 0.6,
+        letterSpacing: 0.6,
   },
 
   // ─── SECTION WRAPS ───
@@ -332,8 +330,7 @@ const styles = StyleSheet.create({
     flex: 1,
     color: '#dde2f0',
     fontSize: 11,
-    fontFamily: 'monospace',
-    ...(Platform.OS === 'web' ? { outlineStyle: 'none' } : {}),
+        ...(Platform.OS === 'web' ? { outlineStyle: 'none' } : {}),
   } as any,
 
   // ─── DRIVER CARD ───
@@ -373,8 +370,7 @@ const styles = StyleSheet.create({
   driverCode: {
     color: '#849396',
     fontSize: 10,
-    fontFamily: 'monospace',
-    marginTop: 2,
+        marginTop: 2,
   },
   statusBadge: {
     flexDirection: 'row',
@@ -401,8 +397,7 @@ const styles = StyleSheet.create({
   statusText: {
     fontSize: 9,
     fontWeight: '800',
-    fontFamily: 'monospace',
-  },
+      },
 
   driverSpecsGrid: {
     flexDirection: 'row',
@@ -428,14 +423,12 @@ const styles = StyleSheet.create({
   specValMono: {
     color: '#bac9cc',
     fontSize: 10,
-    fontFamily: 'monospace',
-  },
+      },
   specValHighlight: {
     color: '#00e5ff',
     fontSize: 10,
     fontWeight: '800',
-    fontFamily: 'monospace',
-  },
+      },
 
   emptyCard: {
     backgroundColor: '#080e17',

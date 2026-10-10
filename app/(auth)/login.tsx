@@ -294,8 +294,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: '#849396',
     letterSpacing: 1.2,
-    fontFamily: 'monospace',
-    textAlign: 'center',
+        textAlign: 'center',
   },
   onlineBadge: {
     flexDirection: 'row',
@@ -319,8 +318,7 @@ const styles = StyleSheet.create({
     fontSize: 9,
     fontWeight: '800',
     color: '#22ef7e',
-    fontFamily: 'monospace',
-  },
+      },
 
   roleTabsRow: {
     flexDirection: 'row',
@@ -389,8 +387,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 13,
     color: '#dde2f0',
-    fontFamily: 'monospace',
-    height: 50,
+        height: 50,
     ...(Platform.OS === 'web' ? { outlineStyle: 'none' } : {}),
   } as any,
   eyeBtn: {
@@ -442,14 +439,12 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#849396',
     letterSpacing: 0.8,
-    fontFamily: 'monospace',
-    textAlign: 'center',
+        textAlign: 'center',
   },
   footerSub: {
     fontSize: 8,
     color: '#3b494c',
-    fontFamily: 'monospace',
-  },
+      },
   recognizedBanner: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -477,7 +472,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '700',
     color: '#dde2f0',
-    fontFamily: 'monospace',
-    marginTop: 2,
+        marginTop: 2,
   },
 });

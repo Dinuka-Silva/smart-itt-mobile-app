@@ -19,6 +19,22 @@ import { useMockTripStore } from '../../../src/store/mockTripStore';
 import { colors, radius, spacing } from '../../../src/theme';
 
 const TERMINALS = ['ALL', 'CICT', 'CWIT', 'ECT', 'JCT', 'UCT', 'SAGT'] as const;
+const PERIOD_OPTIONS = [
+  { id: 'DAILY', label: 'DAILY (TODAY)' },
+  { id: 'WEEKLY', label: 'WEEKLY' },
+  { id: 'MONTHLY', label: 'MONTHLY' },
+  { id: 'YEARLY', label: 'YEARLY' },
+  { id: 'ALL', label: 'ALL TIME' },
+] as const;
+
+const DRIVER_OPTIONS = [
+  { id: 'ALL', label: 'ALL DRIVERS' },
+  { id: 'demo-driver', label: 'Kamal Perera' },
+  { id: 'drv-002', label: 'Saman Kumara' },
+  { id: 'drv-003', label: 'Nimal Fernando' },
+  { id: 'drv-004', label: 'Sunil Silva' },
+] as const;
+
 const STATUS_OPTIONS = [
   { id: 'ALL', label: 'ALL TRIPS' },
   { id: 'IN_PROGRESS', label: 'IN PROGRESS' },
@@ -38,6 +54,8 @@ export default function SupervisorMissionDispatcher() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTerminal, setSelectedTerminal] = useState<string>('ALL');
   const [selectedStatus, setSelectedStatus] = useState<string>('ALL');
+  const [selectedDriverFilter, setSelectedDriverFilter] = useState<string>('ALL');
+  const [selectedPeriodFilter, setSelectedPeriodFilter] = useState<string>('DAILY');
 
   // Rejection modal
   const [rejectModalVisible, setRejectModalVisible] = useState(false);
@@ -83,6 +101,37 @@ export default function SupervisorMissionDispatcher() {
   // Filtered trips
   const filteredTrips = useMemo(() => {
     return trips.filter((t) => {
+      // 0. Driver Filter
+      if (selectedDriverFilter !== 'ALL') {
+        if (t.driverId !== selectedDriverFilter) return false;
+      }
+
+      // 0.1 Date Period Filter
+      if (selectedPeriodFilter !== 'ALL') {
+        const dateStr = t.createdAt || t.startTime || t.operationDate;
+        if (dateStr) {
+          const tripDate = new Date(dateStr);
+          const now = new Date();
+          if (!isNaN(tripDate.getTime())) {
+            if (selectedPeriodFilter === 'DAILY') {
+              const isToday =
+                tripDate.getDate() === now.getDate() &&
+                tripDate.getMonth() === now.getMonth() &&
+                tripDate.getFullYear() === now.getFullYear();
+              if (!isToday) return false;
+            } else if (selectedPeriodFilter === 'WEEKLY') {
+              const diffDays = Math.ceil(Math.abs(now.getTime() - tripDate.getTime()) / (1000 * 60 * 60 * 24));
+              if (diffDays > 7) return false;
+            } else if (selectedPeriodFilter === 'MONTHLY') {
+              const diffDays = Math.ceil(Math.abs(now.getTime() - tripDate.getTime()) / (1000 * 60 * 60 * 24));
+              if (diffDays > 30) return false;
+            } else if (selectedPeriodFilter === 'YEARLY') {
+              if (tripDate.getFullYear() !== now.getFullYear()) return false;
+            }
+          }
+        }
+      }
+
       // 1. Terminal Filter
       if (selectedTerminal !== 'ALL') {
         const matchesOrigin = t.sourceTerminal === selectedTerminal;
@@ -118,7 +167,20 @@ export default function SupervisorMissionDispatcher() {
 
       return true;
     });
-  }, [trips, selectedTerminal, selectedStatus, searchQuery]);
+  }, [trips, selectedTerminal, selectedStatus, selectedDriverFilter, selectedPeriodFilter, searchQuery]);
+
+  const handleDischargeAndComplete = async (trip: any) => {
+    try {
+      await tripService.approveTrip(trip.id, user?.id || 'sup-001', 'Container discharged and trip approved');
+      useMockTripStore.getState().dischargeAndCompleteTrip(trip.id, user?.id || 'sup-001');
+      Alert.alert('Container Discharged & Gate Pass Approved', `Trip ${trip.tripNumber || trip.id} is discharged and completed.`);
+      await loadTrips();
+    } catch {
+      useMockTripStore.getState().dischargeAndCompleteTrip(trip.id, user?.id || 'sup-001');
+      Alert.alert('Container Discharged & Gate Pass Approved (Local)', `Trip ${trip.tripNumber || trip.id} is discharged and completed.`);
+      await loadTrips();
+    }
+  };
 
   // Approval actions
   const handleApproveTrip = async (trip: any) => {
@@ -261,6 +323,58 @@ export default function SupervisorMissionDispatcher() {
                 <Ionicons name="close-circle" size={16} color="#849396" />
               </TouchableOpacity>
             )}
+          </View>
+
+          {/* Date Period Filter */}
+          <View>
+            <Text style={styles.filterGroupLabel}>DATE PERIOD FILTER (SELECTION)</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterChipsScroll}>
+              {PERIOD_OPTIONS.map((p) => (
+                <TouchableOpacity
+                  key={p.id}
+                  style={[
+                    styles.filterChip,
+                    selectedPeriodFilter === p.id && styles.filterChipActiveCyan,
+                  ]}
+                  onPress={() => setSelectedPeriodFilter(p.id)}
+                >
+                  <Text
+                    style={[
+                      styles.filterChipText,
+                      selectedPeriodFilter === p.id && styles.filterChipTextActiveCyan,
+                    ]}
+                  >
+                    {p.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+
+          {/* Driver Selection Filter */}
+          <View>
+            <Text style={styles.filterGroupLabel}>DRIVER SELECTION FILTER</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterChipsScroll}>
+              {DRIVER_OPTIONS.map((d) => (
+                <TouchableOpacity
+                  key={d.id}
+                  style={[
+                    styles.filterChip,
+                    selectedDriverFilter === d.id && styles.filterChipActive,
+                  ]}
+                  onPress={() => setSelectedDriverFilter(d.id)}
+                >
+                  <Text
+                    style={[
+                      styles.filterChipText,
+                      selectedDriverFilter === d.id && styles.filterChipTextActive,
+                    ]}
+                  >
+                    {d.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
           </View>
 
           {/* Terminal Filters */}
@@ -408,24 +522,28 @@ export default function SupervisorMissionDispatcher() {
                       </View>
                     )}
 
-                    {/* Decision Action Buttons if Pending Approval */}
-                    {isPending && (
+                    {/* Decision Action Buttons if Pending Approval or In Progress */}
+                    {(isPending || t.status === 'IN_PROGRESS') && (
                       <View style={styles.decisionButtonsRow}>
                         <TouchableOpacity
                           style={styles.approveBtn}
-                          onPress={() => handleApproveTrip(t)}
+                          onPress={() => handleDischargeAndComplete(t)}
                         >
                           <Ionicons name="shield-checkmark" size={14} color="#00363d" />
-                          <Text style={styles.approveBtnText}>APPROVE GATE PASS</Text>
+                          <Text style={styles.approveBtnText}>
+                            {isPending ? 'APPROVE & DISCHARGE GATE PASS' : 'DISCHARGE & COMPLETE TRIP'}
+                          </Text>
                         </TouchableOpacity>
 
-                        <TouchableOpacity
-                          style={styles.rejectBtn}
-                          onPress={() => handleOpenRejectModal(t)}
-                        >
-                          <Ionicons name="close-circle" size={14} color="#ff5252" />
-                          <Text style={styles.rejectBtnText}>REJECT</Text>
-                        </TouchableOpacity>
+                        {isPending && (
+                          <TouchableOpacity
+                            style={styles.rejectBtn}
+                            onPress={() => handleOpenRejectModal(t)}
+                          >
+                            <Ionicons name="close-circle" size={14} color="#ff5252" />
+                            <Text style={styles.rejectBtnText}>REJECT</Text>
+                          </TouchableOpacity>
+                        )}
                       </View>
                     )}
                   </View>
@@ -558,8 +676,7 @@ const styles = StyleSheet.create({
   dateText: {
     color: '#849396',
     fontSize: 9,
-    fontFamily: 'monospace',
-    fontWeight: '700',
+        fontWeight: '700',
   },
   onlinePill: {
     flexDirection: 'row',
@@ -582,8 +699,7 @@ const styles = StyleSheet.create({
     fontSize: 9,
     fontWeight: '800',
     color: '#00e5ff',
-    fontFamily: 'monospace',
-    letterSpacing: 0.6,
+        letterSpacing: 0.6,
   },
 
   // ─── 4 SUMMARY METRIC CARDS ───
@@ -615,8 +731,7 @@ const styles = StyleSheet.create({
   metricValue: {
     fontSize: 22,
     fontWeight: '900',
-    fontFamily: 'monospace',
-    marginTop: 2,
+        marginTop: 2,
   },
   metricSub: {
     color: '#849396',
@@ -662,8 +777,7 @@ const styles = StyleSheet.create({
     flex: 1,
     color: '#dde2f0',
     fontSize: 11,
-    fontFamily: 'monospace',
-    ...(Platform.OS === 'web' ? { outlineStyle: 'none' } : {}),
+        ...(Platform.OS === 'web' ? { outlineStyle: 'none' } : {}),
   } as any,
   filterGroupLabel: {
     fontSize: 9,
@@ -695,8 +809,7 @@ const styles = StyleSheet.create({
     color: '#849396',
     fontSize: 9,
     fontWeight: '800',
-    fontFamily: 'monospace',
-  },
+      },
   filterChipTextActive: {
     color: '#feb300',
   },
@@ -726,8 +839,7 @@ const styles = StyleSheet.create({
   },
   monTripId: {
     color: '#00e5ff',
-    fontFamily: 'monospace',
-    fontSize: 12,
+        fontSize: 12,
     fontWeight: '900',
   },
   monStatusBadge: {
@@ -757,8 +869,7 @@ const styles = StyleSheet.create({
   monTime: {
     color: '#849396',
     fontSize: 9,
-    fontFamily: 'monospace',
-  },
+      },
   monSpecsRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -783,8 +894,7 @@ const styles = StyleSheet.create({
   monContainersText: {
     color: '#00e5ff',
     fontSize: 9,
-    fontFamily: 'monospace',
-  },
+      },
   emptyPendingCard: {
     backgroundColor: '#080e17',
     borderRadius: radius.DEFAULT,

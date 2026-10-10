@@ -236,7 +236,7 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: colors.outline,
   },
   driverCodeLabel: { fontSize: 9, fontWeight: '800', color: colors.primaryFixedDim, letterSpacing: 1 },
-  driverCodeValue: { fontSize: 16, fontWeight: '900', color: colors.onSurface, fontFamily: 'monospace' },
+  driverCodeValue: { fontSize: 16, fontWeight: '900', color: colors.onSurface,  },
 
   content: { padding: spacing.md },
 
@@ -260,7 +260,7 @@ const styles = StyleSheet.create({
   infoKeyRow: { flexDirection: 'row', alignItems: 'center', gap: 5, width: '40%' },
   infoKey: { fontSize: 12, color: colors.onSurfaceVariant, fontWeight: '600' },
   infoVal: { fontSize: 13, color: colors.onSurface, fontWeight: '600', flex: 1, textAlign: 'right' },
-  monoText: { fontFamily: 'monospace' },
+  monoText: {  },
 
   logoutBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
