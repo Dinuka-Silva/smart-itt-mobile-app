@@ -1,10 +1,14 @@
 import { useEffect } from 'react';
+import { ActivityIndicator, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
+
+import { ThemedView } from '../src/components/themed-view';
+import { useTheme } from '../src/hooks/use-theme';
 import { useAuthStore } from '../src/store/authStore';
-import { View, ActivityIndicator, StyleSheet } from 'react-native';
 
 export default function Index() {
   const router = useRouter();
+  const theme = useTheme();
   const { isAuthenticated, user } = useAuthStore();
 
   useEffect(() => {
@@ -15,12 +19,12 @@ export default function Index() {
     } else {
       router.replace('/(supervisor)/(tabs)');
     }
-  }, [isAuthenticated, user]);
+  }, [isAuthenticated, user, router]);
 
   return (
-    <View style={styles.container}>
-      <ActivityIndicator size="large" color="#0A2540" />
-    </View>
+    <ThemedView style={styles.container}>
+      <ActivityIndicator size="large" color={theme.accent} />
+    </ThemedView>
   );
 }
 
@@ -29,6 +33,5 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#0A2540',
   },
 });

@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { colors } from '../../../src/theme';
 
 export default function SupervisorReports() {
   return (
@@ -94,10 +95,10 @@ export default function SupervisorReports() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F5F7FA' },
-  header: { backgroundColor: '#0A1628', padding: 24, paddingTop: 60, paddingBottom: 24, borderBottomLeftRadius: 24, borderBottomRightRadius: 24 },
-  headerTitle: { color: '#fff', fontSize: 24, fontWeight: 'bold' },
-  headerSub: { color: '#8E99A4', fontSize: 13, marginTop: 4 },
+  container: { flex: 1, backgroundColor: colors.background },
+  header: { backgroundColor: colors.background, padding: 24, paddingTop: 60, paddingBottom: 24 },
+  headerTitle: { color: colors.text, fontSize: 24, fontWeight: 'bold' },
+  headerSub: { color: colors.textSecondary, fontSize: 13, marginTop: 4 },
   summaryCard: { backgroundColor: '#fff', marginHorizontal: 16, borderRadius: 14, padding: 20, marginTop: -16, elevation: 3 },
   summaryTitle: { fontSize: 16, fontWeight: '700', color: '#0A1628', marginBottom: 16 },
   summaryGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 0 },

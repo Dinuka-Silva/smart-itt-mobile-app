@@ -1,7 +1,11 @@
-
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ViewStyle } from 'react-native';
-import { colors, radius, spacing, shadow } from '../theme';
+import { StyleSheet, TouchableOpacity, View, ViewStyle } from 'react-native';
+
+import { ThemedText } from './themed-text';
+import { ThemedView } from './themed-view';
+
+import { Spacing } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
 
 type Variant = 'driver' | 'supervisor' | 'default';
 
@@ -14,27 +18,26 @@ type Props = {
   style?: ViewStyle;
 };
 
-const accent: Record<Variant, string> = {
-  driver: colors.secondaryContainer,
-  supervisor: colors.tertiaryContainer,
-  default: colors.primaryContainer,
-};
-
-export function ScreenHeader({ title, subtitle, eyebrow, variant = 'default', right, style }: Props) {
-  const bar = accent[variant];
-
+export function ScreenHeader({ title, subtitle, eyebrow, right, style }: Props) {
   return (
-    <View style={[styles.wrap, style]}>
-      <View style={[styles.accentBar, { backgroundColor: bar }]} />
+    <ThemedView style={[styles.wrap, style]}>
       <View style={styles.inner}>
         <View style={styles.textBlock}>
-          {eyebrow ? <Text style={styles.eyebrow}>{eyebrow}</Text> : null}
-          {title ? <Text style={styles.title}>{title}</Text> : null}
-          {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
+          {eyebrow ? (
+            <ThemedText type="code" themeColor="textSecondary" style={styles.eyebrow}>
+              {eyebrow}
+            </ThemedText>
+          ) : null}
+          {title ? <ThemedText type="subtitle">{title}</ThemedText> : null}
+          {subtitle ? (
+            <ThemedText type="small" themeColor="textSecondary">
+              {subtitle}
+            </ThemedText>
+          ) : null}
         </View>
         {right ? <View style={styles.right}>{right}</View> : null}
       </View>
-    </View>
+    </ThemedView>
   );
 }
 
@@ -45,88 +48,44 @@ type HeaderButtonProps = {
 };
 
 export function HeaderButton({ label, onPress, tone = 'primary' }: HeaderButtonProps) {
-  const toneStyle =
-    tone === 'danger'
-      ? styles.btnDanger
-      : tone === 'muted'
-        ? styles.btnMuted
-        : styles.btnPrimary;
+  const theme = useTheme();
+  const backgroundColor =
+    tone === 'danger' ? theme.danger : tone === 'muted' ? theme.backgroundElement : theme.accent;
+  const color = tone === 'muted' ? theme.text : '#ffffff';
 
   return (
-    <TouchableOpacity style={[styles.btn, toneStyle]} onPress={onPress} activeOpacity={0.85}>
-      <Text style={[styles.btnText, tone === 'muted' && styles.btnTextMuted]}>{label}</Text>
+    <TouchableOpacity
+      style={[styles.btn, { backgroundColor }]}
+      onPress={onPress}
+      activeOpacity={0.85}
+    >
+      <ThemedText type="smallBold" style={{ color }}>
+        {label}
+      </ThemedText>
     </TouchableOpacity>
   );
 }
 
 const styles = StyleSheet.create({
   wrap: {
-    backgroundColor: colors.surfaceContainer,
-    borderBottomLeftRadius: radius.lg,
-    borderBottomRightRadius: radius.lg,
-    overflow: 'hidden',
     paddingTop: 52,
-    paddingBottom: spacing.lg,
-    borderWidth: 1,
-    borderBottomWidth: 0,
-    borderColor: colors.outlineVariant,
-  },
-  accentBar: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 3,
+    paddingBottom: Spacing.four,
   },
   inner: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    paddingHorizontal: spacing.lg,
-    gap: spacing.md,
+    paddingHorizontal: Spacing.four,
+    gap: Spacing.three,
   },
-  textBlock: { flex: 1 },
-  right: { alignItems: 'flex-end', gap: spacing.sm },
+  textBlock: { flex: 1, gap: Spacing.one },
+  right: { alignItems: 'flex-end', gap: Spacing.two },
   eyebrow: {
-    color: colors.onSurfaceVariant,
-    fontSize: 12,
-    fontWeight: '600',
-    marginBottom: 4,
     textTransform: 'uppercase',
-    letterSpacing: 0.6,
-  },
-  title: {
-    color: colors.onSurface,
-    fontSize: 26,
-    fontWeight: '700',
-    letterSpacing: -0.5,
-  },
-  subtitle: {
-    color: colors.onSurfaceVariant,
-    fontSize: 13,
-    marginTop: 6,
-    lineHeight: 18,
-    fontFamily: 'monospace',
   },
   btn: {
     paddingHorizontal: 14,
     paddingVertical: 8,
-    borderRadius: radius.DEFAULT,
-    borderWidth: 1,
+    borderRadius: Spacing.two,
   },
-  btnPrimary: { 
-    backgroundColor: colors.primaryContainer,
-    borderColor: colors.primaryContainer,
-    ...shadow.glow,
-  },
-  btnDanger: { 
-    backgroundColor: colors.errorContainer,
-    borderColor: colors.errorContainer,
-  },
-  btnMuted: {
-    backgroundColor: colors.surfaceContainerHigh,
-    borderColor: colors.outline,
-  },
-  btnText: { color: colors.onPrimaryContainer, fontSize: 12, fontWeight: '700' },
-  btnTextMuted: { color: colors.onSurface },
 });

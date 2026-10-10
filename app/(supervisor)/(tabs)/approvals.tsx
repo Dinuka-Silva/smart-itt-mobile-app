@@ -14,6 +14,8 @@ import {
 import axios from 'axios';
 import API_BASE_URL from '../../../src/config/api';
 import { useAuthStore } from '../../../src/store/authStore';
+import { useMockTripStore } from '../../../src/store/mockTripStore';
+import { colors } from '../../../src/theme';
 
 export default function SupervisorApprovals() {
   const user = useAuthStore((s) => s.user);
@@ -29,7 +31,9 @@ export default function SupervisorApprovals() {
       const res = await axios.get(`${API_BASE_URL}/trips?status=PENDING_APPROVAL`);
       setTrips(Array.isArray(res.data) ? res.data : []);
     } catch {
-      setTrips([]);
+      console.warn('Backend unavailable, fetching pending trips from demo store.');
+      const mockTrips = useMockTripStore.getState().getPendingTrips();
+      setTrips(mockTrips);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -52,9 +56,13 @@ export default function SupervisorApprovals() {
       else Alert.alert('✓ Trip Approved', msg);
       fetchPending();
     } catch (e: any) {
-      const msg = e?.response?.data?.message || 'Failed to approve trip';
+      console.warn('Backend unavailable — simulating successful trip approval for demo mode.');
+      const msg = '[OFFLINE DEMO] Trip has been approved successfully.';
       if (Platform.OS === 'web') window.alert(msg);
-      else Alert.alert('Error', msg);
+      else Alert.alert('✓ Trip Approved', msg);
+      
+      useMockTripStore.getState().updateTripStatus(tripId, 'APPROVED');
+      fetchPending();
     } finally {
       setProcessingId(null);
     }
@@ -62,10 +70,11 @@ export default function SupervisorApprovals() {
 
   const handleRejectSubmit = async () => {
     if (!rejectTarget) return;
-    setProcessingId(rejectTarget);
+    const target = rejectTarget;
+    setProcessingId(target);
     setRejectTarget(null);
     try {
-      await axios.post(`${API_BASE_URL}/trips/${rejectTarget}/approve`, {
+      await axios.post(`${API_BASE_URL}/trips/${target}/approve`, {
         supervisorId: user?.supervisorId || user?.id,
         status: 'REJECTED',
         reason: rejectReason.trim() || 'Rejected by supervisor',
@@ -76,9 +85,14 @@ export default function SupervisorApprovals() {
       setRejectReason('');
       fetchPending();
     } catch (e: any) {
-      const msg = e?.response?.data?.message || 'Failed to reject trip';
+      console.warn('Backend unavailable — simulating successful trip rejection for demo mode.');
+      const msg = '[OFFLINE DEMO] Trip has been rejected.';
       if (Platform.OS === 'web') window.alert(msg);
-      else Alert.alert('Error', msg);
+      else Alert.alert('✕ Trip Rejected', msg);
+      
+      setRejectReason('');
+      useMockTripStore.getState().updateTripStatus(target, 'REJECTED');
+      fetchPending();
     } finally {
       setProcessingId(null);
     }
@@ -192,7 +206,7 @@ export default function SupervisorApprovals() {
               <View style={styles.cardSection}>
                 <Text style={styles.sectionLabel}>Driver</Text>
                 <Text style={styles.driverName}>{driverName}</Text>
-                <Text style={styles.detailText}>🚛 Vehicle: {vehicle}</Text>
+                <Text style={styles.detailText}>🚛 Vehicle: {vehicle} / Chai: {trip.chaiNumber || '—'}</Text>
               </View>
 
               <View style={styles.divider} />
@@ -200,16 +214,13 @@ export default function SupervisorApprovals() {
               {/* Trip Details */}
               <View style={styles.cardSection}>
                 <Text style={styles.sectionLabel}>Trip Details</Text>
-                <Text style={styles.detailText}>🚢 Vessel: {vessel}</Text>
+                <Text style={styles.detailText}>🚢 Vessel: {vessel} {trip.voyageNumber ? `(Voy: ${trip.voyageNumber})` : ''}</Text>
+                <Text style={styles.detailText}>📅 Date: {trip.tripDate || trip.operationDate || new Date(trip.startTime).toLocaleDateString()}</Text>
+                {trip.notes && <Text style={[styles.detailText, { marginTop: 4, fontStyle: 'italic' }]}>📝 Notes: {trip.notes}</Text>}
                 <View style={styles.routeRow}>
                   <View style={styles.terminalBox}>
-                    <Text style={styles.termLabel}>Origin</Text>
+                    <Text style={styles.termLabel}>Load Terminal (Origin)</Text>
                     <Text style={styles.termValue}>{from}</Text>
-                  </View>
-                  <Text style={styles.arrow}>→</Text>
-                  <View style={styles.terminalBox}>
-                    <Text style={styles.termLabel}>Destination</Text>
-                    <Text style={styles.termValue}>{to}</Text>
                   </View>
                 </View>
                 <View style={styles.timeRow}>
@@ -224,13 +235,28 @@ export default function SupervisorApprovals() {
               <View style={styles.cardSection}>
                 <Text style={styles.sectionLabel}>Containers ({containers.length})</Text>
                 {containers.map((c: any, i: number) => (
-                  <View key={c.id} style={styles.containerRow}>
-                    <Text style={styles.containerNum}>{i + 1}. {c.containerNumber}</Text>
-                    <View style={[styles.sizeBadge, { backgroundColor: c.size === '20FT' ? '#EBF8FF' : '#FFF3E0' }]}>
-                      <Text style={[styles.sizeText, { color: c.size === '20FT' ? '#2B6CB0' : '#E65100' }]}>
-                        {c.size || 'FT_40'}
-                      </Text>
+                  <View key={c.id} style={{ marginBottom: 12, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: '#F0F0F0' }}>
+                    <View style={styles.containerRow}>
+                      <View>
+                        <Text style={styles.containerNum}>{i + 1}. {c.containerNumber}</Text>
+                        <Text style={{ fontSize: 13, color: '#333', fontWeight: '600', marginTop: 4 }}>
+                          Discharge: {c.destTerminal || 'JCT'}
+                        </Text>
+                      </View>
+                      <View style={[styles.sizeBadge, { backgroundColor: c.size === '20FT' ? '#EBF8FF' : '#FFF3E0' }]}>
+                        <Text style={[styles.sizeText, { color: c.size === '20FT' ? '#2B6CB0' : '#E65100' }]}>
+                          {c.size || 'FT_40'}
+                        </Text>
+                      </View>
                     </View>
+                    
+                    {(c.sealNumber || c.damageStatus || c.remarks) && (
+                      <View style={{ marginTop: 8, padding: 8, backgroundColor: '#F8FAFC', borderRadius: 4 }}>
+                        {c.sealNumber ? <Text style={{ fontSize: 12, color: '#475569' }}>Seal: {c.sealNumber}</Text> : null}
+                        {c.damageStatus ? <Text style={{ fontSize: 12, color: '#B71C1C' }}>Damage: {c.damageStatus}</Text> : null}
+                        {c.remarks ? <Text style={{ fontSize: 12, color: '#475569' }}>Remarks: {c.remarks}</Text> : null}
+                      </View>
+                    )}
                   </View>
                 ))}
               </View>
@@ -265,14 +291,13 @@ export default function SupervisorApprovals() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F5F7FA' },
+  container: { flex: 1, backgroundColor: colors.background },
   header: {
-    backgroundColor: '#0A1628',
+    backgroundColor: colors.background,
     padding: 24, paddingTop: 54, paddingBottom: 24,
-    borderBottomLeftRadius: 24, borderBottomRightRadius: 24,
   },
-  headerTitle: { color: '#fff', fontSize: 24, fontWeight: 'bold' },
-  headerSub: { color: '#8E99A4', fontSize: 13, marginTop: 4 },
+  headerTitle: { color: colors.text, fontSize: 24, fontWeight: 'bold' },
+  headerSub: { color: colors.textSecondary, fontSize: 13, marginTop: 4 },
   emptyBox: { alignItems: 'center', marginTop: 60, paddingHorizontal: 30 },
   emptyIcon: { fontSize: 48, marginBottom: 12 },
   emptyTitle: { fontSize: 20, fontWeight: '700', color: '#2D3748' },

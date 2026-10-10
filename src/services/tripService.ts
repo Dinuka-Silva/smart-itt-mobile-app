@@ -53,9 +53,25 @@ export const tripService = {
     return response.data;
   },
 
-  async approveTrip(id: string, request: ApproveTripRequest): Promise<TripResponse> {
-    const response = await apiClient.post<TripResponse>(`/trips/${id}/approve`, request);
+  async approveTrip(id: string, requestOrSupervisorId: ApproveTripRequest | string, reason?: string): Promise<TripResponse> {
+    const payload: ApproveTripRequest = typeof requestOrSupervisorId === 'string'
+      ? { status: 'APPROVED', supervisorId: requestOrSupervisorId, reason }
+      : requestOrSupervisorId;
+    const response = await apiClient.post<TripResponse>(`/trips/${id}/approve`, payload);
     return response.data;
+  },
+
+  async rejectTrip(id: string, supervisorId: string, reason: string): Promise<TripResponse> {
+    const response = await apiClient.post<TripResponse>(`/trips/${id}/approve`, {
+      status: 'REJECTED',
+      supervisorId,
+      reason,
+    });
+    return response.data;
+  },
+
+  async updateTripStatus(id: string, status: string): Promise<TripResponse> {
+    return this.updateStatus(id, status);
   },
 
   async submitForApproval(id: string): Promise<TripResponse> {

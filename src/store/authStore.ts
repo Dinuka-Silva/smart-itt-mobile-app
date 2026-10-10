@@ -8,6 +8,7 @@ export interface User {
   username: string;
   role: UserRole;
   name: string;
+  fullName?: string;
   token: string;
   driverId?: string;
   driverCode?: string;
@@ -24,6 +25,7 @@ export interface User {
   emergencyContactName?: string;
   emergencyContactNumber?: string;
   status?: string;
+  chaiNumber?: string;
 }
 
 interface AuthState {

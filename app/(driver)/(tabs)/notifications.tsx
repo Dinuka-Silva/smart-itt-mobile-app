@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
 import API_BASE_URL from '../../../src/config/api';
 import { useAuthStore } from '../../../src/store/authStore';
+import { colors } from '../../../src/theme';
 
 type Notif = {
   id: string;
@@ -132,17 +133,15 @@ export default function DriverNotifications() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F5F7FA' },
+  container: { flex: 1, backgroundColor: colors.background },
   header: {
-    backgroundColor: '#0A1628',
+    backgroundColor: colors.background,
     padding: 24,
     paddingTop: 60,
     paddingBottom: 24,
-    borderBottomLeftRadius: 24,
-    borderBottomRightRadius: 24,
   },
-  headerTitle: { color: '#fff', fontSize: 24, fontWeight: 'bold' },
-  headerSub: { color: '#8E99A4', fontSize: 13, marginTop: 4 },
+  headerTitle: { color: colors.text, fontSize: 24, fontWeight: 'bold' },
+  headerSub: { color: colors.textSecondary, fontSize: 13, marginTop: 4 },
   emptyBox: { alignItems: 'center', marginTop: 60, paddingHorizontal: 30 },
   emptyTitle: { fontSize: 18, fontWeight: '700', color: '#2D3748' },
   emptySub: { fontSize: 13, color: '#718096', marginTop: 6, textAlign: 'center' },

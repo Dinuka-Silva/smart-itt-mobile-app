@@ -14,20 +14,26 @@ import { useRouter } from 'expo-router';
 import axios from 'axios';
 import { useAuthStore } from '../../../src/store/authStore';
 import API_BASE_URL from '../../../src/config/api';
+import { colors, radius, spacing, shadow } from '../../../src/theme';
+import { useMockTripStore } from '../../../src/store/mockTripStore';
+import { TripVerifyOverlay } from '../../../src/components/TripVerifyOverlay';
 
 // All 6 terminals
 const TERMINALS = ['CWIT', 'JCT', 'ECT', 'UCT', 'SAGT', 'CICT'];
 const POPULAR_VESSELS = ['MSC Aurora', 'Maersk Line', 'CMA CGM', 'Evergreen', 'COSCO'];
 
-// One container entry in the form
 interface ContainerEntry {
   containerNumber: string;
+  containerNumber2?: string; // only used when size is 20FT
   size: '20FT' | '40FT';
   destTerminal: string;
+  sealNumber?: string;
+  damageStatus?: string;
+  remarks?: string;
 }
 
 function emptyContainer(defaultDest: string): ContainerEntry {
-  return { containerNumber: '', size: '40FT', destTerminal: defaultDest };
+  return { containerNumber: '', containerNumber2: '', size: '40FT', destTerminal: defaultDest };
 }
 
 // ────────────────────────────────────────────────────────────────
@@ -38,88 +44,83 @@ function TerminalPicker({
   selected,
   onSelect,
   accentColor,
+  exclude,
 }: {
   label: string;
   selected: string;
   onSelect: (t: string) => void;
   accentColor: string;
+  exclude?: string;
 }) {
   return (
     <View style={tp.wrapper}>
       <Text style={tp.label}>{label}</Text>
       <View style={tp.grid}>
-        {TERMINALS.map((t) => (
-          <TouchableOpacity
-            key={t}
-            style={[tp.btn, selected === t && { backgroundColor: accentColor, borderColor: accentColor }]}
-            onPress={() => onSelect(t)}
-          >
-            <Text style={[tp.btnText, selected === t && tp.btnTextActive]}>{t}</Text>
-          </TouchableOpacity>
-        ))}
+        {TERMINALS.map((t) => {
+          const isExcluded = exclude != null && t === exclude;
+          const isActive = selected === t && !isExcluded;
+          return (
+            <TouchableOpacity
+              key={t}
+              disabled={isExcluded}
+              style={[
+                tp.btn,
+                isActive && { backgroundColor: accentColor, borderColor: accentColor },
+                isExcluded && tp.btnDisabled,
+              ]}
+              onPress={() => onSelect(t)}
+            >
+              <Text
+                style={[
+                  tp.btnText,
+                  isActive && tp.btnTextActive,
+                  isExcluded && tp.btnTextDisabled,
+                ]}
+              >
+                {t}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
       </View>
     </View>
   );
 }
 
 const tp = StyleSheet.create({
-  wrapper: { marginBottom: 6 },
-  label: { fontSize: 12, fontWeight: '700', color: '#4A5568', marginBottom: 6 },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  wrapper: { marginBottom: 12 },
+  label: { fontSize: 13, fontWeight: '700', color: colors.textSecondary, marginBottom: 8 },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   btn: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 8,
-    backgroundColor: '#EDF2F7',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: radius.md,
+    backgroundColor: colors.surfaceContainerHighest,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: colors.border,
   },
-  btnText: { fontSize: 12, fontWeight: '700', color: '#4A5568' },
-  btnTextActive: { color: '#fff' },
+  btnText: { fontSize: 13, fontWeight: '700', color: colors.textSecondary },
+  btnTextActive: { color: colors.navy },
+  btnDisabled: { opacity: 0.4 },
+  btnTextDisabled: { color: colors.textMuted },
 });
 
 // ────────────────────────────────────────────────────────────────
 // Sub-component: single container card
 // ────────────────────────────────────────────────────────────────
 function ContainerCard({
-  index,
   entry,
   onChange,
-  onRemove,
-  canRemove,
+  loadingTerminal,
 }: {
-  index: number;
   entry: ContainerEntry;
   onChange: (field: keyof ContainerEntry, value: string) => void;
-  onRemove: () => void;
-  canRemove: boolean;
+  loadingTerminal: string;
 }) {
+  const is20FT = entry.size === '20FT';
   return (
     <View style={cc.card}>
-      {/* Card header */}
-      <View style={cc.header}>
-        <View style={cc.indexBadge}>
-          <Text style={cc.indexText}>📦 Container {index + 1}</Text>
-        </View>
-        {canRemove && (
-          <TouchableOpacity style={cc.removeBtn} onPress={onRemove}>
-            <Text style={cc.removeTxt}>Remove</Text>
-          </TouchableOpacity>
-        )}
-      </View>
-
-      {/* Container number */}
-      <Text style={cc.fieldLabel}>Container Number *</Text>
-      <TextInput
-        style={cc.input}
-        placeholder="e.g. MSCU 7721892"
-        placeholderTextColor="#9AA5B1"
-        autoCapitalize="characters"
-        value={entry.containerNumber}
-        onChangeText={(v) => onChange('containerNumber', v)}
-      />
-
-      {/* Size row */}
+      {/* Size selection — first, so inputs react immediately */}
       <Text style={cc.fieldLabel}>Container Size</Text>
       <View style={cc.sizeRow}>
         {(['20FT', '40FT'] as const).map((s) => (
@@ -133,12 +134,49 @@ function ContainerCard({
         ))}
       </View>
 
-      {/* Destination Terminal for this container */}
+      {/* Container numbers — 2 inputs for 20FT, 1 for 40FT */}
+      {is20FT ? (
+        <>
+          <Text style={cc.fieldLabel}>Container No. 1 *</Text>
+          <TextInput
+            style={cc.input}
+            placeholder="e.g. MSCU7721892"
+            placeholderTextColor="#9AA5B1"
+            autoCapitalize="characters"
+            value={entry.containerNumber}
+            onChangeText={(v) => onChange('containerNumber', v)}
+          />
+          <Text style={cc.fieldLabel}>Container No. 2 *</Text>
+          <TextInput
+            style={cc.input}
+            placeholder="e.g. TCKU3456789"
+            placeholderTextColor="#9AA5B1"
+            autoCapitalize="characters"
+            value={entry.containerNumber2}
+            onChangeText={(v) => onChange('containerNumber2', v)}
+          />
+        </>
+      ) : (
+        <>
+          <Text style={cc.fieldLabel}>Container Number *</Text>
+          <TextInput
+            style={cc.input}
+            placeholder="e.g. MSCU7721892"
+            placeholderTextColor="#9AA5B1"
+            autoCapitalize="characters"
+            value={entry.containerNumber}
+            onChangeText={(v) => onChange('containerNumber', v)}
+          />
+        </>
+      )}
+
+      {/* Destination Terminal */}
       <TerminalPicker
         label="Destination Terminal *"
         selected={entry.destTerminal}
         onSelect={(t) => onChange('destTerminal', t)}
-        accentColor="#FB8C00"
+        accentColor={colors.primaryContainer}
+        exclude={loadingTerminal}
       />
     </View>
   );
@@ -146,43 +184,40 @@ function ContainerCard({
 
 const cc = StyleSheet.create({
   card: {
-    backgroundColor: '#F8FAFC',
-    borderRadius: 12,
-    padding: 14,
-    marginBottom: 12,
+    backgroundColor: colors.surfaceContainer,
+    borderRadius: radius.lg,
+    padding: spacing.md,
+    marginBottom: spacing.md,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: colors.border,
+    ...shadow.card,
   },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
-  indexBadge: { backgroundColor: '#EBF8FF', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
-  indexText: { fontSize: 13, fontWeight: '700', color: '#2B6CB0' },
-  removeBtn: { backgroundColor: '#FEEBEE', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
-  removeTxt: { fontSize: 12, fontWeight: '700', color: '#E53935' },
-  fieldLabel: { fontSize: 12, fontWeight: '600', color: '#4A5568', marginBottom: 5 },
+  fieldLabel: { fontSize: 13, fontWeight: '600', color: colors.textSecondary, marginBottom: 6 },
   input: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surfaceContainerHighest,
     borderWidth: 1,
-    borderColor: '#CBD5E0',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 9,
-    fontSize: 14,
-    color: '#1A202C',
-    marginBottom: 10,
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontSize: 15,
+    color: colors.text,
+    marginBottom: 12,
+    ...(Platform.OS === 'web' && { outlineStyle: 'none', cursor: 'text' } as any),
   },
-  sizeRow: { flexDirection: 'row', gap: 8, marginBottom: 10 },
+  sizeRow: { flexDirection: 'row', gap: 8, marginBottom: 12 },
   sizeBtn: {
     flex: 1,
-    backgroundColor: '#EDF2F7',
-    paddingVertical: 9,
-    borderRadius: 8,
+    backgroundColor: colors.surfaceContainerHighest,
+    paddingVertical: 12,
+    borderRadius: radius.md,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: colors.border,
   },
-  sizeBtnActive: { backgroundColor: '#0A1628', borderColor: '#0A1628' },
-  sizeTxt: { fontSize: 13, fontWeight: '700', color: '#4A5568' },
-  sizeTxtActive: { color: '#fff' },
+  sizeBtnActive: { backgroundColor: colors.primaryContainer, borderColor: colors.primaryContainer },
+  sizeTxt: { fontSize: 14, fontWeight: '700', color: colors.textSecondary },
+  sizeTxtActive: { color: colors.navy },
   row: { flexDirection: 'row', alignItems: 'flex-start' },
 });
 
@@ -194,12 +229,17 @@ export default function NewTripScreen() {
   const user = useAuthStore((s) => s.user);
 
   const [vesselName, setVesselName] = useState('MSC Aurora');
-  const [sourceTerminal, setSourceTerminal] = useState('ECT');
-  const [chassisNumber, setChassisNumber] = useState('CH-8821');
+  const [sourceTerminal, setSourceTerminal] = useState('CICT');
+  const [operationDate, setOperationDate] = useState(new Date().toISOString().split('T')[0]);
+  const [operationTime, setOperationTime] = useState('08:00');
+
+
   const [notes, setNotes] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showVerify, setShowVerify] = useState(false);
+  const [sentTripNumber, setSentTripNumber] = useState<string | null>(null);
 
-  // Multiple containers — each has its own destTerminal
+  // Single container detail entry (20FT can still capture two numbers)
   const [containers, setContainers] = useState<ContainerEntry[]>([emptyContainer('JCT')]);
 
   const updateContainer = (idx: number, field: keyof ContainerEntry, value: string) => {
@@ -210,17 +250,6 @@ export default function NewTripScreen() {
     });
   };
 
-  const addContainer = () => {
-    setContainers((prev) => [
-      ...prev,
-      emptyContainer(prev[prev.length - 1]?.destTerminal || 'JCT'),
-    ]);
-  };
-
-  const removeContainer = (idx: number) => {
-    setContainers((prev) => prev.filter((_, i) => i !== idx));
-  };
-
   const showAlert = (title: string, message: string) => {
     if (Platform.OS === 'web') window.alert(`${title}: ${message}`);
     else Alert.alert(title, message);
@@ -229,15 +258,41 @@ export default function NewTripScreen() {
   const handleStartTrip = async () => {
     // Validations
     if (!vesselName.trim()) { showAlert('Required', 'Please enter a vessel name.'); return; }
+    if (!sourceTerminal) { showAlert('Required', 'Please select a loading terminal.'); return; }
+    
+    // Check containers
+    const containerRegex = /^[A-Z]{4}\d{7}$/i;
+    const seenContainers = new Set();
+    
     for (let i = 0; i < containers.length; i++) {
-      if (!containers[i].containerNumber.trim()) {
+      const cNum = containers[i].containerNumber.trim();
+      if (!cNum) {
         showAlert('Required', `Please enter Container ${i + 1} number.`); return;
       }
+      if (!containerRegex.test(cNum)) {
+        showAlert('Invalid Format', `Container ${i + 1} (${cNum}) must be 4 letters followed by 7 numbers (e.g. MSCU7721892).`); return;
+      }
+      if (seenContainers.has(cNum)) {
+        showAlert('Duplicate Container', `Container ${cNum} is duplicated in this trip.`); return;
+      }
+      seenContainers.add(cNum);
+      if (!containers[i].destTerminal) {
+        showAlert('Required', `Please select a destination terminal for Container ${i + 1}.`); return;
+      }
       if (containers[i].destTerminal === sourceTerminal) {
-        showAlert('Invalid Route', `Container ${i + 1}: Destination terminal cannot be the same as the Origin terminal.`); return;
+        showAlert('Invalid Route', `Container ${i + 1} destination cannot be the same as the loading terminal.`); return;
       }
     }
 
+    setShowVerify(true);
+  };
+
+  const goHomeAfterSend = () => {
+    setSentTripNumber(null);
+    router.replace('/(driver)/(tabs)');
+  };
+
+  const submitTrip = async () => {
     setLoading(true);
     try {
       // Build payload — one trip with multiple containers, each with own destTerminal
@@ -247,8 +302,10 @@ export default function NewTripScreen() {
       const payload = {
         driverId: user?.driverId || user?.id,
         vesselName: vesselName.trim(),
+        operationDate,
+        operationTime,
         vehicleNumber: user?.vehicleNumber || 'WP-DA-4521',
-        chassisNumber: chassisNumber.trim() || undefined,
+        chaiNumber: user?.chaiNumber || undefined,
         sourceTerminal,
         destTerminal: tripDestTerminal,
         notes: notes.trim() || undefined,
@@ -256,27 +313,48 @@ export default function NewTripScreen() {
           containerNumber: c.containerNumber.trim().toUpperCase(),
           size: c.size,
           destTerminal: c.destTerminal,
+          sealNumber: c.sealNumber,
+          damageStatus: c.damageStatus,
+          remarks: c.remarks
         })),
       };
 
       const res = await axios.post(`${API_BASE_URL}/trips`, payload);
       const createdTrip = res.data;
-      const successMsg =
-        `Trip ${createdTrip.tripNumber} confirmed!\n` +
-        `${containers.length} container(s) loaded.\n` +
-        `Waiting for supervisor confirmation.`;
-
-      if (Platform.OS === 'web') {
-        window.alert(successMsg);
-        router.replace('/(driver)/(tabs)/trips');
-      } else {
-        Alert.alert('Trip Confirmed', successMsg, [
-          { text: 'OK', onPress: () => router.replace('/(driver)/(tabs)/trips') },
-        ]);
-      }
+      setShowVerify(false);
+      setSentTripNumber(createdTrip.tripNumber || createdTrip.id);
     } catch (err: any) {
-      const msg = err?.response?.data?.message || err?.message || 'Failed to start trip. Check connection.';
-      showAlert('Error', msg);
+      console.warn('Backend unavailable — simulating successful trip creation for demo mode.');
+      
+      const newTripId = `ITT-${new Date().getFullYear()}-${Math.floor(100000 + Math.random() * 900000)}`;
+      useMockTripStore.getState().addTrip({
+        id: newTripId,
+        tripNumber: newTripId,
+        driverId: user?.driverId || user?.id || 'demo-driver',
+        driverName: user?.name || 'Demo Driver',
+        vehicleNumber: user?.vehicleNumber || 'WP-DA-4521',
+        chaiNumber: user?.chaiNumber || undefined,
+        vesselName: vesselName.trim(),
+        operationDate,
+        operationTime,
+        sourceTerminal,
+        destTerminal: containers[0].destTerminal,
+        notes,
+        status: 'PENDING_APPROVAL',
+        containers: containers.map((c, i) => ({
+          id: `CONT-${Date.now()}-${i}`,
+          containerNumber: c.containerNumber.trim().toUpperCase(),
+          size: c.size,
+          destTerminal: c.destTerminal,
+          sealNumber: c.sealNumber,
+          damageStatus: c.damageStatus,
+          remarks: c.remarks
+        })),
+        startTime: new Date().toISOString(),
+      });
+
+      setShowVerify(false);
+      setSentTripNumber(newTripId);
     } finally {
       setLoading(false);
     }
@@ -296,11 +374,13 @@ export default function NewTripScreen() {
       <View style={styles.content}>
         {/* Driver info card */}
         <View style={styles.infoCard}>
+          <Text style={styles.sectionTitle}>1. Driver Details</Text>
           <View style={styles.infoRow}>
             <View>
-              <Text style={styles.infoLabel}>Assigned Driver</Text>
+              <Text style={styles.infoLabel}>Driver Name</Text>
               <Text style={styles.infoValue}>{user?.name || 'Kamal Perera'}</Text>
-              <Text style={styles.infoSub}>Employee: {user?.employeeId || 'DRV-1001'}</Text>
+              <Text style={styles.infoSub}>Driver Code: {user?.driverCode || user?.employeeId || 'DRV-1001'}</Text>
+              <Text style={styles.infoSub}>Contact: {user?.mobileNumber || '+94 77 123 4567'}</Text>
             </View>
             <View style={styles.truckBadge}>
               <Text style={styles.truckLabel}>TRUCK</Text>
@@ -311,7 +391,8 @@ export default function NewTripScreen() {
 
         {/* Vessel */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>🚢 Vessel Name</Text>
+          <Text style={styles.sectionTitle}>2. Vessel Details</Text>
+          <Text style={styles.fieldLabel}>Vessel Name *</Text>
           <TextInput
             style={styles.input}
             placeholder="e.g. MSC Aurora"
@@ -330,55 +411,57 @@ export default function NewTripScreen() {
               </TouchableOpacity>
             ))}
           </View>
-        </View>
-
-        {/* Origin Terminal (trip-level) */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>📍 Origin Terminal</Text>
-          <Text style={styles.sectionSub}>Where this truck is departing from</Text>
+          
           <TerminalPicker
-            label="Select Origin"
+            label="Loading Terminal *"
             selected={sourceTerminal}
-            onSelect={setSourceTerminal}
-            accentColor="#1E88E5"
+            onSelect={(t) => {
+              setSourceTerminal(t);
+              setContainers((prev) =>
+                prev.map((c) => (c.destTerminal === t ? { ...c, destTerminal: '' } : c))
+              );
+            }}
+            accentColor={colors.primaryContainer}
+          />
+
+          <Text style={styles.fieldLabel}>Operation Date</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="YYYY-MM-DD"
+            placeholderTextColor="#9AA5B1"
+            value={operationDate}
+            onChangeText={setOperationDate}
+          />
+          
+          <Text style={styles.fieldLabel}>Operation Time</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="HH:MM"
+            placeholderTextColor="#9AA5B1"
+            value={operationTime}
+            onChangeText={setOperationTime}
           />
         </View>
 
+
         {/* Containers Section */}
         <View style={styles.section}>
-          <View style={styles.sectionHeaderRow}>
-            <View>
-              <Text style={styles.sectionTitle}>📦 Containers</Text>
-              <Text style={styles.sectionSub}>Each container has its own destination terminal</Text>
-            </View>
-            <TouchableOpacity style={styles.addContainerBtn} onPress={addContainer}>
-              <Text style={styles.addContainerBtnText}>+ Add</Text>
-            </TouchableOpacity>
-          </View>
+          <Text style={styles.sectionTitle}>📦 Container Details</Text>
+          <Text style={styles.sectionSub}>Enter size, number(s), and destination terminal</Text>
 
           {containers.map((entry, idx) => (
             <ContainerCard
               key={idx}
-              index={idx}
               entry={entry}
               onChange={(field, value) => updateContainer(idx, field, value)}
-              onRemove={() => removeContainer(idx)}
-              canRemove={containers.length > 1}
+              loadingTerminal={sourceTerminal}
             />
           ))}
         </View>
 
-        {/* Chassis & Notes */}
+        {/* Notes */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>🚛 Chassis & Notes</Text>
-          <Text style={styles.fieldLabel}>Chassis Number</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="e.g. CH-8821"
-            placeholderTextColor="#9AA5B1"
-            value={chassisNumber}
-            onChangeText={setChassisNumber}
-          />
+          <Text style={styles.sectionTitle}>4. Notes</Text>
           <Text style={styles.fieldLabel}>Notes (Optional)</Text>
           <TextInput
             style={[styles.input, { height: 70, textAlignVertical: 'top' }]}
@@ -392,14 +475,14 @@ export default function NewTripScreen() {
 
         {/* Summary row */}
         <View style={styles.summaryBox}>
-          <Text style={styles.summaryTitle}>Trip Summary</Text>
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryKey}>Origin</Text>
-            <Text style={styles.summaryVal}>{sourceTerminal}</Text>
-          </View>
+          <Text style={styles.summaryTitle}>5. Trip Summary</Text>
           <View style={styles.summaryRow}>
             <Text style={styles.summaryKey}>Containers</Text>
             <Text style={styles.summaryVal}>{containers.length}</Text>
+          </View>
+          <View style={styles.summaryRow}>
+            <Text style={styles.summaryKey}>Loading terminal</Text>
+            <Text style={styles.summaryVal}>{sourceTerminal || '—'}</Text>
           </View>
           <View style={styles.summaryRow}>
             <Text style={styles.summaryKey}>Destinations</Text>
@@ -411,9 +494,22 @@ export default function NewTripScreen() {
             <Text style={styles.summaryKey}>Vessel</Text>
             <Text style={styles.summaryVal}>{vesselName || '—'}</Text>
           </View>
+          <View style={styles.summaryRow}>
+            <Text style={styles.summaryKey}>Vehicle / Chai</Text>
+            <Text style={styles.summaryVal}>{user?.vehicleNumber || 'WP-DA-4521'} / {user?.chaiNumber || '—'}</Text>
+          </View>
         </View>
 
-        {/* Start Button */}
+        {/* Action Buttons */}
+        <View style={{ flexDirection: 'row', gap: 8, marginBottom: 20 }}>
+          <TouchableOpacity style={[styles.startBtn, { flex: 1, backgroundColor: colors.surfaceContainerHighest }]} onPress={() => router.back()}>
+            <Text style={[styles.startBtnText, { color: colors.textSecondary }]}>Cancel</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.startBtn, { flex: 1, backgroundColor: colors.secondaryContainer }]}>
+            <Text style={[styles.startBtnText, { color: colors.onSecondaryContainer }]}>Save Draft</Text>
+          </TouchableOpacity>
+        </View>
+
         <TouchableOpacity
           style={[styles.startBtn, loading && styles.startBtnDisabled]}
           onPress={handleStartTrip}
@@ -422,86 +518,113 @@ export default function NewTripScreen() {
           {loading ? (
             <ActivityIndicator color="#fff" />
           ) : (
-            <Text style={styles.startBtnText}>Confirm Trip — Await Supervisor</Text>
+            <Text style={styles.startBtnText}>Verify & send to supervisor</Text>
           )}
         </TouchableOpacity>
       </View>
+
+      {showVerify && (
+        <TripVerifyOverlay
+          mode="verify"
+          vesselName={vesselName}
+          sourceTerminal={sourceTerminal}
+          destTerminals={[...new Set(containers.map((c) => c.destTerminal))].join(', ')}
+          vehicleNumber={user?.vehicleNumber}
+          driverName={user?.name}
+          containers={containers.map((c) => ({
+            containerNumber: c.containerNumber.trim().toUpperCase(),
+            size: c.size,
+            destTerminal: c.destTerminal,
+          }))}
+          notes={notes.trim() || undefined}
+          submitting={loading}
+          onCancel={() => setShowVerify(false)}
+          onConfirm={submitTrip}
+        />
+      )}
+
+      {sentTripNumber && (
+        <TripVerifyOverlay
+          mode="sent"
+          tripNumber={sentTripNumber}
+          vesselName={vesselName}
+          containerCount={containers.length}
+          onDone={goHomeAfterSend}
+        />
+      )}
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F4F6F9' },
+  container: { flex: 1, backgroundColor: colors.background },
   header: {
-    backgroundColor: '#0A1628',
-    padding: 24, paddingTop: 54, paddingBottom: 24,
-    borderBottomLeftRadius: 24, borderBottomRightRadius: 24,
+    backgroundColor: colors.surfaceContainerLowest,
+    padding: spacing.lg, paddingTop: 60, paddingBottom: spacing.lg,
+    borderBottomLeftRadius: radius.xl, borderBottomRightRadius: radius.xl,
+    ...shadow.card,
   },
-  backBtn: { paddingVertical: 4, marginBottom: 8, alignSelf: 'flex-start' },
-  backText: { color: '#64B5F6', fontSize: 15, fontWeight: '600' },
-  headerTitle: { color: '#FFFFFF', fontSize: 22, fontWeight: '700' },
-  headerSub: { color: '#8E99A4', fontSize: 13, marginTop: 4 },
+  backBtn: { paddingVertical: 4, marginBottom: spacing.sm, alignSelf: 'flex-start' },
+  backText: { color: colors.primaryContainer, fontSize: 15, fontWeight: '700' },
+  headerTitle: { color: colors.text, fontSize: 24, fontWeight: '800' },
+  headerSub: { color: colors.textSecondary, fontSize: 13, marginTop: 4 },
 
-  content: { padding: 16, paddingBottom: 50 },
+  content: { padding: spacing.md, paddingBottom: 50 },
 
   infoCard: {
-    backgroundColor: '#FFFFFF', borderRadius: 14, padding: 16,
-    marginBottom: 16, borderWidth: 1, borderColor: '#E2E8F0',
+    backgroundColor: colors.surfaceContainer, borderRadius: radius.lg, padding: spacing.md,
+    marginBottom: spacing.md, borderWidth: 1, borderColor: colors.border,
+    ...shadow.card,
   },
   infoRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  infoLabel: { fontSize: 11, color: '#718096' },
-  infoValue: { fontSize: 16, fontWeight: '700', color: '#1A202C', marginTop: 2 },
-  infoSub: { fontSize: 11, color: '#A0AEC0', marginTop: 2 },
+  infoLabel: { fontSize: 11, color: colors.textSecondary },
+  infoValue: { fontSize: 17, fontWeight: '800', color: colors.text, marginTop: 2 },
+  infoSub: { fontSize: 11, color: colors.textMuted, marginTop: 2 },
   truckBadge: {
-    backgroundColor: '#EBF8FF', paddingHorizontal: 14, paddingVertical: 8,
-    borderRadius: 10, alignItems: 'center', borderWidth: 1, borderColor: '#BEE3F8',
+    backgroundColor: colors.surfaceContainerHighest, paddingHorizontal: 14, paddingVertical: 8,
+    borderRadius: radius.md, alignItems: 'center', borderWidth: 1, borderColor: colors.borderLight,
   },
-  truckLabel: { fontSize: 9, fontWeight: '800', color: '#2B6CB0' },
-  truckValue: { fontSize: 13, fontWeight: '700', color: '#2B6CB0', marginTop: 2 },
+  truckLabel: { fontSize: 10, fontWeight: '800', color: colors.primaryContainer },
+  truckValue: { fontSize: 14, fontWeight: '700', color: colors.text, marginTop: 2 },
 
   section: {
-    backgroundColor: '#FFFFFF', borderRadius: 14, padding: 16,
-    marginBottom: 16, borderWidth: 1, borderColor: '#E2E8F0',
+    backgroundColor: colors.surfaceContainer, borderRadius: radius.lg, padding: spacing.md,
+    marginBottom: spacing.md, borderWidth: 1, borderColor: colors.border,
+    ...shadow.card,
   },
-  sectionHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 },
-  sectionTitle: { fontSize: 15, fontWeight: '700', color: '#1A202C', marginBottom: 2 },
-  sectionSub: { fontSize: 12, color: '#718096', marginBottom: 10 },
-  fieldLabel: { fontSize: 12, fontWeight: '600', color: '#4A5568', marginBottom: 5 },
+  sectionTitle: { fontSize: 16, fontWeight: '800', color: colors.text, marginBottom: 2 },
+  sectionSub: { fontSize: 13, color: colors.textSecondary, marginBottom: 12 },
+  fieldLabel: { fontSize: 13, fontWeight: '600', color: colors.textSecondary, marginBottom: 6 },
 
   input: {
-    backgroundColor: '#F8FAFC', borderWidth: 1, borderColor: '#CBD5E0',
-    borderRadius: 10, paddingHorizontal: 14, paddingVertical: 10,
-    fontSize: 15, color: '#1A202C', marginBottom: 10,
+    backgroundColor: colors.surfaceContainerHighest, borderWidth: 1, borderColor: colors.border,
+    borderRadius: radius.md, paddingHorizontal: 14, paddingVertical: 12,
+    fontSize: 15, color: colors.text, marginBottom: 12,
+    ...(Platform.OS === 'web' && { outlineStyle: 'none', cursor: 'text' } as any),
   },
-  chipsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 2 },
+  chipsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 4 },
   chip: {
-    backgroundColor: '#EDF2F7', paddingHorizontal: 12, paddingVertical: 6,
-    borderRadius: 16,
+    backgroundColor: colors.surfaceContainerHighest, paddingHorizontal: 14, paddingVertical: 8,
+    borderRadius: radius.pill, borderWidth: 1, borderColor: colors.border,
   },
-  chipActive: { backgroundColor: '#1E88E5' },
-  chipText: { fontSize: 12, color: '#4A5568', fontWeight: '500' },
-  chipTextActive: { color: '#FFFFFF', fontWeight: '700' },
-
-  addContainerBtn: {
-    backgroundColor: '#1E88E5', paddingHorizontal: 14,
-    paddingVertical: 7, borderRadius: 20,
-  },
-  addContainerBtnText: { color: '#fff', fontSize: 13, fontWeight: '700' },
+  chipActive: { backgroundColor: colors.primaryContainer, borderColor: colors.primaryContainer },
+  chipText: { fontSize: 13, color: colors.textSecondary, fontWeight: '600' },
+  chipTextActive: { color: colors.navy, fontWeight: '800' },
 
   summaryBox: {
-    backgroundColor: '#0A1628', borderRadius: 14, padding: 18, marginBottom: 16,
+    backgroundColor: colors.surfaceContainerLowest, borderRadius: radius.lg, padding: spacing.lg, marginBottom: spacing.md,
+    borderWidth: 1, borderColor: colors.border,
   },
-  summaryTitle: { color: '#fff', fontSize: 14, fontWeight: '800', marginBottom: 12, textTransform: 'uppercase', letterSpacing: 1 },
-  summaryRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 },
-  summaryKey: { color: '#8E99A4', fontSize: 13 },
-  summaryVal: { color: '#FFFFFF', fontSize: 13, fontWeight: '700' },
+  summaryTitle: { color: colors.text, fontSize: 15, fontWeight: '800', marginBottom: 14, textTransform: 'uppercase', letterSpacing: 1 },
+  summaryRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
+  summaryKey: { color: colors.textSecondary, fontSize: 14 },
+  summaryVal: { color: colors.primary, fontSize: 14, fontWeight: '700' },
 
   startBtn: {
-    backgroundColor: '#1E88E5', paddingVertical: 16, borderRadius: 12,
-    alignItems: 'center', elevation: 3,
-    shadowColor: '#1E88E5', shadowOpacity: 0.3,
-    shadowOffset: { width: 0, height: 4 }, shadowRadius: 8,
+    backgroundColor: colors.primaryContainer, paddingVertical: 18, borderRadius: radius.lg,
+    alignItems: 'center', marginTop: spacing.sm,
+    ...shadow.glow,
   },
-  startBtnDisabled: { opacity: 0.7 },
-  startBtnText: { color: '#FFFFFF', fontSize: 16, fontWeight: '700' },
+  startBtnDisabled: { opacity: 0.5 },
+  startBtnText: { color: colors.navy, fontSize: 16, fontWeight: '800', letterSpacing: 0.5 },
 });

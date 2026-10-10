@@ -1,28 +1,32 @@
-import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, radius } from '../../../src/theme';
-import { View } from 'react-native';
+import { Tabs } from 'expo-router';
+
+import { useTheme } from '@/hooks/use-theme';
+import { colors } from '@/theme';
 
 export default function DriverTabsLayout() {
+  const theme = useTheme();
+
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: colors.primaryContainer,
-        tabBarInactiveTintColor: colors.onSurfaceVariant,
+        tabBarInactiveTintColor: colors.outline,
         tabBarStyle: {
-          backgroundColor: colors.surfaceContainer,
+          backgroundColor: '#080e17',
           borderTopWidth: 1,
-          borderTopColor: colors.outlineVariant,
-          elevation: 0,
-          height: 66,
+          borderTopColor: '#242a34',
+          elevation: 8,
+          height: 68,
           paddingBottom: 10,
-          paddingTop: 6,
+          paddingTop: 8,
         },
         tabBarLabelStyle: {
           fontSize: 10,
           fontWeight: '700',
-          letterSpacing: 0.2,
+          letterSpacing: 0.8,
+          textTransform: 'uppercase',
           marginTop: 2,
         },
       }}
@@ -32,38 +36,26 @@ export default function DriverTabsLayout() {
         options={{
           title: 'Home',
           tabBarIcon: ({ color, focused }) => (
-            <View style={{ alignItems: 'center' }}>
-              <Ionicons name={focused ? 'home' : 'home-outline'} size={23} color={color} />
-            </View>
+            <Ionicons name={focused ? 'home' : 'home-outline'} size={22} color={color} />
           ),
         }}
       />
       <Tabs.Screen
         name="trips"
         options={{
-          title: 'Trips',
+          title: 'My Trips',
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? 'cube' : 'cube-outline'} size={23} color={color} />
+            <Ionicons name={focused ? 'trail-sign' : 'trail-sign-outline'} size={22} color={color} />
           ),
         }}
       />
       <Tabs.Screen
         name="containers"
         options={{
-          title: 'Load',
+          title: 'Containers',
           tabBarIcon: ({ color, focused }) => (
-            <View style={{
-              width: 46, height: 46, borderRadius: 23,
-              backgroundColor: focused ? colors.primaryContainer : colors.surfaceContainerHigh,
-              alignItems: 'center', justifyContent: 'center',
-              marginBottom: 4,
-              borderWidth: 2,
-              borderColor: focused ? colors.primaryContainer : colors.outlineVariant,
-            }}>
-              <Ionicons name="add" size={26} color={focused ? colors.onPrimaryContainer : colors.onSurfaceVariant} />
-            </View>
+            <Ionicons name={focused ? 'cube' : 'cube-outline'} size={22} color={color} />
           ),
-          tabBarLabel: () => null,
         }}
       />
       <Tabs.Screen
@@ -71,7 +63,7 @@ export default function DriverTabsLayout() {
         options={{
           title: 'Alerts',
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? 'notifications' : 'notifications-outline'} size={23} color={color} />
+            <Ionicons name={focused ? 'notifications' : 'notifications-outline'} size={22} color={color} />
           ),
         }}
       />
@@ -80,7 +72,7 @@ export default function DriverTabsLayout() {
         options={{
           title: 'Profile',
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? 'person-circle' : 'person-circle-outline'} size={23} color={color} />
+            <Ionicons name={focused ? 'person' : 'person-outline'} size={22} color={color} />
           ),
         }}
       />

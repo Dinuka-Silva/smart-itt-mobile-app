@@ -10,6 +10,7 @@ import {
 import axios from 'axios';
 import API_BASE_URL from '../../../src/config/api';
 import { useAuthStore } from '../../../src/store/authStore';
+import { colors } from '../../../src/theme';
 
 export default function DriverContainers() {
   const user = useAuthStore((s) => s.user);
@@ -198,13 +199,12 @@ function getFallbackContainers() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F5F7FA' },
+  container: { flex: 1, backgroundColor: colors.background },
   header: {
-    backgroundColor: '#0A1628', padding: 24, paddingTop: 54, paddingBottom: 30,
-    borderBottomLeftRadius: 24, borderBottomRightRadius: 24,
+    backgroundColor: colors.background, padding: 24, paddingTop: 54, paddingBottom: 30,
   },
-  headerTitle: { color: '#fff', fontSize: 24, fontWeight: 'bold' },
-  headerSub: { color: '#8E99A4', fontSize: 13, marginTop: 4 },
+  headerTitle: { color: colors.text, fontSize: 24, fontWeight: 'bold' },
+  headerSub: { color: colors.textSecondary, fontSize: 13, marginTop: 4 },
   summaryRow: { flexDirection: 'row', paddingHorizontal: 16, marginTop: -16, gap: 10 },
   summaryCard: {
     flex: 1, backgroundColor: '#fff', borderRadius: 12, padding: 14,

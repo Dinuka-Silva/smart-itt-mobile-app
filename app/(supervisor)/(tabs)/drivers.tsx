@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity } from 'react-native';
+import { colors } from '../../../src/theme';
 
 export default function SupervisorDrivers() {
   const drivers = [
@@ -46,10 +47,10 @@ export default function SupervisorDrivers() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F5F7FA' },
-  header: { backgroundColor: '#0A1628', padding: 24, paddingTop: 60, paddingBottom: 24, borderBottomLeftRadius: 24, borderBottomRightRadius: 24 },
-  headerTitle: { color: '#fff', fontSize: 24, fontWeight: 'bold' },
-  headerSub: { color: '#8E99A4', fontSize: 13, marginTop: 4 },
+  container: { flex: 1, backgroundColor: colors.background },
+  header: { backgroundColor: colors.background, padding: 24, paddingTop: 60, paddingBottom: 24 },
+  headerTitle: { color: colors.text, fontSize: 24, fontWeight: 'bold' },
+  headerSub: { color: colors.textSecondary, fontSize: 13, marginTop: 4 },
   searchContainer: { paddingHorizontal: 16, marginTop: 16 },
   searchInput: { backgroundColor: '#fff', borderRadius: 12, paddingHorizontal: 16, height: 48, fontSize: 14, borderWidth: 1, borderColor: '#E8ECF0' },
   card: { backgroundColor: '#fff', marginHorizontal: 16, borderRadius: 14, padding: 16, marginTop: 12, elevation: 2 },
