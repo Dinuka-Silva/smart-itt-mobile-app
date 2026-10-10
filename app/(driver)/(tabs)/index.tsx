@@ -16,13 +16,6 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../../../src/store/authStore';
 import { tripService } from '../../../src/services/tripService';
-import {
-  containerService,
-  normalizeContainerNumber,
-  isValidIsoFormat,
-  computeCheckDigit,
-  ValidateContainerResult,
-} from '../../../src/services/containerService';
 import { dashboardService, DriverDashboardStats } from '../../../src/services/dashboardService';
 import { colors, radius, spacing } from '../../../src/theme';
 import { useMockTripStore } from '../../../src/store/mockTripStore';
@@ -50,23 +43,10 @@ export default function DriverHomeDashboard() {
   const [isOnline, setIsOnline] = useState(true);
 
   // Modals state
-  const [addContainerModalVisible, setAddContainerModalVisible] = useState(false);
   const [notificationsModalVisible, setNotificationsModalVisible] = useState(false);
   const [allowanceModalVisible, setAllowanceModalVisible] = useState(false);
   const [damageReportModalVisible, setDamageReportModalVisible] = useState(false);
   const [supervisorModalVisible, setSupervisorModalVisible] = useState(false);
-
-  // Add Container Form State
-  const [inputContainerNumber, setInputContainerNumber] = useState('');
-  const [inputContainerSize, setInputContainerSize] = useState<'20FT' | '40FT'>('40FT');
-  const [inputMainTerminal, setInputMainTerminal] = useState<TerminalCode>('CICT');
-  const [inputVesselName, setInputVesselName] = useState('');
-  const [inputChaiNo, setInputChaiNo] = useState('');
-  const [validationResult, setValidationResult] = useState<ValidateContainerResult | null>(null);
-  const [validating, setValidating] = useState(false);
-  const [submittingContainer, setSubmittingContainer] = useState(false);
-  const [containerFormError, setContainerFormError] = useState<string | null>(null);
-  const [containerSuccessMsg, setContainerSuccessMsg] = useState<string | null>(null);
 
   // Damage Report Form State
   const [damageContainerNumber, setDamageContainerNumber] = useState('');
@@ -137,114 +117,7 @@ export default function DriverHomeDashboard() {
   const count20Ft = (activeTrip?.containers || []).filter((c: any) => c.size === '20FT' || c.size === 'FT_20').length;
   const count40Ft = (activeTrip?.containers || []).filter((c: any) => c.size === '40FT' || c.size === 'FT_40').length;
 
-  // Real-time validation handler for Container Number
-  const handleContainerNumberChange = async (text: string) => {
-    const normalized = normalizeContainerNumber(text);
-    setInputContainerNumber(normalized);
-    setContainerFormError(null);
-    setContainerSuccessMsg(null);
 
-    if (normalized.length >= 4) {
-      setValidating(true);
-      try {
-        const result = await containerService.validateContainer(normalized, activeTrip?.id);
-        setValidationResult(result);
-      } catch {
-        // Fallback client-side validation
-        const formatValid = isValidIsoFormat(normalized);
-        const expected = computeCheckDigit(normalized);
-        const actual = normalized.length >= 11 ? parseInt(normalized[10], 10) : -1;
-        setValidationResult({
-          valid: formatValid && expected === actual,
-          isoFormatValid: formatValid,
-          checkDigitValid: formatValid && expected === actual,
-          expectedCheckDigit: expected,
-          actualCheckDigit: actual,
-          duplicate: false,
-          message: formatValid && expected === actual
-            ? `Container ${normalized} ISO 6346 verified.`
-            : `ISO Check Digit: ${expected >= 0 ? expected : 'calc...'}`,
-          normalizedNumber: normalized,
-        });
-      } finally {
-        setValidating(false);
-      }
-    } else {
-      setValidationResult(null);
-    }
-  };
-
-  const handleFixCheckDigit = () => {
-    if (!validationResult || validationResult.expectedCheckDigit < 0) return;
-    const base = inputContainerNumber.slice(0, 10);
-    const corrected = `${base}${validationResult.expectedCheckDigit}`;
-    handleContainerNumberChange(corrected);
-  };
-
-  const handleOpenAddContainerModal = () => {
-    setInputContainerNumber('');
-    setInputContainerSize('40FT');
-    setInputMainTerminal(activeTrip?.sourceTerminal || 'CICT');
-    setInputVesselName(activeTrip?.vesselName || 'MV Colombo Star');
-    setInputChaiNo(activeTrip?.chassisNumber || 'CHAI-102');
-    setValidationResult(null);
-    setContainerFormError(null);
-    setContainerSuccessMsg(null);
-    setAddContainerModalVisible(true);
-  };
-
-  const handleSaveContainer = async () => {
-    const clean = normalizeContainerNumber(inputContainerNumber);
-    if (!clean) {
-      setContainerFormError('Please enter a container number.');
-      return;
-    }
-    if (!isValidIsoFormat(clean)) {
-      setContainerFormError('Format error: Must be 4 uppercase letters and 7 digits (e.g. MSCU1234567).');
-      return;
-    }
-
-    setSubmittingContainer(true);
-    setContainerFormError(null);
-
-    try {
-      // 1. Authoritative backend validation
-      const valRes = await containerService.validateContainer(clean, activeTrip?.id);
-      if (!valRes.valid) {
-        setContainerFormError(valRes.message);
-        setSubmittingContainer(false);
-        return;
-      }
-
-      // 2. Add container through backend API
-      const updated = await containerService.addManualContainer({
-        tripId: activeTrip?.id,
-        containerNumber: clean,
-        size: inputContainerSize,
-        mainTerminal: inputMainTerminal,
-        vesselName: inputVesselName.trim() || activeTrip?.vesselName || 'MV Colombo Star',
-        chaiNo: inputChaiNo.trim() || activeTrip?.chassisNumber || 'CHAI-101',
-      });
-
-      setContainerSuccessMsg(`Container ${clean} saved and linked to mission!`);
-      // Update local trips
-      useMockTripStore.getState().addManualContainerToTrip(activeTrip?.id, {
-        containerNumber: clean,
-        size: inputContainerSize,
-        mainTerminal: inputMainTerminal,
-      });
-
-      await loadData();
-      setTimeout(() => {
-        setAddContainerModalVisible(false);
-      }, 1200);
-    } catch (err: any) {
-      const msg = err?.response?.data?.message || err?.message || 'Failed to save container.';
-      setContainerFormError(msg);
-    } finally {
-      setSubmittingContainer(false);
-    }
-  };
 
   // Stage transition triggers for progress tracker
   const handleTransitionTripStage = async (nextStatus: string, actionLabel: string) => {
@@ -479,10 +352,10 @@ export default function DriverHomeDashboard() {
 
               <TouchableOpacity
                 style={styles.addContBtnSmall}
-                onPress={handleOpenAddContainerModal}
+                onPress={() => router.push('/(driver)/trips/new')}
               >
-                <Ionicons name="add" size={16} color="#00e5ff" />
-                <Text style={styles.addContBtnSmallText}>ADD CONTAINER</Text>
+                <Ionicons name="add-circle" size={16} color="#00e5ff" />
+                <Text style={styles.addContBtnSmallText}>NEW TRIP</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -491,28 +364,28 @@ export default function DriverHomeDashboard() {
             <Ionicons name="hourglass-outline" size={32} color="#849396" />
             <Text style={styles.noActiveTitle}>NO ACTIVE MISSION</Text>
             <Text style={styles.noActiveSub}>
-              You currently have no mission in progress. Tap below to manually load a container or check the dispatcher queue.
+              You currently have no mission in progress. Tap below to enter trip details and container numbers to begin.
             </Text>
-            <TouchableOpacity style={styles.startManualBtn} onPress={handleOpenAddContainerModal}>
+            <TouchableOpacity style={styles.startManualBtn} onPress={() => router.push('/(driver)/trips/new')}>
               <Ionicons name="add-circle" size={18} color="#00363d" />
-              <Text style={styles.startManualBtnText}>MANUALLY ENTER CONTAINER</Text>
+              <Text style={styles.startManualBtnText}>CREATE NEW TRIP</Text>
             </TouchableOpacity>
           </View>
         )}
 
-        {/* ─── D. PROMINENT ADD CONTAINER BUTTON ─── */}
+        {/* ─── D. CREATE NEW TRIP ACTION ─── */}
         <TouchableOpacity
           style={styles.prominentAddContainerBtn}
-          onPress={handleOpenAddContainerModal}
+          onPress={() => router.push('/(driver)/trips/new')}
           activeOpacity={0.88}
         >
           <View style={styles.prominentAddIconCircle}>
-            <Ionicons name="cube" size={20} color="#00363d" />
+            <Ionicons name="trail-sign" size={20} color="#00363d" />
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={styles.prominentAddTitle}>MANUAL CONTAINER MANAGEMENT</Text>
+            <Text style={styles.prominentAddTitle}>CREATE NEW TRIP</Text>
             <Text style={styles.prominentAddSub}>
-              Enter container number with instant ISO 6346 check digit validation &amp; duplicate check
+              Enter vessel, origin, destination and container numbers with ISO 6346 verification
             </Text>
           </View>
           <Ionicons name="chevron-forward" size={20} color="#00e5ff" />
@@ -610,11 +483,11 @@ export default function DriverHomeDashboard() {
         <View style={styles.quickActionsSection}>
           <Text style={styles.sectionHeaderTitle}>DRIVER QUICK ACTIONS</Text>
           <View style={styles.quickActionsGrid}>
-            <TouchableOpacity style={styles.quickActionTile} onPress={handleOpenAddContainerModal}>
+            <TouchableOpacity style={styles.quickActionTile} onPress={() => router.push('/(driver)/trips/new')}>
               <View style={[styles.tileIconCircle, { backgroundColor: 'rgba(0, 229, 255, 0.15)' }]}>
                 <Ionicons name="add-circle" size={20} color="#00e5ff" />
               </View>
-              <Text style={styles.tileTitle}>Add Container</Text>
+              <Text style={styles.tileTitle}>New Trip</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.quickActionTile} onPress={() => router.push('/(driver)/(tabs)/trips')}>
@@ -671,182 +544,7 @@ export default function DriverHomeDashboard() {
         <View style={{ height: 40 }} />
       </ScrollView>
 
-      {/* ─── MODAL 1: MANUAL CONTAINER ENTRY WITH ISO 6346 VALIDATION ─── */}
-      <Modal visible={addContainerModalVisible} transparent animationType="slide">
-        <View style={styles.modalOverlay}>
-          <ScrollView contentContainerStyle={styles.modalScroll}>
-            <View style={styles.modalCard}>
-              <View style={styles.modalHeader}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                  <Ionicons name="cube" size={20} color="#00e5ff" />
-                  <Text style={styles.modalTitle}>MANUAL CONTAINER ENTRY</Text>
-                </View>
-                <TouchableOpacity onPress={() => setAddContainerModalVisible(false)}>
-                  <Ionicons name="close" size={22} color="#849396" />
-                </TouchableOpacity>
-              </View>
 
-              {/* Form Input 1: Container Number */}
-              <View style={styles.modalFieldGroup}>
-                <Text style={styles.modalLabel}>CONTAINER NUMBER (MANUAL ENTRY) *</Text>
-                <View style={styles.inputWrap}>
-                  <Ionicons name="barcode-outline" size={18} color="#00e5ff" style={{ marginRight: 8 }} />
-                  <TextInput
-                    style={styles.modalInput}
-                    placeholder="e.g. MSCU1234566"
-                    placeholderTextColor="#849396"
-                    value={inputContainerNumber}
-                    onChangeText={handleContainerNumberChange}
-                    autoCapitalize="characters"
-                    autoCorrect={false}
-                  />
-                  {validating && <ActivityIndicator size="small" color="#00e5ff" />}
-                </View>
-
-                {/* ISO 6346 Real-time Feedback Pill */}
-                {validationResult && (
-                  <View
-                    style={[
-                      styles.validationPill,
-                      validationResult.valid ? styles.pillValid : styles.pillInvalid,
-                    ]}
-                  >
-                    <Ionicons
-                      name={validationResult.valid ? 'checkmark-circle' : 'alert-circle'}
-                      size={14}
-                      color={validationResult.valid ? '#22ef7e' : '#ff5252'}
-                    />
-                    <Text
-                      style={[
-                        styles.validationPillText,
-                        { color: validationResult.valid ? '#22ef7e' : '#ff5252' },
-                      ]}
-                    >
-                      {validationResult.message}
-                    </Text>
-
-                    {/* Auto-fix check digit button */}
-                    {!validationResult.checkDigitValid && validationResult.expectedCheckDigit >= 0 && (
-                      <TouchableOpacity style={styles.fixDigitBtn} onPress={handleFixCheckDigit}>
-                        <Text style={styles.fixDigitBtnText}>
-                          FIX TO {validationResult.expectedCheckDigit}
-                        </Text>
-                      </TouchableOpacity>
-                    )}
-                  </View>
-                )}
-              </View>
-
-              {/* Form Input 2: Container Size */}
-              <View style={styles.modalFieldGroup}>
-                <Text style={styles.modalLabel}>CONTAINER SIZE *</Text>
-                <View style={styles.sizeToggleRow}>
-                  <TouchableOpacity
-                    style={[styles.sizeBtn, inputContainerSize === '20FT' && styles.sizeBtnActive]}
-                    onPress={() => setInputContainerSize('20FT')}
-                  >
-                    <Text style={[styles.sizeBtnText, inputContainerSize === '20FT' && styles.sizeBtnTextActive]}>
-                      20 FT STANDARD
-                    </Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={[styles.sizeBtn, inputContainerSize === '40FT' && styles.sizeBtnActive]}
-                    onPress={() => setInputContainerSize('40FT')}
-                  >
-                    <Text style={[styles.sizeBtnText, inputContainerSize === '40FT' && styles.sizeBtnTextActive]}>
-                      40 FT HIGH CUBE
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-
-              {/* Form Input 3: Main Terminal */}
-              <View style={styles.modalFieldGroup}>
-                <Text style={styles.modalLabel}>MAIN TERMINAL CLEARANCE *</Text>
-                <View style={styles.terminalChipsWrap}>
-                  {TERMINALS.map((t) => (
-                    <TouchableOpacity
-                      key={t}
-                      style={[styles.terminalChip, inputMainTerminal === t && styles.terminalChipActive]}
-                      onPress={() => setInputMainTerminal(t)}
-                    >
-                      <Text
-                        style={[
-                          styles.terminalChipText,
-                          inputMainTerminal === t && styles.terminalChipTextActive,
-                        ]}
-                      >
-                        {t}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              </View>
-
-              {/* Form Input 4: Vessel Name */}
-              <View style={styles.modalFieldGroup}>
-                <Text style={styles.modalLabel}>VESSEL NAME</Text>
-                <View style={styles.inputWrap}>
-                  <Ionicons name="boat-outline" size={18} color="#849396" style={{ marginRight: 8 }} />
-                  <TextInput
-                    style={styles.modalInput}
-                    placeholder="e.g. MV Colombo Star"
-                    placeholderTextColor="#849396"
-                    value={inputVesselName}
-                    onChangeText={setInputVesselName}
-                  />
-                </View>
-              </View>
-
-              {/* Form Input 5: Chai No. */}
-              <View style={styles.modalFieldGroup}>
-                <Text style={styles.modalLabel}>CHAI NO. / CHASSIS NUMBER</Text>
-                <View style={styles.inputWrap}>
-                  <Ionicons name="construct-outline" size={18} color="#849396" style={{ marginRight: 8 }} />
-                  <TextInput
-                    style={styles.modalInput}
-                    placeholder="e.g. CHAI-102"
-                    placeholderTextColor="#849396"
-                    value={inputChaiNo}
-                    onChangeText={setInputChaiNo}
-                  />
-                </View>
-              </View>
-
-              {/* Error / Success message */}
-              {containerFormError && (
-                <View style={styles.errorBox}>
-                  <Ionicons name="close-circle" size={16} color="#ff5252" />
-                  <Text style={styles.errorBoxText}>{containerFormError}</Text>
-                </View>
-              )}
-              {containerSuccessMsg && (
-                <View style={styles.successBox}>
-                  <Ionicons name="checkmark-circle" size={16} color="#22ef7e" />
-                  <Text style={styles.successBoxText}>{containerSuccessMsg}</Text>
-                </View>
-              )}
-
-              {/* Submit Button */}
-              <TouchableOpacity
-                style={[styles.modalSubmitBtn, submittingContainer && { opacity: 0.6 }]}
-                onPress={handleSaveContainer}
-                disabled={submittingContainer}
-              >
-                {submittingContainer ? (
-                  <ActivityIndicator color="#00363d" />
-                ) : (
-                  <>
-                    <Ionicons name="checkmark-done" size={18} color="#00363d" />
-                    <Text style={styles.modalSubmitBtnText}>VALIDATE &amp; ADD CONTAINER</Text>
-                  </>
-                )}
-              </TouchableOpacity>
-            </View>
-          </ScrollView>
-        </View>
-      </Modal>
 
       {/* ─── MODAL 2: ALLOWANCE / SALARY SUMMARY ─── */}
       <Modal visible={allowanceModalVisible} transparent animationType="fade">

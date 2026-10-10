@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -11,12 +11,21 @@ import {
   Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
 import { useAuthStore } from '../../../src/store/authStore';
 import API_BASE_URL from '../../../src/config/api';
 import { colors, radius, spacing, shadow } from '../../../src/theme';
 import { useMockTripStore } from '../../../src/store/mockTripStore';
 import { TripVerifyOverlay } from '../../../src/components/TripVerifyOverlay';
+import {
+  containerService,
+  normalizeContainerNumber,
+  isValidIsoFormat,
+  computeCheckDigit,
+  validateIsoClientSide,
+  ValidateContainerResult,
+} from '../../../src/services/containerService';
 
 // All 6 terminals
 const TERMINALS = ['CWIT', 'JCT', 'ECT', 'UCT', 'SAGT', 'CICT'];
@@ -106,6 +115,139 @@ const tp = StyleSheet.create({
 });
 
 // ────────────────────────────────────────────────────────────────
+// Sub-component: live container ISO 6346 validation feedback
+// ────────────────────────────────────────────────────────────────
+function ContainerValidationPill({
+  containerNumber,
+  onFixCheckDigit,
+}: {
+  containerNumber: string;
+  onFixCheckDigit: (corrected: string) => void;
+}) {
+  const [valResult, setValResult] = useState<ValidateContainerResult | null>(null);
+  const [checking, setChecking] = useState(false);
+
+  useEffect(() => {
+    const clean = normalizeContainerNumber(containerNumber);
+    if (!clean || clean.length < 4) {
+      setValResult(null);
+      return;
+    }
+
+    // 1. Instant client-side validation
+    const clientRes = validateIsoClientSide(clean);
+    setValResult(clientRes);
+
+    // 2. Authoritative backend duplicate check if format valid
+    if (clientRes.isoFormatValid) {
+      let cancelled = false;
+      setChecking(true);
+      containerService.validateContainer(clean)
+        .then((res) => {
+          if (!cancelled) setValResult(res);
+        })
+        .catch(() => {})
+        .finally(() => {
+          if (!cancelled) setChecking(false);
+        });
+
+      return () => {
+        cancelled = true;
+      };
+    }
+  }, [containerNumber]);
+
+  if (!containerNumber || containerNumber.trim().length === 0) {
+    return (
+      <View style={vp.hintWrap}>
+        <Ionicons name="information-circle-outline" size={13} color="#849396" />
+        <Text style={vp.hintText}>ISO 6346: 4 letters + 6 digits + 1 check digit (e.g. MSCU7721892)</Text>
+      </View>
+    );
+  }
+
+  if (!valResult) return null;
+
+  return (
+    <View style={[vp.wrap, valResult.valid ? vp.wrapValid : vp.wrapInvalid]}>
+      <Ionicons
+        name={valResult.valid ? 'checkmark-circle' : 'alert-circle'}
+        size={14}
+        color={valResult.valid ? '#22ef7e' : '#ff5252'}
+      />
+      <Text style={[vp.msg, { color: valResult.valid ? '#22ef7e' : '#ff5252' }]}>
+        {valResult.message}
+      </Text>
+      {checking && <ActivityIndicator size="small" color="#00e5ff" style={{ marginLeft: 4 }} />}
+
+      {!valResult.checkDigitValid && valResult.expectedCheckDigit >= 0 && (
+        <TouchableOpacity
+          style={vp.fixBtn}
+          onPress={() => {
+            const base = normalizeContainerNumber(containerNumber).slice(0, 10);
+            onFixCheckDigit(`${base}${valResult.expectedCheckDigit}`);
+          }}
+        >
+          <Text style={vp.fixBtnText}>FIX TO {valResult.expectedCheckDigit}</Text>
+        </TouchableOpacity>
+      )}
+    </View>
+  );
+}
+
+const vp = StyleSheet.create({
+  hintWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: -4,
+    marginBottom: 12,
+    paddingHorizontal: 4,
+  },
+  hintText: {
+    fontSize: 11,
+    color: '#849396',
+    fontWeight: '500',
+  },
+  wrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginTop: -4,
+    marginBottom: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+  },
+  wrapValid: {
+    backgroundColor: 'rgba(34, 239, 126, 0.08)',
+    borderColor: 'rgba(34, 239, 126, 0.3)',
+  },
+  wrapInvalid: {
+    backgroundColor: 'rgba(255, 82, 82, 0.08)',
+    borderColor: 'rgba(255, 82, 82, 0.3)',
+  },
+  msg: {
+    fontSize: 12,
+    fontWeight: '600',
+    flex: 1,
+  },
+  fixBtn: {
+    backgroundColor: '#00e5ff',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 4,
+  },
+  fixBtnText: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#00363d',
+  },
+});
+
+// ────────────────────────────────────────────────────────────────
 // Sub-component: single container card
 // ────────────────────────────────────────────────────────────────
 function ContainerCard({
@@ -137,35 +279,48 @@ function ContainerCard({
       {/* Container numbers — 2 inputs for 20FT, 1 for 40FT */}
       {is20FT ? (
         <>
-          <Text style={cc.fieldLabel}>Container No. 1 *</Text>
+          <Text style={cc.fieldLabel}>Container No. 1 * (Manual Entry)</Text>
           <TextInput
             style={cc.input}
             placeholder="e.g. MSCU7721892"
             placeholderTextColor="#9AA5B1"
             autoCapitalize="characters"
             value={entry.containerNumber}
-            onChangeText={(v) => onChange('containerNumber', v)}
+            onChangeText={(v) => onChange('containerNumber', normalizeContainerNumber(v))}
           />
-          <Text style={cc.fieldLabel}>Container No. 2 *</Text>
+          <ContainerValidationPill
+            containerNumber={entry.containerNumber}
+            onFixCheckDigit={(corrected) => onChange('containerNumber', corrected)}
+          />
+
+          <Text style={cc.fieldLabel}>Container No. 2 * (Manual Entry)</Text>
           <TextInput
             style={cc.input}
             placeholder="e.g. TCKU3456789"
             placeholderTextColor="#9AA5B1"
             autoCapitalize="characters"
             value={entry.containerNumber2}
-            onChangeText={(v) => onChange('containerNumber2', v)}
+            onChangeText={(v) => onChange('containerNumber2', normalizeContainerNumber(v))}
+          />
+          <ContainerValidationPill
+            containerNumber={entry.containerNumber2 || ''}
+            onFixCheckDigit={(corrected) => onChange('containerNumber2', corrected)}
           />
         </>
       ) : (
         <>
-          <Text style={cc.fieldLabel}>Container Number *</Text>
+          <Text style={cc.fieldLabel}>Container Number * (Manual Entry)</Text>
           <TextInput
             style={cc.input}
             placeholder="e.g. MSCU7721892"
             placeholderTextColor="#9AA5B1"
             autoCapitalize="characters"
             value={entry.containerNumber}
-            onChangeText={(v) => onChange('containerNumber', v)}
+            onChangeText={(v) => onChange('containerNumber', normalizeContainerNumber(v))}
+          />
+          <ContainerValidationPill
+            containerNumber={entry.containerNumber}
+            onFixCheckDigit={(corrected) => onChange('containerNumber', corrected)}
           />
         </>
       )}
@@ -256,31 +411,89 @@ export default function NewTripScreen() {
   };
 
   const handleStartTrip = async () => {
-    // Validations
-    if (!vesselName.trim()) { showAlert('Required', 'Please enter a vessel name.'); return; }
-    if (!sourceTerminal) { showAlert('Required', 'Please select a loading terminal.'); return; }
-    
-    // Check containers
-    const containerRegex = /^[A-Z]{4}\d{7}$/i;
-    const seenContainers = new Set();
-    
+    // 1. Mission Info Validations
+    if (!vesselName.trim()) {
+      showAlert('Required', 'Please enter a vessel name.');
+      return;
+    }
+    if (!sourceTerminal) {
+      showAlert('Required', 'Please select a loading terminal.');
+      return;
+    }
+
+    // 2. Comprehensive Container Validations (ISO 6346 & Duplicate Check)
+    const seenContainers = new Set<string>();
+
     for (let i = 0; i < containers.length; i++) {
-      const cNum = containers[i].containerNumber.trim();
-      if (!cNum) {
-        showAlert('Required', `Please enter Container ${i + 1} number.`); return;
+      const entry = containers[i];
+      const numbersToValidate = [entry.containerNumber];
+      if (entry.size === '20FT' && entry.containerNumber2 && entry.containerNumber2.trim()) {
+        numbersToValidate.push(entry.containerNumber2);
       }
-      if (!containerRegex.test(cNum)) {
-        showAlert('Invalid Format', `Container ${i + 1} (${cNum}) must be 4 letters followed by 7 numbers (e.g. MSCU7721892).`); return;
+
+      for (let j = 0; j < numbersToValidate.length; j++) {
+        const raw = numbersToValidate[j];
+        const cNum = normalizeContainerNumber(raw);
+        const contLabel = numbersToValidate.length > 1 ? `Container ${i + 1} (#${j + 1})` : `Container ${i + 1}`;
+
+        if (!cNum) {
+          showAlert('Required', `Please manually enter ${contLabel} number.`);
+          return;
+        }
+
+        // A. Format validation: 4 letters + 7 numbers
+        if (!isValidIsoFormat(cNum)) {
+          showAlert(
+            'Invalid Format',
+            `${contLabel} (${cNum}) must follow ISO standard: 4 uppercase letters followed by 7 numbers (e.g. MSCU7721892).`
+          );
+          return;
+        }
+
+        // B. ISO 6346 Check Digit Validation
+        const expectedDigit = computeCheckDigit(cNum);
+        const actualDigit = parseInt(cNum[10], 10);
+        if (expectedDigit !== actualDigit) {
+          showAlert(
+            'Check Digit Mismatch',
+            `${contLabel} (${cNum}) failed ISO 6346 check digit validation.\n\nEntered Check Digit: ${actualDigit}\nExpected Check Digit: ${expectedDigit}\n\nPlease correct the container number before proceeding.`
+          );
+          return;
+        }
+
+        // C. Check for duplicate within the current trip
+        if (seenContainers.has(cNum)) {
+          showAlert('Duplicate Entry', `Container ${cNum} is entered more than once in this trip.`);
+          return;
+        }
+        seenContainers.add(cNum);
+
+        // D. Authoritative backend duplicate check against database
+        try {
+          const valRes = await containerService.validateContainer(cNum);
+          if (valRes.duplicate || !valRes.valid) {
+            showAlert(
+              'Duplicate Container in Database',
+              valRes.message || `Container ${cNum} already exists in database or active terminal records. Duplicate entry is not allowed.`
+            );
+            return;
+          }
+        } catch (err) {
+          console.warn('Backend container duplicate check warning:', err);
+        }
       }
-      if (seenContainers.has(cNum)) {
-        showAlert('Duplicate Container', `Container ${cNum} is duplicated in this trip.`); return;
+
+      // 3. Terminal validation
+      if (!entry.destTerminal) {
+        showAlert('Required', `Please select a destination terminal for Container ${i + 1}.`);
+        return;
       }
-      seenContainers.add(cNum);
-      if (!containers[i].destTerminal) {
-        showAlert('Required', `Please select a destination terminal for Container ${i + 1}.`); return;
-      }
-      if (containers[i].destTerminal === sourceTerminal) {
-        showAlert('Invalid Route', `Container ${i + 1} destination cannot be the same as the loading terminal.`); return;
+      if (entry.destTerminal === sourceTerminal) {
+        showAlert(
+          'Invalid Route',
+          `Container ${i + 1} destination terminal cannot be the same as the loading terminal (${sourceTerminal}).`
+        );
+        return;
       }
     }
 
@@ -294,6 +507,30 @@ export default function NewTripScreen() {
 
   const submitTrip = async () => {
     setLoading(true);
+    const allTripContainers: any[] = [];
+    containers.forEach((c, i) => {
+      allTripContainers.push({
+        id: `CONT-${Date.now()}-${i}-1`,
+        containerNumber: c.containerNumber.trim().toUpperCase(),
+        size: c.size,
+        destTerminal: c.destTerminal,
+        sealNumber: c.sealNumber,
+        damageStatus: c.damageStatus,
+        remarks: c.remarks,
+      });
+      if (c.size === '20FT' && c.containerNumber2 && c.containerNumber2.trim()) {
+        allTripContainers.push({
+          id: `CONT-${Date.now()}-${i}-2`,
+          containerNumber: c.containerNumber2.trim().toUpperCase(),
+          size: '20FT',
+          destTerminal: c.destTerminal,
+          sealNumber: c.sealNumber,
+          damageStatus: c.damageStatus,
+          remarks: c.remarks,
+        });
+      }
+    });
+
     try {
       // Build payload — one trip with multiple containers, each with own destTerminal
       // We use the first container's destTerminal as the trip-level destTerminal
@@ -309,13 +546,13 @@ export default function NewTripScreen() {
         sourceTerminal,
         destTerminal: tripDestTerminal,
         notes: notes.trim() || undefined,
-        containers: containers.map((c) => ({
-          containerNumber: c.containerNumber.trim().toUpperCase(),
+        containers: allTripContainers.map((c) => ({
+          containerNumber: c.containerNumber,
           size: c.size,
           destTerminal: c.destTerminal,
           sealNumber: c.sealNumber,
           damageStatus: c.damageStatus,
-          remarks: c.remarks
+          remarks: c.remarks,
         })),
       };
 
@@ -341,15 +578,7 @@ export default function NewTripScreen() {
         destTerminal: containers[0].destTerminal,
         notes,
         status: 'PENDING_APPROVAL',
-        containers: containers.map((c, i) => ({
-          id: `CONT-${Date.now()}-${i}`,
-          containerNumber: c.containerNumber.trim().toUpperCase(),
-          size: c.size,
-          destTerminal: c.destTerminal,
-          sealNumber: c.sealNumber,
-          damageStatus: c.damageStatus,
-          remarks: c.remarks
-        })),
+        containers: allTripContainers,
         startTime: new Date().toISOString(),
       });
 
