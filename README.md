@@ -139,6 +139,19 @@ Supervisors have access to live date-wise reporting tables and an interactive dr
 
 ---
 
+### 4.1 Terminal-Wise Total Trips Panel (Weekly & Monthly Filters)
+A consolidated terminal throughput panel providing multi-dimensional traffic analytics across all 6 SLPA terminals (`CICT`, `CWIT`, `ECT`, `JCT`, `UCT`, `SAGT`):
+- **Timeframe Filters**: One-tap toggle between **`WEEKLY (7D)`**, **`MONTHLY (30D)`**, **`TODAY`**, and **`ALL TIME`**.
+- **Traffic Direction Filters**: Focus on **`Total (Load + Discharge)`**, **`Origin Gate (Out)`**, or **`Discharge Bay (In)`**.
+- **Real-Time Terminal Cards**: Displays live trip counts, container TEU totals, inbound/outbound flow ratios, and terminal active beacon indicators.
+
+<div align="center">
+  <img src="docs/screenshots/terminal_totals_weekly_monthly_panel.png" alt="Terminal-Wise Consolidated Totals Panel with Weekly and Monthly Filters" width="85%" style="border-radius: 8px; border: 1px solid #1e293b;" />
+  <p><i>Supervisor Panel: 6-Terminal throughput breakdown with 7-day rolling weekly and 30-day monthly filter options.</i></p>
+</div>
+
+---
+
 ### 5. Multi-Format Dispatch Export (Excel & PDF)
 Supervisors can instantly export terminal dispatch records, driver performance, and container logs in both Microsoft Excel (`.XLS` / `.CSV`) spreadsheet format and formatted printable PDF documents.
 
