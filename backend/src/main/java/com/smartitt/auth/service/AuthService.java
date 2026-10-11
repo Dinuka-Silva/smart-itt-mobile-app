@@ -36,6 +36,7 @@ public class AuthService {
     private final SupervisorRepository supervisorRepository;
     private final DriverCodeGeneratorService driverCodeGeneratorService;
     private final DriverService driverService;
+    private final com.smartitt.vehicle.repository.VehicleRepository vehicleRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
 
@@ -119,7 +120,16 @@ public class AuthService {
         driver.setEmergencyContactName(req.getEmergencyContactName() != null ? req.getEmergencyContactName().trim() : "Port Dispatch Operations");
         driver.setEmergencyContactNumber(req.getEmergencyContactNumber() != null ? req.getEmergencyContactNumber().trim() : "0112456789");
         driver.setProfilePhoto(req.getProfilePhoto());
-        driver.setVehicleNumber(req.getVehicleNumber() != null ? req.getVehicleNumber().trim() : "WP-DA-1001");
+        final String resolvedVehicle = req.getVehicleNumber() != null ? req.getVehicleNumber().trim().toUpperCase() : "LY 5234";
+        driver.setVehicleNumber(resolvedVehicle);
+        String matchedChassis = vehicleRepository.findByVehicleNumber(resolvedVehicle)
+                .map(com.smartitt.vehicle.entity.Vehicle::getChassisNumber)
+                .orElseGet(() -> vehicleRepository.findAll().stream()
+                        .filter(v -> v.getVehicleNumber().replaceAll("\\s+", "").equalsIgnoreCase(resolvedVehicle.replaceAll("\\s+", "")))
+                        .findFirst()
+                        .map(com.smartitt.vehicle.entity.Vehicle::getChassisNumber)
+                        .orElse("SCK 100"));
+        driver.setChassisNumber(matchedChassis);
 
         // Email: use provided or format driverCode@smartitt.lk
         String resolvedEmail = (req.getEmail() != null && !req.getEmail().trim().isEmpty())
