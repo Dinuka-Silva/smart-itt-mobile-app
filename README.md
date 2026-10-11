@@ -1,100 +1,240 @@
-# 🚛 SMART ITT - Inter Terminal Transportation Management System
+# 🚛 SMART ITT — Inter-Terminal Transportation Management System
 
 <div align="center">
-  <img src="https://img.shields.io/badge/Spring_Boot-F2F4F9?style=for-the-badge&logo=spring-boot" alt="Spring Boot" />
-  <img src="https://img.shields.io/badge/React_Native-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" alt="React Native" />
-  <img src="https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript" />
-  <img src="https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white" alt="PostgreSQL" />
-  <img src="https://img.shields.io/badge/Docker-2CA5E0?style=for-the-badge&logo=docker&logoColor=white" alt="Docker" />
-</div>
+
+[![Spring Boot](https://img.shields.io/badge/Spring_Boot_3.2-6DB33F?style=for-the-badge&logo=spring-boot&logoColor=white)](https://spring.io/projects/spring-boot)
+[![React Native Expo](https://img.shields.io/badge/React_Native_Expo-000020?style=for-the-badge&logo=expo&logoColor=white)](https://expo.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript_5.3-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL_16-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![Docker Compose](https://img.shields.io/badge/Docker_Compose-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)](LICENSE)
 
 <br />
 
-**SMART ITT** is a comprehensive, full-stack logistics and transportation management solution designed to streamline container movement, driver assignments, and terminal reporting. With a powerful mobile application for personnel and a robust backend API, SMART ITT ensures seamless coordination across terminal operations.
+**SMART ITT** is an enterprise-grade digital platform engineered for real-time **Inter-Terminal Transportation (ITT)** across modern maritime container terminals (JCT, CICT, SAGT, CWIT). It unifies telematics fleet identification, dual 20ft container logistics, real-time driver telecommunications, supervisor live monitoring, and mission lifecycle archival.
 
-## ✨ Key Features
-
-### 👨‍✈️ Driver Hub
-- **Trip Management**: Receive, accept, and update the status of assigned container transportation trips.
-- **Real-Time Tracking**: Update trip status (Pending, In Progress, Completed) effortlessly from the mobile app.
-- **Secure Authentication**: PIN and JWT-based secure login flow for operators.
-
-### 📋 Supervisor Dashboard
-- **Analytics & Reporting**: Daily snapshot of completed, pending, and rejected trips across the terminal.
-- **Resource Management**: Assign containers and vehicles dynamically based on priority.
-- **Driver Overview**: Monitor driver performance, active assignments, and statuses.
-
-## 🛠 Tech Stack
-
-### Frontend (Mobile App)
-- **Framework**: React Native with [Expo](https://expo.dev/)
-- **Language**: TypeScript
-- **State Management**: Zustand
-- **Data Fetching**: React Query & Axios
-- **Routing**: Expo Router
-
-### Backend (REST API)
-- **Framework**: Spring Boot (Java)
-- **Database**: PostgreSQL (with Flyway for migrations)
-- **Security**: Spring Security & JWT authentication
-- **Documentation**: OpenAPI / Swagger
+</div>
 
 ---
 
-## 🚀 Getting Started
+## 🌟 Executive Summary & Core Capabilities
 
-### Prerequisites
-Make sure you have the following installed on your machine:
-- [Docker & Docker Compose](https://www.docker.com/products/docker-desktop/)
-- [Node.js](https://nodejs.org/en/) (v18+)
-- Java Development Kit (JDK 17+)
+| Capability | Technical Realization |
+| :--- | :--- |
+| **Instant Vehicle ➔ CHE (SCK No) Lookup** | Real-time vehicle matcher connects any prime mover license (e.g. `LY 5234`) to its Port Container Handling Equipment number (`SCK 100`) and operator. |
+| **Complete End-to-End Mission Workflow** | Driver trip creation ➔ Supervisor verification & dispatch ➔ In-Transit telemetry ➔ Terminal arrival ➔ "My Trips" archival storage. |
+| **Driver Communications & Message Hub** | Cyber-styled emergency dispatcher broadcasting Safety, Dispatch, Operations, and Maintenance alerts with acoustic radio chatter. |
+| **Supervisor Real-Time Monitoring & Reporting** | Live date-wise trip monitoring sheet, visual fleet status, container capacity filters, and driver directory with rich avatar photos. |
+| **Production Security Architecture** | Dual-layer auth with JWT Bearer tokens + `X-API-KEY` header guard, externalized environment secrets, and Spring Security filters. |
 
-### 1️⃣ Start the Backend & Database
-The backend and PostgreSQL database are fully containerized for easy setup.
-```bash
-# From the root directory, start the containers in detached mode
-docker-compose up -d
+---
+
+## 📸 System Screenshots & Visual Showcase
+
+### 1. Vehicle Telematics & Automatic CHE No (SCK No) Recognition
+When a driver registers and enters a vehicle number, the system automatically detects and displays the **Port CHE No (SCK No)** and **Fleet Operator** in real-time.
+
+<div align="center">
+  <table>
+    <tr>
+      <th width="33%">SCK Logistics (SCK 100)</th>
+      <th width="33%">SDR LINK (SCK 115)</th>
+      <th width="33%">E3 Logistics (SCK 123)</th>
+    </tr>
+    <tr>
+      <td><img src="docs/screenshots/vehicle_che_sck100.png" alt="SCK 100 Vehicle Match" width="100%"/></td>
+      <td><img src="docs/screenshots/vehicle_che_sck115.png" alt="SCK 115 Vehicle Match" width="100%"/></td>
+      <td><img src="docs/screenshots/vehicle_che_sck123.png" alt="SCK 123 Vehicle Match" width="100%"/></td>
+    </tr>
+    <tr>
+      <td align="center"><b>Vehicle:</b> <code>LY 5234</code><br/><b>CHE:</b> <code>SCK 100</code></td>
+      <td align="center"><b>Vehicle:</b> <code>LY 6528</code><br/><b>CHE:</b> <code>SCK 115</code></td>
+      <td align="center"><b>Vehicle:</b> <code>LY 5597</code><br/><b>CHE:</b> <code>SCK 123</code></td>
+    </tr>
+  </table>
+</div>
+
+---
+
+### 2. Driver Communications & Telematics Message Center
+Dedicated driver communication hub featuring channel filters (`ALL`, `DISPATCH`, `SAFETY`, `OPERATIONS`, `MAINTENANCE`), priority visual badges, and simulated terminal dispatch audio transmissions.
+
+<div align="center">
+  <table>
+    <tr>
+      <th width="50%">Driver Communications Center</th>
+      <th width="50%">Filtered Dispatch Transmissions</th>
+    </tr>
+    <tr>
+      <td><img src="docs/screenshots/driver_messages_hub.png" alt="Driver Messages Hub" width="100%"/></td>
+      <td><img src="docs/screenshots/dispatch_filter_selected_1791700652694.png" alt="Dispatch Filtered Messages" width="100%"/></td>
+    </tr>
+  </table>
+</div>
+
+---
+
+### 3. End-to-End ITT Trip Execution Lifecycle
+A complete operational trial demonstrating driver submission, supervisor approval, live in-transit tracking, terminal gate-in completion, and local storage in **My Trips**.
+
+<div align="center">
+  <table>
+    <tr>
+      <th width="20%">Step 1: Driver Submit</th>
+      <th width="20%">Step 2: Supervisor Confirm</th>
+      <th width="20%">Step 3: Trip In-Transit</th>
+      <th width="20%">Step 4: Trip Completed</th>
+      <th width="20%">Step 5: My Trips Archive</th>
+    </tr>
+    <tr>
+      <td><img src="docs/screenshots/trip_01_submitted.png" alt="Trip Submitted" width="100%"/></td>
+      <td><img src="docs/screenshots/trip_02_supervisor_approved.png" alt="Supervisor Approved" width="100%"/></td>
+      <td><img src="docs/screenshots/trip_03_in_transit.png" alt="Trip In-Transit" width="100%"/></td>
+      <td><img src="docs/screenshots/trip_04_completed.png" alt="Trip Completed" width="100%"/></td>
+      <td><img src="docs/screenshots/trip_05_my_trips_archived.png" alt="My Trips Archive" width="100%"/></td>
+    </tr>
+    <tr>
+      <td align="center"><small>Driver logs vehicle & 20ft/40ft container</small></td>
+      <td align="center"><small>Supervisor validates & grants terminal dispatch</small></td>
+      <td align="center"><small>Prime mover departs terminal origin gate</small></td>
+      <td align="center"><small>Gate-in scan and arrival timestamp logged</small></td>
+      <td align="center"><small>Trip permanently archived in driver log</small></td>
+    </tr>
+  </table>
+</div>
+
+---
+
+### 4. Supervisor Command Center & Driver Directory
+Supervisors have access to live date-wise reporting tables and an interactive driver roster with high-resolution profile imagery and telematics telemetry.
+
+<div align="center">
+  <table>
+    <tr>
+      <th width="33%">Supervisor Operations Dashboard</th>
+      <th width="33%">Date-Wise Dispatch Reports</th>
+      <th width="33%">Driver Profile Directory</th>
+    </tr>
+    <tr>
+      <td><img src="docs/screenshots/supervisor_dashboard.png" alt="Supervisor Dashboard" width="100%"/></td>
+      <td><img src="docs/screenshots/supervisor_reports_datewise.png" alt="Date-wise Reports" width="100%"/></td>
+      <td><img src="docs/screenshots/supervisor_drivers_directory.png" alt="Supervisor Driver Directory" width="100%"/></td>
+    </tr>
+  </table>
+</div>
+
+---
+
+## ⚡ Feature Matrix
+
+### 🚛 Driver Portal & Mobile App
+- **Real-Time CHE No (SCK No) Lookup**: Auto-matches license plates against fleet database records (`SCK Logistics`, `SDR LINK`, `E3 Logistics`).
+- **Interactive Fleet Chip Bar**: 1-tap vehicle picker pre-populating prime mover details and equipment codes.
+- **Dual 20ft & 40ft Container Logging**: Supports single 40ft containers or dual 20ft multi-box freight on a single chassis.
+- **Trip Status Workflow**: `PENDING_APPROVAL` ➔ `CONFIRMED` ➔ `IN_TRANSIT` ➔ `COMPLETED`.
+- **Driver "My Trips" History**: Retains full history of all completed and archived runs with container numbers and timestamps.
+- **Driver Message Center**: Radio transmissions, emergency advisories, and weather alerts with visual priority tags.
+- **Driver Profile & Identity**: Supports personalized profile photos, emergency contacts, NIC, and employee badge details.
+
+### 👔 Supervisor Terminal Cockpit
+- **Live Dispatch Queue**: One-click confirmation, gate pass verification, and trip assignment.
+- **Date-Wise Trip Analytics**: Filters trips by date, terminal pair (e.g. `JCT ➔ CICT`, `SAGT ➔ CWIT`), vehicle number, and status.
+- **Live Fleet Directory**: Complete list of registered terminal drivers with active status badges and profile avatars.
+- **Daily Performance Metrics**: Real-time counter of total transfers, completed runs, pending gate-ins, and active bottlenecks.
+
+### 🛡️ Security & Architecture
+- **Stateless Authentication**: High-entropy JWT tokens with BCrypt-hashed credentials.
+- **API Key Guard (`X-API-KEY`)**: Enforced for sensitive operations and external integrations via `ApiKeyAuthFilter`.
+- **Environment Protection**: Sensitive database credentials externalized to `.env` with comprehensive `.env.example` templates.
+- **Database Scalability**: PostgreSQL 16 database with Flyway version-controlled migrations (`V1` through `V5`).
+
+---
+
+## 🗄️ Database Fleet Mapping (Sample)
+
+| Vehicle No | CHE No (SCK No) | Fleet Operator | Max Containers | Chassis Type |
+| :--- | :--- | :--- | :---: | :--- |
+| `LY 5234` | **SCK 100** | SCK Logistics | 2 x 20ft / 1 x 40ft | Heavy Port Skeletal |
+| `LY 5235` | **SCK 101** | SCK Logistics | 2 x 20ft / 1 x 40ft | Heavy Port Skeletal |
+| `LY 6528` | **SCK 115** | SDR LINK | 2 x 20ft / 1 x 40ft | Heavy Port Skeletal |
+| `LY 6529` | **SCK 117** | SDR LINK | 2 x 20ft / 1 x 40ft | Heavy Port Skeletal |
+| `LY 5597` | **SCK 123** | E3 Logistics | 2 x 20ft / 1 x 40ft | Heavy Port Skeletal |
+| `LY 5598` | **SCK 124** | E3 Logistics | 2 x 20ft / 1 x 40ft | Heavy Port Skeletal |
+
+---
+
+## 🛠️ Tech Stack & Architecture
+
 ```
-*The backend API will be available at `http://localhost:8080`*
+                        ┌───────────────────────────────┐
+                        │    React Native (Expo SDK)    │
+                        │    TypeScript + Zustand Store │
+                        └──────────────┬────────────────┘
+                                       │ REST / JSON (Axios)
+                                       │ JWT + X-API-KEY Header
+                                       ▼
+                        ┌───────────────────────────────┐
+                        │      Spring Boot 3.2 API      │
+                        │ Spring Security + JPA Hibernate│
+                        └──────────────┬────────────────┘
+                                       │ JDBC Connection Pool
+                                       ▼
+                        ┌───────────────────────────────┐
+                        │      PostgreSQL 16 Engine     │
+                        │    Flyway Migrations (V1-V5)  │
+                        └───────────────────────────────┘
+```
 
-### 2️⃣ Start the Frontend App
-Navigate into the frontend directory to run the mobile application.
+- **Frontend**: React Native, Expo Router, TypeScript, Zustand, React Native Reanimated, Expo Vector Icons.
+- **Backend**: Spring Boot 3.2, Java 21, Spring Data JPA, Spring Security, Flyway, Maven.
+- **Database**: PostgreSQL 16.
+- **DevOps**: Docker, Docker Compose, Git.
+
+---
+
+## 🚀 Quick Start Guide
+
+### 1. Prerequisites
+- [Docker & Docker Compose](https://www.docker.com/products/docker-desktop/)
+- [Node.js](https://nodejs.org/) (v18 or higher)
+- [Java JDK 21](https://adoptium.net/)
+
+### 2. Configuration Setup
+Copy the environment template:
+```bash
+cp .env.example .env
+```
+
+### 3. Launch Backend & Database
+```bash
+# Start PostgreSQL via Docker Compose
+docker-compose up -d postgres
+
+# Start Spring Boot backend
+cd backend
+./mvnw spring-boot:run
+```
+*Backend runs at `http://localhost:8080`*
+
+### 4. Launch Frontend (Expo)
 ```bash
 cd frontend
-
-# Install dependencies
 npm install
-
-# Start the Expo development server
 npm run start
 ```
-*You can run the app on iOS/Android simulators, on the web, or on your physical device using the Expo Go app.*
+*Web dashboard opens at `http://localhost:8081` (or scan the QR code via Expo Go for iOS/Android).*
 
 ---
 
-## 📂 Project Structure
+## 👥 Demo Credentials
 
-```bash
-smart_itt_app_v2/
-├── backend/                  # Spring Boot Java Application
-│   ├── src/main/java/...     # Controllers, Services, Repositories, Security
-│   ├── src/main/resources/   # App Config & Flyway SQL Migrations
-│   └── pom.xml               # Maven Dependencies
-├── frontend/                 # React Native / Expo Application
-│   ├── app/                  # File-based routing (Supervisor & Driver tabs)
-│   ├── src/components/       # Reusable UI components
-│   ├── src/services/         # API integration layers
-│   └── src/store/            # Zustand global state
-├── docker-compose.yml        # Multi-container orchestration
-└── README.md
-```
-
-## 🔐 Authentication
-The system uses stateless JSON Web Tokens (JWT) for secure authentication. 
-- During development, demo accounts are automatically seeded into the database via Flyway migrations (`V3__Seed_Demo_Accounts.sql`).
-- Login with the provided supervisor or driver credentials to access role-specific UI flows in the frontend.
+| Role | Username / ID | Password | Access Rights |
+| :--- | :--- | :--- | :--- |
+| **Driver** | `driver1` | `password` | Vehicle Registration, Trip Creation, My Trips History, Driver Messages |
+| **Supervisor** | `supervisor` | `password` | Mission Approval, Fleet Directory, Date-wise Dispatch Reporting |
 
 ---
+
 <div align="center">
-  <i>Built for the future of Inter-Terminal Transportation.</i>
+  <sub>Engineered for Smart Maritime Terminals. Built with ❤️ for Port Logistics Innovation.</sub>
 </div>
