@@ -46,6 +46,13 @@ spring:
     username: ${SPRING_DATASOURCE_USERNAME:postgres}
     password: ${SPRING_DATASOURCE_PASSWORD:password}
     driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: ${DB_POOL_MAX:20}
+      minimum-idle: ${DB_POOL_MIN:5}
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      connection-timeout: 30000
+      pool-name: SmartIttHikariPoolProd
 
   jpa:
     hibernate:
@@ -54,18 +61,26 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
-        format_sql: true
+        format_sql: false
 
   flyway:
     enabled: true
     baseline-on-migrate: true
 
+  h2:
+    console:
+      enabled: false
+
 ---
 # Common Configuration
+security:
+  api-key: ${API_KEY:smart-itt-sec-key-prod-2026}
+  require-api-key: ${REQUIRE_API_KEY:false}
+
 jwt:
-  secret: aVeryLongSecretKeyForJwtAuthenticationWhichShouldBeAtLeast256BitsLongSoLetsMakeItEvenLongerForSafety
-  expiration: 86400000 # 24 hours in ms
-  refresh-expiration: 604800000 # 7 days in ms
+  secret: ${JWT_SECRET:smartitt-jwt-256bit-secure-token-production-fleet-key-2026-auth}
+  expiration: ${JWT_EXPIRATION_MS:86400000} # 24 hours in ms
+  refresh-expiration: ${JWT_REFRESH_EXPIRATION_MS:604800000} # 7 days in ms
 
 springdoc:
   swagger-ui:
@@ -74,4 +89,5 @@ springdoc:
     path: /api-docs
 
 server:
-  port: 8080
+  port: ${PORT:8080}
+

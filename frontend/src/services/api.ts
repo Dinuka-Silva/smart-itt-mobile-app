@@ -1,11 +1,12 @@
 import axios from 'axios';
 import { storage } from './storage';
-import API_BASE_URL from '../config/api';
+import API_BASE_URL, { API_KEY } from '../config/api';
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
+    'X-API-KEY': API_KEY,
   },
   timeout: 10000,
 });

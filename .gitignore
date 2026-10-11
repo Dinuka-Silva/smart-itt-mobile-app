@@ -1,9 +1,37 @@
+# Node dependencies
 node_modules/
+.npm/
+
+# IDE & OS
 .idea/
 .vscode/
-*.class
-backend/target/
 .DS_Store
-
+Thumbs.db
 .windsurf/
 .cursor/
+
+# Environment Variables & Secrets
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+*.p12
+*.p8
+*.jks
+
+# Build Outputs & Binaries
+backend/target/
+frontend/dist/
+frontend/web-build/
+*.class
+*.jar
+*.war
+*.log
+
+# Databases & Backups
+*.db
+*.sqlite
+*.sqlite3
+*.dump
+*.sql.gz

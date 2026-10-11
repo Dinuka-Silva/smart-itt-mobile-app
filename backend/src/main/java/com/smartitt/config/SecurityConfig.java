@@ -29,6 +29,7 @@ import java.util.List;
 public class SecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
+    private final com.smartitt.security.ApiKeyAuthFilter apiKeyAuthFilter;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -45,6 +46,9 @@ public class SecurityConfig {
         http
             .csrf(AbstractHttpConfigurer::disable)
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            .headers(headers -> headers
+                .frameOptions(frame -> frame.sameOrigin())
+            )
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 // Public endpoints
@@ -58,6 +62,7 @@ public class SecurityConfig {
                 // All authenticated requests - open for now to allow frontend integration
                 .anyRequest().permitAll()
             )
+            .addFilterBefore(apiKeyAuthFilter, UsernamePasswordAuthenticationFilter.class)
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
