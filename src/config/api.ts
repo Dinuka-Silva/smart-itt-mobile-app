@@ -2,6 +2,10 @@ import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 
 const getBaseUrl = () => {
+  if (process.env.EXPO_PUBLIC_API_URL) {
+    return process.env.EXPO_PUBLIC_API_URL;
+  }
+
   const hostUri = Constants.expoConfig?.hostUri;
   if (hostUri) {
     const ip = hostUri.split(':')[0];
@@ -16,5 +20,6 @@ const getBaseUrl = () => {
 };
 
 const API_BASE_URL = getBaseUrl();
+export const API_KEY = process.env.EXPO_PUBLIC_API_KEY || 'smart-itt-sec-key-prod-2026';
 
 export default API_BASE_URL;
