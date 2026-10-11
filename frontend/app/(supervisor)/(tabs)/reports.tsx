@@ -328,55 +328,72 @@ export default function SupervisorReports() {
     (t) => t.status === 'COMPLETED' || t.status === 'APPROVED'
   ).length;
 
-  // ─── Export to Excel/CSV function ───
+  // ─── Export to Excel (.XLS / CSV) function ───
   const handleExportExcel = () => {
     if (excelDataRows.length === 0) {
       Alert.alert('Empty Report', 'There are no rows matching your selected filters to export.');
       return;
     }
 
-    const headers = [
-      'Date',
-      'Time',
-      'Driver Identifier',
-      'Driver Name',
-      'Vehicle No',
-      'CHE No',
-      'Container(s)',
-      'Size of Container',
-      'Damage or Not',
-      'Load Terminal',
-      'Discharge Terminal',
-      'Trip Number',
-      'Status',
-    ];
+    // Generate XML-based Microsoft Excel Spreadsheet (Native .xls format with styled formatting)
+    const xmlRows = excelDataRows.map((r, idx) => `
+      <Row>
+        <Cell><Data ss:Type="Number">${idx + 1}</Data></Cell>
+        <Cell><Data ss:Type="String">${r.date}</Data></Cell>
+        <Cell><Data ss:Type="String">${r.time}</Data></Cell>
+        <Cell><Data ss:Type="String">${r.tripNumber}</Data></Cell>
+        <Cell><Data ss:Type="String">${r.driverIdentifier}</Data></Cell>
+        <Cell><Data ss:Type="String">${r.driverName}</Data></Cell>
+        <Cell><Data ss:Type="String">${r.vehicleNo}</Data></Cell>
+        <Cell><Data ss:Type="String">${r.cheNo}</Data></Cell>
+        <Cell><Data ss:Type="String">${r.container}</Data></Cell>
+        <Cell><Data ss:Type="String">${r.sizeOfContainer}</Data></Cell>
+        <Cell><Data ss:Type="String">${r.damageOrNot}</Data></Cell>
+        <Cell><Data ss:Type="String">${r.loadTerminal}</Data></Cell>
+        <Cell><Data ss:Type="String">${r.dischargeTerminal}</Data></Cell>
+        <Cell><Data ss:Type="String">${r.status}</Data></Cell>
+      </Row>`).join('');
 
-    const csvRows = [
-      headers.join(','),
-      ...excelDataRows.map((r) =>
-        [
-          `"${r.date}"`,
-          `"${r.time}"`,
-          `"${r.driverIdentifier}"`,
-          `"${r.driverName}"`,
-          `"${r.vehicleNo}"`,
-          `"${r.cheNo}"`,
-          `"${r.container}"`,
-          `"${r.sizeOfContainer}"`,
-          `"${r.damageOrNot}"`,
-          `"${r.loadTerminal}"`,
-          `"${r.dischargeTerminal}"`,
-          `"${r.tripNumber}"`,
-          `"${r.status}"`,
-        ].join(',')
-      ),
-    ];
+    const excelXML = `<?xml version="1.0"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:o="urn:schemas-microsoft-com:office:office"
+ xmlns:x="urn:schemas-microsoft-com:office:excel"
+ xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+ <Styles>
+  <Style ss:ID="Header">
+   <Font ss:Bold="1" ss:Color="#FFFFFF"/>
+   <Interior ss:Color="#0A3641" ss:Pattern="Solid"/>
+   <Alignment ss:Horizontal="Center"/>
+  </Style>
+ </Styles>
+ <Worksheet ss:Name="ITT Dispatch Report">
+  <Table>
+   <Row ss:StyleID="Header">
+    <Cell><Data ss:Type="String">#</Data></Cell>
+    <Cell><Data ss:Type="String">Date</Data></Cell>
+    <Cell><Data ss:Type="String">Time</Data></Cell>
+    <Cell><Data ss:Type="String">Trip Number</Data></Cell>
+    <Cell><Data ss:Type="String">Driver ID</Data></Cell>
+    <Cell><Data ss:Type="String">Driver Name</Data></Cell>
+    <Cell><Data ss:Type="String">Vehicle No</Data></Cell>
+    <Cell><Data ss:Type="String">CHE / SCK No</Data></Cell>
+    <Cell><Data ss:Type="String">Container Number</Data></Cell>
+    <Cell><Data ss:Type="String">Size</Data></Cell>
+    <Cell><Data ss:Type="String">Damage Status</Data></Cell>
+    <Cell><Data ss:Type="String">Load Terminal</Data></Cell>
+    <Cell><Data ss:Type="String">Discharge Terminal</Data></Cell>
+    <Cell><Data ss:Type="String">Status</Data></Cell>
+   </Row>
+   ${xmlRows}
+  </Table>
+ </Worksheet>
+</Workbook>`;
 
-    const csvContent = csvRows.join('\n');
-    const fileName = `SCK_ITT_Report_${selectedDate || 'ALL_DATES'}_${selectedTerminal}_${selectedDriver}.csv`;
+    const fileName = `SMART_ITT_Dispatch_Report_${selectedDate || 'ALL_DATES'}_${selectedTerminal}_${selectedDriver}.xls`;
 
     if (Platform.OS === 'web' && typeof window !== 'undefined' && typeof document !== 'undefined') {
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const blob = new Blob([excelXML], { type: 'application/vnd.ms-excel;charset=utf-8' });
       const link = document.createElement('a');
       const url = URL.createObjectURL(blob);
       link.setAttribute('href', url);
@@ -385,11 +402,201 @@ export default function SupervisorReports() {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      Alert.alert('Export Complete', `Excel/CSV downloaded as "${fileName}". Contains ${excelDataRows.length} container records.`);
+      Alert.alert('Excel Export Complete', `Report downloaded as "${fileName}". Contains ${excelDataRows.length} container records.`);
     } else {
       Alert.alert(
         'Excel Export Generated',
-        `Successfully generated "${fileName}" with ${excelDataRows.length} rows.\n\nDate: ${selectedDate || 'All'}\nTerminal: ${selectedTerminal}\nDriver: ${selectedDriver}`
+        `Successfully generated "${fileName}" with ${excelDataRows.length} rows.`
+      );
+    }
+  };
+
+  // ─── Export as Printable PDF Report function ───
+  const handleExportPdf = () => {
+    if (excelDataRows.length === 0) {
+      Alert.alert('Empty Report', 'There are no rows matching your selected filters to export.');
+      return;
+    }
+
+    const reportTitle = `SMART ITT — Official Dispatch & Terminal Operations Report`;
+    const genDate = new Date().toLocaleString();
+    const filterSummary = `Date: ${selectedDate || 'All Recorded Dates'} | Terminal: ${selectedTerminal} | Driver: ${selectedDriver}`;
+
+    const tableRows = excelDataRows.map((r, i) => `
+      <tr style="background-color: ${i % 2 === 0 ? '#f8fafd' : '#ffffff'};">
+        <td style="text-align: center; font-weight: bold; padding: 6px 8px;">${i + 1}</td>
+        <td style="padding: 6px 8px;">${r.date}<br/><small style="color: #666;">${r.time}</small></td>
+        <td style="padding: 6px 8px; font-weight: 600; color: #005662;">${r.tripNumber}</td>
+        <td style="padding: 6px 8px;">${r.driverName}<br/><small style="color: #666;">ID: ${r.driverIdentifier}</small></td>
+        <td style="padding: 6px 8px;"><b>${r.vehicleNo}</b></td>
+        <td style="padding: 6px 8px; font-weight: bold; color: #00838f;">${r.cheNo}</td>
+        <td style="padding: 6px 8px; font-family: monospace; font-weight: bold;">${r.container}</td>
+        <td style="padding: 6px 8px; text-align: center;"><span style="background: #e0f2f1; padding: 2px 6px; border-radius: 4px; font-size: 11px;">${r.sizeOfContainer}</span></td>
+        <td style="padding: 6px 8px; text-align: center; color: ${r.damageOrNot === 'DAMAGED' ? '#d32f2f' : '#2e7d32'}; font-weight: bold;">${r.damageOrNot}</td>
+        <td style="padding: 6px 8px;">${r.loadTerminal} ➔ ${r.dischargeTerminal}</td>
+        <td style="padding: 6px 8px; text-align: center;"><span style="background: #e8f5e9; color: #1b5e20; padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 11px;">${r.status}</span></td>
+      </tr>
+    `).join('');
+
+    const htmlContent = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <title>${reportTitle}</title>
+  <style>
+    @media print {
+      @page { size: landscape; margin: 12mm; }
+      body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      margin: 20px;
+      color: #1a202c;
+      font-size: 12px;
+    }
+    .header-bar {
+      border-bottom: 3px solid #00838f;
+      padding-bottom: 12px;
+      margin-bottom: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+    }
+    .title {
+      font-size: 20px;
+      font-weight: 800;
+      color: #004d40;
+      letter-spacing: -0.5px;
+      margin: 0;
+    }
+    .subtitle {
+      font-size: 12px;
+      color: #546e7a;
+      margin-top: 4px;
+    }
+    .meta-box {
+      background: #eceff1;
+      border-radius: 6px;
+      padding: 10px 14px;
+      margin-bottom: 16px;
+      font-size: 11px;
+      display: flex;
+      justify-content: space-between;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+    }
+    th {
+      background-color: #004d40;
+      color: #ffffff;
+      padding: 8px;
+      text-align: left;
+      font-weight: bold;
+      border: 1px solid #00332c;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    td {
+      border: 1px solid #cfd8dc;
+    }
+    .footer {
+      margin-top: 24px;
+      padding-top: 10px;
+      border-top: 1px solid #cfd8dc;
+      font-size: 10px;
+      color: #78909c;
+      display: flex;
+      justify-content: space-between;
+    }
+    .print-btn {
+      background: #00838f;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-bottom: 15px;
+    }
+    @media print {
+      .print-btn { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <button class="print-btn" onclick="window.print()">🖨️ PRINT / SAVE AS PDF</button>
+  <div class="header-bar">
+    <div>
+      <h1 class="title">🚛 SMART ITT — INTER-TERMINAL LOGISTICS REPORT</h1>
+      <div class="subtitle">Port Container Handling Equipment & Vehicle Telematics Dispatch Summary</div>
+    </div>
+    <div style="text-align: right; font-size: 11px; color: #546e7a;">
+      <b>PORT TELEMATICS AUTHORITY</b><br/>
+      Generated by: <b>${supervisorName}</b>
+    </div>
+  </div>
+
+  <div class="meta-box">
+    <div><b>Filters Applied:</b> ${filterSummary}</div>
+    <div><b>Total Container Records:</b> ${excelDataRows.length} | <b>Damaged:</b> ${damagedCount} | <b>Generated:</b> ${genDate}</div>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th style="width: 30px; text-align: center;">#</th>
+        <th>Date & Time</th>
+        <th>Trip #</th>
+        <th>Driver Info</th>
+        <th>Vehicle No</th>
+        <th>CHE / SCK No</th>
+        <th>Container No</th>
+        <th style="text-align: center;">Size</th>
+        <th style="text-align: center;">Condition</th>
+        <th>Terminal Route</th>
+        <th style="text-align: center;">Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${tableRows}
+    </tbody>
+  </table>
+
+  <div class="footer">
+    <div>SMART ITT SYSTEM — Confidential Port Logistics Operations Document</div>
+    <div>Page 1 of 1 · Verified Telematics Dispatch Data</div>
+  </div>
+
+  <script>
+    // Automatically trigger print dialog when opened
+    window.addEventListener('load', () => {
+      setTimeout(() => { window.print(); }, 400);
+    });
+  </script>
+</body>
+</html>`;
+
+    if (Platform.OS === 'web' && typeof window !== 'undefined' && typeof document !== 'undefined') {
+      const printWindow = window.open('', '_blank');
+      if (printWindow) {
+        printWindow.document.open();
+        printWindow.document.write(htmlContent);
+        printWindow.document.close();
+      } else {
+        // Fallback to downloadable HTML that opens directly in browser print
+        const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `SMART_ITT_Report_${selectedDate || 'ALL'}.html`;
+        link.click();
+      }
+    } else {
+      Alert.alert(
+        'PDF Export Generated',
+        `Report with ${excelDataRows.length} container records compiled.\nUse the web portal or browser print preview to save as PDF.`
       );
     }
   };
@@ -795,14 +1002,24 @@ export default function SupervisorReports() {
           </View>
         )}
 
-        {/* ─── 6. EXCEL EXPORT BUTTON ─── */}
+        {/* ─── 6. EXPORT ACTION BUTTONS (PDF & EXCEL) ─── */}
         <View style={styles.exportSection}>
-          <TouchableOpacity style={styles.exportExcelBtn} onPress={handleExportExcel} activeOpacity={0.88}>
-            <Ionicons name="download" size={18} color="#00363d" />
-            <Text style={styles.exportExcelBtnText}>DOWNLOAD EXCEL SPREADSHEET (.CSV)</Text>
-          </TouchableOpacity>
+          <View style={styles.exportButtonsRow}>
+            {/* EXCEL SPREADSHEET BUTTON */}
+            <TouchableOpacity style={styles.exportExcelBtn} onPress={handleExportExcel} activeOpacity={0.88}>
+              <Ionicons name="document-text" size={18} color="#00363d" />
+              <Text style={styles.exportExcelBtnText}>EXPORT AS EXCEL (.XLS)</Text>
+            </TouchableOpacity>
+
+            {/* PDF DOCUMENT BUTTON */}
+            <TouchableOpacity style={styles.exportPdfBtn} onPress={handleExportPdf} activeOpacity={0.88}>
+              <Ionicons name="print" size={18} color="#ffffff" />
+              <Text style={styles.exportPdfBtnText}>EXPORT AS PDF</Text>
+            </TouchableOpacity>
+          </View>
+
           <Text style={styles.exportHelpText}>
-            Export includes: Date · Time · Driver ID · Driver Name · Vehicle No · CHE No · Container(s) · Size · Damage · Load Terminal · Discharge Terminal
+            Export includes: Date · Time · Driver ID · Driver Name · Vehicle No · CHE No · Container(s) · Size · Damage · Load Terminal · Discharge Terminal · Status
           </Text>
         </View>
 
@@ -1469,12 +1686,19 @@ const styles = StyleSheet.create({
 
   // Export Section
   exportSection: {
-    gap: 6,
+    gap: 8,
     alignItems: 'center',
+    width: '100%',
+  },
+  exportButtonsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    width: '100%',
   },
   exportExcelBtn: {
+    flex: 1,
     backgroundColor: '#22ef7e',
-    width: '100%',
     height: 48,
     borderRadius: radius.DEFAULT,
     flexDirection: 'row',
@@ -1482,9 +1706,34 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
     elevation: 4,
+    shadowColor: '#22ef7e',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
   },
   exportExcelBtnText: {
     color: '#00363d',
+    fontSize: 12,
+    fontWeight: '900',
+    letterSpacing: 0.8,
+  },
+  exportPdfBtn: {
+    flex: 1,
+    backgroundColor: '#00838f',
+    height: 48,
+    borderRadius: radius.DEFAULT,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    elevation: 4,
+    shadowColor: '#00e5ff',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+  },
+  exportPdfBtnText: {
+    color: '#ffffff',
     fontSize: 12,
     fontWeight: '900',
     letterSpacing: 0.8,

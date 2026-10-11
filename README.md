@@ -125,6 +125,16 @@ Supervisors have access to live date-wise reporting tables and an interactive dr
 
 ---
 
+### 5. Multi-Format Dispatch Export (Excel & PDF)
+Supervisors can instantly export terminal dispatch records, driver performance, and container logs in both Microsoft Excel (`.XLS` / `.CSV`) spreadsheet format and formatted printable PDF documents.
+
+<div align="center">
+  <img src="docs/screenshots/export_pdf_excel_buttons.png" alt="Export As Excel and PDF Action Buttons" width="85%" style="border-radius: 8px; border: 1px solid #1e293b;" />
+  <p><i>Dual Action Export: <b>EXPORT AS EXCEL (.XLS)</b> in emerald and <b>EXPORT AS PDF</b> in cyan with automated print formatting.</i></p>
+</div>
+
+---
+
 ## ⚡ Feature Matrix
 
 ### 🚛 Driver Portal & Mobile App
@@ -139,6 +149,7 @@ Supervisors have access to live date-wise reporting tables and an interactive dr
 ### 👔 Supervisor Terminal Cockpit
 - **Live Dispatch Queue**: One-click confirmation, gate pass verification, and trip assignment.
 - **Date-Wise Trip Analytics**: Filters trips by date, terminal pair (e.g. `JCT ➔ CICT`, `SAGT ➔ CWIT`), vehicle number, and status.
+- **Export as PDF & Excel**: Instant generation of formatted Excel spreadsheets (`.xls`) and printable executive PDF documents.
 - **Live Fleet Directory**: Complete list of registered terminal drivers with active status badges and profile avatars.
 - **Daily Performance Metrics**: Real-time counter of total transfers, completed runs, pending gate-ins, and active bottlenecks.
 
