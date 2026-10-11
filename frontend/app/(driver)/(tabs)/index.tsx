@@ -21,6 +21,7 @@ import { dashboardService, DriverDashboardStats } from '../../../src/services/da
 import { driverService } from '../../../src/services/driverService';
 import { colors, radius, spacing } from '../../../src/theme';
 import { useMockTripStore } from '../../../src/store/mockTripStore';
+import { useDriverMessageStore } from '../../../src/store/driverMessageStore';
 
 const TERMINALS = ['CICT', 'CWIT', 'ECT', 'JCT', 'UCT', 'SAGT'] as const;
 type TerminalCode = (typeof TERMINALS)[number];
@@ -29,6 +30,7 @@ export default function DriverHomeDashboard() {
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
   const router = useRouter();
+  const unreadMessagesCount = useDriverMessageStore((s) => s.messages.filter((m) => !m.read).length);
 
   // Trips & Dashboard State
   const [trips, setTrips] = useState<any[]>([]);
@@ -225,15 +227,17 @@ export default function DriverHomeDashboard() {
               <Text style={styles.statusToggleText}>{isOnline ? 'ONLINE' : 'OFFLINE'}</Text>
             </TouchableOpacity>
 
-            {/* Notification button with badge */}
+            {/* Notification button with live badge */}
             <TouchableOpacity
               style={styles.headerIconBtn}
-              onPress={() => setNotificationsModalVisible(true)}
+              onPress={() => router.push('/(driver)/(tabs)/notifications')}
             >
-              <Ionicons name="notifications" size={18} color="#00e5ff" />
-              <View style={styles.unreadBadge}>
-                <Text style={styles.unreadBadgeText}>3</Text>
-              </View>
+              <Ionicons name="chatbubbles" size={18} color="#00e5ff" />
+              {unreadMessagesCount > 0 && (
+                <View style={styles.unreadBadge}>
+                  <Text style={styles.unreadBadgeText}>{unreadMessagesCount}</Text>
+                </View>
+              )}
             </TouchableOpacity>
 
             {/* Logout button */}
@@ -699,11 +703,11 @@ export default function DriverHomeDashboard() {
               <Text style={styles.tileTitle}>Trip History</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.quickActionTile} onPress={() => setNotificationsModalVisible(true)}>
+            <TouchableOpacity style={styles.quickActionTile} onPress={() => router.push('/(driver)/(tabs)/notifications')}>
               <View style={[styles.tileIconCircle, { backgroundColor: 'rgba(0, 229, 255, 0.15)' }]}>
-                <Ionicons name="notifications" size={20} color="#00e5ff" />
+                <Ionicons name="chatbubbles" size={20} color="#00e5ff" />
               </View>
-              <Text style={styles.tileTitle}>Notifications</Text>
+              <Text style={styles.tileTitle}>Dispatch Comms</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.quickActionTile} onPress={() => setAllowanceModalVisible(true)}>
@@ -880,8 +884,23 @@ export default function DriverHomeDashboard() {
               </View>
             </View>
 
-            <TouchableOpacity style={styles.modalSubmitBtn} onPress={() => setNotificationsModalVisible(false)}>
-              <Text style={styles.modalSubmitBtnText}>DISMISS NOTIFICATIONS</Text>
+            <TouchableOpacity
+              style={[styles.modalSubmitBtn, { backgroundColor: '#00e5ff', marginTop: 14 }]}
+              onPress={() => {
+                setNotificationsModalVisible(false);
+                router.push('/(driver)/(tabs)/notifications');
+              }}
+            >
+              <Text style={[styles.modalSubmitBtnText, { color: '#080e17' }]}>
+                OPEN FULL DISPATCH COMMUNICATIONS HUB
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.modalSubmitBtn, { backgroundColor: 'transparent', borderWidth: 1, borderColor: '#242a34', marginTop: 8 }]}
+              onPress={() => setNotificationsModalVisible(false)}
+            >
+              <Text style={styles.modalSubmitBtnText}>CLOSE</Text>
             </TouchableOpacity>
           </View>
         </View>
