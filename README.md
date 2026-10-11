@@ -105,6 +105,20 @@ A complete operational trial demonstrating driver submission, supervisor approva
 
 ---
 
+### 3.1 Driver Mission Operations Console (Home Section)
+The Driver Home dashboard dynamically guides the operator through each operational milestone without clutter:
+- **Awaiting Confirmation**: Pulsing notification banner informing the driver that the trip is queued for supervisor gate pass approval.
+- **Supervisor Confirmed (`START THE TRIP NOW`)**: Once approved, highlights a prominent emerald action button to depart the origin gate.
+- **Trip In Transit (`ARRIVED AT TERMINAL`)**: Highlights active route and corridor destination with arrival reporting button.
+- **Arrived at Terminal (`COMPLETE TRIP & DISCHARGE`)**: Allows the driver to discharge containers and commit the trip into their permanent **My Trips** archive.
+
+<div align="center">
+  <img src="docs/screenshots/driver_home_lifecycle_console.png" alt="Driver Mission Operations Console on Home Dashboard" width="85%" style="border-radius: 8px; border: 1px solid #1e293b;" />
+  <p><i>Driver Home Section: Live mission details, loaded container breakdown, route telemetry, and dynamic lifecycle action buttons.</i></p>
+</div>
+
+---
+
 ### 4. Supervisor Command Center & Driver Directory
 Supervisors have access to live date-wise reporting tables and an interactive driver roster with high-resolution profile imagery and telematics telemetry.
 
