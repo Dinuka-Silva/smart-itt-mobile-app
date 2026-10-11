@@ -11,12 +11,26 @@ import {
   Alert,
   Modal,
   Platform,
+  Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../../../src/store/authStore';
 import { tripService } from '../../../src/services/tripService';
 import { useMockTripStore } from '../../../src/store/mockTripStore';
 import { colors, radius, spacing } from '../../../src/theme';
+
+const DRIVER_PHOTO_POOL = [
+  'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80',
+  'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=300&q=80',
+  'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=300&q=80',
+  'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=300&q=80',
+  'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80',
+  'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=300&q=80',
+  'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?auto=format&fit=crop&w=300&q=80',
+  'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=300&q=80',
+  'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=300&q=80',
+  'https://images.unsplash.com/photo-1528892952291-009c663ce843?auto=format&fit=crop&w=300&q=80',
+];
 
 const TERMINALS = ['ALL', 'CICT', 'CWIT', 'ECT', 'JCT', 'UCT', 'SAGT'] as const;
 const PERIOD_OPTIONS = [
@@ -168,6 +182,62 @@ export default function SupervisorMissionDispatcher() {
       return true;
     });
   }, [trips, selectedTerminal, selectedStatus, selectedDriverFilter, selectedPeriodFilter, searchQuery]);
+
+  // Date-wise grouped trips
+  const tripsByDate = useMemo(() => {
+    const todayStr = new Date().toISOString().slice(0, 10);
+    const yesterdayDate = new Date();
+    yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+    const yesterdayStr = yesterdayDate.toISOString().slice(0, 10);
+
+    const groups: {
+      [key: string]: {
+        dateKey: string;
+        displayDate: string;
+        isToday: boolean;
+        isYesterday: boolean;
+        trips: any[];
+        totalContainers: number;
+      };
+    } = {};
+
+    filteredTrips.forEach((t) => {
+      const rawDate = t.operationDate || t.startTime || t.createdAt || new Date().toISOString();
+      const dateKey = rawDate.slice(0, 10);
+
+      if (!groups[dateKey]) {
+        const isToday = dateKey === todayStr;
+        const isYesterday = dateKey === yesterdayStr;
+        let displayDate = dateKey;
+        try {
+          const dObj = new Date(dateKey + 'T00:00:00');
+          displayDate = dObj.toLocaleDateString('en-US', {
+            weekday: 'short',
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+          });
+        } catch {}
+
+        groups[dateKey] = {
+          dateKey,
+          displayDate,
+          isToday,
+          isYesterday,
+          trips: [],
+          totalContainers: 0,
+        };
+      }
+
+      const driverIndex = Math.abs((t.driverName || 'Kamal').charCodeAt(0) + (t.id || '1').charCodeAt(0)) % DRIVER_PHOTO_POOL.length;
+      const driverPhoto = t.driverPhoto || DRIVER_PHOTO_POOL[driverIndex];
+
+      groups[dateKey].trips.push({ ...t, driverPhoto });
+      groups[dateKey].totalContainers += (t.containers?.length || 1);
+    });
+
+    return Object.values(groups).sort((a, b) => b.dateKey.localeCompare(a.dateKey));
+  }, [filteredTrips]);
 
   const handleDischargeAndComplete = async (trip: any) => {
     try {
@@ -429,11 +499,11 @@ export default function SupervisorMissionDispatcher() {
             </ScrollView>
           </View>
 
-          {/* List of Trip Monitoring Cards */}
-          <View style={{ gap: 10, marginTop: 4 }}>
+          {/* List of Trip Monitoring Cards Grouped Date-Wise */}
+          <View style={{ gap: 14, marginTop: 4 }}>
             {loading ? (
               <ActivityIndicator size="large" color="#00e5ff" style={{ marginVertical: 20 }} />
-            ) : filteredTrips.length === 0 ? (
+            ) : tripsByDate.length === 0 ? (
               <View style={styles.emptyPendingCard}>
                 <Ionicons name="file-tray-outline" size={28} color="#849396" />
                 <Text style={styles.emptyPendingText}>NO MATCHING TRIPS</Text>
@@ -442,113 +512,159 @@ export default function SupervisorMissionDispatcher() {
                 </Text>
               </View>
             ) : (
-              filteredTrips.map((t) => {
-                const count20 = (t.containers || []).filter((c: any) => (c.size || '').includes('20')).length;
-                const count40 = (t.containers || []).filter((c: any) => (c.size || '').includes('40')).length;
-                const isPending = t.status === 'PENDING_APPROVAL';
-
-                return (
-                  <View key={t.id} style={styles.monitoringCard}>
-                    {/* Header */}
-                    <View style={styles.monHeader}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                        {t.status === 'IN_PROGRESS' && <View style={styles.greenPulseDot} />}
-                        <Text style={styles.monTripId}>
-                          {t.tripNumber || `ITT-${t.id?.slice(0, 6)}`}
-                        </Text>
-                      </View>
-
-                      <View
-                        style={[
-                          styles.monStatusBadge,
-                          t.status === 'IN_PROGRESS' && styles.badgeGreen,
-                          t.status === 'PENDING_APPROVAL' && styles.badgeAmber,
-                          t.status === 'APPROVED' && styles.badgeCyan,
-                          t.status === 'COMPLETED' && styles.badgeCyan,
-                          t.status === 'REJECTED' && styles.badgeRed,
-                        ]}
-                      >
-                        <Text style={styles.monStatusText}>{t.status?.replace(/_/g, ' ')}</Text>
-                      </View>
+              tripsByDate.map((group) => (
+                <View key={group.dateKey} style={styles.dateGroupWrap}>
+                  {/* Date Section Header */}
+                  <View style={styles.dateGroupHeader}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <Ionicons name="calendar" size={14} color="#00e5ff" />
+                      <Text style={styles.dateGroupTitle}>{group.displayDate.toUpperCase()}</Text>
+                      {group.isToday && (
+                        <View style={styles.todayPill}>
+                          <Text style={styles.todayPillText}>TODAY</Text>
+                        </View>
+                      )}
+                      {group.isYesterday && (
+                        <View style={styles.yesterdayPill}>
+                          <Text style={styles.yesterdayPillText}>YESTERDAY</Text>
+                        </View>
+                      )}
                     </View>
-
-                    {/* Route Row */}
-                    <View style={styles.monRouteBox}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                        <Text style={styles.monRouteText}>
-                          {t.sourceTerminal || 'CICT'}
-                        </Text>
-                        <Ionicons name="arrow-forward" size={14} color="#00e5ff" />
-                        <Text style={styles.monRouteText}>
-                          {t.destTerminal || 'JCT'}
-                        </Text>
-                      </View>
-
-                      <Text style={styles.monTime}>
-                        {t.startTime
-                          ? new Date(t.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                          : t.createdAt
-                          ? new Date(t.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                          : '08:30 AM'}
+                    <View style={styles.dateGroupCountBadge}>
+                      <Text style={styles.dateGroupCountText}>
+                        {group.trips.length} TRIPS • {group.totalContainers} CONTAINERS
                       </Text>
                     </View>
-
-                    {/* Specs Row */}
-                    <View style={styles.monSpecsRow}>
-                      <Text style={styles.monSpecItem}>
-                        Driver: <Text style={styles.monSpecBold}>{t.driverName || 'Kamal Perera'}</Text>
-                      </Text>
-                      <Text style={styles.monSpecItem}>
-                        Truck: <Text style={styles.monSpecBold}>{t.vehicleNumber || 'WP-BA-1234'}</Text>
-                      </Text>
-                      <Text style={styles.monSpecItem}>
-                        Vessel: <Text style={styles.monSpecBold}>{t.vesselName || 'MV Colombo Star'}</Text>
-                      </Text>
-                      <Text style={styles.monSpecItem}>
-                        Chai: <Text style={styles.monSpecBold}>{t.chassisNumber || t.chaiNumber || 'CHAI-102'}</Text>
-                      </Text>
-                      <Text style={styles.monSpecItem}>
-                        Cargo: <Text style={styles.monSpecBold}>{count20}×20FT · {count40}×40FT</Text>
-                      </Text>
-                    </View>
-
-                    {/* Container Manifest Chips */}
-                    {t.containers && t.containers.length > 0 && (
-                      <View style={styles.monContainersRow}>
-                        <Ionicons name="cube-outline" size={13} color="#00e5ff" />
-                        <Text style={styles.monContainersText}>
-                          {t.containers.map((c: any) => `${c.containerNumber} (${c.size || '40FT'})`).join('  ·  ')}
-                        </Text>
-                      </View>
-                    )}
-
-                    {/* Decision Action Buttons if Pending Approval or In Progress */}
-                    {(isPending || t.status === 'IN_PROGRESS') && (
-                      <View style={styles.decisionButtonsRow}>
-                        <TouchableOpacity
-                          style={styles.approveBtn}
-                          onPress={() => handleDischargeAndComplete(t)}
-                        >
-                          <Ionicons name="shield-checkmark" size={14} color="#00363d" />
-                          <Text style={styles.approveBtnText}>
-                            {isPending ? 'APPROVE & DISCHARGE GATE PASS' : 'DISCHARGE & COMPLETE TRIP'}
-                          </Text>
-                        </TouchableOpacity>
-
-                        {isPending && (
-                          <TouchableOpacity
-                            style={styles.rejectBtn}
-                            onPress={() => handleOpenRejectModal(t)}
-                          >
-                            <Ionicons name="close-circle" size={14} color="#ff5252" />
-                            <Text style={styles.rejectBtnText}>REJECT</Text>
-                          </TouchableOpacity>
-                        )}
-                      </View>
-                    )}
                   </View>
-                );
-              })
+
+                  {/* Trips List for this Date */}
+                  <View style={{ gap: 10, marginTop: 8 }}>
+                    {group.trips.map((t) => {
+                      const count20 = (t.containers || []).filter((c: any) => (c.size || '').includes('20')).length;
+                      const count40 = (t.containers || []).filter((c: any) => (c.size || '').includes('40')).length;
+                      const isPending = t.status === 'PENDING_APPROVAL';
+
+                      return (
+                        <View key={t.id} style={styles.monitoringCard}>
+                          {/* Header with Driver Photo */}
+                          <View style={styles.monHeader}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                              {t.driverPhoto ? (
+                                <Image source={{ uri: t.driverPhoto }} style={styles.monDriverThumb} />
+                              ) : (
+                                <View style={styles.monDriverThumbFallback}>
+                                  <Text style={styles.monDriverThumbText}>{(t.driverName || 'K')[0]}</Text>
+                                </View>
+                              )}
+                              <View>
+                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                                  {t.status === 'IN_PROGRESS' && <View style={styles.greenPulseDot} />}
+                                  <Text style={styles.monTripId}>
+                                    {t.tripNumber || `ITT-${t.id?.slice(0, 6)}`}
+                                  </Text>
+                                </View>
+                                <Text style={styles.monDriverNameSmall}>
+                                  {t.driverName || 'Kamal Perera'} {t.driverCode ? `(${t.driverCode})` : ''}
+                                </Text>
+                              </View>
+                            </View>
+
+                            <View
+                              style={[
+                                styles.monStatusBadge,
+                                t.status === 'IN_PROGRESS' && styles.badgeGreen,
+                                t.status === 'PENDING_APPROVAL' && styles.badgeAmber,
+                                t.status === 'APPROVED' && styles.badgeCyan,
+                                t.status === 'COMPLETED' && styles.badgeCyan,
+                                t.status === 'REJECTED' && styles.badgeRed,
+                              ]}
+                            >
+                              <Text style={styles.monStatusText}>{t.status?.replace(/_/g, ' ')}</Text>
+                            </View>
+                          </View>
+
+                          {/* Route Row */}
+                          <View style={styles.monRouteBox}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                              <Ionicons name="boat" size={13} color="#00e5ff" />
+                              <Text style={styles.monRouteText}>
+                                {t.sourceTerminal || 'CICT'}
+                              </Text>
+                              <Ionicons name="arrow-forward" size={13} color="#00e5ff" />
+                              <Text style={styles.monRouteText}>
+                                {t.destTerminal || 'JCT'}
+                              </Text>
+                            </View>
+
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                              <Ionicons name="time-outline" size={12} color="#feb300" />
+                              <Text style={styles.monTime}>
+                                {t.operationTime ||
+                                  (t.startTime
+                                    ? new Date(t.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                                    : t.createdAt
+                                    ? new Date(t.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                                    : '08:30 AM')}
+                              </Text>
+                            </View>
+                          </View>
+
+                          {/* Specs Row */}
+                          <View style={styles.monSpecsRow}>
+                            <Text style={styles.monSpecItem}>
+                              Truck: <Text style={styles.monSpecBoldHighlight}>{t.vehicleNumber || 'LY 5234'}</Text>
+                            </Text>
+                            <Text style={styles.monSpecItem}>
+                              CHE: <Text style={styles.monSpecBoldCyan}>{t.chassisNumber || t.chaiNumber || 'SCK 100'}</Text>
+                            </Text>
+                            <Text style={styles.monSpecItem}>
+                              Vessel: <Text style={styles.monSpecBold}>{t.vesselName || 'MV Colombo Star'}</Text>
+                            </Text>
+                            <Text style={styles.monSpecItem}>
+                              Cargo: <Text style={styles.monSpecBoldGreen}>{count20 > 0 ? `${count20}×20FT ` : ''}{count40 > 0 ? `${count40}×40FT` : ''}</Text>
+                            </Text>
+                          </View>
+
+                          {/* Container Manifest Chips */}
+                          {t.containers && t.containers.length > 0 && (
+                            <View style={styles.monContainersRow}>
+                              <Ionicons name="cube" size={13} color="#00e5ff" />
+                              <Text style={styles.monContainersText}>
+                                {t.containers.map((c: any) => `${c.containerNumber} (${c.size || '40FT'})`).join('  •  ')}
+                              </Text>
+                            </View>
+                          )}
+
+                          {/* Decision Action Buttons if Pending Approval or In Progress */}
+                          {(isPending || t.status === 'IN_PROGRESS') && (
+                            <View style={styles.decisionButtonsRow}>
+                              <TouchableOpacity
+                                style={styles.approveBtn}
+                                onPress={() => handleDischargeAndComplete(t)}
+                              >
+                                <Ionicons name="shield-checkmark" size={14} color="#00363d" />
+                                <Text style={styles.approveBtnText}>
+                                  {isPending ? 'APPROVE & DISCHARGE GATE PASS' : 'DISCHARGE & COMPLETE TRIP'}
+                                </Text>
+                              </TouchableOpacity>
+
+                              {isPending && (
+                                <TouchableOpacity
+                                  style={styles.rejectBtn}
+                                  onPress={() => handleOpenRejectModal(t)}
+                                >
+                                  <Ionicons name="close-circle" size={14} color="#ff5252" />
+                                  <Text style={styles.rejectBtnText}>REJECT</Text>
+                                </TouchableOpacity>
+                              )}
+                            </View>
+                          )}
+                        </View>
+                      );
+                    })}
+                  </View>
+                </View>
+              ))
             )}
           </View>
         </View>
@@ -815,6 +931,104 @@ const styles = StyleSheet.create({
   },
   filterChipTextActiveCyan: {
     color: '#00e5ff',
+  },
+
+  // ─── DATE-WISE GROUP STYLES ───
+  dateGroupWrap: {
+    gap: 4,
+  },
+  dateGroupHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#101721',
+    borderWidth: 1,
+    borderColor: '#242a34',
+    borderRadius: radius.DEFAULT,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  dateGroupTitle: {
+    color: '#dde2f0',
+    fontSize: 10,
+    fontWeight: '900',
+    letterSpacing: 0.5,
+  },
+  todayPill: {
+    backgroundColor: '#00e5ff',
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    borderRadius: 3,
+  },
+  todayPillText: {
+    color: '#00363d',
+    fontSize: 8,
+    fontWeight: '900',
+  },
+  yesterdayPill: {
+    backgroundColor: 'rgba(254, 179, 0, 0.2)',
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    borderRadius: 3,
+    borderWidth: 1,
+    borderColor: '#feb300',
+  },
+  yesterdayPillText: {
+    color: '#feb300',
+    fontSize: 8,
+    fontWeight: '800',
+  },
+  dateGroupCountBadge: {
+    backgroundColor: '#080e17',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: '#242a34',
+  },
+  dateGroupCountText: {
+    color: '#00e5ff',
+    fontSize: 9,
+    fontWeight: '800',
+  },
+  monDriverThumb: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    borderWidth: 1.5,
+    borderColor: '#00e5ff',
+  },
+  monDriverThumbFallback: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#101d30',
+    borderWidth: 1.5,
+    borderColor: '#00e5ff',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  monDriverThumbText: {
+    color: '#00e5ff',
+    fontWeight: '900',
+    fontSize: 12,
+  },
+  monDriverNameSmall: {
+    color: '#dde2f0',
+    fontSize: 10,
+    fontWeight: '700',
+  },
+  monSpecBoldHighlight: {
+    color: '#feb300',
+    fontWeight: '800',
+  },
+  monSpecBoldCyan: {
+    color: '#00e5ff',
+    fontWeight: '800',
+  },
+  monSpecBoldGreen: {
+    color: '#22ef7e',
+    fontWeight: '800',
   },
 
   // ─── MONITORING CARDS ───

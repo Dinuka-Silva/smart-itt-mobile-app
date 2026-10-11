@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Smart ITT",
-    "slug": "smart-itt",
+    "name": "SCK ITT Project",
+    "slug": "sck-itt-project",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",

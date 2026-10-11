@@ -9,6 +9,7 @@ import {
   Platform,
   ScrollView,
   Text,
+  Image,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -85,8 +86,10 @@ export default function LoginScreen() {
         name: isSupervisor ? 'Nimal Silva (Supervisor)' : 'Kamal Perera (Driver)',
         token: 'demo-token-xyz',
         driverId: isSupervisor ? undefined : 'driver-123',
-        driverCode: isSupervisor ? undefined : (username.trim() || 'DRV-00001'),
-        vehicleNumber: isSupervisor ? undefined : 'WP-BA-1234',
+        vehicleNumber: isSupervisor ? undefined : 'LY 5234',
+        chassisNumber: isSupervisor ? undefined : 'SCK 100',
+        cheNumber: isSupervisor ? undefined : 'SCK 100',
+        operator: isSupervisor ? undefined : 'SCK Logistics',
         supervisorId: isSupervisor ? 'sup-123' : undefined,
         status: 'ACTIVE',
       };
@@ -114,14 +117,22 @@ export default function LoginScreen() {
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
         {/* Brand Header */}
         <View style={styles.hero}>
-          <View style={styles.logoBadge}>
-            <Ionicons name="boat" size={32} color="#00e5ff" />
+          <View style={styles.companyPill}>
+            <Ionicons name="shield-checkmark" size={13} color="#00e5ff" />
+            <Text style={styles.companyPillText}>POWERED BY SCK LOGISTICS</Text>
           </View>
-          <Text style={styles.brandTitle}>SMART ITT</Text>
-          <Text style={styles.brandSubtitle}>INTER-TERMINAL TRANSPORTATION TELEMATICS</Text>
+          <View style={styles.logoBadge}>
+            <Image
+              source={require('../../assets/icon.png')}
+              style={styles.heroLogo}
+              resizeMode="contain"
+            />
+          </View>
+          <Text style={styles.brandTitle}>SCK ITT PROJECT</Text>
+          <Text style={styles.brandSubtitle}>INTER-TERMINAL TRANSPORTATION MANAGEMENT SYSTEM</Text>
           <View style={styles.onlineBadge}>
             <View style={styles.onlineDot} />
-            <Text style={styles.onlineText}>CENTRAL DISPATCH GATEWAY ONLINE</Text>
+            <Text style={styles.onlineText}>SCK FLEET TELEMATICS GATEWAY ONLINE</Text>
           </View>
         </View>
 
@@ -142,7 +153,7 @@ export default function LoginScreen() {
                 username === 'DRV-00001' && styles.roleTabTextActiveDark,
               ]}
             >
-              DRIVER COCKPIT
+              SCK DRIVER
             </Text>
           </TouchableOpacity>
 
@@ -164,7 +175,7 @@ export default function LoginScreen() {
                 username.includes('supervisor') && styles.roleTabTextActiveDark,
               ]}
             >
-              SUPERVISOR RADAR
+              SCK SUPERVISOR
             </Text>
           </TouchableOpacity>
         </View>
@@ -241,8 +252,15 @@ export default function LoginScreen() {
         </View>
 
         <View style={styles.footerWrap}>
+          <View style={styles.footerLogoContainer}>
+            <Image
+              source={require('../../assets/sck-logo.png')}
+              style={styles.footerLogo}
+              resizeMode="contain"
+            />
+          </View>
           <Text style={styles.footer}>
-            SRI LANKA PORTS AUTHORITY · TERMINAL KINETIC INDUSTRIAL HUD
+            SCK LOGISTICS (PVT) LTD · PORT & TERMINAL TELEMATICS
           </Text>
           <Text style={styles.footerSub}>TLS 1.3 MESH · 256-BIT JWT ENCRYPTION</Text>
         </View>
@@ -271,16 +289,40 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
   },
+  companyPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(0, 229, 255, 0.08)',
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 229, 255, 0.28)',
+    marginBottom: 4,
+  },
+  companyPillText: {
+    fontSize: 10,
+    fontWeight: '900',
+    color: '#00e5ff',
+    letterSpacing: 1.2,
+  },
   logoBadge: {
-    width: 60,
-    height: 60,
-    borderRadius: radius.DEFAULT,
-    backgroundColor: '#161c25',
+    width: 76,
+    height: 76,
+    borderRadius: 18,
+    backgroundColor: '#0e141d',
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#00e5ff',
-    elevation: 6,
+    borderWidth: 1.5,
+    borderColor: 'rgba(0, 229, 255, 0.4)',
+    elevation: 8,
+    overflow: 'hidden',
+  },
+  heroLogo: {
+    width: 74,
+    height: 74,
+    borderRadius: 16,
   },
   brandTitle: {
     fontSize: 26,
@@ -387,9 +429,8 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 13,
     color: '#dde2f0',
-        height: 50,
-    ...(Platform.OS === 'web' ? { outlineStyle: 'none' } : {}),
-  } as any,
+    height: 50,
+  },
   eyeBtn: {
     padding: 6,
   },
@@ -431,8 +472,26 @@ const styles = StyleSheet.create({
   },
   footerWrap: {
     alignItems: 'center',
-    marginTop: 20,
-    gap: 4,
+    marginTop: 22,
+    gap: 5,
+  },
+  footerLogoContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#ffffff',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 4,
+    borderWidth: 1.5,
+    borderColor: '#dfa837',
+    overflow: 'hidden',
+    elevation: 3,
+  },
+  footerLogo: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
   },
   footer: {
     fontSize: 9,

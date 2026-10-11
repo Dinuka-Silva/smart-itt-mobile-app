@@ -5,6 +5,16 @@
   --font-serif: var(--font-display);
 }
 
-*, body, html, input, button, select, textarea {
-  font-family: var(--font-display) !important;
+body, html, input, button, select, textarea {
+  font-family: var(--font-display);
 }
+
+/* Ensure vector icons are never overridden by general fonts */
+[style*="font-family: ionicons"],
+[style*="font-family: 'ionicons'"],
+[style*="font-family: Ionicons"],
+[style*="font-family: 'Ionicons'"],
+[data-icon] {
+  font-family: Ionicons, ionicons !important;
+}
+

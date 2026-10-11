@@ -26,6 +26,11 @@ export interface User {
   emergencyContactNumber?: string;
   status?: string;
   chaiNumber?: string;
+  chassisNumber?: string;
+  cheNumber?: string;
+  operator?: string;
+  profilePhoto?: string;
+  coverImage?: string;
 }
 
 interface AuthState {

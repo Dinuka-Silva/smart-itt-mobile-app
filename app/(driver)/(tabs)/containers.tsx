@@ -162,7 +162,7 @@ export default function DriverContainers() {
         <ActivityIndicator size="large" color="#00e5ff" style={{ marginTop: 30 }} />
       ) : filteredContainers.length === 0 ? (
         <View style={styles.emptyBox}>
-          <Text style={styles.emptyIcon}>📦</Text>
+          <Ionicons name="cube-outline" size={42} color="#849396" style={{ marginBottom: 12 }} />
           <Text style={styles.emptyTitle}>NO CONTAINERS</Text>
           <Text style={styles.emptySubtitle}>No containers match the selected date</Text>
         </View>
@@ -176,7 +176,10 @@ export default function DriverContainers() {
             <View key={c.id || idx} style={styles.card}>
               {/* Container Number + Size */}
               <View style={styles.cardHeader}>
-                <Text style={styles.containerNum}>{c.containerNumber}</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <Ionicons name="cube" size={16} color="#00e5ff" />
+                  <Text style={styles.containerNum}>{c.containerNumber}</Text>
+                </View>
                 <View style={[
                   styles.sizeBadge,
                   { backgroundColor: sizeLabel.startsWith('20') ? 'rgba(0, 229, 255, 0.15)' : 'rgba(254, 179, 0, 0.15)' }
@@ -191,9 +194,12 @@ export default function DriverContainers() {
               </View>
 
               {/* Trip Info */}
-              <Text style={styles.tripName}>
-                🚢 {c.vesselName || 'Vessel'} — {c.tripNumber || 'Trip'}
-              </Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
+                <Ionicons name="boat" size={13} color="#feb300" style={{ marginRight: 6 }} />
+                <Text style={styles.tripName}>
+                  {c.vesselName || 'Vessel'} — {c.tripNumber || 'Trip'}
+                </Text>
+              </View>
 
               {/* Route */}
               <View style={styles.routeRow}>
@@ -201,7 +207,7 @@ export default function DriverContainers() {
                   <Text style={styles.termLabel}>ORIGIN</Text>
                   <Text style={styles.termValue}>{c.sourceTerminal || 'ECT'}</Text>
                 </View>
-                <Text style={styles.arrow}>→</Text>
+                <Ionicons name="arrow-forward" size={16} color="#00e5ff" />
                 <View style={styles.termBox}>
                   <Text style={styles.termLabel}>DESTINATION</Text>
                   <Text style={styles.termValue}>{c.destTerminal || 'JCT'}</Text>
@@ -215,7 +221,10 @@ export default function DriverContainers() {
 
               {/* Weight if available */}
               {c.weight && (
-                <Text style={styles.weightText}>⚖️ Weight: {c.weight}T</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8 }}>
+                  <Ionicons name="scale-outline" size={13} color="#849396" style={{ marginRight: 4 }} />
+                  <Text style={styles.weightText}>Weight: {c.weight}T</Text>
+                </View>
               )}
             </View>
           );

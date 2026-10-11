@@ -219,10 +219,10 @@ export default function DriverRegisterScreen() {
         {/* Hero Section */}
         <View style={styles.hero}>
           <View style={styles.logoBadge}>
-            <Ionicons name="boat" size={28} color="#00e5ff" />
+            <Ionicons name="cube" size={28} color="#00e5ff" />
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={styles.brandTitle}>SMART ITT PORT SYSTEM</Text>
+            <Text style={styles.brandTitle}>SCK LOGISTICS PORT SYSTEM</Text>
             <Text style={styles.brandSubtitle}>NEW OPERATOR REGISTRATION PORTAL</Text>
           </View>
         </View>
@@ -695,7 +695,7 @@ export default function DriverRegisterScreen() {
               <View style={styles.loginCredsBox}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                   <Ionicons name="key" size={16} color="#22ef7e" />
-                  <Text style={styles.loginCredsTitle}>HOW TO LOG IN TO SMART ITT</Text>
+                  <Text style={styles.loginCredsTitle}>HOW TO LOG IN TO SCK LOGISTICS</Text>
                 </View>
                 <View style={styles.credRow}>
                   <Text style={styles.credKey}>OPERATOR USERNAME:</Text>

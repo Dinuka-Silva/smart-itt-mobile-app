@@ -9,16 +9,19 @@ export interface MockContainer {
   status?: 'LOCKED' | 'IN_TRANSIT' | 'DISCHARGED';
   unloadedAt?: string;
   unloadedTerminal?: string;
+  damageStatus?: 'NONE' | 'DAMAGED' | string;
 }
 
 export interface MockTrip {
   id: string;
   tripNumber: string;
   driverId: string;
+  driverCode?: string;
   driverName: string;
   vehicleNumber: string;
   chassisNumber?: string;
   chaiNumber?: string;
+  operator?: string;
   vesselName: string;
   voyageNumber?: string;
   operationDate?: string;
@@ -66,9 +69,11 @@ const initialTrips: MockTrip[] = [
     id: 'TRP-1001',
     tripNumber: 'ITT-2026-0891',
     driverId: 'demo-driver',
+    driverCode: 'DRV-00001',
     driverName: 'Kamal Perera',
-    vehicleNumber: 'WP-BA-1234',
-    chassisNumber: 'CHAI-102',
+    vehicleNumber: 'LY 5234',
+    chassisNumber: 'SCK 100',
+    operator: 'SCK Logistics',
     vesselName: 'MV Colombo Express',
     sourceTerminal: 'CICT',
     destTerminal: 'JCT',
@@ -76,17 +81,19 @@ const initialTrips: MockTrip[] = [
     startTime: todayISO,
     createdAt: todayISO,
     containers: [
-      { id: 'c-101', containerNumber: 'MSKU-88219-0', size: '40FT', isoType: '40HC', status: 'IN_TRANSIT', destTerminal: 'JCT' },
-      { id: 'c-102', containerNumber: 'TGHU-33012-9', size: '20FT', isoType: '20GP', status: 'IN_TRANSIT', destTerminal: 'JCT' },
+      { id: 'c-101', containerNumber: 'MSKU-88219-0', size: '40FT', isoType: '40HC', status: 'IN_TRANSIT', destTerminal: 'JCT', damageStatus: 'NONE' },
+      { id: 'c-102', containerNumber: 'TGHU-33012-9', size: '20FT', isoType: '20GP', status: 'IN_TRANSIT', destTerminal: 'JCT', damageStatus: 'DAMAGED' },
     ],
   },
   {
     id: 'TRP-1002',
     tripNumber: 'ITT-2026-0892',
     driverId: 'demo-driver',
+    driverCode: 'DRV-00001',
     driverName: 'Kamal Perera',
-    vehicleNumber: 'WP-BA-1234',
-    chassisNumber: 'CHAI-102',
+    vehicleNumber: 'LY 5234',
+    chassisNumber: 'SCK 100',
+    operator: 'SCK Logistics',
     vesselName: 'MV Maersk Seletar',
     sourceTerminal: 'ECT',
     destTerminal: 'UCT',
@@ -95,16 +102,18 @@ const initialTrips: MockTrip[] = [
     createdAt: todayISO,
     dischargedAt: todayISO,
     containers: [
-      { id: 'c-103', containerNumber: 'CMAU-90123-4', size: '40FT', isoType: '40HC', status: 'DISCHARGED', unloadedAt: todayISO, destTerminal: 'UCT' },
+      { id: 'c-103', containerNumber: 'CMAU-90123-4', size: '40FT', isoType: '40HC', status: 'DISCHARGED', unloadedAt: todayISO, destTerminal: 'UCT', damageStatus: 'NONE' },
     ],
   },
   {
     id: 'TRP-1003',
     tripNumber: 'ITT-2026-0893',
     driverId: 'drv-002',
-    driverName: 'Saman Kumara',
-    vehicleNumber: 'WP-DA-5567',
-    chassisNumber: 'CHAI-405',
+    driverCode: 'DRV-00002',
+    driverName: 'Saman Silva',
+    vehicleNumber: 'LY 5235',
+    chassisNumber: 'SCK 101',
+    operator: 'SCK Logistics',
     vesselName: 'MSC Katie',
     sourceTerminal: 'SAGT',
     destTerminal: 'CICT',
@@ -112,16 +121,18 @@ const initialTrips: MockTrip[] = [
     startTime: todayISO,
     createdAt: todayISO,
     containers: [
-      { id: 'c-104', containerNumber: 'MSCU-44910-2', size: '40FT', isoType: '40HC', status: 'IN_TRANSIT', destTerminal: 'CICT' },
+      { id: 'c-104', containerNumber: 'MSCU-44910-2', size: '40FT', isoType: '40HC', status: 'IN_TRANSIT', destTerminal: 'CICT', damageStatus: 'DAMAGED' },
     ],
   },
   {
     id: 'TRP-1004',
     tripNumber: 'ITT-2026-0894',
     driverId: 'drv-003',
-    driverName: 'Nimal Fernando',
-    vehicleNumber: 'WP-GA-9912',
-    chassisNumber: 'CHAI-208',
+    driverCode: 'DRV-00003',
+    driverName: 'Ruwan Fernando',
+    vehicleNumber: 'LY 5236',
+    chassisNumber: 'SCK 102',
+    operator: 'SCK Logistics',
     vesselName: 'Ever Given',
     sourceTerminal: 'CWIT',
     destTerminal: 'ECT',
@@ -131,7 +142,7 @@ const initialTrips: MockTrip[] = [
     createdAt: todayISO,
     dischargedAt: todayISO,
     containers: [
-      { id: 'c-105', containerNumber: 'EGLV-77123-0', size: '20FT', isoType: '20GP', status: 'DISCHARGED', unloadedAt: todayISO, destTerminal: 'ECT' },
+      { id: 'c-105', containerNumber: 'EGLV-77123-0', size: '20FT', isoType: '20GP', status: 'DISCHARGED', unloadedAt: todayISO, destTerminal: 'ECT', damageStatus: 'NONE' },
     ],
   },
   // Yesterday's trips
@@ -139,9 +150,11 @@ const initialTrips: MockTrip[] = [
     id: 'TRP-1005',
     tripNumber: 'ITT-2026-0880',
     driverId: 'demo-driver',
+    driverCode: 'DRV-00001',
     driverName: 'Kamal Perera',
-    vehicleNumber: 'WP-BA-1234',
-    chassisNumber: 'CHAI-102',
+    vehicleNumber: 'LY 5234',
+    chassisNumber: 'SCK 100',
+    operator: 'SCK Logistics',
     vesselName: 'COSCO Shipping',
     sourceTerminal: 'JCT',
     destTerminal: 'CICT',
@@ -151,16 +164,18 @@ const initialTrips: MockTrip[] = [
     createdAt: yesterdayISO,
     dischargedAt: yesterdayISO,
     containers: [
-      { id: 'c-106', containerNumber: 'COSU-12389-9', size: '40FT', status: 'DISCHARGED', unloadedAt: yesterdayISO, destTerminal: 'CICT' },
+      { id: 'c-106', containerNumber: 'COSU-12389-9', size: '40FT', status: 'DISCHARGED', unloadedAt: yesterdayISO, destTerminal: 'CICT', damageStatus: 'NONE' },
     ],
   },
   {
     id: 'TRP-1006',
     tripNumber: 'ITT-2026-0881',
-    driverId: 'drv-002',
-    driverName: 'Saman Kumara',
-    vehicleNumber: 'WP-DA-5567',
-    chassisNumber: 'CHAI-405',
+    driverId: 'drv-011',
+    driverCode: 'DRV-00011',
+    driverName: 'Roshan Mahanama',
+    vehicleNumber: 'LY 6528',
+    chassisNumber: 'SCK 115',
+    operator: 'SDR LINK',
     vesselName: 'ONE Continuity',
     sourceTerminal: 'UCT',
     destTerminal: 'SAGT',
@@ -170,17 +185,20 @@ const initialTrips: MockTrip[] = [
     createdAt: yesterdayISO,
     dischargedAt: yesterdayISO,
     containers: [
-      { id: 'c-107', containerNumber: 'ONEU-55412-1', size: '40FT', status: 'DISCHARGED', unloadedAt: yesterdayISO, destTerminal: 'SAGT' },
+      { id: 'c-107a', containerNumber: 'ONEU-55412-1', size: '20FT', status: 'DISCHARGED', unloadedAt: yesterdayISO, destTerminal: 'SAGT', damageStatus: 'NONE' },
+      { id: 'c-107b', containerNumber: 'ONEU-55413-7', size: '20FT', status: 'DISCHARGED', unloadedAt: yesterdayISO, destTerminal: 'SAGT', damageStatus: 'NONE' },
     ],
   },
   // Weekly / Monthly Trips
   {
     id: 'TRP-1007',
     tripNumber: 'ITT-2026-0850',
-    driverId: 'drv-004',
-    driverName: 'Sunil Silva',
-    vehicleNumber: 'WP-LA-3344',
-    chassisNumber: 'CHAI-601',
+    driverId: 'drv-017',
+    driverCode: 'DRV-00017',
+    driverName: 'Kumar Sangakkara',
+    vehicleNumber: 'LY 6530',
+    chassisNumber: 'SCK 119',
+    operator: 'E3 Logistics',
     vesselName: 'Hapag-Lloyd Express',
     sourceTerminal: 'CICT',
     destTerminal: 'ECT',
@@ -190,26 +208,30 @@ const initialTrips: MockTrip[] = [
     createdAt: threeDaysAgoISO,
     dischargedAt: threeDaysAgoISO,
     containers: [
-      { id: 'c-108', containerNumber: 'HLXU-99012-3', size: '20FT', status: 'DISCHARGED', unloadedAt: threeDaysAgoISO, destTerminal: 'ECT' },
+      { id: 'c-108a', containerNumber: 'HLXU-99012-3', size: '20FT', status: 'DISCHARGED', unloadedAt: threeDaysAgoISO, destTerminal: 'ECT', damageStatus: 'NONE' },
+      { id: 'c-108b', containerNumber: 'HLXU-99013-9', size: '20FT', status: 'DISCHARGED', unloadedAt: threeDaysAgoISO, destTerminal: 'ECT', damageStatus: 'DAMAGED' },
     ],
   },
   {
     id: 'TRP-1008',
     tripNumber: 'ITT-2026-0800',
     driverId: 'demo-driver',
+    driverCode: 'DRV-00001',
     driverName: 'Kamal Perera',
-    vehicleNumber: 'WP-BA-1234',
-    chassisNumber: 'CHAI-102',
+    vehicleNumber: 'LY 5234',
+    chassisNumber: 'SCK 100',
+    operator: 'SCK Logistics',
     vesselName: 'Yang Ming Target',
     sourceTerminal: 'ECT',
     destTerminal: 'CWIT',
     status: 'COMPLETED',
     startTime: tenDaysAgoISO,
     endTime: tenDaysAgoISO,
+
     createdAt: tenDaysAgoISO,
     dischargedAt: tenDaysAgoISO,
     containers: [
-      { id: 'c-109', containerNumber: 'YMLU-77612-5', size: '40FT', status: 'DISCHARGED', unloadedAt: tenDaysAgoISO, destTerminal: 'CWIT' },
+      { id: 'c-109', containerNumber: 'YMLU-77612-5', size: '40FT', status: 'DISCHARGED', unloadedAt: tenDaysAgoISO, destTerminal: 'CWIT', damageStatus: 'NONE' },
     ],
   },
 ];

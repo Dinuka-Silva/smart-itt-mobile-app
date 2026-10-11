@@ -97,6 +97,22 @@ export default function DriverJobQueue() {
   useEffect(() => { fetchTrips(); }, [fetchTrips]);
   useFocusEffect(useCallback(() => { fetchTrips(); }, [fetchTrips]));
 
+  const handleStartTrip = async (tripId: string) => {
+    setUpdatingId(tripId);
+    try {
+      await axios.patch(`${API_BASE_URL}/trips/${tripId}/status`, { status: 'IN_PROGRESS' });
+      useMockTripStore.getState().updateTripStatus(tripId, 'IN_PROGRESS');
+      showMessage('Trip Started', 'Gate pass validated. Trip is now IN PROGRESS.');
+      fetchTrips();
+    } catch {
+      useMockTripStore.getState().updateTripStatus(tripId, 'IN_PROGRESS');
+      showMessage('Trip Started', 'Gate pass validated. Trip is now IN PROGRESS.');
+      fetchTrips();
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
   const handleCompleteTrip = async (tripId: string) => {
     setUpdatingId(tripId);
     try {
@@ -109,27 +125,27 @@ export default function DriverJobQueue() {
       await axios.patch(`${API_BASE_URL}/trips/${tripId}/complete`, { containerUpdates });
       useMockTripStore.getState().unloadContainer(tripId, trip?.containers?.[0]?.id || 'c-1', new Date().toISOString());
       useMockTripStore.getState().updateTripStatus(tripId, 'COMPLETED');
-      showMessage('Trip Completed', 'Trip marked as completed successfully.');
+      showMessage('Trip Completed & Stored', 'All containers discharged. Trip has been stored in your My Trips archive!');
       fetchTrips();
     } catch {
       useMockTripStore.getState().unloadContainer(tripId, 'c-1', new Date().toISOString());
       useMockTripStore.getState().updateTripStatus(tripId, 'COMPLETED');
-      showMessage('Trip Completed', 'Trip marked as completed successfully.');
+      showMessage('Trip Completed & Stored', 'All containers discharged. Trip has been stored in your My Trips archive!');
       fetchTrips();
     } finally {
       setUpdatingId(null);
     }
   };
 
-  const completedCount = trips.filter((t) => t.status === 'COMPLETED' || t.status === 'APPROVED').length;
-  const inProgressCount = trips.filter((t) => t.status === 'IN_PROGRESS').length;
+  const completedCount = trips.filter((t) => t.status === 'COMPLETED').length;
+  const inProgressCount = trips.filter((t) => t.status === 'IN_PROGRESS' || t.status === 'APPROVED').length;
   const pendingCount = trips.filter((t) => t.status === 'PENDING_APPROVAL').length;
 
   const filteredTrips = trips.filter((t) => {
     if (filter === 'ALL') return true;
-    if (filter === 'ACTIVE') return t.status === 'IN_PROGRESS';
+    if (filter === 'ACTIVE') return t.status === 'IN_PROGRESS' || t.status === 'APPROVED';
     if (filter === 'PENDING') return t.status === 'PENDING_APPROVAL';
-    if (filter === 'DONE') return t.status === 'COMPLETED' || t.status === 'APPROVED';
+    if (filter === 'DONE') return t.status === 'COMPLETED';
     return true;
   });
 
@@ -206,22 +222,31 @@ export default function DriverJobQueue() {
         ) : (
           filteredTrips.map((trip) => {
             const tripNum = trip.tripNumber || `TRP-${trip.id?.slice(0, 6)}`;
+            const isApproved = trip.status === 'APPROVED';
             const isProgress = trip.status === 'IN_PROGRESS';
             const isPending = trip.status === 'PENDING_APPROVAL';
-            const isDone = trip.status === 'COMPLETED' || trip.status === 'APPROVED';
+            const isDone = trip.status === 'COMPLETED';
+
+            const statusColor = isDone
+              ? '#22ef7e'
+              : isProgress
+              ? '#00e5ff'
+              : isApproved
+              ? '#00e5ff'
+              : '#feb300';
 
             return (
               <View key={trip.id} style={styles.jobCard}>
-                <View style={[styles.jobBorderIndicator, isProgress && { backgroundColor: '#00e5ff' }, isPending && { backgroundColor: '#feb300' }, isDone && { backgroundColor: '#22ef7e' }]} />
+                <View style={[styles.jobBorderIndicator, { backgroundColor: statusColor }]} />
 
                 <View style={styles.jobCardContent}>
                   {/* Card Header */}
                   <View style={styles.jobHeader}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                       <Text style={styles.jobNumText}>{tripNum}</Text>
-                      <View style={[styles.statusTag, isProgress && { backgroundColor: 'rgba(0, 229, 255, 0.15)' }, isPending && { backgroundColor: 'rgba(254, 179, 0, 0.15)' }, isDone && { backgroundColor: 'rgba(34, 239, 126, 0.15)' }]}>
-                        <Text style={[styles.statusTagText, isProgress && { color: '#00e5ff' }, isPending && { color: '#feb300' }, isDone && { color: '#22ef7e' }]}>
-                          {trip.status?.replace(/_/g, ' ')}
+                      <View style={[styles.statusTag, { backgroundColor: `${statusColor}22` }]}>
+                        <Text style={[styles.statusTagText, { color: statusColor }]}>
+                          {isApproved ? 'GATE PASS APPROVED' : trip.status?.replace(/_/g, ' ')}
                         </Text>
                       </View>
                     </View>
@@ -257,13 +282,13 @@ export default function DriverJobQueue() {
                               <Ionicons name="cube" size={14} color={colors.primaryContainer} />
                               <Text style={styles.containerNumText}>{c.containerNumber || 'MSKU-88219-0'}</Text>
                             </View>
-                            <Text style={styles.isoType}>{c.isoType || '40FT HC'}</Text>
+                            <Text style={styles.isoType}>{c.size || c.isoType || '40FT'}</Text>
                           </View>
 
-                          {/* Unload Terminal Selector if in progress */}
-                          {isProgress && (
+                          {/* Unload Terminal Selector if in progress and arrived */}
+                          {isProgress && arrivedTrips.has(trip.id) && (
                             <View style={styles.unloadRow}>
-                              <Text style={styles.unloadLabel}>UNLOAD BAY:</Text>
+                              <Text style={styles.unloadLabel}>UNLOAD BAY / BERTH:</Text>
                               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 4 }}>
                                 {TERMINALS.map((term) => (
                                   <TouchableOpacity
@@ -284,10 +309,46 @@ export default function DriverJobQueue() {
                     })}
                   </View>
 
-                  {/* Actions */}
+                  {/* ─── State 1: PENDING APPROVAL ─── */}
+                  {isPending && (
+                    <View style={styles.pendingNoticeBox}>
+                      <Ionicons name="time-outline" size={16} color="#feb300" />
+                      <Text style={styles.pendingNoticeText}>
+                        Awaiting Port Operations Supervisor gate pass clearance before departure.
+                      </Text>
+                    </View>
+                  )}
+
+                  {/* ─── State 2: GATE PASS APPROVED -> START TRIP ─── */}
+                  {isApproved && (
+                    <View style={{ gap: 8 }}>
+                      <View style={styles.approvedNoticeBox}>
+                        <Ionicons name="shield-checkmark" size={16} color="#00e5ff" />
+                        <Text style={styles.approvedNoticeText}>
+                          Gate Pass Cleared. You are authorized to depart {trip.sourceTerminal || 'Origin'}.
+                        </Text>
+                      </View>
+                      <TouchableOpacity
+                        style={[styles.completeBtn, { backgroundColor: '#00e5ff' }]}
+                        onPress={() => handleStartTrip(trip.id)}
+                        disabled={updatingId === trip.id}
+                      >
+                        {updatingId === trip.id ? (
+                          <ActivityIndicator size="small" color="#00363d" />
+                        ) : (
+                          <>
+                            <Ionicons name="navigate" size={18} color="#00363d" />
+                            <Text style={styles.completeBtnText}>START TRIP / DEPART TERMINAL</Text>
+                          </>
+                        )}
+                      </TouchableOpacity>
+                    </View>
+                  )}
+
+                  {/* ─── State 3: IN PROGRESS -> ARRIVED AT DESTINATION ─── */}
                   {isProgress && !arrivedTrips.has(trip.id) && (
                     <TouchableOpacity
-                      style={styles.completeBtn}
+                      style={[styles.completeBtn, { backgroundColor: '#feb300' }]}
                       onPress={() => {
                         const next = new Set(arrivedTrips);
                         next.add(trip.id);
@@ -295,24 +356,47 @@ export default function DriverJobQueue() {
                       }}
                     >
                       <Ionicons name="location" size={18} color="#00363d" />
-                      <Text style={styles.completeBtnText}>ARRIVED AT DESTINATION TERMINAL</Text>
+                      <Text style={styles.completeBtnText}>ARRIVED AT DESTINATION TERMINAL ({trip.destTerminal})</Text>
                     </TouchableOpacity>
                   )}
+
+                  {/* ─── State 4: ARRIVED -> DISCHARGE & COMPLETE ─── */}
                   {isProgress && arrivedTrips.has(trip.id) && (
-                    <TouchableOpacity
-                      style={[styles.completeBtn, { backgroundColor: '#22ef7e' }]}
-                      onPress={() => handleCompleteTrip(trip.id)}
-                      disabled={updatingId === trip.id}
-                    >
-                      {updatingId === trip.id ? (
-                        <ActivityIndicator size="small" color="#00363d" />
-                      ) : (
-                        <>
-                          <Ionicons name="checkmark-done" size={18} color="#00363d" />
-                          <Text style={styles.completeBtnText}>COMPLETE TRIP</Text>
-                        </>
-                      )}
-                    </TouchableOpacity>
+                    <View style={{ gap: 8 }}>
+                      <View style={styles.arrivedNoticeBox}>
+                        <Ionicons name="pin" size={16} color="#22ef7e" />
+                        <Text style={styles.arrivedNoticeText}>
+                          Arrived at {trip.destTerminal}. Confirm unload bay and discharge cargo.
+                        </Text>
+                      </View>
+                      <TouchableOpacity
+                        style={[styles.completeBtn, { backgroundColor: '#22ef7e' }]}
+                        onPress={() => handleCompleteTrip(trip.id)}
+                        disabled={updatingId === trip.id}
+                      >
+                        {updatingId === trip.id ? (
+                          <ActivityIndicator size="small" color="#00363d" />
+                        ) : (
+                          <>
+                            <Ionicons name="checkmark-done" size={18} color="#00363d" />
+                            <Text style={styles.completeBtnText}>DISCHARGE CONTAINERS & COMPLETE TRIP</Text>
+                          </>
+                        )}
+                      </TouchableOpacity>
+                    </View>
+                  )}
+
+                  {/* ─── State 5: COMPLETED -> STORED IN MY TRIPS ─── */}
+                  {isDone && (
+                    <View style={styles.completedNoticeBox}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                        <Ionicons name="checkmark-circle" size={16} color="#22ef7e" />
+                        <Text style={styles.completedNoticeText}>STORED IN MY TRIPS ARCHIVE</Text>
+                      </View>
+                      <Text style={styles.completedNoticeSub}>
+                        Containers successfully discharged at {trip.destTerminal}. Trip record archived.
+                      </Text>
+                    </View>
                   )}
                 </View>
               </View>
@@ -598,5 +682,78 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     color: '#00363d',
     letterSpacing: 0.8,
+  },
+  pendingNoticeBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: 'rgba(254, 179, 0, 0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(254, 179, 0, 0.3)',
+    borderRadius: radius.sm,
+    padding: 10,
+    marginTop: 4,
+  },
+  pendingNoticeText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#feb300',
+    flex: 1,
+  },
+  approvedNoticeBox: {
+    flexDirection: 'column',
+    gap: 4,
+    backgroundColor: 'rgba(0, 229, 255, 0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 229, 255, 0.3)',
+    borderRadius: radius.sm,
+    padding: 10,
+  },
+  approvedNoticeText: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#00e5ff',
+  },
+  approvedNoticeSub: {
+    fontSize: 11,
+    fontWeight: '500',
+    color: '#849396',
+  },
+  arrivedNoticeBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: 'rgba(34, 239, 126, 0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(34, 239, 126, 0.3)',
+    borderRadius: radius.sm,
+    padding: 10,
+  },
+  arrivedNoticeText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#22ef7e',
+    flex: 1,
+  },
+  completedNoticeBox: {
+    flexDirection: 'column',
+    gap: 4,
+    backgroundColor: 'rgba(34, 239, 126, 0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(34, 239, 126, 0.3)',
+    borderRadius: radius.sm,
+    padding: 10,
+    marginTop: 4,
+  },
+  completedNoticeText: {
+    fontSize: 12,
+    fontWeight: '900',
+    color: '#22ef7e',
+    letterSpacing: 0.5,
+  },
+  completedNoticeSub: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#849396',
   },
 });

@@ -11,12 +11,14 @@ import {
   ActivityIndicator,
   Alert,
   Platform,
+  Image,
 } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../../../src/store/authStore';
 import { tripService } from '../../../src/services/tripService';
 import { dashboardService, DriverDashboardStats } from '../../../src/services/dashboardService';
+import { driverService } from '../../../src/services/driverService';
 import { colors, radius, spacing } from '../../../src/theme';
 import { useMockTripStore } from '../../../src/store/mockTripStore';
 
@@ -79,6 +81,16 @@ export default function DriverHomeDashboard() {
       const stats = await dashboardService.getDriverDashboard(driverId);
       setDashboardStats(stats);
       setIsOnline(true);
+
+      // Fetch driver profile photos if not yet loaded in store
+      if (!user?.profilePhoto) {
+        try {
+          const prof = await driverService.getProfile();
+          if (prof?.profilePhoto) {
+            useAuthStore.getState().updateUser({ profilePhoto: prof.profilePhoto, coverImage: prof.coverImage });
+          }
+        } catch {}
+      }
     } catch {
       setTrips(demoTrips);
       setIsOnline(false);
@@ -117,6 +129,7 @@ export default function DriverHomeDashboard() {
   const driverCode = user?.driverCode || user?.username || 'DRV-00001';
   const vehicleNumber = user?.vehicleNumber || activeTrip?.vehicleNumber || 'WP-BA-1234';
   const initials = driverName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase();
+  const driverPhoto = user?.profilePhoto || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80';
 
   // Container counts for active trip
   const count20Ft = (activeTrip?.containers || []).filter((c: any) => c.size === '20FT' || c.size === 'FT_20').length;
@@ -177,9 +190,18 @@ export default function DriverHomeDashboard() {
         {/* ─── A. DRIVER HEADER ─── */}
         <View style={styles.header}>
           <View style={styles.headerLeft}>
-            <View style={styles.avatarWrap}>
-              <Text style={styles.avatarText}>{initials}</Text>
-            </View>
+            <TouchableOpacity
+              activeOpacity={0.85}
+              onPress={() => router.push('/(driver)/(tabs)/profile')}
+            >
+              {driverPhoto ? (
+                <Image source={{ uri: driverPhoto }} style={styles.avatarImage} />
+              ) : (
+                <View style={styles.avatarWrap}>
+                  <Text style={styles.avatarText}>{initials}</Text>
+                </View>
+              )}
+            </TouchableOpacity>
             <View>
               <Text style={styles.driverNameText}>{driverName}</Text>
               <View style={styles.codeRow}>
@@ -933,6 +955,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#00e5ff',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  avatarImage: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    borderWidth: 2,
+    borderColor: '#00e5ff',
   },
   avatarText: {
     color: '#00363d',

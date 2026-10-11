@@ -11,6 +11,7 @@ import {
   ActivityIndicator,
   Alert,
   Platform,
+  Image,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -23,6 +24,26 @@ import { useMockTripStore } from '../../../src/store/mockTripStore';
 
 const TERMINALS = ['ALL', 'CICT', 'CWIT', 'ECT', 'JCT', 'UCT', 'SAGT'] as const;
 const STATUS_FILTERS = ['ALL', 'PENDING_APPROVAL', 'IN_PROGRESS', 'COMPLETED', 'APPROVED'] as const;
+
+const DATE_FILTER_OPTIONS = [
+  { id: 'ALL', label: 'ALL DATES' },
+  { id: 'TODAY', label: 'TODAY' },
+  { id: 'YESTERDAY', label: 'YESTERDAY' },
+  { id: 'OLDER', label: 'PREVIOUS DATES' },
+] as const;
+
+const DRIVER_PHOTO_POOL = [
+  'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80',
+  'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=300&q=80',
+  'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=300&q=80',
+  'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=300&q=80',
+  'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80',
+  'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=300&q=80',
+  'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?auto=format&fit=crop&w=300&q=80',
+  'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=300&q=80',
+  'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=300&q=80',
+  'https://images.unsplash.com/photo-1528892952291-009c663ce843?auto=format&fit=crop&w=300&q=80',
+];
 
 export default function SupervisorHomeDashboard() {
   const user = useAuthStore((s) => s.user);
@@ -57,6 +78,7 @@ export default function SupervisorHomeDashboard() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTerminal, setSelectedTerminal] = useState<string>('ALL');
   const [selectedStatus, setSelectedStatus] = useState<string>('ALL');
+  const [selectedDateFilter, setSelectedDateFilter] = useState<string>('ALL');
 
   // Modal States
   const [rejectModalVisible, setRejectModalVisible] = useState(false);
@@ -179,6 +201,68 @@ export default function SupervisorHomeDashboard() {
       return true;
     });
   }, [trips, selectedTerminal, selectedStatus, searchQuery]);
+
+  // Date-wise grouped trips for Trip Monitoring
+  const tripsByDate = useMemo(() => {
+    const todayStr = new Date().toISOString().slice(0, 10);
+    const yesterdayDate = new Date();
+    yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+    const yesterdayStr = yesterdayDate.toISOString().slice(0, 10);
+
+    const groups: {
+      [key: string]: {
+        dateKey: string;
+        displayDate: string;
+        isToday: boolean;
+        isYesterday: boolean;
+        trips: any[];
+        totalContainers: number;
+      };
+    } = {};
+
+    filteredTrips.forEach((t) => {
+      const rawDate = t.operationDate || t.startTime || t.createdAt || new Date().toISOString();
+      const dateKey = rawDate.slice(0, 10);
+
+      // Date Filter Check
+      if (selectedDateFilter === 'TODAY' && dateKey !== todayStr) return;
+      if (selectedDateFilter === 'YESTERDAY' && dateKey !== yesterdayStr) return;
+      if (selectedDateFilter === 'OLDER' && (dateKey === todayStr || dateKey === yesterdayStr)) return;
+
+      if (!groups[dateKey]) {
+        const isToday = dateKey === todayStr;
+        const isYesterday = dateKey === yesterdayStr;
+        let displayDate = dateKey;
+        try {
+          const dObj = new Date(dateKey + 'T00:00:00');
+          displayDate = dObj.toLocaleDateString('en-US', {
+            weekday: 'short',
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+          });
+        } catch {}
+
+        groups[dateKey] = {
+          dateKey,
+          displayDate,
+          isToday,
+          isYesterday,
+          trips: [],
+          totalContainers: 0,
+        };
+      }
+
+      const driverIndex = Math.abs((t.driverName || 'Kamal').charCodeAt(0) + (t.id || '1').charCodeAt(0)) % DRIVER_PHOTO_POOL.length;
+      const driverPhoto = t.driverPhoto || DRIVER_PHOTO_POOL[driverIndex];
+
+      groups[dateKey].trips.push({ ...t, driverPhoto });
+      groups[dateKey].totalContainers += (t.containers?.length || 1);
+    });
+
+    // Sort descending by date (newest first)
+    return Object.values(groups).sort((a, b) => b.dateKey.localeCompare(a.dateKey));
+  }, [filteredTrips, selectedDateFilter]);
 
   // Trips pending supervisor approval
   const pendingTrips = useMemo(() => {
@@ -414,11 +498,17 @@ export default function SupervisorHomeDashboard() {
           )}
         </View>
 
-        {/* ─── C. LIVE TRIP MONITORING (NO GPS / LOCATION TRACKING) ─── */}
+        {/* ─── C. LIVE TRIP MONITORING (DATE-WISE BREAKDOWN) ─── */}
         <View style={styles.sectionWrap}>
           <View style={styles.sectionTitleRow}>
-            <Ionicons name="radio" size={18} color="#00e5ff" />
-            <Text style={styles.sectionTitle}>LIVE TRIP MONITORING</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
+              <Ionicons name="radio" size={18} color="#00e5ff" />
+              <Text style={styles.sectionTitle}>LIVE TRIP MONITORING</Text>
+            </View>
+            <View style={styles.dateWiseCountPill}>
+              <Ionicons name="calendar-outline" size={11} color="#00e5ff" />
+              <Text style={styles.dateWiseCountPillText}>{tripsByDate.length} DATES</Text>
+            </View>
           </View>
 
           {/* Search Bar */}
@@ -426,7 +516,7 @@ export default function SupervisorHomeDashboard() {
             <Ionicons name="search" size={16} color="#849396" style={{ marginRight: 8 }} />
             <TextInput
               style={styles.searchInput}
-              placeholder="Search by Trip ID, Container, Vehicle, Vessel..."
+              placeholder="Search by Trip ID, Container, Vehicle, Vessel, Driver..."
               placeholderTextColor="#849396"
               value={searchQuery}
               onChangeText={setSearchQuery}
@@ -438,83 +528,178 @@ export default function SupervisorHomeDashboard() {
             )}
           </View>
 
+          {/* Quick Date Filters Chips */}
+          <View style={{ gap: 4 }}>
+            <Text style={styles.filterSubLabel}>DATE SELECTION</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterChipsScroll}>
+              {DATE_FILTER_OPTIONS.map((df) => (
+                <TouchableOpacity
+                  key={df.id}
+                  style={[
+                    styles.filterChip,
+                    selectedDateFilter === df.id && styles.filterChipActiveDate,
+                  ]}
+                  onPress={() => setSelectedDateFilter(df.id)}
+                >
+                  <Ionicons
+                    name={df.id === 'TODAY' ? 'today' : 'calendar'}
+                    size={11}
+                    color={selectedDateFilter === df.id ? '#00363d' : '#849396'}
+                    style={{ marginRight: 4 }}
+                  />
+                  <Text
+                    style={[
+                      styles.filterChipText,
+                      selectedDateFilter === df.id && styles.filterChipTextActiveDate,
+                    ]}
+                  >
+                    {df.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+
           {/* Terminal Filters Chips */}
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterChipsScroll}>
-            {TERMINALS.map((term) => (
-              <TouchableOpacity
-                key={term}
-                style={[styles.filterChip, selectedTerminal === term && styles.filterChipActive]}
-                onPress={() => setSelectedTerminal(term)}
-              >
-                <Text style={[styles.filterChipText, selectedTerminal === term && styles.filterChipTextActive]}>
-                  {term}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
+          <View style={{ gap: 4 }}>
+            <Text style={styles.filterSubLabel}>TERMINAL CLEARANCE</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterChipsScroll}>
+              {TERMINALS.map((term) => (
+                <TouchableOpacity
+                  key={term}
+                  style={[styles.filterChip, selectedTerminal === term && styles.filterChipActive]}
+                  onPress={() => setSelectedTerminal(term)}
+                >
+                  <Text style={[styles.filterChipText, selectedTerminal === term && styles.filterChipTextActive]}>
+                    {term}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
 
           {/* Status Filters Chips */}
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterChipsScroll}>
-            {STATUS_FILTERS.map((st) => (
-              <TouchableOpacity
-                key={st}
-                style={[styles.filterChip, selectedStatus === st && styles.filterChipActiveCyan]}
-                onPress={() => setSelectedStatus(st)}
-              >
-                <Text style={[styles.filterChipText, selectedStatus === st && styles.filterChipTextActiveCyan]}>
-                  {st}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
+          <View style={{ gap: 4 }}>
+            <Text style={styles.filterSubLabel}>MISSION STATUS</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterChipsScroll}>
+              {STATUS_FILTERS.map((st) => (
+                <TouchableOpacity
+                  key={st}
+                  style={[styles.filterChip, selectedStatus === st && styles.filterChipActiveCyan]}
+                  onPress={() => setSelectedStatus(st)}
+                >
+                  <Text style={[styles.filterChipText, selectedStatus === st && styles.filterChipTextActiveCyan]}>
+                    {st}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
 
-          {/* Trips List */}
-          <View style={{ gap: 10 }}>
-            {filteredTrips.length === 0 ? (
+          {/* Trips List - Date Wise Grouping */}
+          <View style={{ gap: 14 }}>
+            {tripsByDate.length === 0 ? (
               <View style={styles.emptyPendingCard}>
-                <Text style={styles.emptyPendingText}>NO TRIPS MATCH CRITERIA</Text>
+                <Ionicons name="calendar-outline" size={28} color="#849396" />
+                <Text style={styles.emptyPendingText}>NO TRIPS RECORDED FOR THIS CRITERIA</Text>
+                <Text style={styles.emptyPendingSub}>Select "ALL DATES" or clear the search filter.</Text>
               </View>
             ) : (
-              filteredTrips.map((t) => (
-                <View key={t.id} style={styles.monitoringCard}>
-                  <View style={styles.monHeader}>
-                    <Text style={styles.monTripId}>{t.tripNumber || `ITT-${t.id?.slice(0, 6)}`}</Text>
-                    <View
-                      style={[
-                        styles.monStatusBadge,
-                        t.status === 'COMPLETED' ? styles.badgeGreen :
-                        t.status === 'IN_PROGRESS' ? styles.badgeCyan :
-                        t.status === 'PENDING_APPROVAL' ? styles.badgeAmber : styles.badgeDefault,
-                      ]}
-                    >
-                      <Text style={styles.monStatusText}>{t.status}</Text>
+              tripsByDate.map((group) => (
+                <View key={group.dateKey} style={styles.dateGroupWrap}>
+                  {/* Date Header Banner */}
+                  <View style={styles.dateGroupHeader}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <Ionicons name="calendar" size={14} color="#00e5ff" />
+                      <Text style={styles.dateGroupTitle}>{group.displayDate.toUpperCase()}</Text>
+                      {group.isToday && (
+                        <View style={styles.todayPill}>
+                          <Text style={styles.todayPillText}>TODAY</Text>
+                        </View>
+                      )}
+                      {group.isYesterday && (
+                        <View style={styles.yesterdayPill}>
+                          <Text style={styles.yesterdayPillText}>YESTERDAY</Text>
+                        </View>
+                      )}
                     </View>
-                  </View>
-
-                  <View style={styles.monRouteBox}>
-                    <Text style={styles.monRouteText}>
-                      {t.sourceTerminal} ➔ {t.destTerminal}
-                    </Text>
-                    <Text style={styles.monTime}>
-                      {t.startTime ? new Date(t.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '09:00 AM'}
-                    </Text>
-                  </View>
-
-                  <View style={styles.monSpecsRow}>
-                    <Text style={styles.monSpecItem}>Driver: <Text style={styles.monSpecBold}>{t.driverName || 'Kamal Perera'}</Text></Text>
-                    <Text style={styles.monSpecItem}>Truck: <Text style={styles.monSpecBold}>{t.vehicleNumber || 'WP-BA-1234'}</Text></Text>
-                    <Text style={styles.monSpecItem}>Vessel: <Text style={styles.monSpecBold}>{t.vesselName || 'MV Colombo Star'}</Text></Text>
-                    <Text style={styles.monSpecItem}>Chai No: <Text style={styles.monSpecBold}>{t.chassisNumber || 'CHAI-102'}</Text></Text>
-                  </View>
-
-                  {t.containers && t.containers.length > 0 && (
-                    <View style={styles.monContainersRow}>
-                      <Ionicons name="cube-outline" size={13} color="#00e5ff" />
-                      <Text style={styles.monContainersText}>
-                        {t.containers.map((c: any) => `${c.containerNumber} (${c.size})`).join(', ')}
+                    <View style={styles.dateGroupCountBadge}>
+                      <Text style={styles.dateGroupCountText}>
+                        {group.trips.length} TRIPS • {group.totalContainers} CONTAINERS
                       </Text>
                     </View>
-                  )}
+                  </View>
+
+                  {/* Trips for this Date */}
+                  <View style={{ gap: 10, marginTop: 8 }}>
+                    {group.trips.map((t) => {
+                      const count20 = (t.containers || []).filter((c: any) => (c.size || '').includes('20')).length;
+                      const count40 = (t.containers || []).filter((c: any) => (c.size || '').includes('40')).length;
+                      return (
+                        <View key={t.id} style={styles.monitoringCard}>
+                          <View style={styles.monHeader}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                              {t.driverPhoto ? (
+                                <Image source={{ uri: t.driverPhoto }} style={styles.monDriverThumb} />
+                              ) : (
+                                <View style={styles.monDriverThumbFallback}>
+                                  <Text style={styles.monDriverThumbText}>{(t.driverName || 'K')[0]}</Text>
+                                </View>
+                              )}
+                              <View>
+                                <Text style={styles.monTripId}>{t.tripNumber || `ITT-${t.id?.slice(0, 6)}`}</Text>
+                                <Text style={styles.monDriverNameSmall}>
+                                  {t.driverName || 'Kamal Perera'} {t.driverCode ? `(${t.driverCode})` : ''}
+                                </Text>
+                              </View>
+                            </View>
+
+                            <View
+                              style={[
+                                styles.monStatusBadge,
+                                t.status === 'COMPLETED' ? styles.badgeGreen :
+                                t.status === 'IN_PROGRESS' ? styles.badgeCyan :
+                                t.status === 'PENDING_APPROVAL' ? styles.badgeAmber : styles.badgeDefault,
+                              ]}
+                            >
+                              <Text style={styles.monStatusText}>{t.status}</Text>
+                            </View>
+                          </View>
+
+                          <View style={styles.monRouteBox}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                              <Ionicons name="boat" size={13} color="#00e5ff" />
+                              <Text style={styles.monRouteText}>
+                                {t.sourceTerminal} ➔ {t.destTerminal}
+                              </Text>
+                            </View>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                              <Ionicons name="time-outline" size={12} color="#feb300" />
+                              <Text style={styles.monTime}>
+                                {t.operationTime || (t.startTime ? new Date(t.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '09:00 AM')}
+                              </Text>
+                            </View>
+                          </View>
+
+                          <View style={styles.monSpecsRow}>
+                            <Text style={styles.monSpecItem}>Truck: <Text style={styles.monSpecBoldHighlight}>{t.vehicleNumber || 'LY 5234'}</Text></Text>
+                            <Text style={styles.monSpecItem}>CHE: <Text style={styles.monSpecBoldCyan}>{t.chassisNumber || t.cheNumber || 'SCK 100'}</Text></Text>
+                            <Text style={styles.monSpecItem}>Vessel: <Text style={styles.monSpecBold}>{t.vesselName || 'MV Colombo Star'}</Text></Text>
+                            <Text style={styles.monSpecItem}>Cargo: <Text style={styles.monSpecBoldGreen}>{count20 > 0 ? `${count20}×20FT ` : ''}{count40 > 0 ? `${count40}×40FT` : ''}</Text></Text>
+                          </View>
+
+                          {t.containers && t.containers.length > 0 && (
+                            <View style={styles.monContainersRow}>
+                              <Ionicons name="cube" size={13} color="#00e5ff" />
+                              <Text style={styles.monContainersText}>
+                                {t.containers.map((c: any) => `${c.containerNumber} (${c.size})`).join('  •  ')}
+                              </Text>
+                            </View>
+                          )}
+                        </View>
+                      );
+                    })}
+                  </View>
                 </View>
               ))
             )}
@@ -529,23 +714,24 @@ export default function SupervisorHomeDashboard() {
           </View>
 
           <View style={{ gap: 8 }}>
-            {drivers.map((drv) => (
-              <View key={drv.id} style={styles.driverRowCard}>
-                <View style={styles.driverAvatar}>
-                  <Text style={styles.driverAvatarText}>{drv.fullName?.[0] || 'D'}</Text>
+            {drivers.map((drv, idx) => {
+              const photo = drv.profilePhoto || DRIVER_PHOTO_POOL[idx % DRIVER_PHOTO_POOL.length];
+              return (
+                <View key={drv.id} style={styles.driverRowCard}>
+                  <Image source={{ uri: photo }} style={styles.driverAvatarImg} />
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.driverFullName}>{drv.fullName}</Text>
+                    <Text style={styles.driverDetails}>
+                      Code: {drv.driverCode} · Truck: {drv.vehicleNumber || 'LY 5234'} · Tel: {drv.mobileNumber}
+                    </Text>
+                  </View>
+                  <View style={styles.driverActivePill}>
+                    <View style={styles.greenDot} />
+                    <Text style={styles.driverActivePillText}>{drv.status || 'ACTIVE'}</Text>
+                  </View>
                 </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.driverFullName}>{drv.fullName}</Text>
-                  <Text style={styles.driverDetails}>
-                    Code: {drv.driverCode} · Truck: {drv.vehicleNumber || 'WP-BA-1234'} · Tel: {drv.mobileNumber}
-                  </Text>
-                </View>
-                <View style={styles.driverActivePill}>
-                  <View style={styles.greenDot} />
-                  <Text style={styles.driverActivePillText}>{drv.status || 'ACTIVE'}</Text>
-                </View>
-              </View>
-            ))}
+              );
+            })}
           </View>
         </View>
 
@@ -1187,6 +1373,144 @@ const styles = StyleSheet.create({
     color: '#00e5ff',
     fontSize: 9,
       },
+
+  // ─── DATE-WISE MONITORING & DRIVERS STYLES ───
+  dateWiseCountPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(0, 229, 255, 0.1)',
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 229, 255, 0.3)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  dateWiseCountPillText: {
+    color: '#00e5ff',
+    fontSize: 9,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
+  filterSubLabel: {
+    color: '#849396',
+    fontSize: 8,
+    fontWeight: '800',
+    letterSpacing: 0.6,
+    textTransform: 'uppercase',
+    marginTop: 2,
+  },
+  filterChipActiveDate: {
+    backgroundColor: '#00e5ff',
+    borderColor: '#00e5ff',
+  },
+  filterChipTextActiveDate: {
+    color: '#00363d',
+    fontWeight: '900',
+  },
+  dateGroupWrap: {
+    gap: 4,
+  },
+  dateGroupHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#101721',
+    borderWidth: 1,
+    borderColor: '#242a34',
+    borderRadius: radius.DEFAULT,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  dateGroupTitle: {
+    color: '#dde2f0',
+    fontSize: 10,
+    fontWeight: '900',
+    letterSpacing: 0.5,
+  },
+  todayPill: {
+    backgroundColor: '#00e5ff',
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    borderRadius: 3,
+  },
+  todayPillText: {
+    color: '#00363d',
+    fontSize: 8,
+    fontWeight: '900',
+  },
+  yesterdayPill: {
+    backgroundColor: 'rgba(254, 179, 0, 0.2)',
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    borderRadius: 3,
+    borderWidth: 1,
+    borderColor: '#feb300',
+  },
+  yesterdayPillText: {
+    color: '#feb300',
+    fontSize: 8,
+    fontWeight: '800',
+  },
+  dateGroupCountBadge: {
+    backgroundColor: '#080e17',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: '#242a34',
+  },
+  dateGroupCountText: {
+    color: '#00e5ff',
+    fontSize: 9,
+    fontWeight: '800',
+  },
+  monDriverThumb: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    borderWidth: 1.5,
+    borderColor: '#00e5ff',
+  },
+  monDriverThumbFallback: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#101d30',
+    borderWidth: 1.5,
+    borderColor: '#00e5ff',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  monDriverThumbText: {
+    color: '#00e5ff',
+    fontWeight: '900',
+    fontSize: 12,
+  },
+  monDriverNameSmall: {
+    color: '#dde2f0',
+    fontSize: 10,
+    fontWeight: '700',
+  },
+  monSpecBoldHighlight: {
+    color: '#feb300',
+    fontWeight: '800',
+  },
+  monSpecBoldCyan: {
+    color: '#00e5ff',
+    fontWeight: '800',
+  },
+  monSpecBoldGreen: {
+    color: '#22ef7e',
+    fontWeight: '800',
+  },
+  driverAvatarImg: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    borderWidth: 1.5,
+    borderColor: '#00e5ff',
+  },
 
   // ─── DRIVERS ROW ───
   driverRowCard: {

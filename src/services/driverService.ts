@@ -16,7 +16,11 @@ export interface DriverProfile {
   emergencyContactName?: string;
   emergencyContactNumber?: string;
   profilePhoto?: string;
+  coverImage?: string;
   vehicleNumber?: string;
+  chassisNumber?: string;
+  cheNumber?: string;
+  operator?: string;
   status: string;
   createdAt?: string;
   updatedAt?: string;
@@ -41,6 +45,14 @@ export const driverService = {
 
   async updateStatus(id: string, status: string): Promise<DriverProfile> {
     const response = await apiClient.patch<DriverProfile>(`/drivers/${id}/status`, { status });
+    return response.data;
+  },
+
+  async updatePhotos(id: string, profilePhoto?: string, coverImage?: string): Promise<DriverProfile> {
+    const response = await apiClient.patch<DriverProfile>(`/drivers/${id}/photos`, {
+      profilePhoto,
+      coverImage,
+    });
     return response.data;
   },
 };

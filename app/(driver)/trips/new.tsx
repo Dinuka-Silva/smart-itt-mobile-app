@@ -595,8 +595,9 @@ export default function NewTripScreen() {
         vesselName: vesselName.trim(),
         operationDate,
         operationTime,
-        vehicleNumber: user?.vehicleNumber || 'WP-DA-4521',
-        chaiNumber: user?.chaiNumber || undefined,
+        vehicleNumber: user?.vehicleNumber || 'LY 5234',
+        chassisNumber: user?.chassisNumber || user?.cheNumber || 'SCK 100',
+        chaiNumber: user?.chassisNumber || user?.cheNumber || 'SCK 100',
         sourceTerminal,
         destTerminal: tripDestTerminal,
         notes: notes.trim() || undefined,
@@ -612,6 +613,29 @@ export default function NewTripScreen() {
 
       const res = await axios.post(`${API_BASE_URL}/trips`, payload);
       const createdTrip = res.data;
+
+      // Immediately sync with client mockTripStore so both Driver and Supervisor tabs reflect this trip in real time
+      useMockTripStore.getState().addTrip({
+        id: createdTrip.id,
+        tripNumber: createdTrip.tripNumber || createdTrip.id,
+        driverId: user?.driverId || user?.id || 'demo-driver',
+        driverCode: user?.driverId || 'DRV-00001',
+        driverName: user?.name || user?.fullName || 'Kamal Perera',
+        vehicleNumber: user?.vehicleNumber || 'LY 5234',
+        chassisNumber: user?.chassisNumber || user?.cheNumber || 'SCK 100',
+        chaiNumber: user?.chassisNumber || user?.cheNumber || 'SCK 100',
+        vesselName: vesselName.trim(),
+        operationDate,
+        operationTime,
+        sourceTerminal,
+        destTerminal: tripDestTerminal,
+        notes,
+        status: 'PENDING_APPROVAL',
+        containers: allTripContainers,
+        startTime: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
+      });
+
       setShowVerify(false);
       setSentTripNumber(createdTrip.tripNumber || createdTrip.id);
     } catch (err: any) {
@@ -623,8 +647,9 @@ export default function NewTripScreen() {
         tripNumber: newTripId,
         driverId: user?.driverId || user?.id || 'demo-driver',
         driverName: user?.name || 'Demo Driver',
-        vehicleNumber: user?.vehicleNumber || 'WP-DA-4521',
-        chaiNumber: user?.chaiNumber || undefined,
+        vehicleNumber: user?.vehicleNumber || 'LY 5234',
+        chassisNumber: user?.chassisNumber || user?.cheNumber || 'SCK 100',
+        chaiNumber: user?.chassisNumber || user?.cheNumber || 'SCK 100',
         vesselName: vesselName.trim(),
         operationDate,
         operationTime,
