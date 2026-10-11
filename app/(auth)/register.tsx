@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -16,6 +16,61 @@ import { Ionicons } from '@expo/vector-icons';
 import { authService, DriverRegisterRequest } from '../../src/services/authService';
 import { useAuthStore } from '../../src/store/authStore';
 import { colors, radius, spacing } from '../../src/theme';
+
+export const SCK_FLEET_VEHICLES = [
+  // SCK Logistics Main Fleet (10 vehicles)
+  { vehicleNumber: 'LY 5234', cheNumber: 'SCK 100', operator: 'SCK Logistics' },
+  { vehicleNumber: 'LY 5235', cheNumber: 'SCK 101', operator: 'SCK Logistics' },
+  { vehicleNumber: 'LY 5236', cheNumber: 'SCK 102', operator: 'SCK Logistics' },
+  { vehicleNumber: 'LY 5237', cheNumber: 'SCK 103', operator: 'SCK Logistics' },
+  { vehicleNumber: 'LY 5238', cheNumber: 'SCK 104', operator: 'SCK Logistics' },
+  { vehicleNumber: 'LY 5665', cheNumber: 'SCK 105', operator: 'SCK Logistics' },
+  { vehicleNumber: 'LY 5708', cheNumber: 'SCK 106', operator: 'SCK Logistics' },
+  { vehicleNumber: 'LY 5711', cheNumber: 'SCK 107', operator: 'SCK Logistics' },
+  { vehicleNumber: 'LY 5717', cheNumber: 'SCK 108', operator: 'SCK Logistics' },
+  { vehicleNumber: 'LY 5721', cheNumber: 'SCK 109', operator: 'SCK Logistics' },
+
+  // SDR LINK Fleet (6 vehicles)
+  { vehicleNumber: 'LY 6528', cheNumber: 'SCK 115', operator: 'SDR LINK' },
+  { vehicleNumber: 'LY 6529', cheNumber: 'SCK 117', operator: 'SDR LINK' },
+  { vehicleNumber: 'LY 5596', cheNumber: 'SCK 122', operator: 'SDR LINK' },
+  { vehicleNumber: 'LY 6530', cheNumber: 'SCK 119', operator: 'SDR LINK' },
+  { vehicleNumber: 'LY 6531', cheNumber: 'SCK 120', operator: 'SDR LINK' },
+  { vehicleNumber: 'LY 6532', cheNumber: 'SCK 121', operator: 'SDR LINK' },
+
+  // E3 Logistics Fleet (3 vehicles)
+  { vehicleNumber: 'LY 5597', cheNumber: 'SCK 123', operator: 'E3 Logistics' },
+  { vehicleNumber: 'LY 5598', cheNumber: 'SCK 124', operator: 'E3 Logistics' },
+  { vehicleNumber: 'LY 5600', cheNumber: 'SCK 125', operator: 'E3 Logistics' },
+];
+
+export function findFleetVehicle(input?: string) {
+  if (!input || !input.trim()) return null;
+  const clean = input.replace(/\s+/g, '').toUpperCase();
+  
+  // 1. Direct match on vehicle number
+  let match = SCK_FLEET_VEHICLES.find(
+    (v) => v.vehicleNumber.replace(/\s+/g, '').toUpperCase() === clean
+  );
+  if (match) return match;
+
+  // 2. Suffix match (e.g. user typed "5234" or "6528")
+  if (clean.length >= 4) {
+    match = SCK_FLEET_VEHICLES.find(
+      (v) => v.vehicleNumber.replace(/\s+/g, '').toUpperCase().endsWith(clean)
+    );
+    if (match) return match;
+  }
+
+  // 3. Match on CHE / SCK number (e.g. "SCK 100" or "SCK100")
+  match = SCK_FLEET_VEHICLES.find(
+    (v) => v.cheNumber.replace(/\s+/g, '').toUpperCase() === clean ||
+           (clean.startsWith('SCK') && v.cheNumber.replace(/\s+/g, '').toUpperCase().includes(clean))
+  );
+  if (match) return match;
+
+  return null;
+}
 
 export default function DriverRegisterScreen() {
   const router = useRouter();
@@ -36,6 +91,9 @@ export default function DriverRegisterScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+
+  // Automatically detect CHE No (SCK No) and Fleet Operator from entered Vehicle Number
+  const detectedFleet = useMemo(() => findFleetVehicle(vehicleNumber), [vehicleNumber]);
 
   // UI state
   const [loading, setLoading] = useState(false);
@@ -66,7 +124,7 @@ export default function DriverRegisterScreen() {
     setDateOfBirth('1992-06-15');
     setEmergencyContactName('Nayana Perera');
     setEmergencyContactNumber('0719876543');
-    setVehicleNumber(`WP-DA-${randomSuffix}`);
+    setVehicleNumber('LY 5234'); // Instantly links to CHE: SCK 100 (SCK Logistics)!
     setEmail(`driver${randomSuffix}@smartitt.lk`);
     setPassword('Password@123');
     setConfirmPassword('Password@123');
@@ -110,7 +168,10 @@ export default function DriverRegisterScreen() {
     const resolvedLicense = (licenseNumber.trim() || `B-${randSuffix}88`).toUpperCase();
     const resolvedEmergencyName = emergencyContactName.trim() || 'Port Dispatch Control';
     const resolvedEmergencyPhone = emergencyContactNumber.trim() || '0112456789';
-    const resolvedVehicleNumber = (vehicleNumber.trim() || `WP-DA-${randSuffix}`).toUpperCase();
+    const resolvedVehicleNumber = (vehicleNumber.trim() || 'LY 5234').toUpperCase();
+    const fleetMatch = findFleetVehicle(resolvedVehicleNumber);
+    const resolvedCheNumber = fleetMatch?.cheNumber || 'SCK 100';
+    const resolvedOperator = fleetMatch?.operator || 'SCK Logistics';
     const resolvedEmail = email.trim() || `${resolvedEmployeeId.toLowerCase()}@smartitt.lk`;
     const resolvedPassword = password.trim() || 'Password@123';
     const resolvedConfirm = confirmPassword.trim() || resolvedPassword;
@@ -146,6 +207,9 @@ export default function DriverRegisterScreen() {
         driverCode: code,
         token: response.token,
         vehicleNumber: resolvedVehicleNumber,
+        cheNumber: resolvedCheNumber,
+        chassisNumber: resolvedCheNumber,
+        operator: resolvedOperator,
         fullName: resolvedFullName,
         nic: resolvedNic,
         employeeId: resolvedEmployeeId,
@@ -171,6 +235,9 @@ export default function DriverRegisterScreen() {
         driverCode: offlineCode,
         token: `mock-token-${Date.now()}`,
         vehicleNumber: resolvedVehicleNumber,
+        cheNumber: resolvedCheNumber,
+        chassisNumber: resolvedCheNumber,
+        operator: resolvedOperator,
         fullName: resolvedFullName,
         nic: resolvedNic,
         employeeId: resolvedEmployeeId,
@@ -387,17 +454,104 @@ export default function DriverRegisterScreen() {
           </View>
 
           <View style={styles.fieldGroup}>
-            <Text style={styles.fieldLabel}>ASSIGNED TRUCK / VEHICLE NUMBER *</Text>
-            <View style={styles.inputWrap}>
-              <Ionicons name="bus" size={16} color="#feb300" style={styles.inputIcon} />
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+              <Text style={styles.fieldLabel}>ASSIGNED TRUCK / VEHICLE NUMBER *</Text>
+              {detectedFleet && (
+                <View style={styles.cheBadgeInline}>
+                  <Ionicons name="checkmark-circle" size={11} color="#00ff88" />
+                  <Text style={styles.cheBadgeInlineText}>CHE {detectedFleet.cheNumber} DETECTED</Text>
+                </View>
+              )}
+            </View>
+
+            <View style={[styles.inputWrap, detectedFleet && styles.inputWrapDetected]}>
+              <Ionicons name="bus" size={16} color={detectedFleet ? '#00e5ff' : '#feb300'} style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
-                placeholder="e.g. WP-BA-1234 or TR-104"
+                placeholder="e.g. LY 5234, LY 6528, LY 5596..."
                 placeholderTextColor="#849396"
                 value={vehicleNumber}
                 onChangeText={setVehicleNumber}
                 autoCapitalize="characters"
               />
+              {vehicleNumber.length > 0 && (
+                <TouchableOpacity onPress={() => setVehicleNumber('')} style={{ paddingHorizontal: 6 }}>
+                  <Ionicons name="close-circle" size={16} color="#849396" />
+                </TouchableOpacity>
+              )}
+            </View>
+
+            {/* AUTOMATICALLY DISPLAYED CHE NO (SCK NO) & OPERATOR CARD */}
+            {detectedFleet ? (
+              <View style={styles.cheAutoCard}>
+                <View style={styles.cheAutoHeader}>
+                  <View style={styles.cheLivePill}>
+                    <Ionicons name="hardware-chip" size={13} color="#00ff88" />
+                    <Text style={styles.cheLivePillText}>PORT TELEMATICS DETECTED</Text>
+                  </View>
+                  <Text style={styles.cheVerifiedText}>✓ FLEET VERIFIED</Text>
+                </View>
+
+                <View style={styles.cheInfoRow}>
+                  <View style={styles.cheBlock}>
+                    <Text style={styles.cheBlockLabel}>CHE NO (SCK NO)</Text>
+                    <Text style={styles.cheBlockValue}>{detectedFleet.cheNumber}</Text>
+                  </View>
+
+                  <View style={styles.cheDivider} />
+
+                  <View style={styles.cheBlock}>
+                    <Text style={styles.cheBlockLabel}>FLEET OPERATOR</Text>
+                    <Text style={styles.cheBlockOperator}>{detectedFleet.operator}</Text>
+                  </View>
+                </View>
+
+                <View style={styles.cheFooterNotice}>
+                  <Ionicons name="shield-checkmark" size={13} color="#00e5ff" />
+                  <Text style={styles.cheFooterNoticeText}>
+                    CHE {detectedFleet.cheNumber} is registered under {detectedFleet.operator}. ITT gateway ready.
+                  </Text>
+                </View>
+              </View>
+            ) : vehicleNumber.trim().length > 0 ? (
+              <View style={styles.chePendingCard}>
+                <Ionicons name="information-circle-outline" size={15} color="#feb300" />
+                <Text style={styles.chePendingText}>
+                  Type or tap a fleet vehicle below (e.g. LY 5234) to auto-display CHE (SCK No).
+                </Text>
+              </View>
+            ) : null}
+
+            {/* Quick Fleet Vehicle Selection Chips */}
+            <View style={{ marginTop: 10 }}>
+              <Text style={styles.fleetPickerLabel}>TAP TO CHOOSE SCK FLEET TRUCK:</Text>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.fleetChipsScroll}
+              >
+                {SCK_FLEET_VEHICLES.map((v) => {
+                  const isSelected = detectedFleet?.vehicleNumber === v.vehicleNumber;
+                  return (
+                    <TouchableOpacity
+                      key={v.vehicleNumber}
+                      style={[styles.fleetChip, isSelected && styles.fleetChipActive]}
+                      onPress={() => setVehicleNumber(v.vehicleNumber)}
+                      activeOpacity={0.7}
+                    >
+                      <Ionicons name="bus" size={12} color={isSelected ? '#00e5ff' : '#849396'} />
+                      <Text style={[styles.fleetChipText, isSelected && styles.fleetChipTextActive]}>
+                        {v.vehicleNumber}
+                      </Text>
+                      <View style={[styles.fleetChipCheBadge, isSelected && styles.fleetChipCheBadgeActive]}>
+                        <Text style={[styles.fleetChipCheBadgeText, isSelected && styles.fleetChipCheBadgeTextActive]}>
+                          {v.cheNumber}
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
             </View>
           </View>
 
@@ -676,7 +830,19 @@ export default function DriverRegisterScreen() {
                 <View style={styles.vehicleBox}>
                   <View style={styles.vehicleRow}>
                     <Text style={styles.vehicleProp}>ASSIGNED VEHICLE NUMBER:</Text>
-                    <Text style={styles.vehicleVal}>{registeredUser?.vehicleNumber || vehicleNumber || 'WP-BA-1234'}</Text>
+                    <Text style={styles.vehicleVal}>{registeredUser?.vehicleNumber || vehicleNumber || 'LY 5234'}</Text>
+                  </View>
+                  <View style={styles.vehicleRow}>
+                    <Text style={styles.vehicleProp}>CHE NUMBER (SCK NO):</Text>
+                    <Text style={[styles.vehicleVal, { color: '#00e5ff', fontWeight: '900' }]}>
+                      {registeredUser?.cheNumber || detectedFleet?.cheNumber || 'SCK 100'}
+                    </Text>
+                  </View>
+                  <View style={styles.vehicleRow}>
+                    <Text style={styles.vehicleProp}>FLEET OPERATOR:</Text>
+                    <Text style={[styles.vehicleVal, { color: '#00ff88', fontWeight: '800' }]}>
+                      {registeredUser?.operator || detectedFleet?.operator || 'SCK Logistics'}
+                    </Text>
                   </View>
                   <View style={styles.vehicleRow}>
                     <Text style={styles.vehicleProp}>TERMINAL CLEARANCE:</Text>
@@ -1283,5 +1449,180 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     color: '#00e5ff',
     letterSpacing: 0.8,
+  },
+
+  // CHE Auto-Detection Styles
+  cheBadgeInline: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(0, 255, 136, 0.12)',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 255, 136, 0.3)',
+  },
+  cheBadgeInlineText: {
+    color: '#00ff88',
+    fontSize: 9,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
+  inputWrapDetected: {
+    borderColor: '#00e5ff',
+    backgroundColor: 'rgba(0, 229, 255, 0.05)',
+  },
+  cheAutoCard: {
+    backgroundColor: '#07121e',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 229, 255, 0.3)',
+    padding: 12,
+    marginTop: 8,
+    gap: 8,
+  },
+  cheAutoHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  cheLivePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: 'rgba(0, 255, 136, 0.12)',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+  },
+  cheLivePillText: {
+    color: '#00ff88',
+    fontSize: 9,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
+  cheVerifiedText: {
+    color: '#00e5ff',
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
+  cheInfoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(12, 23, 38, 0.7)',
+    borderRadius: 8,
+    padding: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.06)',
+  },
+  cheBlock: {
+    flex: 1,
+  },
+  cheBlockLabel: {
+    color: '#849396',
+    fontSize: 9,
+    fontWeight: '700',
+    letterSpacing: 0.5,
+  },
+  cheBlockValue: {
+    color: '#00e5ff',
+    fontSize: 16,
+    fontWeight: '900',
+    letterSpacing: 0.8,
+    marginTop: 2,
+  },
+  cheBlockOperator: {
+    color: '#00ff88',
+    fontSize: 13,
+    fontWeight: '800',
+    marginTop: 2,
+  },
+  cheDivider: {
+    width: 1,
+    height: 32,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    marginHorizontal: 12,
+  },
+  cheFooterNotice: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingTop: 4,
+  },
+  cheFooterNoticeText: {
+    color: '#849396',
+    fontSize: 10,
+    flex: 1,
+  },
+  chePendingCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: 'rgba(254, 179, 0, 0.08)',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(254, 179, 0, 0.25)',
+    padding: 10,
+    marginTop: 8,
+  },
+  chePendingText: {
+    color: '#feb300',
+    fontSize: 11,
+    flex: 1,
+    lineHeight: 15,
+  },
+  fleetPickerLabel: {
+    color: '#849396',
+    fontSize: 9,
+    fontWeight: '800',
+    letterSpacing: 0.6,
+    marginBottom: 6,
+  },
+  fleetChipsScroll: {
+    flexDirection: 'row',
+    gap: 8,
+    paddingVertical: 2,
+  },
+  fleetChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#0a1420',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  fleetChipActive: {
+    backgroundColor: 'rgba(0, 229, 255, 0.15)',
+    borderColor: '#00e5ff',
+  },
+  fleetChipText: {
+    color: '#dde2f0',
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  fleetChipTextActive: {
+    color: '#00e5ff',
+  },
+  fleetChipCheBadge: {
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    borderRadius: 6,
+  },
+  fleetChipCheBadgeActive: {
+    backgroundColor: '#00e5ff',
+  },
+  fleetChipCheBadgeText: {
+    color: '#849396',
+    fontSize: 9,
+    fontWeight: '800',
+  },
+  fleetChipCheBadgeTextActive: {
+    color: '#080e17',
   },
 });
