@@ -80,6 +80,10 @@ export default function SupervisorHomeDashboard() {
   const [selectedStatus, setSelectedStatus] = useState<string>('ALL');
   const [selectedDateFilter, setSelectedDateFilter] = useState<string>('ALL');
 
+  // Terminal Consolidated Panel Filter States (Weekly, Monthly, Daily)
+  const [terminalPanelPeriod, setTerminalPanelPeriod] = useState<'WEEKLY' | 'MONTHLY' | 'TODAY' | 'ALL'>('WEEKLY');
+  const [terminalPanelTrafficType, setTerminalPanelTrafficType] = useState<'ALL' | 'ORIGIN' | 'DESTINATION'>('ALL');
+
   // Modal States
   const [rejectModalVisible, setRejectModalVisible] = useState(false);
   const [tripToReject, setTripToReject] = useState<any | null>(null);
@@ -263,6 +267,74 @@ export default function SupervisorHomeDashboard() {
     // Sort descending by date (newest first)
     return Object.values(groups).sort((a, b) => b.dateKey.localeCompare(a.dateKey));
   }, [filteredTrips, selectedDateFilter]);
+
+  // Terminal-Wise Consolidated Analytics with Weekly & Monthly Filtering
+  const terminalWiseStats = useMemo(() => {
+    const terminals = ['CICT', 'CWIT', 'ECT', 'JCT', 'UCT', 'SAGT'];
+    const now = new Date();
+
+    // 1. Filter trips based on the chosen period
+    const periodTrips = trips.filter((t) => {
+      const rawDate = t.operationDate || t.startTime || t.createdAt;
+      if (!rawDate) return true;
+      const tripDate = new Date(rawDate);
+      if (isNaN(tripDate.getTime())) return true;
+
+      if (terminalPanelPeriod === 'TODAY') {
+        return (
+          tripDate.getDate() === now.getDate() &&
+          tripDate.getMonth() === now.getMonth() &&
+          tripDate.getFullYear() === now.getFullYear()
+        );
+      } else if (terminalPanelPeriod === 'WEEKLY') {
+        const diffMs = now.getTime() - tripDate.getTime();
+        const diffDays = diffMs / (1000 * 60 * 60 * 24);
+        return diffDays >= 0 && diffDays <= 7;
+      } else if (terminalPanelPeriod === 'MONTHLY') {
+        const diffMs = now.getTime() - tripDate.getTime();
+        const diffDays = diffMs / (1000 * 60 * 60 * 24);
+        return diffDays >= 0 && diffDays <= 30;
+      }
+      return true; // 'ALL'
+    });
+
+    // 2. Aggregate per terminal
+    const res: Record<string, { totalTrips: number; containers: number; originTrips: number; destTrips: number }> = {};
+    terminals.forEach((term) => {
+      res[term] = { totalTrips: 0, containers: 0, originTrips: 0, destTrips: 0 };
+    });
+
+    periodTrips.forEach((t) => {
+      const orig = t.sourceTerminal;
+      const dest = t.destTerminal;
+      const cCount = t.containers?.length || 1;
+
+      if (orig && res[orig]) {
+        res[orig].originTrips += 1;
+        if (terminalPanelTrafficType === 'ALL' || terminalPanelTrafficType === 'ORIGIN') {
+          res[orig].totalTrips += 1;
+          res[orig].containers += cCount;
+        }
+      }
+      if (dest && res[dest]) {
+        res[dest].destTrips += 1;
+        if (terminalPanelTrafficType === 'ALL' || terminalPanelTrafficType === 'DESTINATION') {
+          res[dest].totalTrips += 1;
+          res[dest].containers += cCount;
+        }
+      }
+    });
+
+    const grandTotalTrips = periodTrips.length;
+    const grandTotalContainers = periodTrips.reduce((acc, t) => acc + (t.containers?.length || 1), 0);
+
+    return {
+      perTerminal: res,
+      periodTripsCount: periodTrips.length,
+      grandTotalTrips,
+      grandTotalContainers,
+    };
+  }, [trips, terminalPanelPeriod, terminalPanelTrafficType]);
 
   // Trips pending supervisor approval
   const pendingTrips = useMemo(() => {
@@ -735,21 +807,103 @@ export default function SupervisorHomeDashboard() {
           </View>
         </View>
 
-        {/* ─── F. TERMINAL AND CONTAINER REPORTS SUMMARY ─── */}
+        {/* ─── F. TERMINAL AND CONTAINER REPORTS SUMMARY WITH WEEKLY & MONTHLY FILTERS ─── */}
         <View style={styles.sectionWrap}>
           <View style={styles.sectionTitleRow}>
-            <Ionicons name="business" size={18} color="#00e5ff" />
-            <Text style={styles.sectionTitle}>SLPA 6-TERMINAL CONSOLIDATED TOTALS</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <Ionicons name="business" size={18} color="#00e5ff" />
+              <Text style={styles.sectionTitle}>SLPA 6-TERMINAL CONSOLIDATED TOTALS</Text>
+            </View>
+            <View style={styles.panelActivePeriodBadge}>
+              <Text style={styles.panelActivePeriodText}>
+                {terminalPanelPeriod === 'WEEKLY' ? '7-DAY ROLLING' : terminalPanelPeriod === 'MONTHLY' ? '30-DAY MONTH' : terminalPanelPeriod === 'TODAY' ? 'TODAY' : 'ALL TIME'}
+              </Text>
+            </View>
           </View>
 
+          {/* Timeframe Filter Tabs (Weekly / Monthly / Today / All Time) */}
+          <View style={styles.panelFilterBar}>
+            <View style={styles.periodTabsRow}>
+              {(['WEEKLY', 'MONTHLY', 'TODAY', 'ALL'] as const).map((period) => {
+                const isActive = terminalPanelPeriod === period;
+                const label = period === 'WEEKLY' ? 'WEEKLY (7D)' : period === 'MONTHLY' ? 'MONTHLY (30D)' : period === 'TODAY' ? 'TODAY' : 'ALL TIME';
+                return (
+                  <TouchableOpacity
+                    key={period}
+                    style={[styles.periodTabBtn, isActive && styles.periodTabBtnActive]}
+                    onPress={() => setTerminalPanelPeriod(period)}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={[styles.periodTabText, isActive && styles.periodTabTextActive]}>
+                      {label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+
+            {/* Traffic Direction Sub-Filter */}
+            <View style={styles.trafficTypeRow}>
+              <Text style={styles.trafficTypeLabel}>TRAFFIC ROLE:</Text>
+              {(['ALL', 'ORIGIN', 'DESTINATION'] as const).map((type) => {
+                const isSelected = terminalPanelTrafficType === type;
+                const typeLabel = type === 'ALL' ? 'Total (Load + Discharge)' : type === 'ORIGIN' ? 'Origin Gate' : 'Discharge Bay';
+                return (
+                  <TouchableOpacity
+                    key={type}
+                    style={[styles.trafficTypeChip, isSelected && styles.trafficTypeChipActive]}
+                    onPress={() => setTerminalPanelTrafficType(type)}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={[styles.trafficTypeChipText, isSelected && styles.trafficTypeChipTextActive]}>
+                      {typeLabel}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
+
+          {/* Aggregate Snapshot Banner */}
+          <View style={styles.panelSummaryStrip}>
+            <View style={styles.panelSummaryItem}>
+              <Text style={styles.panelSummaryNum}>{terminalWiseStats.grandTotalTrips}</Text>
+              <Text style={styles.panelSummaryLabel}>Total Trips ({terminalPanelPeriod})</Text>
+            </View>
+            <View style={styles.panelSummaryDivider} />
+            <View style={styles.panelSummaryItem}>
+              <Text style={[styles.panelSummaryNum, { color: '#feb300' }]}>{terminalWiseStats.grandTotalContainers}</Text>
+              <Text style={styles.panelSummaryLabel}>Containers Moved (TEU)</Text>
+            </View>
+            <View style={styles.panelSummaryDivider} />
+            <View style={styles.panelSummaryItem}>
+              <Text style={[styles.panelSummaryNum, { color: '#22ef7e' }]}>6</Text>
+              <Text style={styles.panelSummaryLabel}>Active Port Terminals</Text>
+            </View>
+          </View>
+
+          {/* 6 Terminals Consolidated Grid */}
           <View style={styles.terminalGrid}>
             {['CICT', 'CWIT', 'ECT', 'JCT', 'UCT', 'SAGT'].map((tName) => {
-              const tripCount = stats.terminalWiseTrips?.[tName] || 0;
+              const data = terminalWiseStats.perTerminal[tName] || { totalTrips: 0, containers: 0, originTrips: 0, destTrips: 0 };
+              const periodSub = terminalPanelPeriod === 'WEEKLY' ? 'Trips This Week' : terminalPanelPeriod === 'MONTHLY' ? 'Trips This Month' : terminalPanelPeriod === 'TODAY' ? 'Trips Today' : 'Total Trips';
               return (
                 <View key={tName} style={styles.terminalGridItem}>
-                  <Text style={styles.termGridName}>{tName}</Text>
-                  <Text style={styles.termGridCount}>{tripCount}</Text>
-                  <Text style={styles.termGridSub}>Trips Today</Text>
+                  <View style={styles.termHeaderRow}>
+                    <Text style={styles.termGridName}>{tName}</Text>
+                    {data.totalTrips > 0 && (
+                      <View style={styles.termActiveDot} />
+                    )}
+                  </View>
+                  <Text style={styles.termGridCount}>{data.totalTrips}</Text>
+                  <Text style={styles.termGridSub}>{periodSub}</Text>
+
+                  {/* Flow Sub-Metrics */}
+                  <View style={styles.termFlowRow}>
+                    <Text style={styles.termFlowText}>
+                      Out: <Text style={{ color: '#00e5ff' }}>{data.originTrips}</Text> · In: <Text style={{ color: '#22ef7e' }}>{data.destTrips}</Text>
+                    </Text>
+                  </View>
                 </View>
               );
             })}
@@ -1598,6 +1752,152 @@ const styles = StyleSheet.create({
   termGridSub: {
     color: '#849396',
     fontSize: 8,
+  },
+  panelActivePeriodBadge: {
+    backgroundColor: 'rgba(0, 229, 255, 0.15)',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#00e5ff',
+  },
+  panelActivePeriodText: {
+    color: '#00e5ff',
+    fontSize: 8,
+    fontWeight: '900',
+    letterSpacing: 0.5,
+  },
+  panelFilterBar: {
+    backgroundColor: '#0c131d',
+    borderRadius: radius.DEFAULT,
+    borderWidth: 1,
+    borderColor: '#242a34',
+    padding: 10,
+    gap: 10,
+  },
+  periodTabsRow: {
+    flexDirection: 'row',
+    gap: 6,
+  },
+  periodTabBtn: {
+    flex: 1,
+    backgroundColor: '#161c25',
+    paddingVertical: 7,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#242a34',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  periodTabBtnActive: {
+    backgroundColor: '#00e5ff',
+    borderColor: '#00e5ff',
+    shadowColor: '#00e5ff',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  periodTabText: {
+    color: '#849396',
+    fontSize: 9,
+    fontWeight: '800',
+    letterSpacing: 0.4,
+  },
+  periodTabTextActive: {
+    color: '#00363d',
+    fontWeight: '900',
+  },
+  trafficTypeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingTop: 6,
+    borderTopWidth: 1,
+    borderTopColor: '#1a2230',
+    flexWrap: 'wrap',
+  },
+  trafficTypeLabel: {
+    color: '#849396',
+    fontSize: 8,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
+  trafficTypeChip: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+    backgroundColor: '#161c25',
+    borderWidth: 1,
+    borderColor: '#242a34',
+  },
+  trafficTypeChipActive: {
+    backgroundColor: 'rgba(34, 239, 126, 0.15)',
+    borderColor: '#22ef7e',
+  },
+  trafficTypeChipText: {
+    color: '#849396',
+    fontSize: 8,
+    fontWeight: '700',
+  },
+  trafficTypeChipTextActive: {
+    color: '#22ef7e',
+    fontWeight: '900',
+  },
+  panelSummaryStrip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#080e17',
+    borderRadius: radius.DEFAULT,
+    padding: 10,
+    borderWidth: 1,
+    borderColor: '#242a34',
+  },
+  panelSummaryItem: {
+    flex: 1,
+    alignItems: 'center',
+    gap: 2,
+  },
+  panelSummaryNum: {
+    color: '#00e5ff',
+    fontSize: 16,
+    fontWeight: '900',
+  },
+  panelSummaryLabel: {
+    color: '#849396',
+    fontSize: 8,
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+  panelSummaryDivider: {
+    width: 1,
+    height: 24,
+    backgroundColor: '#242a34',
+  },
+  termHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  termActiveDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
+    backgroundColor: '#22ef7e',
+  },
+  termFlowRow: {
+    marginTop: 2,
+    paddingTop: 3,
+    borderTopWidth: 1,
+    borderTopColor: '#161c25',
+    width: '100%',
+    alignItems: 'center',
+  },
+  termFlowText: {
+    color: '#849396',
+    fontSize: 7,
+    fontWeight: '800',
   },
   exportReportBtn: {
     height: 44,
