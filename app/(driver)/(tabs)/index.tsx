@@ -22,6 +22,8 @@ import { driverService } from '../../../src/services/driverService';
 import { colors, radius, spacing } from '../../../src/theme';
 import { useMockTripStore } from '../../../src/store/mockTripStore';
 import { useDriverMessageStore } from '../../../src/store/driverMessageStore';
+import axios from 'axios';
+import API_BASE_URL from '../../../src/config/api';
 
 const TERMINALS = ['CICT', 'CWIT', 'ECT', 'JCT', 'UCT', 'SAGT'] as const;
 type TerminalCode = (typeof TERMINALS)[number];
@@ -121,12 +123,26 @@ export default function DriverHomeDashboard() {
   useEffect(() => { loadData(); }, [loadData]);
   useFocusEffect(useCallback(() => { loadData(); }, [loadData]));
 
-  // Active Trip resolution
+  // Active and relevant trips resolution
+  const inProgressTrip = useMemo(() => {
+    return trips.find((t) => t.status === 'IN_PROGRESS' || t.status === 'ARRIVED');
+  }, [trips]);
+
+  const pendingApprovalTrip = useMemo(() => {
+    return trips.find((t) => t.status === 'PENDING_APPROVAL');
+  }, [trips]);
+
+  const approvedTrip = useMemo(() => {
+    return trips.find((t) => t.status === 'APPROVED');
+  }, [trips]);
+
   const activeTrip = useMemo(() => {
-    return trips.find((t) => t.status === 'IN_PROGRESS') ||
+    return inProgressTrip ||
+      approvedTrip ||
+      pendingApprovalTrip ||
       trips.find((t) => t.status === 'DRAFT') ||
       (trips.length > 0 ? trips[0] : null);
-  }, [trips]);
+  }, [inProgressTrip, approvedTrip, pendingApprovalTrip, trips]);
 
   const driverName = user?.name || user?.fullName || 'Kamal Perera';
   const driverCode = user?.driverCode || user?.username || 'DRV-00001';
@@ -138,7 +154,66 @@ export default function DriverHomeDashboard() {
   const count20Ft = (activeTrip?.containers || []).filter((c: any) => c.size === '20FT' || c.size === 'FT_20').length;
   const count40Ft = (activeTrip?.containers || []).filter((c: any) => c.size === '40FT' || c.size === 'FT_40').length;
 
+  const [actionInProgress, setActionInProgress] = useState(false);
 
+  // 1. START TRIP HANDLER
+  const handleStartActiveTrip = async (tripId: string) => {
+    setActionInProgress(true);
+    try {
+      await axios.patch(`${API_BASE_URL}/trips/${tripId}/status`, { status: 'IN_PROGRESS' });
+      useMockTripStore.getState().updateTripStatus(tripId, 'IN_PROGRESS');
+      await loadData();
+      Alert.alert('Trip Started! 🚛', 'Terminal Gate Pass verified. Mission is now IN PROGRESS. Drive safely!');
+    } catch {
+      useMockTripStore.getState().updateTripStatus(tripId, 'IN_PROGRESS');
+      await loadData();
+      Alert.alert('Trip Started! 🚛', 'Terminal Gate Pass verified. Mission is now IN PROGRESS.');
+    } finally {
+      setActionInProgress(false);
+    }
+  };
+
+  // 2. ARRIVE AT TERMINAL HANDLER
+  const handleArriveTerminal = async (tripId: string) => {
+    setActionInProgress(true);
+    try {
+      await axios.patch(`${API_BASE_URL}/trips/${tripId}/status`, { status: 'ARRIVED' });
+      useMockTripStore.getState().updateTripStatus(tripId, 'ARRIVED' as any);
+      await loadData();
+      Alert.alert('Arrived at Terminal! 📍', `Gate-In clearance registered at destination terminal: ${activeTrip?.destTerminal || 'ECT'}.`);
+    } catch {
+      useMockTripStore.getState().updateTripStatus(tripId, 'ARRIVED' as any);
+      await loadData();
+      Alert.alert('Arrived at Terminal! 📍', `Gate-In clearance registered at destination terminal: ${activeTrip?.destTerminal || 'ECT'}.`);
+    } finally {
+      setActionInProgress(false);
+    }
+  };
+
+  // 3. COMPLETE TRIP HANDLER
+  const handleCompleteActiveTrip = async (tripId: string) => {
+    setActionInProgress(true);
+    try {
+      const trip = trips.find((t) => t.id === tripId);
+      const containerUpdates = (trip?.containers || []).map((c: any) => ({
+        containerId: c.id,
+        unloadedTerminal: c.unloadedTerminal || trip?.destTerminal || 'ECT',
+      }));
+
+      await axios.patch(`${API_BASE_URL}/trips/${tripId}/complete`, { containerUpdates });
+      useMockTripStore.getState().unloadContainer(tripId, trip?.containers?.[0]?.id || 'c-1', new Date().toISOString());
+      useMockTripStore.getState().updateTripStatus(tripId, 'COMPLETED');
+      await loadData();
+      Alert.alert('Trip Completed! 🎉', 'All containers safely discharged. Trip permanently saved to your My Trips archive!');
+    } catch {
+      useMockTripStore.getState().unloadContainer(tripId, 'c-1', new Date().toISOString());
+      useMockTripStore.getState().updateTripStatus(tripId, 'COMPLETED');
+      await loadData();
+      Alert.alert('Trip Completed! 🎉', 'All containers safely discharged. Trip permanently saved to your My Trips archive!');
+    } finally {
+      setActionInProgress(false);
+    }
+  };
 
   // Stage transition triggers for progress tracker
   const handleTransitionTripStage = async (nextStatus: string, actionLabel: string) => {
@@ -300,263 +375,238 @@ export default function DriverHomeDashboard() {
           </View>
         </View>
 
-        {/* ─── C. STITCH ACTIVE MISSION & TACTICAL HUD ─── */}
+        {/* ─── C. DRIVER MISSION OPERATIONS CONSOLE (DYNAMIC TRIP LIFECYCLE) ─── */}
         {activeTrip ? (
-          <View style={styles.stitchHudContainer}>
-            {/* 1. Container Telematics Banner */}
-            <View style={styles.hudTelematicsBanner}>
-              <View style={styles.hudBannerTop}>
-                <View style={styles.hudMissionBadge}>
-                  <Text style={styles.hudMissionBadgeText}>MISSION ACTIVE</Text>
-                </View>
-                <Text style={styles.hudMissionIdText}>
-                  #{activeTrip.tripNumber || `MSN-${activeTrip.id?.slice(0, 6)}`}
-                </Text>
-                <View style={styles.hudTransmittingBadge}>
-                  <View style={styles.pingDot} />
-                  <Text style={styles.hudTransmittingText}>TRANSMITTING</Text>
+          <View style={styles.missionLifecycleCard}>
+            {/* 1. Trip Header Bar with Live Status */}
+            <View style={styles.missionCardHeader}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <Ionicons name="git-network" size={20} color="#00e5ff" />
+                <View>
+                  <Text style={styles.missionIdText}>
+                    TRIP #{activeTrip.tripNumber || activeTrip.id?.slice(0, 8)}
+                  </Text>
+                  <Text style={styles.missionVesselText}>
+                    {activeTrip.vesselName || 'MV Colombo Express'}
+                  </Text>
                 </View>
               </View>
 
-              <View style={styles.hudContainerTitleRow}>
-                <Text style={styles.hudContainerId}>
-                  {activeTrip.containers?.[0]?.containerNumber || 'MSKU-982412-0'}
-                </Text>
-                <Text style={styles.hudContainerSize}>
-                  {activeTrip.containers?.[0]?.size || '40FT HC'}
-                </Text>
+              {/* Status Pill Badge */}
+              {activeTrip.status === 'PENDING_APPROVAL' && (
+                <View style={styles.statusPillPending}>
+                  <Ionicons name="time" size={13} color="#feb300" />
+                  <Text style={styles.statusPillTextPending}>AWAITING CONFIRMATION</Text>
+                </View>
+              )}
+              {activeTrip.status === 'APPROVED' && (
+                <View style={styles.statusPillApproved}>
+                  <Ionicons name="checkmark-circle" size={13} color="#22ef7e" />
+                  <Text style={styles.statusPillTextApproved}>SUPERVISOR CONFIRMED</Text>
+                </View>
+              )}
+              {activeTrip.status === 'IN_PROGRESS' && (
+                <View style={styles.statusPillProgress}>
+                  <View style={styles.livePulseDot} />
+                  <Text style={styles.statusPillTextProgress}>TRIP IN PROGRESS</Text>
+                </View>
+              )}
+              {activeTrip.status === 'ARRIVED' && (
+                <View style={styles.statusPillArrived}>
+                  <Ionicons name="flag" size={13} color="#00e5ff" />
+                  <Text style={styles.statusPillTextArrived}>ARRIVED AT TERMINAL</Text>
+                </View>
+              )}
+              {activeTrip.status === 'COMPLETED' && (
+                <View style={styles.statusPillCompleted}>
+                  <Ionicons name="checkmark-done" size={13} color="#22ef7e" />
+                  <Text style={styles.statusPillTextCompleted}>TRIP COMPLETED</Text>
+                </View>
+              )}
+            </View>
+
+            {/* 2. Route & Terminal Pair */}
+            <View style={styles.routePairBox}>
+              <View style={styles.routeCol}>
+                <Text style={styles.routeLabel}>LOAD FROM</Text>
+                <Text style={styles.routeTerminal}>{activeTrip.sourceTerminal || 'CICT'}</Text>
+                <Text style={styles.routeSub}>Origin Gate</Text>
               </View>
 
-              <View style={styles.hudSpecChipsGrid}>
-                <View style={styles.hudSpecChip}>
-                  <Text style={styles.hudSpecLabel}>PAYLOAD TYPE</Text>
-                  <Text style={styles.hudSpecValCyan}>REEFER ISO</Text>
-                </View>
-                <View style={styles.hudSpecChip}>
-                  <Text style={styles.hudSpecLabel}>CORE TEMP</Text>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                    <Ionicons name="snow" size={12} color="#22ef7e" />
-                    <Text style={styles.hudSpecValLime}>-18.2°C</Text>
-                  </View>
-                </View>
-                <View style={styles.hudSpecChip}>
-                  <Text style={styles.hudSpecLabel}>STABILITY</Text>
-                  <Text style={styles.hudSpecValLime}>LOCKED</Text>
-                </View>
+              <View style={styles.routeArrowBox}>
+                <Ionicons name="arrow-forward" size={20} color="#00e5ff" />
+                <Text style={styles.routeDistanceText}>ITT ROUTE</Text>
+              </View>
+
+              <View style={[styles.routeCol, { alignItems: 'flex-end' }]}>
+                <Text style={styles.routeLabel}>DISCHARGE TO</Text>
+                <Text style={[styles.routeTerminal, { color: '#22ef7e' }]}>
+                  {activeTrip.destTerminal || 'JCT'}
+                </Text>
+                <Text style={styles.routeSub}>Destination Bay</Text>
               </View>
             </View>
 
-            {/* 2. Turn-by-Turn Guidance Banner */}
-            <View style={styles.hudTurnGuidanceBanner}>
-              <View style={styles.hudTurnIconBox}>
-                <Ionicons name="arrow-redo" size={22} color="#00363d" />
-              </View>
-              <View style={{ flex: 1 }}>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Text style={styles.hudDistLabel}>IN 120 METRES</Text>
-                  <View style={styles.routeCodeTag}>
-                    <Text style={styles.routeCodeTagText}>RTE-04</Text>
-                  </View>
-                </View>
-                <Text style={styles.hudTurnInstruction}>
-                  TURN RIGHT ONTO TERMINAL SPINE AVE
+            {/* 3. Containers on Chassis */}
+            <View style={styles.containersListBox}>
+              <View style={styles.containersListHeader}>
+                <Ionicons name="cube" size={14} color="#00e5ff" />
+                <Text style={styles.containersListTitle}>
+                  LOADED CONTAINERS ({activeTrip.containers?.length || 1})
                 </Text>
+                <Text style={styles.chassisTag}>CHE: {activeTrip.chassisNumber || user?.cheNumber || 'SCK 100'}</Text>
               </View>
-            </View>
 
-            {/* 3. Tactical Yard Radar / Route Display */}
-            <View style={styles.hudYardRadarCard}>
-              <View style={styles.radarSimulationBox}>
-                {/* Yard Bay Overlay Labels */}
-                <View style={styles.radarBayLabel1}>
-                  <Text style={styles.radarBayText}>BAY B-02</Text>
-                </View>
-                <View style={styles.radarBayLabel2}>
-                  <Text style={styles.radarBayTextActive}>BAY B-03 (ACTIVE)</Text>
-                </View>
-                <View style={styles.radarBayLabel3}>
-                  <Text style={styles.radarBayText}>BAY B-04</Text>
-                </View>
-
-                {/* Active Tractor Beacon */}
-                <View style={styles.tractorBeaconWrap}>
-                  <View style={styles.tractorBeaconPulse}>
-                    <Ionicons name="navigate" size={18} color="#00363d" />
+              {(activeTrip.containers || []).map((c: any, idx: number) => (
+                <View key={c.id || idx} style={styles.containerItemRow}>
+                  <View style={styles.containerBadge}>
+                    <Text style={styles.containerBadgeText}>{idx + 1}</Text>
                   </View>
-                  <Text style={styles.tractorBeaconTag}>TR-104</Text>
-                </View>
-
-                {/* Radar Corner Telemetry Badges */}
-                <View style={styles.radarCornerTopLeft}>
-                  <View style={styles.radarBadgePill}>
-                    <Ionicons name="location" size={11} color="#00e5ff" />
-                    <Text style={styles.radarBadgeText}>RTLS ACC: ±0.2M</Text>
-                  </View>
-                  <View style={styles.radarBadgePill}>
-                    <Ionicons name="compass" size={11} color="#feb300" />
-                    <Text style={styles.radarBadgeText}>HDG 084° E</Text>
-                  </View>
-                </View>
-
-                {/* Live Speed HUD Badge */}
-                <View style={styles.radarSpeedHud}>
-                  <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 2 }}>
-                    <Text style={styles.speedValueText}>18</Text>
-                    <Text style={styles.speedUnitText}>KM/H</Text>
-                  </View>
-                  <Text style={styles.speedLimitText}>LIMIT 25 KM/H</Text>
-                </View>
-
-                {/* Destination Target Tag */}
-                <View style={styles.radarDestTargetBar}>
-                  <Ionicons name="flag" size={16} color="#feb300" />
-                  <View style={{ flex: 1, marginHorizontal: 6 }}>
-                    <Text style={styles.radarDestSubLabel}>ASSIGNED DESTINATION</Text>
-                    <Text style={styles.radarDestTitle}>
-                      {activeTrip.destTerminal || 'JCT'} · SLOT C-12 (CRANE QC-07)
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.containerItemNumber}>{c.containerNumber || 'MSKU-88219-0'}</Text>
+                    <Text style={styles.containerItemSub}>
+                      {c.size || '40FT'} · {c.damageStatus === 'DAMAGED' ? '⚠️ DAMAGED' : '✓ SOUND'} · Dest: {c.destTerminal || activeTrip.destTerminal}
                     </Text>
                   </View>
-                  <Text style={styles.radarDestDist}>340m</Text>
+                  <View style={styles.containerStatusTag}>
+                    <Text style={styles.containerStatusTagText}>{c.status || activeTrip.status}</Text>
+                  </View>
                 </View>
-              </View>
+              ))}
             </View>
 
-            {/* 4. Waypoint Progress Pipeline */}
-            <View style={styles.hudWaypointsCard}>
-              <View style={styles.hudWaypointsHeader}>
-                <Text style={styles.hudWaypointsTitle}>MISSION WAYPOINTS</Text>
-                <Text style={styles.hudWaypointsStep}>STEP 2 OF 3</Text>
-              </View>
+            {/* 4. DYNAMIC NOTIFICATIONS & ACTION BUTTONS */}
 
-              <View style={styles.waypointsList}>
-                {/* Step 1 */}
-                <View style={styles.waypointRowDone}>
-                  <View style={styles.wpIconDone}>
-                    <Ionicons name="checkmark" size={14} color="#00363d" />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.wpTitleDone}>1. GATE-IN CLEARANCE</Text>
-                    <Text style={styles.wpSub}>Auth Station Alpha · Verified</Text>
-                  </View>
-                  <Text style={styles.wpTimeDone}>08:14</Text>
-                </View>
-
-                {/* Step 2 (Active) */}
-                <View style={styles.waypointRowActive}>
-                  <View style={styles.wpIconActive}>
-                    <Text style={styles.wpIconActiveText}>2</Text>
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                      <Text style={styles.wpTitleActive}>
-                        TRANSFER BAY {activeTrip.destTerminal || 'B-03'}
-                      </Text>
-                      <View style={styles.activeTagMini}>
-                        <Text style={styles.activeTagMiniText}>ACTIVE</Text>
-                      </View>
-                    </View>
-                    <Text style={styles.wpSubActive}>Align chassis under hoist guide</Text>
-                  </View>
-                  <Text style={styles.wpTimeActive}>CURRENT</Text>
-                </View>
-
-                {/* Step 3 */}
-                <View style={styles.waypointRowUpcoming}>
-                  <View style={styles.wpIconUpcoming}>
-                    <Text style={styles.wpIconUpcomingText}>3</Text>
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.wpTitleUpcoming}>3. VESSEL BERTHING BAY 2</Text>
-                    <Text style={styles.wpSub}>Crane QC-07 · Slot C-12</Text>
-                  </View>
-                  <Text style={styles.wpTimeUpcoming}>ETA 08:35</Text>
-                </View>
-              </View>
-            </View>
-
-            {/* 5. Tractor Telemetry Strip */}
-            <View style={styles.hudTelemetryStripGrid}>
-              <View style={styles.hudTelemBox}>
-                <Text style={styles.hudTelemLabel}>5TH-WHEEL PIN</Text>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                  <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#22ef7e' }} />
-                  <Text style={styles.hudTelemValLime}>SECURED</Text>
-                </View>
-                <Text style={styles.hudTelemSub}>Lock Force 32kN</Text>
-              </View>
-
-              <View style={styles.hudTelemBox}>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                  <Text style={styles.hudTelemLabel}>TRACTOR EV</Text>
-                  <Text style={styles.hudTelemValCyan}>78%</Text>
-                </View>
-                <View style={styles.batteryProgressBar}>
-                  <View style={[styles.batteryProgressFill, { width: '78%' }]} />
-                </View>
-                <Text style={styles.hudTelemSub}>5.4h Shift Rem.</Text>
-              </View>
-
-              <View style={styles.hudTelemBox}>
-                <Text style={styles.hudTelemLabel}>PNEUMATICS</Text>
-                <Text style={styles.hudTelemValWhite}>8.4 <Text style={{ fontSize: 9, color: '#849396' }}>BAR</Text></Text>
-                <Text style={styles.hudTelemSubLime}>NORMAL PRESS</Text>
-              </View>
-            </View>
-
-            {/* 6. Glove-Optimized Mission Critical Large Controls (56px) */}
-            <View style={{ gap: 8 }}>
-              {/* Primary Confirmation Button */}
-              <TouchableOpacity
-                style={[styles.glovePrimaryBtn, bayArrived && { backgroundColor: '#22ef7e' }]}
-                onPress={() => setBayArrived(!bayArrived)}
-                activeOpacity={0.88}
-              >
-                <Ionicons name="checkmark-done-circle" size={24} color="#00363d" />
-                <Text style={styles.glovePrimaryBtnText}>
-                  {bayArrived ? 'BAY POSITION CONFIRMED' : `ARRIVED AT BAY ${activeTrip.destTerminal || 'B-03'}`}
-                </Text>
-              </TouchableOpacity>
-
-              {/* Secondary & Safety Row */}
-              <View style={{ flexDirection: 'row', gap: 8 }}>
-                <TouchableOpacity
-                  style={[styles.gloveSecondaryBtn, hookConfirmed && { backgroundColor: '#22ef7e' }]}
-                  onPress={() => setHookConfirmed(!hookConfirmed)}
-                  activeOpacity={0.88}
-                >
-                  <Ionicons name="link" size={20} color={hookConfirmed ? '#00363d' : '#feb300'} />
-                  <Text style={[styles.gloveSecondaryBtnText, hookConfirmed && { color: '#00363d' }]}>
-                    {hookConfirmed ? 'HOOK LOCKED & ENGAGED' : 'CONFIRM HOOKED'}
+            {/* STATE A: Awaiting Supervisor Confirmation */}
+            {activeTrip.status === 'PENDING_APPROVAL' && (
+              <View style={styles.notificationBannerPending}>
+                <View style={styles.notificationBannerHeader}>
+                  <Ionicons name="hourglass" size={20} color="#feb300" />
+                  <Text style={styles.notificationBannerTitlePending}>
+                    AWAITING SUPERVISOR CONFIRMATION
                   </Text>
-                </TouchableOpacity>
+                </View>
+                <Text style={styles.notificationBannerMsg}>
+                  Your trip details have been submitted to the operations tower. Please wait until the supervisor verifies the containers and grants your gate pass.
+                </Text>
+                <View style={styles.pendingActionInfoRow}>
+                  <ActivityIndicator size="small" color="#feb300" />
+                  <Text style={styles.pendingWaitingText}>
+                    Checking for supervisor approval in real-time...
+                  </Text>
+                </View>
+              </View>
+            )}
+
+            {/* STATE B: Supervisor Confirmed Trip -> START THE TRIP BUTTON */}
+            {activeTrip.status === 'APPROVED' && (
+              <View style={styles.notificationBannerApproved}>
+                <View style={styles.notificationBannerHeader}>
+                  <Ionicons name="checkmark-circle" size={22} color="#22ef7e" />
+                  <Text style={styles.notificationBannerTitleApproved}>
+                    SUPERVISOR CONFIRMED THE TRIP!
+                  </Text>
+                </View>
+                <Text style={styles.notificationBannerMsgApproved}>
+                  Gate pass validated. You are cleared to depart {activeTrip.sourceTerminal || 'origin terminal'}. Tap below to start the trip.
+                </Text>
 
                 <TouchableOpacity
-                  style={styles.gloveHazardBtn}
-                  onPress={() => Alert.alert('SAFETY DISPATCH', 'Hazard alert broadcasted to Tower Bay-7 console.')}
+                  style={styles.startTripPrimaryBtn}
+                  onPress={() => handleStartActiveTrip(activeTrip.id)}
+                  disabled={actionInProgress}
                   activeOpacity={0.88}
                 >
-                  <Ionicons name="warning" size={20} color="#ff5252" />
-                  <Text style={styles.gloveHazardBtnText}>ALERT</Text>
+                  {actionInProgress ? (
+                    <ActivityIndicator color="#00363d" size="small" />
+                  ) : (
+                    <>
+                      <Ionicons name="play-circle" size={24} color="#00363d" />
+                      <Text style={styles.startTripPrimaryBtnText}>START THE TRIP NOW</Text>
+                    </>
+                  )}
                 </TouchableOpacity>
               </View>
-            </View>
+            )}
 
-            {/* 7. Yard Marshal Tower Comms Toast */}
-            <View style={styles.hudTowerCommsToast}>
-              <Ionicons name="headset" size={18} color="#00e5ff" />
-              <View style={{ flex: 1, marginHorizontal: 6 }}>
-                <Text style={styles.towerCommsLabel}>YARD MARSHAL TOWER:</Text>
-                <Text style={styles.towerCommsMsg}>"TR-104 prioritize Reefer drop off"</Text>
-              </View>
-              <TouchableOpacity
-                style={[styles.ackBtn, towerAck && { backgroundColor: '#22ef7e' }]}
-                onPress={() => setTowerAck(!towerAck)}
-              >
-                <Text style={[styles.ackBtnText, towerAck && { color: '#00363d' }]}>
-                  {towerAck ? 'ACKED' : 'ACK'}
+            {/* STATE C: Trip In Progress -> ARRIVE THE TERMINAL BUTTON */}
+            {activeTrip.status === 'IN_PROGRESS' && (
+              <View style={styles.notificationBannerInProgress}>
+                <View style={styles.notificationBannerHeader}>
+                  <Ionicons name="navigate-circle" size={22} color="#00e5ff" />
+                  <Text style={styles.notificationBannerTitleInProgress}>
+                    TRIP IN TRANSIT TO {activeTrip.destTerminal || 'DESTINATION'}
+                  </Text>
+                </View>
+                <Text style={styles.notificationBannerMsg}>
+                  Drive safely along the designated ITT corridor. When you pull up to the discharge gate, tap the button below to register terminal arrival.
                 </Text>
-              </TouchableOpacity>
-            </View>
+
+                <TouchableOpacity
+                  style={styles.arriveTerminalBtn}
+                  onPress={() => handleArriveTerminal(activeTrip.id)}
+                  disabled={actionInProgress}
+                  activeOpacity={0.88}
+                >
+                  {actionInProgress ? (
+                    <ActivityIndicator color="#00363d" size="small" />
+                  ) : (
+                    <>
+                      <Ionicons name="location" size={24} color="#00363d" />
+                      <Text style={styles.arriveTerminalBtnText}>
+                        ARRIVED AT TERMINAL ({activeTrip.destTerminal || 'DESTINATION'})
+                      </Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+              </View>
+            )}
+
+            {/* STATE D: Arrived At Terminal -> COMPLETE TRIP BUTTON */}
+            {activeTrip.status === 'ARRIVED' && (
+              <View style={styles.notificationBannerArrived}>
+                <View style={styles.notificationBannerHeader}>
+                  <Ionicons name="flag" size={22} color="#22ef7e" />
+                  <Text style={styles.notificationBannerTitleArrived}>
+                    ARRIVED AT {activeTrip.destTerminal || 'DISCHARGE TERMINAL'}
+                  </Text>
+                </View>
+                <Text style={styles.notificationBannerMsg}>
+                  Containers are ready to be discharged from chassis {activeTrip.chassisNumber || user?.cheNumber || 'SCK 100'}. Once crane offloading is done, tap Complete Trip to archive your run.
+                </Text>
+
+                <TouchableOpacity
+                  style={styles.completeTripBtn}
+                  onPress={() => handleCompleteActiveTrip(activeTrip.id)}
+                  disabled={actionInProgress}
+                  activeOpacity={0.88}
+                >
+                  {actionInProgress ? (
+                    <ActivityIndicator color="#00363d" size="small" />
+                  ) : (
+                    <>
+                      <Ionicons name="checkmark-done-circle" size={24} color="#00363d" />
+                      <Text style={styles.completeTripBtnText}>COMPLETE TRIP & DISCHARGE</Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+              </View>
+            )}
+
+            {/* STATE E: Trip Completed Confirmation */}
+            {activeTrip.status === 'COMPLETED' && (
+              <View style={styles.notificationBannerCompleted}>
+                <View style={styles.notificationBannerHeader}>
+                  <Ionicons name="trophy" size={22} color="#22ef7e" />
+                  <Text style={styles.notificationBannerTitleCompleted}>
+                    TRIP SUCCESSFULLY COMPLETED!
+                  </Text>
+                </View>
+                <Text style={styles.notificationBannerMsg}>
+                  This mission has been completed and stored in your My Trips archive. You can start a new trip below.
+                </Text>
+              </View>
+            )}
           </View>
         ) : (
           <View style={styles.noActiveCard}>
@@ -2300,37 +2350,413 @@ const styles = StyleSheet.create({
     fontWeight: '900',
   },
 
-  // Tower Comms Toast
-  hudTowerCommsToast: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  // Mission Lifecycle Card & Operations Console
+  missionLifecycleCard: {
     backgroundColor: '#161c25',
     borderRadius: radius.DEFAULT,
     borderWidth: 1,
-    borderColor: '#242a34',
-    padding: 10,
+    borderColor: 'rgba(0, 229, 255, 0.25)',
+    padding: 16,
+    gap: 14,
+    marginBottom: 16,
+    shadowColor: '#00e5ff',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 10,
+    elevation: 4,
   },
-  towerCommsLabel: {
-    color: '#849396',
-    fontSize: 8,
-    fontWeight: '800',
+  missionCardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#242a34',
   },
-  towerCommsMsg: {
+  missionIdText: {
     color: '#dde2f0',
+    fontSize: 13,
+    fontWeight: '900',
+    letterSpacing: 0.6,
+  },
+  missionVesselText: {
+    color: '#849396',
     fontSize: 10,
     fontWeight: '700',
   },
-  ackBtn: {
-    backgroundColor: '#080e17',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 4,
+
+  // Status Pills
+  statusPillPending: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: 'rgba(254, 179, 0, 0.15)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#feb300',
+  },
+  statusPillTextPending: {
+    color: '#feb300',
+    fontSize: 9,
+    fontWeight: '900',
+    letterSpacing: 0.5,
+  },
+  statusPillApproved: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: 'rgba(34, 239, 126, 0.15)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#22ef7e',
+  },
+  statusPillTextApproved: {
+    color: '#22ef7e',
+    fontSize: 9,
+    fontWeight: '900',
+    letterSpacing: 0.5,
+  },
+  statusPillProgress: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(0, 229, 255, 0.15)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
     borderWidth: 1,
     borderColor: '#00e5ff',
   },
-  ackBtnText: {
+  livePulseDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#00e5ff',
+  },
+  statusPillTextProgress: {
     color: '#00e5ff',
     fontSize: 9,
     fontWeight: '900',
+    letterSpacing: 0.5,
+  },
+  statusPillArrived: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: 'rgba(0, 229, 255, 0.2)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#00e5ff',
+  },
+  statusPillTextArrived: {
+    color: '#00e5ff',
+    fontSize: 9,
+    fontWeight: '900',
+    letterSpacing: 0.5,
+  },
+  statusPillCompleted: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: 'rgba(34, 239, 126, 0.15)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#22ef7e',
+  },
+  statusPillTextCompleted: {
+    color: '#22ef7e',
+    fontSize: 9,
+    fontWeight: '900',
+    letterSpacing: 0.5,
+  },
+
+  // Route Box
+  routePairBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#0c131d',
+    borderRadius: radius.DEFAULT,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#242a34',
+  },
+  routeCol: {
+    gap: 2,
+  },
+  routeLabel: {
+    color: '#849396',
+    fontSize: 8,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
+  routeTerminal: {
+    color: '#00e5ff',
+    fontSize: 16,
+    fontWeight: '900',
+    letterSpacing: 0.6,
+  },
+  routeSub: {
+    color: '#556575',
+    fontSize: 8,
+    fontWeight: '700',
+  },
+  routeArrowBox: {
+    alignItems: 'center',
+    gap: 2,
+  },
+  routeDistanceText: {
+    color: '#849396',
+    fontSize: 8,
+    fontWeight: '900',
+    letterSpacing: 0.5,
+  },
+
+  // Containers List Box
+  containersListBox: {
+    backgroundColor: '#0c131d',
+    borderRadius: radius.DEFAULT,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#242a34',
+    gap: 8,
+  },
+  containersListHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  containersListTitle: {
+    color: '#dde2f0',
+    fontSize: 10,
+    fontWeight: '900',
+    letterSpacing: 0.5,
+    flex: 1,
+    marginLeft: 6,
+  },
+  chassisTag: {
+    color: '#feb300',
+    fontSize: 9,
+    fontWeight: '900',
+    backgroundColor: 'rgba(254, 179, 0, 0.1)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  containerItemRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#161c25',
+    padding: 8,
+    borderRadius: radius.sm,
+    gap: 8,
+  },
+  containerBadge: {
+    width: 20,
+    height: 20,
+    borderRadius: 4,
+    backgroundColor: '#00e5ff',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  containerBadgeText: {
+    color: '#00363d',
+    fontSize: 10,
+    fontWeight: '900',
+  },
+  containerItemNumber: {
+    color: '#dde2f0',
+    fontSize: 11,
+    fontWeight: '900',
+    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
+  },
+  containerItemSub: {
+    color: '#849396',
+    fontSize: 9,
+    marginTop: 1,
+  },
+  containerStatusTag: {
+    backgroundColor: 'rgba(0, 229, 255, 0.1)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  containerStatusTagText: {
+    color: '#00e5ff',
+    fontSize: 8,
+    fontWeight: '800',
+  },
+
+  // Notification Banners for States
+  notificationBannerPending: {
+    backgroundColor: 'rgba(254, 179, 0, 0.1)',
+    borderWidth: 1,
+    borderColor: '#feb300',
+    borderRadius: radius.DEFAULT,
+    padding: 14,
+    gap: 8,
+  },
+  notificationBannerHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  notificationBannerTitlePending: {
+    color: '#feb300',
+    fontSize: 12,
+    fontWeight: '900',
+    letterSpacing: 0.6,
+  },
+  notificationBannerMsg: {
+    color: '#dde2f0',
+    fontSize: 11,
+    lineHeight: 16,
+  },
+  pendingActionInfoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 4,
+  },
+  pendingWaitingText: {
+    color: '#feb300',
+    fontSize: 10,
+    fontWeight: '700',
+  },
+
+  notificationBannerApproved: {
+    backgroundColor: 'rgba(34, 239, 126, 0.12)',
+    borderWidth: 1.5,
+    borderColor: '#22ef7e',
+    borderRadius: radius.DEFAULT,
+    padding: 14,
+    gap: 10,
+  },
+  notificationBannerTitleApproved: {
+    color: '#22ef7e',
+    fontSize: 13,
+    fontWeight: '900',
+    letterSpacing: 0.6,
+  },
+  notificationBannerMsgApproved: {
+    color: '#dde2f0',
+    fontSize: 11,
+    lineHeight: 16,
+  },
+  startTripPrimaryBtn: {
+    backgroundColor: '#22ef7e',
+    height: 52,
+    borderRadius: radius.DEFAULT,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    elevation: 4,
+    shadowColor: '#22ef7e',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.35,
+    shadowRadius: 6,
+    marginTop: 4,
+  },
+  startTripPrimaryBtnText: {
+    color: '#00363d',
+    fontSize: 13,
+    fontWeight: '900',
+    letterSpacing: 0.8,
+  },
+
+  notificationBannerInProgress: {
+    backgroundColor: 'rgba(0, 229, 255, 0.12)',
+    borderWidth: 1.5,
+    borderColor: '#00e5ff',
+    borderRadius: radius.DEFAULT,
+    padding: 14,
+    gap: 10,
+  },
+  notificationBannerTitleInProgress: {
+    color: '#00e5ff',
+    fontSize: 12,
+    fontWeight: '900',
+    letterSpacing: 0.6,
+  },
+  arriveTerminalBtn: {
+    backgroundColor: '#00e5ff',
+    height: 52,
+    borderRadius: radius.DEFAULT,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    elevation: 4,
+    shadowColor: '#00e5ff',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.35,
+    shadowRadius: 6,
+    marginTop: 4,
+  },
+  arriveTerminalBtnText: {
+    color: '#00363d',
+    fontSize: 12,
+    fontWeight: '900',
+    letterSpacing: 0.8,
+  },
+
+  notificationBannerArrived: {
+    backgroundColor: 'rgba(34, 239, 126, 0.12)',
+    borderWidth: 1.5,
+    borderColor: '#22ef7e',
+    borderRadius: radius.DEFAULT,
+    padding: 14,
+    gap: 10,
+  },
+  notificationBannerTitleArrived: {
+    color: '#22ef7e',
+    fontSize: 12,
+    fontWeight: '900',
+    letterSpacing: 0.6,
+  },
+  completeTripBtn: {
+    backgroundColor: '#22ef7e',
+    height: 52,
+    borderRadius: radius.DEFAULT,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    elevation: 4,
+    shadowColor: '#22ef7e',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.35,
+    shadowRadius: 6,
+    marginTop: 4,
+  },
+  completeTripBtnText: {
+    color: '#00363d',
+    fontSize: 12,
+    fontWeight: '900',
+    letterSpacing: 0.8,
+  },
+
+  notificationBannerCompleted: {
+    backgroundColor: 'rgba(34, 239, 126, 0.15)',
+    borderWidth: 1,
+    borderColor: '#22ef7e',
+    borderRadius: radius.DEFAULT,
+    padding: 14,
+    gap: 6,
+  },
+  notificationBannerTitleCompleted: {
+    color: '#22ef7e',
+    fontSize: 12,
+    fontWeight: '900',
+    letterSpacing: 0.6,
   },
 });
