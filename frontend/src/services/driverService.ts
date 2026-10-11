@@ -27,9 +27,19 @@ export interface DriverProfile {
 }
 
 export const driverService = {
-  async getProfile(): Promise<DriverProfile> {
-    const response = await apiClient.get<DriverProfile>('/drivers/me');
-    return response.data;
+  async getProfile(driverIdOrCode?: string): Promise<DriverProfile | null> {
+    try {
+      const response = await apiClient.get<DriverProfile>('/drivers/me');
+      return response.data;
+    } catch {
+      const fallbackId = driverIdOrCode || 'DRV-00001';
+      try {
+        const response = await apiClient.get<DriverProfile>(`/drivers/${fallbackId}`);
+        return response.data;
+      } catch {
+        return null;
+      }
+    }
   },
 
   async getDriverById(id: string): Promise<DriverProfile> {

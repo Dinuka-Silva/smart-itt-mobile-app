@@ -86,6 +86,7 @@ export default function LoginScreen() {
         name: isSupervisor ? 'Nimal Silva (Supervisor)' : 'Kamal Perera (Driver)',
         token: 'demo-token-xyz',
         driverId: isSupervisor ? undefined : 'driver-123',
+        driverCode: isSupervisor ? undefined : (username.trim().startsWith('DRV-') ? username.trim() : 'DRV-00001'),
         vehicleNumber: isSupervisor ? undefined : 'LY 5234',
         chassisNumber: isSupervisor ? undefined : 'SCK 100',
         cheNumber: isSupervisor ? undefined : 'SCK 100',

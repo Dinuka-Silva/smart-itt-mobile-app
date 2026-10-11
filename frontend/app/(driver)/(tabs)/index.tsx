@@ -85,7 +85,8 @@ export default function DriverHomeDashboard() {
       // Fetch driver profile photos if not yet loaded in store
       if (!user?.profilePhoto) {
         try {
-          const prof = await driverService.getProfile();
+          const driverIdentifier = user?.driverCode || user?.driverId || user?.username || 'DRV-00001';
+          const prof = await driverService.getProfile(driverIdentifier);
           if (prof?.profilePhoto) {
             useAuthStore.getState().updateUser({ profilePhoto: prof.profilePhoto, coverImage: prof.coverImage });
           }
