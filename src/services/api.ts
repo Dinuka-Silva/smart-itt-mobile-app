@@ -33,11 +33,15 @@ apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response) {
-      // Server responded with error status
-      console.error('API Error:', error.response.status, error.response.data);
+      // Handle 401 without popping LogBox error modal
+      if (error.response.status === 401) {
+        console.warn('API Auth (401):', error.response.data?.message || 'Unauthorized');
+      } else {
+        console.error('API Error:', error.response.status, error.response.data);
+      }
     } else if (error.request) {
-      // Request made but no response
-      console.error('Network Error:', error.message);
+      // Request made but no response (offline / connection timeout)
+      console.warn('Network Notice:', error.message);
     } else {
       // Error in request setup
       console.error('Request Error:', error.message);

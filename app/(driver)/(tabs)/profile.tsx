@@ -98,7 +98,8 @@ export default function DriverProfileScreen() {
 
   const fetchProfile = useCallback(async () => {
     try {
-      const data = await driverService.getProfile();
+      const driverIdentifier = user?.driverCode || user?.driverId || user?.username || 'DRV-00001';
+      const data = await driverService.getProfile(driverIdentifier);
       setProfile(data);
       if (data) {
         if (data.profilePhoto) setProfilePhoto(data.profilePhoto);
