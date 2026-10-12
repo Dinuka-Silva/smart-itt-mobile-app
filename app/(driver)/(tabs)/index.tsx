@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import {
   View,
   Text,
@@ -12,6 +12,7 @@ import {
   Alert,
   Platform,
   Image,
+  Animated,
 } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -62,6 +63,50 @@ export default function DriverHomeDashboard() {
   const [bayArrived, setBayArrived] = useState(false);
   const [hookConfirmed, setHookConfirmed] = useState(false);
   const [towerAck, setTowerAck] = useState(false);
+
+  // ─── MONTHLY CONTAINER MISSION & CELEBRATION ANIMATION STATE ───
+  const monthlyTarget = 150;
+  const [celebrationModalVisible, setCelebrationModalVisible] = useState(false);
+  const scaleAnim = useRef(new Animated.Value(0)).current;
+  const rotateAnim = useRef(new Animated.Value(0)).current;
+  const confettiAnim = useRef(new Animated.Value(0)).current;
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+
+  const triggerCelebrationAnimation = useCallback(() => {
+    setCelebrationModalVisible(true);
+    scaleAnim.setValue(0);
+    rotateAnim.setValue(0);
+    confettiAnim.setValue(0);
+    pulseAnim.setValue(1);
+
+    Animated.spring(scaleAnim, {
+      toValue: 1,
+      friction: 5,
+      tension: 40,
+      useNativeDriver: true,
+    }).start();
+
+    Animated.sequence([
+      Animated.timing(rotateAnim, { toValue: -0.15, duration: 180, useNativeDriver: true }),
+      Animated.timing(rotateAnim, { toValue: 0.15, duration: 180, useNativeDriver: true }),
+      Animated.timing(rotateAnim, { toValue: -0.08, duration: 140, useNativeDriver: true }),
+      Animated.timing(rotateAnim, { toValue: 0, duration: 140, useNativeDriver: true }),
+    ]).start();
+
+    Animated.timing(confettiAnim, {
+      toValue: 1,
+      duration: 2200,
+      useNativeDriver: true,
+    }).start();
+
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, { toValue: 1.1, duration: 700, useNativeDriver: true }),
+        Animated.timing(pulseAnim, { toValue: 1, duration: 700, useNativeDriver: true }),
+      ]),
+      { iterations: 4 }
+    ).start();
+  }, [scaleAnim, rotateAnim, confettiAnim, pulseAnim]);
 
   const mockTrips = useMockTripStore((s) => s.mockTrips);
 
@@ -152,6 +197,30 @@ export default function DriverHomeDashboard() {
   // Container counts for active trip
   const count20Ft = (activeTrip?.containers || []).filter((c: any) => c.size === '20FT' || c.size === 'FT_20').length;
   const count40Ft = (activeTrip?.containers || []).filter((c: any) => c.size === '40FT' || c.size === 'FT_40').length;
+
+  // Monthly containers completed towards target (150 containers)
+  const currentMonthContainers = useMemo(() => {
+    const now = new Date();
+    const curYear = now.getFullYear();
+    const curMonth = now.getMonth();
+
+    const thisMonthCompletedTrips = trips.filter((t) => {
+      const rawDate = t.operationDate || t.startTime || t.createdAt;
+      if (!rawDate) return false;
+      const d = new Date(rawDate);
+      return !isNaN(d.getTime()) && d.getFullYear() === curYear && d.getMonth() === curMonth;
+    });
+
+    let count = 0;
+    thisMonthCompletedTrips.forEach((t) => {
+      if (t.status === 'COMPLETED' || t.status === 'APPROVED') {
+        count += (t.containers?.length || 1);
+      }
+    });
+
+    // Baseline 50 containers as requested by user
+    return Math.max(50, count);
+  }, [trips]);
 
   const [actionInProgress, setActionInProgress] = useState(false);
 
@@ -370,6 +439,74 @@ export default function DriverHomeDashboard() {
             </Text>
             <Text style={styles.summaryCardSub}>Awaiting Gate Pass</Text>
           </View>
+        </View>
+
+        {/* ─── MONTHLY CONTAINER MISSION TARGET (50 / 150 CONTAINERS) ─── */}
+        <View style={styles.monthlyMissionCard}>
+          <View style={styles.monthlyMissionHeader}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
+              <View style={styles.monthlyMissionIconBox}>
+                <Ionicons name="trophy" size={18} color="#feb300" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.monthlyMissionHeading}>MONTHLY CONTAINER MISSION</Text>
+                <Text style={styles.monthlyMissionSubHeading}>Target: 150 Containers for this month</Text>
+              </View>
+            </View>
+            <TouchableOpacity
+              style={styles.celebrationTriggerBtn}
+              activeOpacity={0.8}
+              onPress={triggerCelebrationAnimation}
+            >
+              <Ionicons name="sparkles" size={12} color="#00363d" />
+              <Text style={styles.celebrationTriggerText}>50 TARGET</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Large Counter display: 50 / 150 */}
+          <View style={styles.missionNumbersRow}>
+            <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 6 }}>
+              <Text style={styles.missionCurrentVal}>{currentMonthContainers}</Text>
+              <Text style={styles.missionSlash}>/</Text>
+              <Text style={styles.missionTargetVal}>{monthlyTarget}</Text>
+              <Text style={styles.missionUnitText}>Containers</Text>
+            </View>
+            <View style={styles.missionPercentBadge}>
+              <Text style={styles.missionPercentText}>
+                {Math.round((currentMonthContainers / monthlyTarget) * 100)}%
+              </Text>
+            </View>
+          </View>
+
+          {/* Progress bar track */}
+          <View style={styles.missionProgressBarTrack}>
+            <View
+              style={[
+                styles.missionProgressBarFill,
+                { width: `${Math.min(100, Math.round((currentMonthContainers / monthlyTarget) * 100))}%` },
+              ]}
+            />
+          </View>
+
+          {/* Milestone Congratulation Trigger Banner */}
+          {currentMonthContainers >= 50 && (
+            <TouchableOpacity
+              style={styles.milestoneNoticeBanner}
+              activeOpacity={0.85}
+              onPress={triggerCelebrationAnimation}
+            >
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
+                <View style={styles.milestoneStarCircle}>
+                  <Ionicons name="star" size={14} color="#00363d" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.milestoneNoticeTitle}>🎉 50 CONTAINERS MILESTONE REACHED!</Text>
+                  <Text style={styles.milestoneNoticeSub}>Tap here to view your celebration animation & rewards</Text>
+                </View>
+              </View>
+              <Ionicons name="chevron-forward" size={16} color="#22ef7e" />
+            </TouchableOpacity>
+          )}
         </View>
 
         {/* ─── C. DRIVER MISSION OPERATIONS CONSOLE (DYNAMIC TRIP LIFECYCLE) ─── */}
@@ -915,6 +1052,148 @@ export default function DriverHomeDashboard() {
           </View>
         </View>
       </Modal>
+
+      {/* ─── MODAL: 50 CONTAINERS CELEBRATION WITH ANIMATION ─── */}
+      <Modal visible={celebrationModalVisible} transparent animationType="fade">
+        <View style={styles.celebrationOverlay}>
+          {/* Animated Confetti Particles */}
+          <View style={styles.confettiContainer} pointerEvents="none">
+            {Array.from({ length: 20 }).map((_, i) => {
+              const confColors = ['#feb300', '#00e5ff', '#22ef7e', '#ff4081', '#e040fb', '#ffffff'];
+              const confColor = confColors[i % confColors.length];
+              const leftPercent = `${(i * 5) + 2}%`;
+              const translateY = confettiAnim.interpolate({
+                inputRange: [0, 1],
+                outputRange: [-30 - (i % 6) * 20, 600 + (i % 5) * 40],
+              });
+              const rotate = confettiAnim.interpolate({
+                inputRange: [0, 1],
+                outputRange: ['0deg', `${(i % 2 === 0 ? 1 : -1) * (360 + i * 40)}deg`],
+              });
+              const opacity = confettiAnim.interpolate({
+                inputRange: [0, 0.1, 0.85, 1],
+                outputRange: [0, 1, 1, 0],
+              });
+              return (
+                <Animated.View
+                  key={i}
+                  style={[
+                    styles.confettiPiece,
+                    {
+                      left: leftPercent as any,
+                      backgroundColor: confColor,
+                      transform: [{ translateY }, { rotate }],
+                      opacity,
+                      width: i % 3 === 0 ? 12 : 8,
+                      height: i % 2 === 0 ? 14 : 8,
+                      borderRadius: i % 4 === 0 ? 6 : 2,
+                    },
+                  ]}
+                />
+              );
+            })}
+          </View>
+
+          {/* Animated Celebration Card */}
+          <Animated.View
+            style={[
+              styles.celebrationCard,
+              {
+                transform: [{ scale: scaleAnim }],
+              },
+            ]}
+          >
+            {/* Close button */}
+            <TouchableOpacity
+              style={styles.celebrationCloseBtn}
+              onPress={() => setCelebrationModalVisible(false)}
+            >
+              <Ionicons name="close" size={20} color="#849396" />
+            </TouchableOpacity>
+
+            {/* Pulsing Trophy Halo */}
+            <View style={styles.trophyHaloWrap}>
+              <Animated.View
+                style={[
+                  styles.trophyHaloGlow,
+                  {
+                    transform: [{ scale: pulseAnim }],
+                  },
+                ]}
+              />
+              <Animated.View
+                style={[
+                  styles.trophyIconBox,
+                  {
+                    transform: [
+                      {
+                        rotate: rotateAnim.interpolate({
+                          inputRange: [-0.2, 0.2],
+                          outputRange: ['-15deg', '15deg'],
+                        }),
+                      },
+                    ],
+                  },
+                ]}
+              >
+                <Ionicons name="trophy" size={56} color="#feb300" />
+              </Animated.View>
+            </View>
+
+            {/* Congratulatory Tag */}
+            <View style={styles.celebrationTagBadge}>
+              <Ionicons name="sparkles" size={12} color="#00363d" />
+              <Text style={styles.celebrationTagBadgeText}>MILESTONE UNLOCKED</Text>
+            </View>
+
+            <Text style={styles.celebrationTitle}>CONGRATULATIONS!</Text>
+            <Text style={styles.celebrationDriverName}>{driverName.toUpperCase()}</Text>
+
+            <Text style={styles.celebrationMessage}>
+              You have completed <Text style={{ color: '#feb300', fontWeight: '900' }}>50 Containers</Text> this month toward your mission target of <Text style={{ color: '#00e5ff', fontWeight: '900' }}>150 Containers</Text>! Outstanding operational efficiency!
+            </Text>
+
+            {/* Achievement Highlights Box */}
+            <View style={styles.achievementBox}>
+              <View style={styles.achievementRow}>
+                <View style={styles.achievementItem}>
+                  <Text style={styles.achievementLabel}>CURRENT ACHIEVED</Text>
+                  <Text style={[styles.achievementVal, { color: '#feb300' }]}>{currentMonthContainers} TEU</Text>
+                </View>
+                <View style={styles.achievementDivider} />
+                <View style={styles.achievementItem}>
+                  <Text style={styles.achievementLabel}>MONTHLY TARGET</Text>
+                  <Text style={[styles.achievementVal, { color: '#00e5ff' }]}>{monthlyTarget} TEU</Text>
+                </View>
+                <View style={styles.achievementDivider} />
+                <View style={styles.achievementItem}>
+                  <Text style={styles.achievementLabel}>PROGRESS</Text>
+                  <Text style={[styles.achievementVal, { color: '#22ef7e' }]}>
+                    {Math.round((currentMonthContainers / monthlyTarget) * 100)}%
+                  </Text>
+                </View>
+              </View>
+
+              <View style={styles.bonusRewardRow}>
+                <Ionicons name="gift" size={16} color="#feb300" />
+                <Text style={styles.bonusRewardText}>
+                  Milestone Performance Bonus: <Text style={{ color: '#22ef7e', fontWeight: '800' }}>+LKR 15,000</Text> Unlocked!
+                </Text>
+              </View>
+            </View>
+
+            {/* Action button */}
+            <TouchableOpacity
+              style={styles.celebrationActionBtn}
+              activeOpacity={0.85}
+              onPress={() => setCelebrationModalVisible(false)}
+            >
+              <Ionicons name="rocket" size={18} color="#00363d" />
+              <Text style={styles.celebrationActionBtnText}>CONTINUE MISSIONS</Text>
+            </TouchableOpacity>
+          </Animated.View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -1113,6 +1392,310 @@ const styles = StyleSheet.create({
   summaryCardSub: {
     color: '#849396',
     fontSize: 11,
+  },
+
+  // ─── MONTHLY CONTAINER MISSION CARD ───
+  monthlyMissionCard: {
+    backgroundColor: '#161c25',
+    borderRadius: radius.DEFAULT,
+    borderWidth: 1.5,
+    borderColor: '#feb300',
+    padding: 14,
+    gap: 10,
+  },
+  monthlyMissionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  monthlyMissionIconBox: {
+    width: 34,
+    height: 34,
+    borderRadius: 8,
+    backgroundColor: 'rgba(254, 179, 0, 0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(254, 179, 0, 0.4)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  monthlyMissionHeading: {
+    color: '#dde2f0',
+    fontSize: 12,
+    fontWeight: '900',
+    letterSpacing: 0.5,
+  },
+  monthlyMissionSubHeading: {
+    color: '#849396',
+    fontSize: 10,
+    marginTop: 1,
+  },
+  celebrationTriggerBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#feb300',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 5,
+  },
+  celebrationTriggerText: {
+    color: '#00363d',
+    fontSize: 9,
+    fontWeight: '900',
+    letterSpacing: 0.5,
+  },
+  missionNumbersRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingTop: 4,
+  },
+  missionCurrentVal: {
+    color: '#feb300',
+    fontSize: 26,
+    fontWeight: '900',
+  },
+  missionSlash: {
+    color: '#849396',
+    fontSize: 20,
+    fontWeight: '700',
+  },
+  missionTargetVal: {
+    color: '#00e5ff',
+    fontSize: 22,
+    fontWeight: '900',
+  },
+  missionUnitText: {
+    color: '#849396',
+    fontSize: 11,
+    fontWeight: '600',
+    marginLeft: 2,
+  },
+  missionPercentBadge: {
+    backgroundColor: 'rgba(0, 229, 255, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 229, 255, 0.3)',
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  missionPercentText: {
+    color: '#00e5ff',
+    fontWeight: '900',
+    fontSize: 12,
+  },
+  missionProgressBarTrack: {
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#0a1017',
+    borderWidth: 1,
+    borderColor: '#242a34',
+    overflow: 'hidden',
+    width: '100%',
+  },
+  missionProgressBarFill: {
+    height: '100%',
+    borderRadius: 4,
+    backgroundColor: '#feb300',
+  },
+  milestoneNoticeBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: 'rgba(34, 239, 126, 0.1)',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(34, 239, 126, 0.35)',
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    marginTop: 2,
+  },
+  milestoneStarCircle: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#22ef7e',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  milestoneNoticeTitle: {
+    color: '#22ef7e',
+    fontSize: 11,
+    fontWeight: '900',
+  },
+  milestoneNoticeSub: {
+    color: '#849396',
+    fontSize: 9,
+    marginTop: 1,
+  },
+
+  // ─── CELEBRATION MODAL & ANIMATION ───
+  celebrationOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(10, 16, 26, 0.88)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 20,
+  },
+  confettiContainer: {
+    ...StyleSheet.absoluteFill,
+    overflow: 'hidden',
+  },
+  confettiPiece: {
+    position: 'absolute',
+    top: 0,
+  },
+  celebrationCard: {
+    width: '100%',
+    maxWidth: 400,
+    backgroundColor: '#161c25',
+    borderRadius: 20,
+    borderWidth: 2,
+    borderColor: '#feb300',
+    padding: 22,
+    alignItems: 'center',
+    shadowColor: '#feb300',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.3,
+    shadowRadius: 20,
+    elevation: 12,
+  },
+  celebrationCloseBtn: {
+    position: 'absolute',
+    top: 14,
+    right: 14,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#242a34',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 10,
+  },
+  trophyHaloWrap: {
+    width: 100,
+    height: 100,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+  },
+  trophyHaloGlow: {
+    position: 'absolute',
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    backgroundColor: 'rgba(254, 179, 0, 0.22)',
+  },
+  trophyIconBox: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  celebrationTagBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#feb300',
+    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    marginBottom: 8,
+  },
+  celebrationTagBadgeText: {
+    color: '#00363d',
+    fontSize: 9,
+    fontWeight: '900',
+    letterSpacing: 0.8,
+  },
+  celebrationTitle: {
+    color: '#feb300',
+    fontSize: 22,
+    fontWeight: '900',
+    letterSpacing: 1,
+    textAlign: 'center',
+  },
+  celebrationDriverName: {
+    color: '#ffffff',
+    fontSize: 14,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+    marginTop: 2,
+    textAlign: 'center',
+  },
+  celebrationMessage: {
+    color: '#bac9cc',
+    fontSize: 12,
+    lineHeight: 18,
+    textAlign: 'center',
+    marginTop: 10,
+    paddingHorizontal: 10,
+  },
+  achievementBox: {
+    width: '100%',
+    backgroundColor: '#0e141d',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#242a34',
+    padding: 12,
+    marginTop: 16,
+    gap: 10,
+  },
+  achievementRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-around',
+  },
+  achievementItem: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  achievementDivider: {
+    width: 1,
+    height: 28,
+    backgroundColor: '#242a34',
+  },
+  achievementLabel: {
+    color: '#849396',
+    fontSize: 8,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
+  achievementVal: {
+    fontSize: 14,
+    fontWeight: '900',
+    marginTop: 2,
+  },
+  bonusRewardRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(254, 179, 0, 0.08)',
+    borderRadius: 6,
+    padding: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(254, 179, 0, 0.25)',
+  },
+  bonusRewardText: {
+    color: '#dde2f0',
+    fontSize: 11,
+    fontWeight: '600',
+    flex: 1,
+  },
+  celebrationActionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: '#feb300',
+    width: '100%',
+    paddingVertical: 13,
+    borderRadius: 10,
+    marginTop: 16,
+  },
+  celebrationActionBtnText: {
+    color: '#00363d',
+    fontSize: 12,
+    fontWeight: '900',
+    letterSpacing: 0.6,
   },
 
   // ─── ACTIVE TRIP CARD ───
