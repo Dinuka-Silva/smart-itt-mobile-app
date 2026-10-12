@@ -1177,18 +1177,21 @@ export default function DriverHomeDashboard() {
             <View style={styles.achievementBox}>
               <View style={styles.achievementRow}>
                 <View style={styles.achievementItem}>
-                  <Text style={styles.achievementLabel}>COMPLETED TRIPS</Text>
-                  <Text style={[styles.achievementVal, { color: '#00e5ff' }]}>{actualTripCount} Trips</Text>
+                  <Text style={styles.achievementLabel}>TRIPS</Text>
+                  <Text style={[styles.achievementVal, { color: '#00e5ff' }]}>{actualTripCount}</Text>
+                  <Text style={styles.achievementSubText}>Completed</Text>
                 </View>
                 <View style={styles.achievementDivider} />
                 <View style={styles.achievementItem}>
                   <Text style={styles.achievementLabel}>CONTAINERS</Text>
-                  <Text style={[styles.achievementVal, { color: '#feb300' }]}>{currentMonthContainers} Containers</Text>
+                  <Text style={[styles.achievementVal, { color: '#feb300' }]}>{currentMonthContainers}</Text>
+                  <Text style={styles.achievementSubText}>Transported</Text>
                 </View>
                 <View style={styles.achievementDivider} />
                 <View style={styles.achievementItem}>
-                  <Text style={styles.achievementLabel}>MONTH TARGET</Text>
-                  <Text style={[styles.achievementVal, { color: '#22ef7e' }]}>{monthlyTarget} Containers</Text>
+                  <Text style={styles.achievementLabel}>TARGET</Text>
+                  <Text style={[styles.achievementVal, { color: '#22ef7e' }]}>{monthlyTarget}</Text>
+                  <Text style={styles.achievementSubText}>Containers</Text>
                 </View>
               </View>
 
@@ -1683,9 +1686,15 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   achievementVal: {
-    fontSize: 14,
+    fontSize: 18,
     fontWeight: '900',
     marginTop: 2,
+  },
+  achievementSubText: {
+    color: '#849396',
+    fontSize: 9,
+    fontWeight: '700',
+    marginTop: 1,
   },
   celebrationHonorRow: {
     flexDirection: 'row',
