@@ -17,7 +17,13 @@ import { authService, DriverRegisterRequest } from '../../src/services/authServi
 import { useAuthStore } from '../../src/store/authStore';
 import { colors, radius, spacing } from '../../src/theme';
 
-import { SCK_FLEET, findFleetVehicle as findFleetVehicleCore, resolveCheNumber, resolveOperator } from '../../src/config/fleet';
+import {
+  SCK_FLEET,
+  findFleetVehicle as findFleetVehicleCore,
+  resolveCheNumber,
+  resolveOperator,
+  resolveTrailerSize,
+} from '../../src/config/fleet';
 
 export const SCK_FLEET_VEHICLES = SCK_FLEET;
 
@@ -123,8 +129,9 @@ export default function DriverRegisterScreen() {
     const resolvedEmergencyPhone = emergencyContactNumber.trim() || '0112456789';
     const resolvedVehicleNumber = (vehicleNumber.trim() || 'LY 5234').toUpperCase();
     const fleetMatch = findFleetVehicle(resolvedVehicleNumber);
-    const resolvedCheNumber = fleetMatch?.cheNumber || 'SCK 100';
-    const resolvedOperator = fleetMatch?.operator || 'SCK Logistics';
+    const resolvedCheNumber = fleetMatch?.cheNumber || resolveCheNumber(resolvedVehicleNumber);
+    const resolvedOperator = fleetMatch?.operator || resolveOperator(resolvedVehicleNumber);
+    const resolvedTrailerSize = fleetMatch?.trailerSize || resolveTrailerSize(resolvedVehicleNumber);
     const resolvedEmail = email.trim() || `${resolvedEmployeeId.toLowerCase()}@smartitt.lk`;
     const resolvedPassword = password.trim() || 'Password@123';
     const resolvedConfirm = confirmPassword.trim() || resolvedPassword;
@@ -163,6 +170,7 @@ export default function DriverRegisterScreen() {
         cheNumber: resolvedCheNumber,
         chassisNumber: resolvedCheNumber,
         operator: resolvedOperator,
+        trailerSize: resolvedTrailerSize,
         fullName: resolvedFullName,
         nic: resolvedNic,
         employeeId: resolvedEmployeeId,
@@ -191,6 +199,7 @@ export default function DriverRegisterScreen() {
         cheNumber: resolvedCheNumber,
         chassisNumber: resolvedCheNumber,
         operator: resolvedOperator,
+        trailerSize: resolvedTrailerSize,
         fullName: resolvedFullName,
         nic: resolvedNic,
         employeeId: resolvedEmployeeId,
@@ -453,6 +462,16 @@ export default function DriverRegisterScreen() {
 
                   <View style={styles.cheDivider} />
 
+                  <View style={styles.cheBlockSmall}>
+                    <Text style={styles.cheBlockLabel}>TRAILER SIZE</Text>
+                    <View style={styles.cheSizePill}>
+                      <Ionicons name="cube" size={11} color="#feb300" />
+                      <Text style={styles.cheBlockSize}>{detectedFleet.trailerSize || '40FT'}</Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.cheDivider} />
+
                   <View style={styles.cheBlock}>
                     <Text style={styles.cheBlockLabel}>FLEET OPERATOR</Text>
                     <Text style={styles.cheBlockOperator}>{detectedFleet.operator}</Text>
@@ -462,7 +481,7 @@ export default function DriverRegisterScreen() {
                 <View style={styles.cheFooterNotice}>
                   <Ionicons name="shield-checkmark" size={13} color="#00e5ff" />
                   <Text style={styles.cheFooterNoticeText}>
-                    CHE {detectedFleet.cheNumber} is registered under {detectedFleet.operator}. ITT gateway ready.
+                    CHE {detectedFleet.cheNumber} • {detectedFleet.trailerSize || '40FT'} Chassis registered under {detectedFleet.operator}. ITT gateway ready.
                   </Text>
                 </View>
               </View>
@@ -470,21 +489,26 @@ export default function DriverRegisterScreen() {
               <View style={styles.chePendingCard}>
                 <Ionicons name="information-circle-outline" size={15} color="#feb300" />
                 <Text style={styles.chePendingText}>
-                  Type or tap a fleet vehicle below (e.g. LY 5234) to auto-display CHE (SCK No).
+                  Type or tap a fleet vehicle below (e.g. LY-5234) to auto-display CHE (SCK No) and 40FT trailer specs.
                 </Text>
               </View>
             ) : null}
 
             {/* Quick Fleet Vehicle Selection Chips */}
             <View style={{ marginTop: 10 }}>
-              <Text style={styles.fleetPickerLabel}>TAP TO CHOOSE SCK FLEET TRUCK:</Text>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                <Text style={styles.fleetPickerLabel}>TAP TO CHOOSE SCK FLEET TRUCK (24 REGISTERED):</Text>
+                <Text style={styles.fleetTotalBadge}>40FT STANDARD</Text>
+              </View>
               <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={styles.fleetChipsScroll}
               >
                 {SCK_FLEET_VEHICLES.map((v) => {
-                  const isSelected = detectedFleet?.vehicleNumber === v.vehicleNumber;
+                  const isSelected =
+                    detectedFleet?.vehicleNumber.replace(/[^A-Za-z0-9]/g, '') ===
+                    v.vehicleNumber.replace(/[^A-Za-z0-9]/g, '');
                   return (
                     <TouchableOpacity
                       key={v.vehicleNumber}
@@ -499,6 +523,11 @@ export default function DriverRegisterScreen() {
                       <View style={[styles.fleetChipCheBadge, isSelected && styles.fleetChipCheBadgeActive]}>
                         <Text style={[styles.fleetChipCheBadgeText, isSelected && styles.fleetChipCheBadgeTextActive]}>
                           {v.cheNumber}
+                        </Text>
+                      </View>
+                      <View style={[styles.fleetChipSizeBadge, isSelected && styles.fleetChipSizeBadgeActive]}>
+                        <Text style={[styles.fleetChipSizeBadgeText, isSelected && styles.fleetChipSizeBadgeTextActive]}>
+                          {v.trailerSize}
                         </Text>
                       </View>
                     </TouchableOpacity>
@@ -789,6 +818,12 @@ export default function DriverRegisterScreen() {
                     <Text style={styles.vehicleProp}>CHE NUMBER (SCK NO):</Text>
                     <Text style={[styles.vehicleVal, { color: '#00e5ff', fontWeight: '900' }]}>
                       {registeredUser?.cheNumber || detectedFleet?.cheNumber || 'SCK 100'}
+                    </Text>
+                  </View>
+                  <View style={styles.vehicleRow}>
+                    <Text style={styles.vehicleProp}>TRAILER / CHASSIS SIZE:</Text>
+                    <Text style={[styles.vehicleVal, { color: '#feb300', fontWeight: '900' }]}>
+                      {registeredUser?.trailerSize || detectedFleet?.trailerSize || '40FT'}
                     </Text>
                   </View>
                   <View style={styles.vehicleRow}>
@@ -1498,6 +1533,25 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
     marginHorizontal: 12,
   },
+  cheBlockSmall: {
+    alignItems: 'flex-start',
+  },
+  cheSizePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(254, 179, 0, 0.12)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+    marginTop: 2,
+  },
+  cheBlockSize: {
+    color: '#feb300',
+    fontSize: 12,
+    fontWeight: '900',
+    letterSpacing: 0.5,
+  },
   cheFooterNotice: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1531,7 +1585,16 @@ const styles = StyleSheet.create({
     fontSize: 9,
     fontWeight: '800',
     letterSpacing: 0.6,
-    marginBottom: 6,
+  },
+  fleetTotalBadge: {
+    color: '#feb300',
+    fontSize: 9,
+    fontWeight: '900',
+    letterSpacing: 0.5,
+    backgroundColor: 'rgba(254, 179, 0, 0.12)',
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    borderRadius: 4,
   },
   fleetChipsScroll: {
     flexDirection: 'row',
@@ -1576,6 +1639,23 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   fleetChipCheBadgeTextActive: {
+    color: '#080e17',
+  },
+  fleetChipSizeBadge: {
+    backgroundColor: 'rgba(254, 179, 0, 0.12)',
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    borderRadius: 6,
+  },
+  fleetChipSizeBadgeActive: {
+    backgroundColor: '#feb300',
+  },
+  fleetChipSizeBadgeText: {
+    color: '#feb300',
+    fontSize: 9,
+    fontWeight: '800',
+  },
+  fleetChipSizeBadgeTextActive: {
     color: '#080e17',
   },
 });

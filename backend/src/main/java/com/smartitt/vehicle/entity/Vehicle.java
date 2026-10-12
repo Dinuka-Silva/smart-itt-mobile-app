@@ -35,6 +35,10 @@ public class Vehicle {
     @Builder.Default
     private String operator = "SCK Logistics"; // "SCK Logistics", "SDR LINK", "E3 Logistics"
 
+    @Column(name = "trailer_size", length = 20)
+    @Builder.Default
+    private String trailerSize = "40FT"; // "40FT"
+
     @Column(name = "assigned_driver_id")
     private UUID assignedDriverId;
 

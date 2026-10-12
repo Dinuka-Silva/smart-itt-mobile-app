@@ -17,6 +17,7 @@ public class VehicleResponse {
     private String chassisNumber; // SCK number (e.g., "SCK 100")
     private String cheNumber;     // Alias for chassisNumber
     private String operator;      // SCK Logistics, SDR LINK, E3 Logistics
+    private String trailerSize;   // 40FT standard ITT container chassis
     private String status;        // ACTIVE, MAINTENANCE, INACTIVE
     private UUID assignedDriverId;
 }

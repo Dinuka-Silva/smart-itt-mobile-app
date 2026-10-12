@@ -49,6 +49,7 @@ public class VehicleService {
                 .chassisNumber(v.getChassisNumber())
                 .cheNumber(v.getChassisNumber())
                 .operator(v.getOperator())
+                .trailerSize(v.getTrailerSize())
                 .status(v.getStatus())
                 .assignedDriverId(v.getAssignedDriverId())
                 .build();
