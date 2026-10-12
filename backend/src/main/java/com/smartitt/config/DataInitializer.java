@@ -59,48 +59,58 @@ public class DataInitializer implements CommandLineRunner {
     }
 
     private void seedVehicles() {
+        List<Vehicle> authoritativeFleet = List.of(
+            // 1. SCK Logistics Main Fleet (15 vehicles: CHE 100 - 114)
+            Vehicle.builder().chassisNumber("SCK 100").vehicleNumber("LY 5234").operator("SCK Logistics").trailerSize("40FT").status("ACTIVE").build(),
+            Vehicle.builder().chassisNumber("SCK 101").vehicleNumber("LY 5235").operator("SCK Logistics").trailerSize("40FT").status("ACTIVE").build(),
+            Vehicle.builder().chassisNumber("SCK 102").vehicleNumber("LY 5236").operator("SCK Logistics").trailerSize("40FT").status("ACTIVE").build(),
+            Vehicle.builder().chassisNumber("SCK 103").vehicleNumber("LY 5237").operator("SCK Logistics").trailerSize("40FT").status("ACTIVE").build(),
+            Vehicle.builder().chassisNumber("SCK 104").vehicleNumber("LY 5238").operator("SCK Logistics").trailerSize("40FT").status("ACTIVE").build(),
+            Vehicle.builder().chassisNumber("SCK 105").vehicleNumber("LY 5665").operator("SCK Logistics").trailerSize("40FT").status("ACTIVE").build(),
+            Vehicle.builder().chassisNumber("SCK 106").vehicleNumber("LY 5708").operator("SCK Logistics").trailerSize("40FT").status("ACTIVE").build(),
+            Vehicle.builder().chassisNumber("SCK 107").vehicleNumber("LY 5711").operator("SCK Logistics").trailerSize("40FT").status("ACTIVE").build(),
+            Vehicle.builder().chassisNumber("SCK 108").vehicleNumber("LY 5717").operator("SCK Logistics").trailerSize("40FT").status("ACTIVE").build(),
+            Vehicle.builder().chassisNumber("SCK 109").vehicleNumber("LY 5721").operator("SCK Logistics").trailerSize("40FT").status("ACTIVE").build(),
+            Vehicle.builder().chassisNumber("SCK 110").vehicleNumber("LY 6426").operator("SCK Logistics").trailerSize("40FT").status("ACTIVE").build(),
+            Vehicle.builder().chassisNumber("SCK 111").vehicleNumber("LY 6428").operator("SCK Logistics").trailerSize("40FT").status("ACTIVE").build(),
+            Vehicle.builder().chassisNumber("SCK 112").vehicleNumber("LY 5217").operator("SCK Logistics").trailerSize("40FT").status("ACTIVE").build(),
+            Vehicle.builder().chassisNumber("SCK 113").vehicleNumber("LY 6429").operator("SCK Logistics").trailerSize("40FT").status("ACTIVE").build(),
+            Vehicle.builder().chassisNumber("SCK 114").vehicleNumber("LY 6433").operator("SCK Logistics").trailerSize("40FT").status("ACTIVE").build(),
+
+            // 2. SDR LINK Fleet (5 vehicles: CHE 115, 117, 119, 120, 121)
+            Vehicle.builder().chassisNumber("SCK 115").vehicleNumber("LY 6528").operator("SDR LINK").trailerSize("40FT").status("ACTIVE").build(),
+            Vehicle.builder().chassisNumber("SCK 117").vehicleNumber("LY 6529").operator("SDR LINK").trailerSize("40FT").status("ACTIVE").build(),
+            Vehicle.builder().chassisNumber("SCK 119").vehicleNumber("LY 6530").operator("SDR LINK").trailerSize("40FT").status("ACTIVE").build(),
+            Vehicle.builder().chassisNumber("SCK 120").vehicleNumber("LY 6531").operator("SDR LINK").trailerSize("40FT").status("ACTIVE").build(),
+            Vehicle.builder().chassisNumber("SCK 121").vehicleNumber("LY 6532").operator("SDR LINK").trailerSize("40FT").status("ACTIVE").build(),
+
+            // 3. E3 Logistics Fleet (4 vehicles: CHE 122, 123, 124, 125)
+            Vehicle.builder().chassisNumber("SCK 122").vehicleNumber("LY 5596").operator("E3 Logistics").trailerSize("40FT").status("ACTIVE").build(),
+            Vehicle.builder().chassisNumber("SCK 123").vehicleNumber("LY 5597").operator("E3 Logistics").trailerSize("40FT").status("ACTIVE").build(),
+            Vehicle.builder().chassisNumber("SCK 124").vehicleNumber("LY 5598").operator("E3 Logistics").trailerSize("40FT").status("ACTIVE").build(),
+            Vehicle.builder().chassisNumber("SCK 125").vehicleNumber("LY 5600").operator("E3 Logistics").trailerSize("40FT").status("ACTIVE").build()
+        );
+
         if (vehicleRepository.count() == 0) {
-            log.info("Seeding SCK ITT Vehicle Fleet (19 vehicles across SCK, SDR LINK, E3 Logistics)...");
-            List<Vehicle> fleet = List.of(
-                // SCK Logistics Main Fleet (10 vehicles)
-                Vehicle.builder().chassisNumber("SCK 100").vehicleNumber("LY 5234").operator("SCK Logistics").status("ACTIVE").build(),
-                Vehicle.builder().chassisNumber("SCK 101").vehicleNumber("LY 5235").operator("SCK Logistics").status("ACTIVE").build(),
-                Vehicle.builder().chassisNumber("SCK 102").vehicleNumber("LY 5236").operator("SCK Logistics").status("ACTIVE").build(),
-                Vehicle.builder().chassisNumber("SCK 103").vehicleNumber("LY 5237").operator("SCK Logistics").status("ACTIVE").build(),
-                Vehicle.builder().chassisNumber("SCK 104").vehicleNumber("LY 5238").operator("SCK Logistics").status("ACTIVE").build(),
-                Vehicle.builder().chassisNumber("SCK 105").vehicleNumber("LY 5665").operator("SCK Logistics").status("ACTIVE").build(),
-                Vehicle.builder().chassisNumber("SCK 106").vehicleNumber("LY 5708").operator("SCK Logistics").status("ACTIVE").build(),
-                Vehicle.builder().chassisNumber("SCK 107").vehicleNumber("LY 5711").operator("SCK Logistics").status("ACTIVE").build(),
-                Vehicle.builder().chassisNumber("SCK 108").vehicleNumber("LY 5717").operator("SCK Logistics").status("ACTIVE").build(),
-                Vehicle.builder().chassisNumber("SCK 109").vehicleNumber("LY 5721").operator("SCK Logistics").status("ACTIVE").build(),
-
-                // SDR LINK Fleet (6 vehicles)
-                Vehicle.builder().chassisNumber("SCK 115").vehicleNumber("LY 6528").operator("SDR LINK").status("ACTIVE").build(),
-                Vehicle.builder().chassisNumber("SCK 117").vehicleNumber("LY 6529").operator("SDR LINK").status("ACTIVE").build(),
-                Vehicle.builder().chassisNumber("SCK 122").vehicleNumber("LY 5596").operator("SDR LINK").status("ACTIVE").build(),
-                Vehicle.builder().chassisNumber("SCK 119").vehicleNumber("LY 6530").operator("SDR LINK").status("ACTIVE").build(),
-                Vehicle.builder().chassisNumber("SCK 120").vehicleNumber("LY 6531").operator("SDR LINK").status("ACTIVE").build(),
-                Vehicle.builder().chassisNumber("SCK 121").vehicleNumber("LY 6532").operator("SDR LINK").status("ACTIVE").build(),
-
-                // E3 Logistics Fleet (3 vehicles)
-                Vehicle.builder().chassisNumber("SCK 123").vehicleNumber("LY 5597").operator("E3 Logistics").status("ACTIVE").build(),
-                Vehicle.builder().chassisNumber("SCK 124").vehicleNumber("LY 5598").operator("E3 Logistics").status("ACTIVE").build(),
-                Vehicle.builder().chassisNumber("SCK 125").vehicleNumber("LY 5600").operator("E3 Logistics").status("ACTIVE").build()
-            );
-            vehicleRepository.saveAll(fleet);
-            log.info("Successfully seeded 19 fleet vehicles into database.");
+            log.info("Seeding SCK ITT Vehicle Fleet (24 vehicles across SCK Logistics, SDR LINK, E3 Logistics)...");
+            vehicleRepository.saveAll(authoritativeFleet);
+            log.info("Successfully seeded all 24 fleet vehicles into database.");
         } else {
-            // Update existing vehicles with revised operators
-            List<Vehicle> existing = vehicleRepository.findAll();
-            for (Vehicle v : existing) {
-                if ("LY 6530".equals(v.getVehicleNumber()) || "LY 6531".equals(v.getVehicleNumber()) || "LY 6532".equals(v.getVehicleNumber())) {
-                    v.setOperator("SDR LINK");
-                } else if ("LY 5597".equals(v.getVehicleNumber()) || "LY 5598".equals(v.getVehicleNumber()) || "LY 5600".equals(v.getVehicleNumber())) {
-                    v.setOperator("E3 Logistics");
+            // Upsert / Synchronize all 24 vehicles into the database
+            for (Vehicle v : authoritativeFleet) {
+                var existingOpt = vehicleRepository.findByVehicleNumber(v.getVehicleNumber());
+                if (existingOpt.isPresent()) {
+                    Vehicle existing = existingOpt.get();
+                    existing.setChassisNumber(v.getChassisNumber());
+                    existing.setOperator(v.getOperator());
+                    existing.setTrailerSize(v.getTrailerSize());
+                    existing.setStatus("ACTIVE");
+                    vehicleRepository.save(existing);
+                } else {
+                    vehicleRepository.save(v);
                 }
             }
-            vehicleRepository.saveAll(existing);
-            log.info("Successfully synchronized 19 fleet vehicle operators.");
+            log.info("Successfully synchronized all 24 fleet vehicles in database.");
         }
     }
 
