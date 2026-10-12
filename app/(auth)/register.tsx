@@ -255,7 +255,16 @@ export default function DriverRegisterScreen() {
       >
         {/* Top Header Bar */}
         <View style={styles.topBar}>
-          <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+          <TouchableOpacity
+            style={styles.backBtn}
+            onPress={() => {
+              if (router.canGoBack()) {
+                router.back();
+              } else {
+                router.replace('/(auth)/login');
+              }
+            }}
+          >
             <Ionicons name="arrow-back" size={18} color="#00e5ff" />
             <Text style={styles.backBtnText}>BACK TO LOGIN TERMINAL</Text>
           </TouchableOpacity>
