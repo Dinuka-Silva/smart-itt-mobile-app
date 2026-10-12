@@ -560,7 +560,7 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   coverScrim: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: 'rgba(10, 16, 26, 0.4)',
   },
   editCoverBtn: {
@@ -733,7 +733,7 @@ const styles = StyleSheet.create({
     gap: 5,
     paddingHorizontal: 8,
     paddingVertical: 3,
-    borderRadius: radius.full,
+    borderRadius: radius.pill,
   },
   statusDotSmall: {
     width: 6,

@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { resolveCheNumber, resolveOperator } from '../config/fleet';
 
 export interface MockContainer {
   id: string;
@@ -198,7 +199,8 @@ const initialTrips: MockTrip[] = [
     driverName: 'Kumar Sangakkara',
     vehicleNumber: 'LY 6530',
     chassisNumber: 'SCK 119',
-    operator: 'E3 Logistics',
+    chaiNumber: 'SCK 119',
+    operator: 'SDR LINK',
     vesselName: 'Hapag-Lloyd Express',
     sourceTerminal: 'CICT',
     destTerminal: 'ECT',
@@ -239,7 +241,17 @@ const initialTrips: MockTrip[] = [
 export const useMockTripStore = create<MockTripState>((set, get) => ({
   mockTrips: initialTrips,
 
-  addTrip: (trip) => set((state) => ({ mockTrips: [trip, ...state.mockTrips] })),
+  addTrip: (trip) => {
+    const resolvedChe = resolveCheNumber(trip.vehicleNumber, trip.chassisNumber || trip.chaiNumber);
+    const resolvedOp = resolveOperator(trip.vehicleNumber, trip.operator);
+    const normalizedTrip: MockTrip = {
+      ...trip,
+      chassisNumber: resolvedChe,
+      chaiNumber: resolvedChe,
+      operator: resolvedOp,
+    };
+    set((state) => ({ mockTrips: [normalizedTrip, ...state.mockTrips] }));
+  },
 
   updateTripStatus: (id, status) =>
     set((state) => ({

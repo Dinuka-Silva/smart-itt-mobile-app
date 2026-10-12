@@ -19,8 +19,9 @@ import { useAuthStore } from '../../../src/store/authStore';
 import { tripService } from '../../../src/services/tripService';
 import { dashboardService, SupervisorDashboardStats } from '../../../src/services/dashboardService';
 import { driverService, DriverProfile } from '../../../src/services/driverService';
-import { colors, radius, spacing } from '../../../src/theme';
 import { useMockTripStore } from '../../../src/store/mockTripStore';
+import { colors, radius, spacing } from '../../../src/theme';
+import { resolveCheNumber, resolveOperator, findFleetVehicle } from '../../../src/config/fleet';
 
 const TERMINALS = ['ALL', 'CICT', 'CWIT', 'ECT', 'JCT', 'UCT', 'SAGT'] as const;
 const STATUS_FILTERS = ['ALL', 'PENDING_APPROVAL', 'IN_PROGRESS', 'COMPLETED', 'APPROVED'] as const;
@@ -126,7 +127,10 @@ export default function SupervisorHomeDashboard() {
             employeeId: 'DRV001',
             nic: '198512345678',
             mobileNumber: '0779876543',
-            vehicleNumber: 'WP-BA-1234',
+            vehicleNumber: 'LY 5234',
+            chassisNumber: 'SCK 100',
+            cheNumber: 'SCK 100',
+            operator: 'SCK Logistics',
             status: 'ACTIVE',
           },
           {
@@ -137,7 +141,10 @@ export default function SupervisorHomeDashboard() {
             employeeId: 'EMP-3273',
             nic: '19923273042V',
             mobileNumber: '077327321',
-            vehicleNumber: 'WP-DA-3273',
+            vehicleNumber: 'LY 5235',
+            chassisNumber: 'SCK 101',
+            cheNumber: 'SCK 101',
+            operator: 'SCK Logistics',
             status: 'ACTIVE',
           },
           {
@@ -148,7 +155,10 @@ export default function SupervisorHomeDashboard() {
             employeeId: 'EMP-8227',
             nic: '19888227042V',
             mobileNumber: '077822712',
-            vehicleNumber: 'WP-DA-8227',
+            vehicleNumber: 'LY 5236',
+            chassisNumber: 'SCK 102',
+            cheNumber: 'SCK 102',
+            operator: 'SCK Logistics',
             status: 'ACTIVE',
           },
         ]);
@@ -192,12 +202,13 @@ export default function SupervisorHomeDashboard() {
         const tripNum = (t.tripNumber || '').toLowerCase();
         const vessel = (t.vesselName || '').toLowerCase();
         const veh = (t.vehicleNumber || '').toLowerCase();
+        const chai = resolveCheNumber(t.vehicleNumber, t.chassisNumber || t.cheNumber).toLowerCase();
         const driver = (t.driverName || '').toLowerCase();
         const contMatches = (t.containers || []).some((c: any) =>
           (c.containerNumber || '').toLowerCase().includes(q)
         );
 
-        if (!tripNum.includes(q) && !vessel.includes(q) && !veh.includes(q) && !driver.includes(q) && !contMatches) {
+        if (!tripNum.includes(q) && !vessel.includes(q) && !veh.includes(q) && !chai.includes(q) && !driver.includes(q) && !contMatches) {
           return false;
         }
       }
@@ -508,7 +519,7 @@ export default function SupervisorHomeDashboard() {
                     <View>
                       <Text style={styles.pendingTripId}>{trip.tripNumber || `ITT-${trip.id?.slice(0, 6)}`}</Text>
                       <Text style={styles.pendingDriver}>
-                        Operator: {trip.driverName || 'Kamal Perera'} · Truck: {trip.vehicleNumber || 'WP-BA-1234'}
+                        Driver: {trip.driverName || 'Kamal Perera'} · Truck: {trip.vehicleNumber || 'LY 5234'} · CHE: {resolveCheNumber(trip.vehicleNumber, trip.chassisNumber)}
                       </Text>
                     </View>
                     <View style={styles.pendingAwaitingTag}>
@@ -525,7 +536,10 @@ export default function SupervisorHomeDashboard() {
                       Vessel: <Text style={styles.pendingSpecHighlight}>{trip.vesselName || 'MV Colombo Star'}</Text>
                     </Text>
                     <Text style={styles.pendingSpec}>
-                      Chai No: <Text style={styles.pendingSpecHighlight}>{trip.chassisNumber || 'CHAI-101'}</Text>
+                      CHE No: <Text style={styles.pendingSpecHighlight}>{resolveCheNumber(trip.vehicleNumber, trip.chassisNumber)}</Text>
+                    </Text>
+                    <Text style={styles.pendingSpec}>
+                      Operator: <Text style={styles.pendingSpecHighlight}>{resolveOperator(trip.vehicleNumber, trip.operator)}</Text>
                     </Text>
                     <Text style={styles.pendingSpec}>
                       Containers: <Text style={styles.pendingSpecHighlight}>{c20}×20FT · {c40}×40FT</Text>
@@ -755,7 +769,7 @@ export default function SupervisorHomeDashboard() {
 
                           <View style={styles.monSpecsRow}>
                             <Text style={styles.monSpecItem}>Truck: <Text style={styles.monSpecBoldHighlight}>{t.vehicleNumber || 'LY 5234'}</Text></Text>
-                            <Text style={styles.monSpecItem}>CHE: <Text style={styles.monSpecBoldCyan}>{t.chassisNumber || t.cheNumber || 'SCK 100'}</Text></Text>
+                            <Text style={styles.monSpecItem}>CHE: <Text style={styles.monSpecBoldCyan}>{resolveCheNumber(t.vehicleNumber, t.chassisNumber || t.cheNumber)}</Text></Text>
                             <Text style={styles.monSpecItem}>Vessel: <Text style={styles.monSpecBold}>{t.vesselName || 'MV Colombo Star'}</Text></Text>
                             <Text style={styles.monSpecItem}>Cargo: <Text style={styles.monSpecBoldGreen}>{count20 > 0 ? `${count20}×20FT ` : ''}{count40 > 0 ? `${count40}×40FT` : ''}</Text></Text>
                           </View>
@@ -794,7 +808,7 @@ export default function SupervisorHomeDashboard() {
                   <View style={{ flex: 1 }}>
                     <Text style={styles.driverFullName}>{drv.fullName}</Text>
                     <Text style={styles.driverDetails}>
-                      Code: {drv.driverCode} · Truck: {drv.vehicleNumber || 'LY 5234'} · Tel: {drv.mobileNumber}
+                      Code: {drv.driverCode} · Truck: {drv.vehicleNumber || 'LY 5234'} · CHE: {resolveCheNumber(drv.vehicleNumber, drv.chassisNumber)} · Tel: {drv.mobileNumber}
                     </Text>
                   </View>
                   <View style={styles.driverActivePill}>

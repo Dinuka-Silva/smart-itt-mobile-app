@@ -17,7 +17,7 @@ import { useMockTripStore } from '../../../src/store/mockTripStore';
 import { tripService } from '../../../src/services/tripService';
 import { driverService } from '../../../src/services/driverService';
 import { radius, spacing } from '../../../src/theme';
-import { SCK_FLEET } from '../../../src/config/fleet';
+import { SCK_FLEET, resolveCheNumber, resolveOperator, findFleetVehicle } from '../../../src/config/fleet';
 
 const ALL_TERMINALS = ['ALL', 'CWIT', 'JCT', 'ECT', 'UCT', 'SAGT', 'CICT'] as const;
 
@@ -44,12 +44,131 @@ export default function SupervisorReports() {
   const [backendTrips, setBackendTrips] = useState<any[]>([]);
 
   // ─── Filter States ───
-  // 1. Date: specific date string "YYYY-MM-DD" or null for all
+  // 1. Date Filter Mode: 'SINGLE' | 'WEEK' | 'MONTH' | 'RANGE'
+  const [dateFilterMode, setDateFilterMode] = useState<'SINGLE' | 'WEEK' | 'MONTH' | 'RANGE'>('SINGLE');
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [dateRangeStart, setDateRangeStart] = useState<string | null>(null);
+  const [dateRangeEnd, setDateRangeEnd] = useState<string | null>(null);
   const [calendarModalVisible, setCalendarModalVisible] = useState(false);
 
   // 2. Terminal: 'ALL' or specific terminal code ('JCT', 'CICT', etc.)
   const [selectedTerminal, setSelectedTerminal] = useState<string>('ALL');
+
+  // Helper date formatting functions
+  const formatDateISO = (d: Date) => d.toISOString().split('T')[0];
+  const formatFriendlyDate = (isoStr: string) => {
+    try {
+      const d = new Date(isoStr + 'T00:00:00');
+      return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    } catch {
+      return isoStr;
+    }
+  };
+
+  // Preset Date Range Handlers
+  const handleSelectSingleDay = (dateStr: string) => {
+    setSelectedDate(dateStr);
+    setDateRangeStart(null);
+    setDateRangeEnd(null);
+    setCalendarModalVisible(false);
+  };
+
+  const handleSelectWeekPreset = (daysBack: number) => {
+    const end = new Date();
+    const start = new Date();
+    start.setDate(end.getDate() - daysBack);
+    const startISO = formatDateISO(start);
+    const endISO = formatDateISO(end);
+    setDateRangeStart(startISO);
+    setDateRangeEnd(endISO);
+    setSelectedDate(null);
+  };
+
+  const handleSelectMonthPreset = (monthsBack: number) => {
+    const end = new Date();
+    const start = new Date();
+    start.setMonth(end.getMonth() - monthsBack);
+    const startISO = formatDateISO(start);
+    const endISO = formatDateISO(end);
+    setDateRangeStart(startISO);
+    setDateRangeEnd(endISO);
+    setSelectedDate(null);
+  };
+
+  // Specific Calendar Month / Window Selector (e.g. Sept 20 to Oct 20)
+  const handleSelectCustomRange = (startISO: string, endISO: string) => {
+    setDateRangeStart(startISO);
+    setDateRangeEnd(endISO);
+    setSelectedDate(null);
+    setCalendarModalVisible(false);
+  };
+
+  const handleClearAllDates = () => {
+    setSelectedDate(null);
+    setDateRangeStart(null);
+    setDateRangeEnd(null);
+  };
+
+  // Compute Active Date Filter Display Label
+  const activeDateFilterLabel = useMemo(() => {
+    if (dateRangeStart && dateRangeEnd) {
+      return `${formatFriendlyDate(dateRangeStart)}  ➔  ${formatFriendlyDate(dateRangeEnd)}`;
+    }
+    if (dateRangeStart && !dateRangeEnd) {
+      return `From: ${formatFriendlyDate(dateRangeStart)} (Pick End Date)`;
+    }
+    if (selectedDate) {
+      return `Date: ${formatFriendlyDate(selectedDate)}`;
+    }
+    return null;
+  }, [dateRangeStart, dateRangeEnd, selectedDate]);
+
+  // Marked dates computation for calendar (highlighting range or single day)
+  const calendarMarkedDates = useMemo(() => {
+    const marks: Record<string, any> = {};
+
+    if (dateFilterMode === 'SINGLE') {
+      if (selectedDate) {
+        marks[selectedDate] = {
+          selected: true,
+          selectedColor: '#00e5ff',
+          selectedTextColor: '#00363d',
+        };
+      }
+      return marks;
+    }
+
+    // Range / Week / Month mode
+    if (dateRangeStart && dateRangeEnd) {
+      const cur = new Date(dateRangeStart + 'T00:00:00');
+      const end = new Date(dateRangeEnd + 'T00:00:00');
+      
+      while (cur <= end) {
+        const iso = formatDateISO(cur);
+        const isStart = iso === dateRangeStart;
+        const isEnd = iso === dateRangeEnd;
+
+        marks[iso] = {
+          selected: true,
+          startingDay: isStart,
+          endingDay: isEnd,
+          color: isStart || isEnd ? '#00e5ff' : 'rgba(0, 229, 255, 0.22)',
+          textColor: isStart || isEnd ? '#00363d' : '#00e5ff',
+        };
+        cur.setDate(cur.getDate() + 1);
+      }
+    } else if (dateRangeStart) {
+      marks[dateRangeStart] = {
+        selected: true,
+        startingDay: true,
+        endingDay: true,
+        color: '#feb300',
+        textColor: '#00363d',
+      };
+    }
+
+    return marks;
+  }, [dateFilterMode, selectedDate, dateRangeStart, dateRangeEnd]);
 
   // 3. Driver: 'ALL' or specific driver identifier (e.g., 'DRV-00001', 'demo-driver')
   const [selectedDriver, setSelectedDriver] = useState<string>('ALL');
@@ -116,8 +235,8 @@ export default function SupervisorReports() {
           driverId: bt.driverId,
           driverCode: bt.driverCode || bt.driverId,
           driverName: bt.driverName || `Driver ${bt.driverId.slice(0, 8)}`,
-          vehicleNumber: bt.vehicleNumber || 'WP-NA-0000',
-          chassisNumber: bt.chassisNumber || 'CHAI-101',
+          vehicleNumber: bt.vehicleNumber || 'LY 5234',
+          chassisNumber: resolveCheNumber(bt.vehicleNumber, bt.chassisNumber),
           vesselName: bt.vesselName || 'Port Vessel',
           sourceTerminal: bt.sourceTerminal || 'CICT',
           destTerminal: bt.destTerminal || 'JCT',
@@ -141,13 +260,19 @@ export default function SupervisorReports() {
   // ─── Filter Logic: Date + Terminal + Driver ───
   const filteredTrips = useMemo(() => {
     return allRawTrips.filter((trip) => {
-      // 1. Date Filter (using selectedDate string YYYY-MM-DD)
-      if (selectedDate) {
-        const rawDate = trip.createdAt || trip.startTime || trip.operationDate;
-        if (rawDate) {
-          const tripDatePart = new Date(rawDate).toISOString().split('T')[0];
-          if (tripDatePart !== selectedDate) return false;
+      // 1. Date Filter (supports Single Date or Date Range Start-End)
+      const rawDate = trip.createdAt || trip.startTime || trip.operationDate;
+      const tripDatePart = rawDate ? new Date(rawDate).toISOString().split('T')[0] : null;
+
+      if (dateRangeStart && dateRangeEnd) {
+        if (!tripDatePart) return false;
+        if (tripDatePart < dateRangeStart || tripDatePart > dateRangeEnd) {
+          return false;
         }
+      } else if (dateRangeStart && !dateRangeEnd) {
+        if (!tripDatePart || tripDatePart !== dateRangeStart) return false;
+      } else if (selectedDate) {
+        if (!tripDatePart || tripDatePart !== selectedDate) return false;
       }
 
       // 2. Terminal Filter (matched against Load Terminal or Discharge Terminal)
@@ -172,7 +297,7 @@ export default function SupervisorReports() {
 
       return true;
     });
-  }, [allRawTrips, selectedDate, selectedTerminal, selectedDriver]);
+  }, [allRawTrips, selectedDate, dateRangeStart, dateRangeEnd, selectedTerminal, selectedDriver]);
 
   // ─── Flatten into Excel Rows ───
   // Columns: Date, Time, Driver Identifier, Driver Name, Vehicle No, CHE No, Container, Size of Container, Damage or Not, Load Terminal, Discharge Terminal
@@ -192,11 +317,9 @@ export default function SupervisorReports() {
 
       const driverIdentifier = t.driverCode || t.driverId || 'DRV-00001';
       const driverName = t.driverName || 'Kamal Perera';
-      const fleetMatch = SCK_FLEET.find(
-        (f) => f.vehicleNumber === t.vehicleNumber || f.cheNumber === t.chassisNumber || f.assignedDriver?.driverCode === t.driverCode
-      );
-      const vehicleNo = t.vehicleNumber || fleetMatch?.vehicleNumber || 'LY 5234';
-      const cheNo = t.chassisNumber || t.chaiNumber || fleetMatch?.cheNumber || 'SCK 100';
+      const vMatch = findFleetVehicle(t.vehicleNumber);
+      const vehicleNo = t.vehicleNumber || vMatch?.vehicleNumber || 'LY 5234';
+      const cheNo = resolveCheNumber(vehicleNo, t.chassisNumber || t.chaiNumber);
       const loadTerminal = t.sourceTerminal || 'CICT';
 
       const containers = t.containers || [];
@@ -646,11 +769,11 @@ export default function SupervisorReports() {
               <Ionicons name="filter" size={16} color="#00e5ff" />
               <Text style={styles.filterCardTitle}>SUPERVISOR AUDIT FILTERS</Text>
             </View>
-            {(selectedDate || selectedTerminal !== 'ALL' || selectedDriver !== 'ALL') && (
+            {(selectedDate || dateRangeStart || selectedTerminal !== 'ALL' || selectedDriver !== 'ALL') && (
               <TouchableOpacity
                 style={styles.resetBtn}
                 onPress={() => {
-                  setSelectedDate(null);
+                  handleClearAllDates();
                   setSelectedTerminal('ALL');
                   setSelectedDriver('ALL');
                 }}
@@ -661,35 +784,230 @@ export default function SupervisorReports() {
             )}
           </View>
 
-          {/* ── A. CALENDAR DATE SELECTOR ── */}
+          {/* ── A. CALENDAR DATE, WEEK & MONTH SELECTOR ── */}
           <View style={styles.filterBlock}>
             <View style={styles.filterLabelRow}>
               <Ionicons name="calendar" size={14} color="#00e5ff" />
-              <Text style={styles.filterLabel}>SELECT DATE (CALENDAR)</Text>
-              {selectedDate && (
+              <Text style={styles.filterLabel}>SELECT DATE / WEEK / MONTH (CALENDAR)</Text>
+              {activeDateFilterLabel && (
                 <View style={styles.activeFilterPill}>
-                  <Text style={styles.activeFilterPillText}>{selectedDate}</Text>
+                  <Text style={styles.activeFilterPillText}>{activeDateFilterLabel}</Text>
                 </View>
               )}
             </View>
 
+            {/* Mode selection tabs: SINGLE DAY | WEEKLY | MONTHLY | CUSTOM RANGE */}
+            <View style={styles.dateModeTabRow}>
+              <TouchableOpacity
+                style={[styles.dateModeTab, dateFilterMode === 'SINGLE' && styles.dateModeTabActive]}
+                onPress={() => setDateFilterMode('SINGLE')}
+                activeOpacity={0.8}
+              >
+                <Ionicons name="today" size={12} color={dateFilterMode === 'SINGLE' ? '#00363d' : '#849396'} />
+                <Text style={[styles.dateModeTabText, dateFilterMode === 'SINGLE' && styles.dateModeTabTextActive]}>
+                  DAY
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.dateModeTab, dateFilterMode === 'WEEK' && styles.dateModeTabActive]}
+                onPress={() => setDateFilterMode('WEEK')}
+                activeOpacity={0.8}
+              >
+                <Ionicons name="time" size={12} color={dateFilterMode === 'WEEK' ? '#00363d' : '#849396'} />
+                <Text style={[styles.dateModeTabText, dateFilterMode === 'WEEK' && styles.dateModeTabTextActive]}>
+                  WEEK
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.dateModeTab, dateFilterMode === 'MONTH' && styles.dateModeTabActive]}
+                onPress={() => setDateFilterMode('MONTH')}
+                activeOpacity={0.8}
+              >
+                <Ionicons name="calendar-number" size={12} color={dateFilterMode === 'MONTH' ? '#00363d' : '#849396'} />
+                <Text style={[styles.dateModeTabText, dateFilterMode === 'MONTH' && styles.dateModeTabTextActive]}>
+                  MONTH
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.dateModeTab, dateFilterMode === 'RANGE' && styles.dateModeTabActive]}
+                onPress={() => setDateFilterMode('RANGE')}
+                activeOpacity={0.8}
+              >
+                <Ionicons name="git-commit" size={12} color={dateFilterMode === 'RANGE' ? '#00363d' : '#849396'} />
+                <Text style={[styles.dateModeTabText, dateFilterMode === 'RANGE' && styles.dateModeTabTextActive]}>
+                  CUSTOM RANGE
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Quick Presets Carousel depending on Mode */}
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.presetsScroll}>
+              <TouchableOpacity
+                style={[
+                  styles.presetChip,
+                  selectedDate === formatDateISO(new Date()) && !dateRangeStart && styles.presetChipActive,
+                ]}
+                onPress={() => handleSelectSingleDay(formatDateISO(new Date()))}
+                activeOpacity={0.8}
+              >
+                <Text style={[
+                  styles.presetChipText,
+                  selectedDate === formatDateISO(new Date()) && !dateRangeStart && styles.presetChipTextActive,
+                ]}>
+                  TODAY
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.presetChip,
+                  dateRangeStart &&
+                  dateRangeEnd === formatDateISO(new Date()) &&
+                  Math.round((new Date(dateRangeEnd).getTime() - new Date(dateRangeStart).getTime()) / (1000 * 3600 * 24)) === 7 &&
+                  styles.presetChipActive,
+                ]}
+                onPress={() => handleSelectWeekPreset(7)}
+                activeOpacity={0.8}
+              >
+                <Text style={[
+                  styles.presetChipText,
+                  dateRangeStart &&
+                  dateRangeEnd === formatDateISO(new Date()) &&
+                  Math.round((new Date(dateRangeEnd).getTime() - new Date(dateRangeStart).getTime()) / (1000 * 3600 * 24)) === 7 &&
+                  styles.presetChipTextActive,
+                ]}>
+                  LAST 7 DAYS (WEEK)
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.presetChip,
+                  dateRangeStart &&
+                  dateRangeEnd === formatDateISO(new Date()) &&
+                  Math.round((new Date(dateRangeEnd).getTime() - new Date(dateRangeStart).getTime()) / (1000 * 3600 * 24)) === 14 &&
+                  styles.presetChipActive,
+                ]}
+                onPress={() => handleSelectWeekPreset(14)}
+                activeOpacity={0.8}
+              >
+                <Text style={[
+                  styles.presetChipText,
+                  dateRangeStart &&
+                  dateRangeEnd === formatDateISO(new Date()) &&
+                  Math.round((new Date(dateRangeEnd).getTime() - new Date(dateRangeStart).getTime()) / (1000 * 3600 * 24)) === 14 &&
+                  styles.presetChipTextActive,
+                ]}>
+                  LAST 14 DAYS (2 WEEKS)
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.presetChip,
+                  dateRangeStart &&
+                  dateRangeEnd === formatDateISO(new Date()) &&
+                  Math.round((new Date(dateRangeEnd).getTime() - new Date(dateRangeStart).getTime()) / (1000 * 3600 * 24)) >= 28 &&
+                  Math.round((new Date(dateRangeEnd).getTime() - new Date(dateRangeStart).getTime()) / (1000 * 3600 * 24)) <= 31 &&
+                  styles.presetChipActive,
+                ]}
+                onPress={() => handleSelectMonthPreset(1)}
+                activeOpacity={0.8}
+              >
+                <Text style={[
+                  styles.presetChipText,
+                  dateRangeStart &&
+                  dateRangeEnd === formatDateISO(new Date()) &&
+                  Math.round((new Date(dateRangeEnd).getTime() - new Date(dateRangeStart).getTime()) / (1000 * 3600 * 24)) >= 28 &&
+                  Math.round((new Date(dateRangeEnd).getTime() - new Date(dateRangeStart).getTime()) / (1000 * 3600 * 24)) <= 31 &&
+                  styles.presetChipTextActive,
+                ]}>
+                  LAST 30 DAYS (MONTH)
+                </Text>
+              </TouchableOpacity>
+
+              {/* September 20 to October 20 Window as explicitly requested by user */}
+              <TouchableOpacity
+                style={[
+                  styles.presetChip,
+                  dateRangeStart === '2026-09-20' && dateRangeEnd === '2026-10-20' && styles.presetChipActive,
+                ]}
+                onPress={() => handleSelectCustomRange('2026-09-20', '2026-10-20')}
+                activeOpacity={0.8}
+              >
+                <Text style={[
+                  styles.presetChipText,
+                  dateRangeStart === '2026-09-20' && dateRangeEnd === '2026-10-20' && styles.presetChipTextActive,
+                ]}>
+                  SEP 20 ➔ OCT 20 (MONTH WINDOW)
+                </Text>
+              </TouchableOpacity>
+
+              {/* October Month Full */}
+              <TouchableOpacity
+                style={[
+                  styles.presetChip,
+                  dateRangeStart === '2026-10-01' && dateRangeEnd === '2026-10-31' && styles.presetChipActive,
+                ]}
+                onPress={() => handleSelectCustomRange('2026-10-01', '2026-10-31')}
+                activeOpacity={0.8}
+              >
+                <Text style={[
+                  styles.presetChipText,
+                  dateRangeStart === '2026-10-01' && dateRangeEnd === '2026-10-31' && styles.presetChipTextActive,
+                ]}>
+                  OCTOBER 2026
+                </Text>
+              </TouchableOpacity>
+
+              {/* September Month Full */}
+              <TouchableOpacity
+                style={[
+                  styles.presetChip,
+                  dateRangeStart === '2026-09-01' && dateRangeEnd === '2026-09-30' && styles.presetChipActive,
+                ]}
+                onPress={() => handleSelectCustomRange('2026-09-01', '2026-09-30')}
+                activeOpacity={0.8}
+              >
+                <Text style={[
+                  styles.presetChipText,
+                  dateRangeStart === '2026-09-01' && dateRangeEnd === '2026-09-30' && styles.presetChipTextActive,
+                ]}>
+                  SEPTEMBER 2026
+                </Text>
+              </TouchableOpacity>
+            </ScrollView>
+
+            {/* Calendar trigger button showing the selected date or range */}
             <View style={styles.dateControlRow}>
               <TouchableOpacity
-                style={[styles.calendarPickerBtn, selectedDate ? styles.calendarPickerBtnActive : null]}
+                style={[styles.calendarPickerBtn, (selectedDate || dateRangeStart) ? styles.calendarPickerBtnActive : null]}
                 onPress={() => setCalendarModalVisible(true)}
                 activeOpacity={0.8}
               >
-                <Ionicons name="calendar-outline" size={18} color={selectedDate ? '#00363d' : '#00e5ff'} />
-                <Text style={[styles.calendarPickerBtnText, selectedDate ? styles.calendarPickerBtnTextActive : null]}>
-                  {selectedDate ? `Selected: ${selectedDate}` : 'Open Calendar To Pick Date'}
-                </Text>
-                <Ionicons name="chevron-down" size={16} color={selectedDate ? '#00363d' : '#849396'} />
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
+                  <Ionicons
+                    name="calendar-outline"
+                    size={18}
+                    color={(selectedDate || dateRangeStart) ? '#00363d' : '#00e5ff'}
+                  />
+                  <Text
+                    style={[styles.calendarPickerBtnText, (selectedDate || dateRangeStart) ? styles.calendarPickerBtnTextActive : null]}
+                    numberOfLines={1}
+                  >
+                    {activeDateFilterLabel || 'Open Interactive Calendar (Pick Day / Week / Month)'}
+                  </Text>
+                </View>
+                <Ionicons name="chevron-down" size={16} color={(selectedDate || dateRangeStart) ? '#00363d' : '#849396'} />
               </TouchableOpacity>
 
-              {selectedDate && (
-                <TouchableOpacity style={styles.clearDateBtn} onPress={() => setSelectedDate(null)}>
+              {(selectedDate || dateRangeStart) && (
+                <TouchableOpacity style={styles.clearDateBtn} onPress={handleClearAllDates}>
                   <Ionicons name="close-circle" size={18} color="#ff5252" />
-                  <Text style={styles.clearDateText}>ALL DATES</Text>
+                  <Text style={styles.clearDateText}>CLEAR DATES</Text>
                 </TouchableOpacity>
               )}
             </View>
@@ -1026,7 +1344,7 @@ export default function SupervisorReports() {
         <View style={{ height: 40 }} />
       </ScrollView>
 
-      {/* ─── 7. CALENDAR MODAL ─── */}
+      {/* ─── 7. INTERACTIVE CALENDAR MODAL (DAY / WEEK / MONTH / RANGE) ─── */}
       <Modal
         visible={calendarModalVisible}
         transparent={true}
@@ -1035,33 +1353,95 @@ export default function SupervisorReports() {
       >
         <View style={styles.modalBackdrop}>
           <View style={styles.modalCard}>
+            {/* Modal Header */}
             <View style={styles.modalHeader}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                 <Ionicons name="calendar" size={18} color="#00e5ff" />
-                <Text style={styles.modalTitle}>SELECT OPERATION DATE</Text>
+                <Text style={styles.modalTitle}>
+                  {dateFilterMode === 'SINGLE' && 'SELECT SINGLE DATE'}
+                  {dateFilterMode === 'WEEK' && 'SELECT 7-DAY WEEK PERIOD'}
+                  {dateFilterMode === 'MONTH' && 'SELECT MONTHLY WINDOW'}
+                  {dateFilterMode === 'RANGE' && 'SELECT CUSTOM DATE RANGE'}
+                </Text>
               </View>
               <TouchableOpacity onPress={() => setCalendarModalVisible(false)} style={styles.closeModalBtn}>
                 <Ionicons name="close" size={20} color="#dde2f0" />
               </TouchableOpacity>
             </View>
 
+            {/* Mode Selector Tabs inside Modal */}
+            <View style={styles.modalModeToggleRow}>
+              {(['SINGLE', 'WEEK', 'MONTH', 'RANGE'] as const).map((m) => {
+                const isActive = dateFilterMode === m;
+                const label = m === 'SINGLE' ? 'DAY' : m;
+                return (
+                  <TouchableOpacity
+                    key={m}
+                    style={[styles.modalModeTab, isActive && styles.modalModeTabActive]}
+                    onPress={() => setDateFilterMode(m)}
+                  >
+                    <Text style={[styles.modalModeTabText, isActive && styles.modalModeTabTextActive]}>
+                      {label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+
+            {/* Instruction prompt for the active mode */}
+            <View style={styles.modalInstructionBanner}>
+              <Ionicons name="information-circle" size={14} color="#00e5ff" />
+              <Text style={styles.modalInstructionText}>
+                {dateFilterMode === 'SINGLE' && 'Tap any date to audit trips on that exact day.'}
+                {dateFilterMode === 'WEEK' && 'Tap start date; 7 days will be automatically selected.'}
+                {dateFilterMode === 'MONTH' && 'Tap start date; 30 days window will be automatically selected.'}
+                {dateFilterMode === 'RANGE' && (!dateRangeStart
+                  ? 'Tap the START date of your custom range.'
+                  : !dateRangeEnd
+                  ? `Start: ${dateRangeStart}. Now tap the END date.`
+                  : `Selected: ${dateRangeStart} ➔ ${dateRangeEnd}. Tap another day to reset.`)}
+              </Text>
+            </View>
+
+            {/* Calendar component */}
             <Calendar
-              current={selectedDate || new Date().toISOString().split('T')[0]}
+              current={dateRangeStart || selectedDate || new Date().toISOString().split('T')[0]}
               onDayPress={(day: { dateString: string }) => {
-                setSelectedDate(day.dateString);
-                setCalendarModalVisible(false);
-              }}
-              markedDates={
-                selectedDate
-                  ? {
-                      [selectedDate]: {
-                        selected: true,
-                        selectedColor: '#00e5ff',
-                        selectedTextColor: '#00363d',
-                      },
+                const clickedDate = day.dateString;
+
+                if (dateFilterMode === 'SINGLE') {
+                  handleSelectSingleDay(clickedDate);
+                } else if (dateFilterMode === 'WEEK') {
+                  // Select 7 days from clickedDate
+                  const startD = new Date(clickedDate + 'T00:00:00');
+                  const endD = new Date(startD);
+                  endD.setDate(startD.getDate() + 6);
+                  handleSelectCustomRange(clickedDate, formatDateISO(endD));
+                } else if (dateFilterMode === 'MONTH') {
+                  // Select 30 days window from clickedDate (e.g. Sept 20 to Oct 20)
+                  const startD = new Date(clickedDate + 'T00:00:00');
+                  const endD = new Date(startD);
+                  endD.setDate(startD.getDate() + 30);
+                  handleSelectCustomRange(clickedDate, formatDateISO(endD));
+                } else if (dateFilterMode === 'RANGE') {
+                  // 2-step custom range picker
+                  if (!dateRangeStart || (dateRangeStart && dateRangeEnd)) {
+                    setDateRangeStart(clickedDate);
+                    setDateRangeEnd(null);
+                    setSelectedDate(null);
+                  } else {
+                    if (clickedDate < dateRangeStart) {
+                      setDateRangeStart(clickedDate);
+                      setDateRangeEnd(dateRangeStart);
+                    } else {
+                      setDateRangeEnd(clickedDate);
                     }
-                  : {}
-              }
+                    setSelectedDate(null);
+                  }
+                }
+              }}
+              markingType={'period'}
+              markedDates={calendarMarkedDates}
               theme={{
                 backgroundColor: '#161c25',
                 calendarBackground: '#161c25',
@@ -1084,27 +1464,65 @@ export default function SupervisorReports() {
               style={styles.calendarStyle}
             />
 
+            {/* Selected Range Display Bar inside Modal */}
+            {(dateRangeStart || selectedDate) && (
+              <View style={styles.modalRangeInfoBox}>
+                <Ionicons name="time" size={14} color="#feb300" />
+                <Text style={styles.modalRangeInfoText}>
+                  {activeDateFilterLabel}
+                </Text>
+              </View>
+            )}
+
+            {/* Modal Bottom Actions */}
             <View style={styles.modalActions}>
+              <TouchableOpacity
+                style={styles.modalPresetBtn}
+                onPress={() => handleSelectCustomRange('2026-09-20', '2026-10-20')}
+              >
+                <Text style={styles.modalPresetBtnText}>SEP 20 - OCT 20</Text>
+              </TouchableOpacity>
+
               <TouchableOpacity
                 style={styles.modalTodayBtn}
                 onPress={() => {
-                  setSelectedDate(new Date().toISOString().split('T')[0]);
-                  setCalendarModalVisible(false);
+                  if (dateFilterMode === 'WEEK') {
+                    handleSelectWeekPreset(7);
+                    setCalendarModalVisible(false);
+                  } else if (dateFilterMode === 'MONTH') {
+                    handleSelectMonthPreset(1);
+                    setCalendarModalVisible(false);
+                  } else {
+                    handleSelectSingleDay(formatDateISO(new Date()));
+                  }
                 }}
               >
-                <Text style={styles.modalTodayBtnText}>TODAY</Text>
+                <Text style={styles.modalTodayBtnText}>
+                  {dateFilterMode === 'WEEK' ? 'LAST 7 DAYS' : dateFilterMode === 'MONTH' ? 'LAST 30 DAYS' : 'TODAY'}
+                </Text>
               </TouchableOpacity>
 
               <TouchableOpacity
                 style={styles.modalAllDatesBtn}
                 onPress={() => {
-                  setSelectedDate(null);
+                  handleClearAllDates();
                   setCalendarModalVisible(false);
                 }}
               >
-                <Text style={styles.modalAllDatesBtnText}>SHOW ALL DATES</Text>
+                <Text style={styles.modalAllDatesBtnText}>ALL DATES</Text>
               </TouchableOpacity>
             </View>
+
+            {/* Apply & Close button when range is picked */}
+            {dateFilterMode === 'RANGE' && dateRangeStart && dateRangeEnd && (
+              <TouchableOpacity
+                style={styles.modalApplyBtn}
+                onPress={() => setCalendarModalVisible(false)}
+              >
+                <Ionicons name="checkmark-circle" size={16} color="#00363d" />
+                <Text style={styles.modalApplyBtnText}>APPLY SELECTED RANGE</Text>
+              </TouchableOpacity>
+            )}
           </View>
         </View>
       </Modal>
@@ -1815,5 +2233,157 @@ const styles = StyleSheet.create({
     color: '#dde2f0',
     fontWeight: '800',
     fontSize: 11,
+  },
+
+  // ─── DATE MODE TABS & PRESETS ───
+  dateModeTabRow: {
+    flexDirection: 'row',
+    backgroundColor: '#080e17',
+    borderRadius: radius.DEFAULT,
+    borderWidth: 1,
+    borderColor: '#242a34',
+    padding: 3,
+    gap: 4,
+  },
+  dateModeTab: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 5,
+    paddingVertical: 7,
+    borderRadius: 6,
+  },
+  dateModeTabActive: {
+    backgroundColor: '#00e5ff',
+  },
+  dateModeTabText: {
+    color: '#849396',
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 0.6,
+  },
+  dateModeTabTextActive: {
+    color: '#00363d',
+    fontWeight: '900',
+  },
+  presetsScroll: {
+    gap: 6,
+    paddingVertical: 2,
+  },
+  presetChip: {
+    backgroundColor: '#080e17',
+    borderWidth: 1,
+    borderColor: '#242a34',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: radius.DEFAULT,
+  },
+  presetChipActive: {
+    backgroundColor: 'rgba(0, 229, 255, 0.2)',
+    borderColor: '#00e5ff',
+  },
+  presetChipText: {
+    color: '#849396',
+    fontSize: 10,
+    fontWeight: '800',
+  },
+  presetChipTextActive: {
+    color: '#00e5ff',
+    fontWeight: '900',
+  },
+
+  // ─── MODAL EXTENSIONS ───
+  modalModeToggleRow: {
+    flexDirection: 'row',
+    backgroundColor: '#080e17',
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#242a34',
+    padding: 2,
+    gap: 4,
+  },
+  modalModeTab: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 6,
+    borderRadius: 4,
+  },
+  modalModeTabActive: {
+    backgroundColor: '#00e5ff',
+  },
+  modalModeTabText: {
+    color: '#849396',
+    fontSize: 10,
+    fontWeight: '800',
+  },
+  modalModeTabTextActive: {
+    color: '#00363d',
+    fontWeight: '900',
+  },
+  modalInstructionBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(0, 229, 255, 0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 229, 255, 0.25)',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 6,
+  },
+  modalInstructionText: {
+    color: '#c3f5ff',
+    fontSize: 10,
+    fontWeight: '700',
+    flex: 1,
+  },
+  modalRangeInfoBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(254, 179, 0, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(254, 179, 0, 0.3)',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 6,
+  },
+  modalRangeInfoText: {
+    color: '#feb300',
+    fontSize: 10,
+    fontWeight: '900',
+  },
+  modalPresetBtn: {
+    flex: 1.2,
+    height: 38,
+    backgroundColor: 'rgba(254, 179, 0, 0.15)',
+    borderWidth: 1,
+    borderColor: '#feb300',
+    borderRadius: radius.DEFAULT,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalPresetBtnText: {
+    color: '#feb300',
+    fontWeight: '900',
+    fontSize: 10,
+  },
+  modalApplyBtn: {
+    height: 42,
+    backgroundColor: '#00e5ff',
+    borderRadius: radius.DEFAULT,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginTop: 4,
+  },
+  modalApplyBtnText: {
+    color: '#00363d',
+    fontWeight: '900',
+    fontSize: 12,
+    letterSpacing: 0.6,
   },
 });
