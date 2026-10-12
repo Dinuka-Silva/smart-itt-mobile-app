@@ -287,7 +287,7 @@ export default function DriverProfileScreen() {
         {/* ─── Header with Cover Background & Editable Avatar ─── */}
         <View style={styles.header}>
           {/* Background Cover Image Banner */}
-          <View style={styles.coverBannerWrap}>
+          <View style={[styles.coverBannerWrap, { paddingTop: topInset, height: 140 + topInset }]}>
             {coverImage ? (
               <Image source={{ uri: coverImage }} style={styles.coverImage} />
             ) : (

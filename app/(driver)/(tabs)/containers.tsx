@@ -138,7 +138,7 @@ export default function DriverContainers() {
           },
         ]}
       >
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
           <View>
             <Text style={styles.headerTitle}>CONTAINERS</Text>
             <Text style={styles.headerSub}>

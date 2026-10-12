@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useTheme } from '@/hooks/use-theme';
 
@@ -7,6 +8,8 @@ import { colors } from '@/theme';
 
 export default function SupervisorTabsLayout() {
   const theme = useTheme();
+  const insets = useSafeAreaInsets();
+  const bottomInset = Math.max(insets.bottom, 10);
 
   return (
     <Tabs
@@ -19,9 +22,9 @@ export default function SupervisorTabsLayout() {
           borderTopWidth: 1,
           borderTopColor: '#242a34',
           elevation: 8,
-          height: 68,
-          paddingBottom: 10,
-          paddingTop: 8,
+          height: 56 + bottomInset,
+          paddingBottom: bottomInset,
+          paddingTop: 6,
         },
         tabBarLabelStyle: {
           fontSize: 10,
