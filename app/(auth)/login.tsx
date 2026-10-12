@@ -129,7 +129,14 @@ export default function LoginScreen() {
               resizeMode="contain"
             />
           </View>
-          <Text style={styles.brandTitle}>SCK ITT PROJECT</Text>
+          <Text
+            style={styles.brandTitle}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.75}
+          >
+            SCK ITT PROJECT
+          </Text>
           <Text style={styles.brandSubtitle}>INTER-TERMINAL TRANSPORTATION MANAGEMENT SYSTEM</Text>
           <View style={styles.onlineBadge}>
             <View style={styles.onlineDot} />
@@ -326,11 +333,15 @@ const styles = StyleSheet.create({
     borderRadius: 16,
   },
   brandTitle: {
-    fontSize: 26,
+    fontSize: 22,
     fontWeight: '900',
     color: '#00e5ff',
-    letterSpacing: 2,
+    letterSpacing: 1.2,
+    textAlign: 'center',
     textTransform: 'uppercase',
+    alignSelf: 'center',
+    maxWidth: '100%',
+    paddingHorizontal: 6,
   },
   brandSubtitle: {
     fontSize: 9,
