@@ -21,13 +21,13 @@ export default function DriverTabsLayout() {
           borderTopWidth: 1,
           borderTopColor: '#242a34',
           elevation: 8,
-          height: 56 + bottomInset,
+          height: 60 + bottomInset,
           paddingBottom: bottomInset,
-          paddingTop: 6,
+          paddingTop: 8,
         },
         tabBarLabelStyle: {
-          fontSize: 10,
-          fontWeight: '700',
+          fontSize: 11,
+          fontWeight: '800',
           letterSpacing: 0.8,
           textTransform: 'uppercase',
           marginTop: 2,
@@ -39,7 +39,7 @@ export default function DriverTabsLayout() {
         options={{
           title: 'Home',
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? 'home' : 'home-outline'} size={22} color={color} />
+            <Ionicons name={focused ? 'home' : 'home-outline'} size={24} color={color} />
           ),
         }}
       />
@@ -48,7 +48,7 @@ export default function DriverTabsLayout() {
         options={{
           title: 'My Trips',
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? 'trail-sign' : 'trail-sign-outline'} size={22} color={color} />
+            <Ionicons name={focused ? 'trail-sign' : 'trail-sign-outline'} size={24} color={color} />
           ),
         }}
       />
@@ -57,7 +57,7 @@ export default function DriverTabsLayout() {
         options={{
           title: 'Containers',
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? 'cube' : 'cube-outline'} size={22} color={color} />
+            <Ionicons name={focused ? 'cube' : 'cube-outline'} size={24} color={color} />
           ),
         }}
       />
@@ -66,7 +66,7 @@ export default function DriverTabsLayout() {
         options={{
           title: 'Messages',
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? 'chatbubbles' : 'chatbubbles-outline'} size={22} color={color} />
+            <Ionicons name={focused ? 'chatbubbles' : 'chatbubbles-outline'} size={24} color={color} />
           ),
         }}
       />
@@ -75,7 +75,7 @@ export default function DriverTabsLayout() {
         options={{
           title: 'Profile',
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? 'person' : 'person-outline'} size={22} color={color} />
+            <Ionicons name={focused ? 'person' : 'person-outline'} size={24} color={color} />
           ),
         }}
       />

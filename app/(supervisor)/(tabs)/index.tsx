@@ -1269,18 +1269,19 @@ const styles = StyleSheet.create({
   },
   metricLabel: {
     color: '#849396',
-    fontSize: 8,
+    fontSize: 10,
     fontWeight: '800',
     letterSpacing: 0.5,
   },
   metricValue: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: '900',
-        marginTop: 2,
+    marginTop: 2,
   },
   metricSub: {
     color: '#849396',
-    fontSize: 8,
+    fontSize: 10,
+    fontWeight: '600',
   },
 
   // ─── SECTION WRAPS ───

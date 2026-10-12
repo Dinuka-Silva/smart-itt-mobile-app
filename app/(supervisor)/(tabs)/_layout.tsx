@@ -22,13 +22,13 @@ export default function SupervisorTabsLayout() {
           borderTopWidth: 1,
           borderTopColor: '#242a34',
           elevation: 8,
-          height: 56 + bottomInset,
+          height: 60 + bottomInset,
           paddingBottom: bottomInset,
-          paddingTop: 6,
+          paddingTop: 8,
         },
         tabBarLabelStyle: {
-          fontSize: 10,
-          fontWeight: '700',
+          fontSize: 11,
+          fontWeight: '800',
           letterSpacing: 0.8,
           textTransform: 'uppercase',
           marginTop: 2,
@@ -40,7 +40,7 @@ export default function SupervisorTabsLayout() {
         options={{
           title: 'Dashboard',
           tabBarIcon: ({ color, focused, size }) => (
-            <Ionicons name={focused ? 'speedometer' : 'speedometer-outline'} size={size || 22} color={color} />
+            <Ionicons name={focused ? 'speedometer' : 'speedometer-outline'} size={size || 24} color={color} />
           ),
         }}
       />
@@ -49,7 +49,7 @@ export default function SupervisorTabsLayout() {
         options={{
           title: 'Trips',
           tabBarIcon: ({ color, focused, size }) => (
-            <Ionicons name={focused ? 'swap-horizontal' : 'swap-horizontal-outline'} size={size || 22} color={color} />
+            <Ionicons name={focused ? 'swap-horizontal' : 'swap-horizontal-outline'} size={size || 24} color={color} />
           ),
         }}
       />
@@ -58,7 +58,7 @@ export default function SupervisorTabsLayout() {
         options={{
           title: 'Approvals',
           tabBarIcon: ({ color, focused, size }) => (
-            <Ionicons name={focused ? 'shield-checkmark' : 'shield-checkmark-outline'} size={size || 22} color={color} />
+            <Ionicons name={focused ? 'shield-checkmark' : 'shield-checkmark-outline'} size={size || 24} color={color} />
           ),
         }}
       />
@@ -67,7 +67,7 @@ export default function SupervisorTabsLayout() {
         options={{
           title: 'Drivers',
           tabBarIcon: ({ color, focused, size }) => (
-            <Ionicons name={focused ? 'people' : 'people-outline'} size={size || 22} color={color} />
+            <Ionicons name={focused ? 'people' : 'people-outline'} size={size || 24} color={color} />
           ),
         }}
       />
@@ -76,7 +76,7 @@ export default function SupervisorTabsLayout() {
         options={{
           title: 'Reports',
           tabBarIcon: ({ color, focused, size }) => (
-            <Ionicons name={focused ? 'document-text' : 'document-text-outline'} size={size || 22} color={color} />
+            <Ionicons name={focused ? 'document-text' : 'document-text-outline'} size={size || 24} color={color} />
           ),
         }}
       />
