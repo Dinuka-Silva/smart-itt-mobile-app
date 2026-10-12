@@ -7,6 +7,9 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useFonts } from 'expo-font';
 
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { applyGlobalTypography } from '../src/theme/typography';
+
+applyGlobalTypography();
 
 if (Platform.OS === 'web') {
   require('../src/global.css');

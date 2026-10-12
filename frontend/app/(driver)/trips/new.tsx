@@ -693,7 +693,16 @@ export default function NewTripScreen() {
       <View style={{ width: '100%', maxWidth: contentMaxWidth, alignSelf: 'center' }}>
         {/* Header */}
         <View style={[styles.header, { paddingTop: Math.max(topInset + 12, 40) }]}>
-          <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+          <TouchableOpacity
+            style={styles.backBtn}
+            onPress={() => {
+              if (router.canGoBack()) {
+                router.back();
+              } else {
+                router.replace('/(driver)/(tabs)');
+              }
+            }}
+          >
             <Text style={styles.backText}>← Back</Text>
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Confirm New Trip</Text>
@@ -847,7 +856,16 @@ export default function NewTripScreen() {
 
         {/* Action Buttons */}
         <View style={{ flexDirection: 'row', gap: 8, marginBottom: 20 }}>
-          <TouchableOpacity style={[styles.startBtn, { flex: 1, backgroundColor: '#080e17', borderColor: '#242a34', borderWidth: 1 }]} onPress={() => router.back()}>
+          <TouchableOpacity
+            style={[styles.startBtn, { flex: 1, backgroundColor: '#080e17', borderColor: '#242a34', borderWidth: 1 }]}
+            onPress={() => {
+              if (router.canGoBack()) {
+                router.back();
+              } else {
+                router.replace('/(driver)/(tabs)');
+              }
+            }}
+          >
             <Text style={[styles.startBtnText, { color: '#849396' }]}>Cancel</Text>
           </TouchableOpacity>
           <TouchableOpacity style={[styles.startBtn, { flex: 1, backgroundColor: 'rgba(34, 239, 126, 0.15)', borderColor: '#22ef7e', borderWidth: 1 }]}>
