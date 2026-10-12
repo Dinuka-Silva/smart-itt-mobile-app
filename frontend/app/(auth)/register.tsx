@@ -17,59 +17,12 @@ import { authService, DriverRegisterRequest } from '../../src/services/authServi
 import { useAuthStore } from '../../src/store/authStore';
 import { colors, radius, spacing } from '../../src/theme';
 
-export const SCK_FLEET_VEHICLES = [
-  // SCK Logistics Main Fleet (10 vehicles)
-  { vehicleNumber: 'LY 5234', cheNumber: 'SCK 100', operator: 'SCK Logistics' },
-  { vehicleNumber: 'LY 5235', cheNumber: 'SCK 101', operator: 'SCK Logistics' },
-  { vehicleNumber: 'LY 5236', cheNumber: 'SCK 102', operator: 'SCK Logistics' },
-  { vehicleNumber: 'LY 5237', cheNumber: 'SCK 103', operator: 'SCK Logistics' },
-  { vehicleNumber: 'LY 5238', cheNumber: 'SCK 104', operator: 'SCK Logistics' },
-  { vehicleNumber: 'LY 5665', cheNumber: 'SCK 105', operator: 'SCK Logistics' },
-  { vehicleNumber: 'LY 5708', cheNumber: 'SCK 106', operator: 'SCK Logistics' },
-  { vehicleNumber: 'LY 5711', cheNumber: 'SCK 107', operator: 'SCK Logistics' },
-  { vehicleNumber: 'LY 5717', cheNumber: 'SCK 108', operator: 'SCK Logistics' },
-  { vehicleNumber: 'LY 5721', cheNumber: 'SCK 109', operator: 'SCK Logistics' },
+import { SCK_FLEET, findFleetVehicle as findFleetVehicleCore, resolveCheNumber, resolveOperator } from '../../src/config/fleet';
 
-  // SDR LINK Fleet (6 vehicles)
-  { vehicleNumber: 'LY 6528', cheNumber: 'SCK 115', operator: 'SDR LINK' },
-  { vehicleNumber: 'LY 6529', cheNumber: 'SCK 117', operator: 'SDR LINK' },
-  { vehicleNumber: 'LY 5596', cheNumber: 'SCK 122', operator: 'SDR LINK' },
-  { vehicleNumber: 'LY 6530', cheNumber: 'SCK 119', operator: 'SDR LINK' },
-  { vehicleNumber: 'LY 6531', cheNumber: 'SCK 120', operator: 'SDR LINK' },
-  { vehicleNumber: 'LY 6532', cheNumber: 'SCK 121', operator: 'SDR LINK' },
-
-  // E3 Logistics Fleet (3 vehicles)
-  { vehicleNumber: 'LY 5597', cheNumber: 'SCK 123', operator: 'E3 Logistics' },
-  { vehicleNumber: 'LY 5598', cheNumber: 'SCK 124', operator: 'E3 Logistics' },
-  { vehicleNumber: 'LY 5600', cheNumber: 'SCK 125', operator: 'E3 Logistics' },
-];
+export const SCK_FLEET_VEHICLES = SCK_FLEET;
 
 export function findFleetVehicle(input?: string) {
-  if (!input || !input.trim()) return null;
-  const clean = input.replace(/\s+/g, '').toUpperCase();
-  
-  // 1. Direct match on vehicle number
-  let match = SCK_FLEET_VEHICLES.find(
-    (v) => v.vehicleNumber.replace(/\s+/g, '').toUpperCase() === clean
-  );
-  if (match) return match;
-
-  // 2. Suffix match (e.g. user typed "5234" or "6528")
-  if (clean.length >= 4) {
-    match = SCK_FLEET_VEHICLES.find(
-      (v) => v.vehicleNumber.replace(/\s+/g, '').toUpperCase().endsWith(clean)
-    );
-    if (match) return match;
-  }
-
-  // 3. Match on CHE / SCK number (e.g. "SCK 100" or "SCK100")
-  match = SCK_FLEET_VEHICLES.find(
-    (v) => v.cheNumber.replace(/\s+/g, '').toUpperCase() === clean ||
-           (clean.startsWith('SCK') && v.cheNumber.replace(/\s+/g, '').toUpperCase().includes(clean))
-  );
-  if (match) return match;
-
-  return null;
+  return findFleetVehicleCore(input) || null;
 }
 
 export default function DriverRegisterScreen() {

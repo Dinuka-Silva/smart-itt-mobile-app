@@ -18,6 +18,7 @@ import { useAuthStore } from '../../../src/store/authStore';
 import { tripService } from '../../../src/services/tripService';
 import { useMockTripStore } from '../../../src/store/mockTripStore';
 import { colors, radius, spacing } from '../../../src/theme';
+import { resolveCheNumber, resolveOperator } from '../../../src/config/fleet';
 
 const DRIVER_PHOTO_POOL = [
   'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80',
@@ -169,7 +170,7 @@ export default function SupervisorMissionDispatcher() {
         const vessel = (t.vesselName || '').toLowerCase();
         const veh = (t.vehicleNumber || '').toLowerCase();
         const driver = (t.driverName || '').toLowerCase();
-        const chai = (t.chassisNumber || t.chaiNumber || '').toLowerCase();
+        const chai = resolveCheNumber(t.vehicleNumber, t.chassisNumber || t.chaiNumber).toLowerCase();
         const contMatches = (t.containers || []).some((c: any) =>
           (c.containerNumber || '').toLowerCase().includes(q)
         );
@@ -615,7 +616,10 @@ export default function SupervisorMissionDispatcher() {
                               Truck: <Text style={styles.monSpecBoldHighlight}>{t.vehicleNumber || 'LY 5234'}</Text>
                             </Text>
                             <Text style={styles.monSpecItem}>
-                              CHE: <Text style={styles.monSpecBoldCyan}>{t.chassisNumber || t.chaiNumber || 'SCK 100'}</Text>
+                              CHE: <Text style={styles.monSpecBoldCyan}>{resolveCheNumber(t.vehicleNumber, t.chassisNumber || t.chaiNumber)}</Text>
+                            </Text>
+                            <Text style={styles.monSpecItem}>
+                              Operator: <Text style={styles.monSpecBoldCyan}>{resolveOperator(t.vehicleNumber, t.operator)}</Text>
                             </Text>
                             <Text style={styles.monSpecItem}>
                               Vessel: <Text style={styles.monSpecBold}>{t.vesselName || 'MV Colombo Star'}</Text>

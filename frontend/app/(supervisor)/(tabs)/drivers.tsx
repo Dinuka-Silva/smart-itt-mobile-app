@@ -18,7 +18,7 @@ import axios from 'axios';
 import API_BASE_URL from '../../../src/config/api';
 import { useAuthStore } from '../../../src/store/authStore';
 import { radius, spacing } from '../../../src/theme';
-import { SCK_FLEET } from '../../../src/config/fleet';
+import { SCK_FLEET, resolveCheNumber, resolveOperator, findFleetVehicle } from '../../../src/config/fleet';
 
 const DRIVER_PHOTO_POOL = [
   'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80',
@@ -131,16 +131,20 @@ export default function SupervisorDrivers() {
   };
 
   const filteredDrivers = drivers.map((d, idx) => {
-    const fleetMatch = SCK_FLEET.find(
+    const vMatch = findFleetVehicle(d.vehicleNumber) || SCK_FLEET.find(
       (f) => f.vehicleNumber === d.vehicleNumber || f.cheNumber === d.chassisNumber || f.assignedDriver?.driverCode === d.driverCode
     );
+    const resolvedVeh = d.vehicleNumber || vMatch?.vehicleNumber || 'LY 5234';
+    const resolvedChe = resolveCheNumber(resolvedVeh, d.chassisNumber || d.cheNumber || vMatch?.cheNumber);
+    const resolvedOp = resolveOperator(resolvedVeh, d.operator || vMatch?.operator);
+
     return {
       ...d,
       fullName: d.fullName || d.name || `Driver ${idx + 1}`,
       driverCode: d.driverCode || d.empId || `DRV-${String(idx + 1).padStart(5, '0')}`,
       employeeId: d.employeeId || `SCK-EMP-${String(1001 + idx)}`,
       nic: d.nic || `198${(5 + idx) % 15}${String(1000000 + idx * 837).slice(1)}V`,
-      mobileNumber: d.mobileNumber || fleetMatch?.assignedDriver?.mobile || `+94 77 ${String(2345678 + idx * 1357).slice(0, 7)}`,
+      mobileNumber: d.mobileNumber || vMatch?.assignedDriver?.mobile || `+94 77 ${String(2345678 + idx * 1357).slice(0, 7)}`,
       email: d.email || `${(d.fullName || d.name || `driver${idx + 1}`).toLowerCase().replace(/\s+/g, '.')}@scklogistics.lk`,
       address: d.address || `No. ${14 + idx * 2}, Port Access Road, Colombo 15, Sri Lanka`,
       licenseNumber: d.licenseNumber || `B${String(8765400 + idx * 12)}`,
@@ -148,10 +152,10 @@ export default function SupervisorDrivers() {
       dateOfBirth: d.dateOfBirth || `198${(5 + idx) % 10}-0${1 + (idx % 9)}-${String(12 + (idx % 15)).padStart(2, '0')}`,
       emergencyContactName: d.emergencyContactName || (idx % 2 === 0 ? 'Nimali Perera (Spouse)' : 'Bandara Silva (Brother)'),
       emergencyContactNumber: d.emergencyContactNumber || `+94 71 ${String(5123456 + idx * 987).slice(0, 7)}`,
-      vehicleNumber: d.vehicleNumber || fleetMatch?.vehicleNumber || 'LY 5234',
-      chassisNumber: d.chassisNumber || d.cheNumber || fleetMatch?.cheNumber || 'SCK 100',
-      cheNumber: d.chassisNumber || d.cheNumber || fleetMatch?.cheNumber || 'SCK 100',
-      operator: d.operator || fleetMatch?.operator || 'SCK Logistics',
+      vehicleNumber: resolvedVeh,
+      chassisNumber: resolvedChe,
+      cheNumber: resolvedChe,
+      operator: resolvedOp,
       status: d.status || 'ACTIVE',
       totalTrips: d.totalTrips || (20 + ((idx * 7) % 35)),
       createdAt: d.createdAt || '2024-02-15T08:30:00',

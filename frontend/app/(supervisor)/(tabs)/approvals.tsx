@@ -16,9 +16,10 @@ import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
 import API_BASE_URL from '../../../src/config/api';
 import { useAuthStore } from '../../../src/store/authStore';
-import { useMockTripStore } from '../../../src/store/mockTripStore';
 import { tripService } from '../../../src/services/tripService';
+import { useMockTripStore } from '../../../src/store/mockTripStore';
 import { radius, spacing } from '../../../src/theme';
+import { resolveCheNumber, resolveOperator } from '../../../src/config/fleet';
 
 export default function SupervisorApprovals() {
   const user = useAuthStore((s) => s.user);
@@ -166,13 +167,15 @@ export default function SupervisorApprovals() {
           ) : (
             trips.map((trip) => {
               const driverName = trip.driverName || trip.driver?.user?.name || trip.driver?.name || 'Kamal Perera';
-              const vehicle = trip.vehicleNumber || 'WP-BA-1234';
+              const vehicle = trip.vehicleNumber || 'LY 5234';
               const vessel = trip.vesselName || 'MV Colombo Star';
               const from = trip.sourceTerminal || 'CICT';
               const to = trip.destTerminal || 'JCT';
               const containers = trip.containers || [];
               const tripNum = trip.tripNumber || `ITT-${trip.id?.slice(0, 6)}`;
               const isProcessing = processingId === trip.id;
+              const cheNumber = resolveCheNumber(vehicle, trip.chassisNumber || trip.chaiNumber);
+              const operatorName = resolveOperator(vehicle, trip.operator);
 
               return (
                 <View key={trip.id} style={styles.pendingCard}>
@@ -195,7 +198,10 @@ export default function SupervisorApprovals() {
                       <Ionicons name="arrow-forward" size={14} color="#00e5ff" />
                       <Text style={styles.routeTermText}>{to}</Text>
                     </View>
-                    <Text style={styles.specsSubText}>Truck: <Text style={{ color: '#dde2f0' }}>{vehicle}</Text></Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                      <Text style={styles.specsSubText}>Truck: <Text style={{ color: '#00e5ff', fontWeight: '800' }}>{vehicle}</Text></Text>
+                      <Text style={styles.specsSubText}>CHE: <Text style={{ color: '#00e5ff', fontWeight: '800' }}>{cheNumber}</Text></Text>
+                    </View>
                   </View>
 
                   {/* Specs Row */}
@@ -204,10 +210,13 @@ export default function SupervisorApprovals() {
                       Vessel: <Text style={styles.specBold}>{vessel}</Text>
                     </Text>
                     <Text style={styles.specItem}>
-                      Chai: <Text style={styles.specBold}>{trip.chassisNumber || trip.chaiNumber || 'CHAI-102'}</Text>
+                      CHE No: <Text style={styles.specBold}>{cheNumber}</Text>
                     </Text>
                     <Text style={styles.specItem}>
-                      Cargo: <Text style={styles.specBold}>{containers.length} Container{containers.length !== 1 ? 's' : ''}</Text>
+                      Operator: <Text style={styles.specBold}>{operatorName}</Text>
+                    </Text>
+                    <Text style={styles.specItem}>
+                      Cargo: <Text style={styles.specBold}>{containers.length} Cont.</Text>
                     </Text>
                   </View>
 

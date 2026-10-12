@@ -171,3 +171,85 @@ export const SCK_FLEET: FleetVehicle[] = [
   },
 ];
 
+export const SCK_FLEET_VEHICLES = SCK_FLEET;
+
+/**
+ * Find a vehicle in the fleet by license plate (LY XXXX), CHE number (SCK XXX),
+ * suffix digits (e.g. 5234), or assigned driver code.
+ */
+export function findFleetVehicle(input?: string): FleetVehicle | undefined {
+  if (!input || !input.trim()) return undefined;
+  const clean = input.replace(/\s+/g, '').toUpperCase();
+
+  // 1. Direct match on vehicle number (e.g. "LY5234" vs "LY 5234")
+  let match = SCK_FLEET.find(
+    (v) => v.vehicleNumber.replace(/\s+/g, '').toUpperCase() === clean
+  );
+  if (match) return match;
+
+  // 2. Direct match on CHE / SCK number (e.g. "SCK100", "SCK 100")
+  match = SCK_FLEET.find(
+    (v) => v.cheNumber.replace(/\s+/g, '').toUpperCase() === clean
+  );
+  if (match) return match;
+
+  // 3. Suffix match on vehicle plate number (e.g. user entered "5234" or "6528")
+  if (clean.length >= 4) {
+    match = SCK_FLEET.find(
+      (v) => v.vehicleNumber.replace(/\s+/g, '').toUpperCase().endsWith(clean)
+    );
+    if (match) return match;
+  }
+
+  // 4. Substring match on CHE number (e.g. "100" or "SCK10")
+  if (clean.startsWith('SCK')) {
+    match = SCK_FLEET.find((v) =>
+      v.cheNumber.replace(/\s+/g, '').toUpperCase().includes(clean)
+    );
+    if (match) return match;
+  }
+
+  // 5. Assigned driver code match (e.g. "DRV-00001")
+  match = SCK_FLEET.find(
+    (v) =>
+      v.assignedDriver?.driverCode.replace(/[\s-]+/g, '').toUpperCase() ===
+      clean.replace(/[\s-]+/g, '')
+  );
+  if (match) return match;
+
+  return undefined;
+}
+
+/**
+ * Reliably resolve the exact CHE number (SCK No) for any vehicle.
+ * Prioritizes matching the vehicleNumber against the official SCK fleet.
+ * If not found, falls back to checking the fallbackChassis.
+ */
+export function resolveCheNumber(vehicleNumber?: string, fallbackChassis?: string): string {
+  if (vehicleNumber) {
+    const match = findFleetVehicle(vehicleNumber);
+    if (match) return match.cheNumber;
+  }
+
+  if (fallbackChassis) {
+    const match = findFleetVehicle(fallbackChassis);
+    if (match) return match.cheNumber;
+    if (fallbackChassis.toUpperCase().startsWith('SCK')) {
+      return fallbackChassis.toUpperCase();
+    }
+  }
+
+  return fallbackChassis || 'SCK 100';
+}
+
+/**
+ * Reliably resolve the operator company name for any vehicle.
+ */
+export function resolveOperator(vehicleNumber?: string, fallbackOperator?: string): string {
+  if (vehicleNumber) {
+    const match = findFleetVehicle(vehicleNumber);
+    if (match) return match.operator;
+  }
+  return fallbackOperator || 'SCK Logistics';
+}
+

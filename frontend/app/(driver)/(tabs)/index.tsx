@@ -2509,10 +2509,6 @@ const styles = StyleSheet.create({
     fontSize: 8,
     fontWeight: '700',
   },
-  routeArrowBox: {
-    alignItems: 'center',
-    gap: 2,
-  },
   routeDistanceText: {
     color: '#849396',
     fontSize: 8,

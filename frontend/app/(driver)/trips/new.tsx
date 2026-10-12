@@ -17,6 +17,7 @@ import { useAuthStore } from '../../../src/store/authStore';
 import API_BASE_URL from '../../../src/config/api';
 import { colors, radius, spacing, shadow } from '../../../src/theme';
 import { useMockTripStore } from '../../../src/store/mockTripStore';
+import { resolveCheNumber, resolveOperator } from '../../../src/config/fleet';
 import { TripVerifyOverlay } from '../../../src/components/TripVerifyOverlay';
 import {
   containerService,
@@ -614,6 +615,10 @@ export default function NewTripScreen() {
       const res = await axios.post(`${API_BASE_URL}/trips`, payload);
       const createdTrip = res.data;
 
+      const assignedVeh = user?.vehicleNumber || 'LY 5234';
+      const assignedChe = resolveCheNumber(assignedVeh, user?.chassisNumber || user?.cheNumber);
+      const assignedOp = resolveOperator(assignedVeh, user?.operator);
+
       // Immediately sync with client mockTripStore so both Driver and Supervisor tabs reflect this trip in real time
       useMockTripStore.getState().addTrip({
         id: createdTrip.id,
@@ -621,9 +626,10 @@ export default function NewTripScreen() {
         driverId: user?.driverId || user?.id || 'demo-driver',
         driverCode: user?.driverId || 'DRV-00001',
         driverName: user?.name || user?.fullName || 'Kamal Perera',
-        vehicleNumber: user?.vehicleNumber || 'LY 5234',
-        chassisNumber: user?.chassisNumber || user?.cheNumber || 'SCK 100',
-        chaiNumber: user?.chassisNumber || user?.cheNumber || 'SCK 100',
+        vehicleNumber: assignedVeh,
+        chassisNumber: assignedChe,
+        chaiNumber: assignedChe,
+        operator: assignedOp,
         vesselName: vesselName.trim(),
         operationDate,
         operationTime,
@@ -641,15 +647,20 @@ export default function NewTripScreen() {
     } catch (err: any) {
       console.warn('Backend unavailable — simulating successful trip creation for demo mode.');
       
+      const fallbackVeh = user?.vehicleNumber || 'LY 5234';
+      const fallbackChe = resolveCheNumber(fallbackVeh, user?.chassisNumber || user?.cheNumber);
+      const fallbackOp = resolveOperator(fallbackVeh, user?.operator);
+
       const newTripId = `ITT-${new Date().getFullYear()}-${Math.floor(100000 + Math.random() * 900000)}`;
       useMockTripStore.getState().addTrip({
         id: newTripId,
         tripNumber: newTripId,
         driverId: user?.driverId || user?.id || 'demo-driver',
         driverName: user?.name || 'Demo Driver',
-        vehicleNumber: user?.vehicleNumber || 'LY 5234',
-        chassisNumber: user?.chassisNumber || user?.cheNumber || 'SCK 100',
-        chaiNumber: user?.chassisNumber || user?.cheNumber || 'SCK 100',
+        vehicleNumber: fallbackVeh,
+        chassisNumber: fallbackChe,
+        chaiNumber: fallbackChe,
+        operator: fallbackOp,
         vesselName: vesselName.trim(),
         operationDate,
         operationTime,
