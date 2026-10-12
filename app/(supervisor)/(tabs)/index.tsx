@@ -22,6 +22,7 @@ import { driverService, DriverProfile } from '../../../src/services/driverServic
 import { useMockTripStore } from '../../../src/store/mockTripStore';
 import { colors, radius, spacing } from '../../../src/theme';
 import { resolveCheNumber, resolveOperator, findFleetVehicle } from '../../../src/config/fleet';
+import { useResponsive } from '../../../src/hooks/useResponsive';
 
 const TERMINALS = ['ALL', 'CICT', 'CWIT', 'ECT', 'JCT', 'UCT', 'SAGT'] as const;
 const STATUS_FILTERS = ['ALL', 'PENDING_APPROVAL', 'IN_PROGRESS', 'COMPLETED', 'APPROVED'] as const;
@@ -50,6 +51,9 @@ export default function SupervisorHomeDashboard() {
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
   const router = useRouter();
+  const { topInset, bottomInset, contentMaxWidth, containerPaddingHorizontal, isSmallMobile, isMobile } = useResponsive();
+
+  const metricCardWidth = isSmallMobile ? '100%' : isMobile ? '48%' : '31.5%';
 
   // Data States
   const [stats, setStats] = useState<SupervisorDashboardStats>({
@@ -398,7 +402,18 @@ export default function SupervisorHomeDashboard() {
   return (
     <View style={styles.container}>
       <ScrollView
-        contentContainerStyle={styles.scroll}
+        contentContainerStyle={[
+          styles.scroll,
+          {
+            paddingTop: Math.max(topInset, 16),
+            paddingBottom: Math.max(bottomInset + 30, 48),
+            paddingHorizontal: containerPaddingHorizontal,
+            maxWidth: contentMaxWidth,
+            width: '100%',
+            alignSelf: 'center',
+          },
+        ]}
+        showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); loadDashboardData(); }} tintColor="#00e5ff" />}
         keyboardShouldPersistTaps="handled"
       >
@@ -439,7 +454,7 @@ export default function SupervisorHomeDashboard() {
 
         {/* ─── B. SUPERVISOR SUMMARY METRIC CARDS (LIVE BACKEND DATA) ─── */}
         <View style={styles.metricsGrid}>
-          <View style={styles.metricCard}>
+          <View style={[styles.metricCard, { width: metricCardWidth }]}>
             <View style={styles.metricCardHeader}>
               <Text style={styles.metricLabel}>TOTAL TRIPS TODAY</Text>
               <Ionicons name="layers" size={16} color="#00e5ff" />
@@ -448,7 +463,7 @@ export default function SupervisorHomeDashboard() {
             <Text style={styles.metricSub}>Port Movements</Text>
           </View>
 
-          <View style={styles.metricCard}>
+          <View style={[styles.metricCard, { width: metricCardWidth }]}>
             <View style={styles.metricCardHeader}>
               <Text style={styles.metricLabel}>ACTIVE TRIPS</Text>
               <Ionicons name="navigate" size={16} color="#22ef7e" />
@@ -457,7 +472,7 @@ export default function SupervisorHomeDashboard() {
             <Text style={styles.metricSub}>In Transit</Text>
           </View>
 
-          <View style={[styles.metricCard, { borderColor: '#feb300' }]}>
+          <View style={[styles.metricCard, { borderColor: '#feb300', width: metricCardWidth }]}>
             <View style={styles.metricCardHeader}>
               <Text style={[styles.metricLabel, { color: '#feb300' }]}>PENDING APPROVAL</Text>
               <Ionicons name="time" size={16} color="#feb300" />
@@ -466,7 +481,7 @@ export default function SupervisorHomeDashboard() {
             <Text style={styles.metricSub}>Needs Action</Text>
           </View>
 
-          <View style={styles.metricCard}>
+          <View style={[styles.metricCard, { width: metricCardWidth }]}>
             <View style={styles.metricCardHeader}>
               <Text style={styles.metricLabel}>COMPLETED TODAY</Text>
               <Ionicons name="checkmark-done" size={16} color="#22ef7e" />
@@ -475,7 +490,7 @@ export default function SupervisorHomeDashboard() {
             <Text style={styles.metricSub}>Discharged</Text>
           </View>
 
-          <View style={styles.metricCard}>
+          <View style={[styles.metricCard, { width: metricCardWidth }]}>
             <View style={styles.metricCardHeader}>
               <Text style={styles.metricLabel}>CONTAINERS (TEU)</Text>
               <Ionicons name="cube" size={16} color="#00e5ff" />
@@ -484,7 +499,7 @@ export default function SupervisorHomeDashboard() {
             <Text style={styles.metricSub}>Loaded/Handed</Text>
           </View>
 
-          <View style={styles.metricCard}>
+          <View style={[styles.metricCard, { width: metricCardWidth }]}>
             <View style={styles.metricCardHeader}>
               <Text style={styles.metricLabel}>REGISTERED DRIVERS</Text>
               <Ionicons name="people" size={16} color="#849396" />
@@ -1129,9 +1144,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#0e141d',
   },
   scroll: {
-    paddingHorizontal: 16,
-    paddingTop: 48,
-    paddingBottom: 40,
+    flexGrow: 1,
     gap: 14,
   },
 

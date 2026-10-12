@@ -16,6 +16,7 @@ import axios from 'axios';
 import { useAuthStore } from '../../../src/store/authStore';
 import API_BASE_URL from '../../../src/config/api';
 import { colors, radius, spacing, shadow } from '../../../src/theme';
+import { useResponsive } from '../../../src/hooks/useResponsive';
 import { useMockTripStore } from '../../../src/store/mockTripStore';
 import { resolveCheNumber, resolveOperator } from '../../../src/config/fleet';
 import { TripVerifyOverlay } from '../../../src/components/TripVerifyOverlay';
@@ -437,6 +438,7 @@ const cc = StyleSheet.create({
 export default function NewTripScreen() {
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
+  const { topInset, bottomInset, contentMaxWidth, containerPaddingHorizontal } = useResponsive();
 
   const [vesselName, setVesselName] = useState('MSC Aurora');
   const [sourceTerminal, setSourceTerminal] = useState('CICT');
@@ -680,17 +682,25 @@ export default function NewTripScreen() {
   };
 
   return (
-    <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-          <Text style={styles.backText}>← Back</Text>
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Confirm New Trip</Text>
-        <Text style={styles.headerSub}>Load containers, then wait for supervisor confirmation</Text>
-      </View>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={{
+        alignItems: 'center',
+        paddingBottom: Math.max(bottomInset + 40, 60),
+      }}
+      keyboardShouldPersistTaps="handled"
+    >
+      <View style={{ width: '100%', maxWidth: contentMaxWidth, alignSelf: 'center' }}>
+        {/* Header */}
+        <View style={[styles.header, { paddingTop: Math.max(topInset + 12, 40) }]}>
+          <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+            <Text style={styles.backText}>← Back</Text>
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Confirm New Trip</Text>
+          <Text style={styles.headerSub}>Load containers, then wait for supervisor confirmation</Text>
+        </View>
 
-      <View style={styles.content}>
+        <View style={[styles.content, { paddingHorizontal: containerPaddingHorizontal }]}>
         {/* Driver info card */}
         <View style={styles.infoCard}>
           <Text style={styles.sectionTitle}>1. Driver Details</Text>
@@ -897,6 +907,7 @@ export default function NewTripScreen() {
           onDone={goHomeAfterSend}
         />
       )}
+      </View>
     </ScrollView>
   );
 }

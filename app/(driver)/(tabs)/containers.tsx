@@ -16,9 +16,11 @@ import { useAuthStore } from '../../../src/store/authStore';
 import { colors } from '../../../src/theme';
 import { useMockTripStore } from '../../../src/store/mockTripStore';
 import { useFocusEffect } from 'expo-router';
+import { useResponsive } from '../../../src/hooks/useResponsive';
 
 export default function DriverContainers() {
   const user = useAuthStore((s) => s.user);
+  const { topInset, bottomInset, contentMaxWidth, containerPaddingHorizontal } = useResponsive();
   const [containers, setContainers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -118,9 +120,24 @@ export default function DriverContainers() {
   return (
     <ScrollView
       style={styles.container}
+      contentContainerStyle={{
+        maxWidth: contentMaxWidth,
+        width: '100%',
+        alignSelf: 'center',
+        paddingBottom: Math.max(bottomInset + 24, 40),
+      }}
+      showsVerticalScrollIndicator={false}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#00e5ff" />}
     >
-      <View style={styles.header}>
+      <View
+        style={[
+          styles.header,
+          {
+            paddingTop: Math.max(topInset, 16),
+            paddingHorizontal: containerPaddingHorizontal,
+          },
+        ]}
+      >
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
           <View>
             <Text style={styles.headerTitle}>CONTAINERS</Text>
@@ -314,7 +331,7 @@ function getFallbackContainers() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0e141d' },
   header: {
-    paddingTop: 48, paddingHorizontal: 16, paddingBottom: 12,
+    paddingBottom: 12,
     backgroundColor: 'rgba(14, 20, 29, 0.96)', borderBottomWidth: 1, borderBottomColor: '#1a2029',
   },
   headerTitle: { fontSize: 18, fontWeight: '900', color: '#dde2f0', letterSpacing: 0.8 },

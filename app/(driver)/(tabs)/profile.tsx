@@ -18,6 +18,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../../../src/store/authStore';
 import { driverService, DriverProfile } from '../../../src/services/driverService';
 import { colors, radius, spacing, shadow } from '../../../src/theme';
+import { useResponsive } from '../../../src/hooks/useResponsive';
 
 const COVER_PRESETS = [
   {
@@ -80,6 +81,7 @@ export default function DriverProfileScreen() {
   const updateUser = useAuthStore((s) => s.updateUser);
   const logout = useAuthStore((s) => s.logout);
   const router = useRouter();
+  const { topInset, bottomInset, contentMaxWidth, containerPaddingHorizontal } = useResponsive();
 
   const [profile, setProfile] = useState<DriverProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -267,6 +269,13 @@ export default function DriverProfileScreen() {
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <ScrollView
         style={styles.container}
+        contentContainerStyle={{
+          maxWidth: contentMaxWidth,
+          width: '100%',
+          alignSelf: 'center',
+          paddingBottom: Math.max(bottomInset + 30, 48),
+        }}
+        showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
