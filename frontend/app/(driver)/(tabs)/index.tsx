@@ -198,29 +198,22 @@ export default function DriverHomeDashboard() {
   const count20Ft = (activeTrip?.containers || []).filter((c: any) => c.size === '20FT' || c.size === 'FT_20').length;
   const count40Ft = (activeTrip?.containers || []).filter((c: any) => c.size === '40FT' || c.size === 'FT_40').length;
 
-  // Monthly containers completed towards target (150 containers)
-  const currentMonthContainers = useMemo(() => {
-    const now = new Date();
-    const curYear = now.getFullYear();
-    const curMonth = now.getMonth();
-
-    const thisMonthCompletedTrips = trips.filter((t) => {
-      const rawDate = t.operationDate || t.startTime || t.createdAt;
-      if (!rawDate) return false;
-      const d = new Date(rawDate);
-      return !isNaN(d.getTime()) && d.getFullYear() === curYear && d.getMonth() === curMonth;
-    });
-
-    let count = 0;
-    thisMonthCompletedTrips.forEach((t) => {
-      if (t.status === 'COMPLETED' || t.status === 'APPROVED') {
-        count += (t.containers?.length || 1);
-      }
-    });
-
-    // Baseline 50 containers as requested by user
-    return Math.max(50, count);
+  // Actual trips completed and container count for current month
+  const actualCompletedTrips = useMemo(() => {
+    return trips.filter((t) => t.status === 'COMPLETED' || t.status === 'APPROVED');
   }, [trips]);
+
+  const actualTripCount = useMemo(() => {
+    return actualCompletedTrips.length;
+  }, [actualCompletedTrips]);
+
+  const currentMonthContainers = useMemo(() => {
+    let count = 0;
+    actualCompletedTrips.forEach((t) => {
+      count += (t.containers?.length || 1);
+    });
+    return count;
+  }, [actualCompletedTrips]);
 
   const [actionInProgress, setActionInProgress] = useState(false);
 
@@ -426,7 +419,7 @@ export default function DriverHomeDashboard() {
             <Text style={[styles.summaryCardValue, { color: '#feb300' }]}>
               {dashboardStats.containersTransportedToday}
             </Text>
-            <Text style={styles.summaryCardSub}>Transported TEU</Text>
+            <Text style={styles.summaryCardSub}>Transported Containers</Text>
           </View>
 
           <View style={[styles.summaryCard, { width: summaryCardWidth }]}>
@@ -463,7 +456,7 @@ export default function DriverHomeDashboard() {
             </TouchableOpacity>
           </View>
 
-          {/* Large Counter display: 50 / 150 */}
+          {/* Large Counter display: Actual Containers / 150 */}
           <View style={styles.missionNumbersRow}>
             <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 6 }}>
               <Text style={styles.missionCurrentVal}>{currentMonthContainers}</Text>
@@ -478,6 +471,14 @@ export default function DriverHomeDashboard() {
             </View>
           </View>
 
+          {/* Actual Trip Count Indicator in front */}
+          <View style={styles.missionTripInfoRow}>
+            <Ionicons name="git-commit" size={14} color="#00e5ff" />
+            <Text style={styles.missionTripInfoText}>
+              Actual Completed: <Text style={{ color: '#00e5ff', fontWeight: '900' }}>{actualTripCount} Trips</Text> ({currentMonthContainers} Containers transported)
+            </Text>
+          </View>
+
           {/* Progress bar track */}
           <View style={styles.missionProgressBarTrack}>
             <View
@@ -489,7 +490,7 @@ export default function DriverHomeDashboard() {
           </View>
 
           {/* Milestone Congratulation Trigger Banner */}
-          {currentMonthContainers >= 50 && (
+          {currentMonthContainers >= 50 ? (
             <TouchableOpacity
               style={styles.milestoneNoticeBanner}
               activeOpacity={0.85}
@@ -501,10 +502,27 @@ export default function DriverHomeDashboard() {
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.milestoneNoticeTitle}>🎉 50 CONTAINERS MILESTONE REACHED!</Text>
-                  <Text style={styles.milestoneNoticeSub}>Tap here to view your celebration animation & rewards</Text>
+                  <Text style={styles.milestoneNoticeSub}>Tap here to view your celebration honors</Text>
                 </View>
               </View>
               <Ionicons name="chevron-forward" size={16} color="#22ef7e" />
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity
+              style={[styles.milestoneNoticeBanner, { borderColor: 'rgba(254, 179, 0, 0.35)', backgroundColor: 'rgba(254, 179, 0, 0.08)' }]}
+              activeOpacity={0.85}
+              onPress={triggerCelebrationAnimation}
+            >
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
+                <View style={[styles.milestoneStarCircle, { backgroundColor: '#feb300' }]}>
+                  <Ionicons name="trophy" size={14} color="#00363d" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.milestoneNoticeTitle, { color: '#feb300' }]}>🎯 50 CONTAINERS TARGET MILESTONE</Text>
+                  <Text style={styles.milestoneNoticeSub}>{50 - currentMonthContainers > 0 ? `${50 - currentMonthContainers} more to reach 50!` : ''} Tap to celebrate milestone</Text>
+                </View>
+              </View>
+              <Ionicons name="chevron-forward" size={16} color="#feb300" />
             </TouchableOpacity>
           )}
         </View>
@@ -1150,35 +1168,40 @@ export default function DriverHomeDashboard() {
             <Text style={styles.celebrationDriverName}>{driverName.toUpperCase()}</Text>
 
             <Text style={styles.celebrationMessage}>
-              You have completed <Text style={{ color: '#feb300', fontWeight: '900' }}>50 Containers</Text> this month toward your mission target of <Text style={{ color: '#00e5ff', fontWeight: '900' }}>150 Containers</Text>! Outstanding operational efficiency!
+              Outstanding operational excellence! You have achieved the{' '}
+              <Text style={{ color: '#feb300', fontWeight: '900' }}>50 Containers Milestone</Text>{' '}
+              toward your monthly mission of <Text style={{ color: '#00e5ff', fontWeight: '900' }}>150 Containers</Text>!
             </Text>
 
             {/* Achievement Highlights Box */}
             <View style={styles.achievementBox}>
               <View style={styles.achievementRow}>
                 <View style={styles.achievementItem}>
-                  <Text style={styles.achievementLabel}>CURRENT ACHIEVED</Text>
-                  <Text style={[styles.achievementVal, { color: '#feb300' }]}>{currentMonthContainers} TEU</Text>
+                  <Text style={styles.achievementLabel}>COMPLETED TRIPS</Text>
+                  <Text style={[styles.achievementVal, { color: '#00e5ff' }]}>{actualTripCount} Trips</Text>
                 </View>
                 <View style={styles.achievementDivider} />
                 <View style={styles.achievementItem}>
-                  <Text style={styles.achievementLabel}>MONTHLY TARGET</Text>
-                  <Text style={[styles.achievementVal, { color: '#00e5ff' }]}>{monthlyTarget} TEU</Text>
+                  <Text style={styles.achievementLabel}>CONTAINERS</Text>
+                  <Text style={[styles.achievementVal, { color: '#feb300' }]}>{currentMonthContainers} Containers</Text>
                 </View>
                 <View style={styles.achievementDivider} />
                 <View style={styles.achievementItem}>
-                  <Text style={styles.achievementLabel}>PROGRESS</Text>
-                  <Text style={[styles.achievementVal, { color: '#22ef7e' }]}>
-                    {Math.round((currentMonthContainers / monthlyTarget) * 100)}%
-                  </Text>
+                  <Text style={styles.achievementLabel}>MONTH TARGET</Text>
+                  <Text style={[styles.achievementVal, { color: '#22ef7e' }]}>{monthlyTarget} Containers</Text>
                 </View>
               </View>
 
-              <View style={styles.bonusRewardRow}>
-                <Ionicons name="gift" size={16} color="#feb300" />
-                <Text style={styles.bonusRewardText}>
-                  Milestone Performance Bonus: <Text style={{ color: '#22ef7e', fontWeight: '800' }}>+LKR 15,000</Text> Unlocked!
-                </Text>
+              <View style={styles.celebrationHonorRow}>
+                <Ionicons name="ribbon" size={20} color="#feb300" />
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.celebrationHonorTitle}>
+                    🌟 50 CONTAINERS MILESTONE CELEBRATION
+                  </Text>
+                  <Text style={styles.celebrationHonorSub}>
+                    Exceptional operational turnaround, terminal safety, and on-time inter-terminal transportation achieved across Colombo Port terminals!
+                  </Text>
+                </View>
               </View>
             </View>
 
@@ -1664,21 +1687,43 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     marginTop: 2,
   },
-  bonusRewardRow: {
+  celebrationHonorRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: 'rgba(254, 179, 0, 0.1)',
+    borderRadius: 8,
+    padding: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(254, 179, 0, 0.3)',
+  },
+  celebrationHonorTitle: {
+    color: '#feb300',
+    fontSize: 11,
+    fontWeight: '900',
+    letterSpacing: 0.5,
+  },
+  celebrationHonorSub: {
+    color: '#dde2f0',
+    fontSize: 10,
+    lineHeight: 14,
+    marginTop: 2,
+  },
+  missionTripInfoRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: 'rgba(254, 179, 0, 0.08)',
+    backgroundColor: 'rgba(0, 229, 255, 0.08)',
     borderRadius: 6,
-    padding: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 5,
     borderWidth: 1,
-    borderColor: 'rgba(254, 179, 0, 0.25)',
+    borderColor: 'rgba(0, 229, 255, 0.2)',
   },
-  bonusRewardText: {
-    color: '#dde2f0',
-    fontSize: 11,
+  missionTripInfoText: {
+    color: '#849396',
+    fontSize: 10,
     fontWeight: '600',
-    flex: 1,
   },
   celebrationActionBtn: {
     flexDirection: 'row',
