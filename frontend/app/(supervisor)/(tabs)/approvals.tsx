@@ -387,13 +387,13 @@ const styles = StyleSheet.create({
   },
   rolePillText: {
     color: '#feb300',
-    fontSize: 9,
+    fontSize: 10,
     fontWeight: '800',
   },
   dateText: {
     color: '#849396',
-    fontSize: 9,
-        fontWeight: '700',
+    fontSize: 11,
+    fontWeight: '700',
   },
   pendingBadgeHeader: {
     flexDirection: 'row',
@@ -407,10 +407,10 @@ const styles = StyleSheet.create({
     borderColor: '#feb300',
   },
   pendingBadgeHeaderText: {
-    fontSize: 9,
+    fontSize: 11,
     fontWeight: '800',
     color: '#feb300',
-        letterSpacing: 0.6,
+    letterSpacing: 0.6,
   },
 
   // ─── SECTION WRAPS ───

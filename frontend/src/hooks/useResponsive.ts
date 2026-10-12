@@ -61,10 +61,11 @@ export function useResponsive(): ResponsiveLayout {
       ? '48.5%'
       : '100%';
 
-  // Font scaling helper (caps scaling to prevent overflow on extreme zoom)
+  // Font scaling helper: boosts text readability on iPhones & Android mobile devices while preventing clipping
   const scaleFont = (size: number): number => {
-    if (isSmallMobile) return Math.max(size * 0.88, 9);
-    if (isDesktop) return Math.min(size * 1.1, size + 2);
+    if (isSmallMobile) return Math.max(Math.round(size * 1.04), 11);
+    if (isMobile) return Math.max(Math.round(size * 1.08), 12);
+    if (isDesktop) return Math.min(Math.round(size * 1.12), size + 4);
     return size;
   };
 

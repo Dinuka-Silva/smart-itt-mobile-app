@@ -1050,12 +1050,12 @@ const styles = StyleSheet.create({
   avatarText: {
     color: '#00363d',
     fontWeight: '900',
-    fontSize: 15,
+    fontSize: 16,
   },
   driverNameText: {
     color: '#dde2f0',
     fontWeight: '800',
-    fontSize: 14,
+    fontSize: 15,
   },
   codeRow: {
     flexDirection: 'row',
@@ -1069,10 +1069,10 @@ const styles = StyleSheet.create({
     borderColor: '#00e5ff',
     borderWidth: 1,
     borderRadius: 4,
-    paddingHorizontal: 6,
-    paddingVertical: 1,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
     color: '#00e5ff',
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '800',
   },
   vehiclePill: {
@@ -1080,13 +1080,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: 'rgba(254, 179, 0, 0.12)',
     borderRadius: 4,
-    paddingHorizontal: 6,
-    paddingVertical: 1,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
     gap: 4,
   },
   vehiclePillText: {
     color: '#feb300',
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '700',
   },
   headerRight: {
@@ -1119,7 +1119,7 @@ const styles = StyleSheet.create({
     borderRadius: 3,
   },
   statusToggleText: {
-    fontSize: 9,
+    fontSize: 10,
     fontWeight: '800',
     color: '#dde2f0',
   },
@@ -1184,18 +1184,18 @@ const styles = StyleSheet.create({
   },
   summaryCardTitle: {
     color: '#849396',
-    fontSize: 9,
+    fontSize: 11,
     fontWeight: '800',
     letterSpacing: 0.6,
   },
   summaryCardValue: {
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: '900',
-        marginTop: 2,
+    marginTop: 2,
   },
   summaryCardSub: {
     color: '#849396',
-    fontSize: 9,
+    fontSize: 11,
   },
 
   // ─── ACTIVE TRIP CARD ───
@@ -1224,8 +1224,8 @@ const styles = StyleSheet.create({
   activeTripIdText: {
     color: '#00e5ff',
     fontWeight: '900',
-    fontSize: 14,
-      },
+    fontSize: 16,
+  },
   tripStatusPill: {
     backgroundColor: 'rgba(0, 229, 255, 0.12)',
     paddingHorizontal: 8,
@@ -1236,7 +1236,7 @@ const styles = StyleSheet.create({
   },
   tripStatusPillText: {
     color: '#00e5ff',
-    fontSize: 9,
+    fontSize: 11,
     fontWeight: '800',
   },
   routeRow: {
@@ -1254,14 +1254,14 @@ const styles = StyleSheet.create({
   },
   terminalLabel: {
     color: '#849396',
-    fontSize: 8,
+    fontSize: 10,
     fontWeight: '800',
   },
   terminalCode: {
     color: '#00e5ff',
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '900',
-        marginTop: 2,
+    marginTop: 2,
   },
   routeArrowBox: {
     alignItems: 'center',
@@ -1269,8 +1269,8 @@ const styles = StyleSheet.create({
   },
   routeDistText: {
     color: '#849396',
-    fontSize: 7,
-        letterSpacing: 0.8,
+    fontSize: 9,
+    letterSpacing: 0.8,
   },
   specsGrid: {
     flexDirection: 'row',
@@ -1286,19 +1286,19 @@ const styles = StyleSheet.create({
   },
   specLabel: {
     color: '#849396',
-    fontSize: 8,
+    fontSize: 10,
     fontWeight: '800',
   },
   specValue: {
     color: '#dde2f0',
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '700',
   },
   specValueMono: {
     color: '#feb300',
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '700',
-      },
+  },
   loadedContainersSection: {
     backgroundColor: '#080e17',
     borderRadius: radius.sm,
@@ -1307,7 +1307,7 @@ const styles = StyleSheet.create({
   },
   loadedTitle: {
     color: '#849396',
-    fontSize: 8,
+    fontSize: 10,
     fontWeight: '800',
     letterSpacing: 0.8,
   },
@@ -1318,17 +1318,18 @@ const styles = StyleSheet.create({
   },
   loadedCode: {
     color: '#dde2f0',
-        fontSize: 11,
+    fontSize: 12,
     fontWeight: '700',
     flex: 1,
   },
   loadedSize: {
     color: '#00e5ff',
-        fontSize: 10,
+    fontSize: 11,
+    fontWeight: '800',
   },
   loadedStatus: {
     color: '#22ef7e',
-    fontSize: 9,
+    fontSize: 10,
     fontWeight: '700',
   },
   activeTripActions: {
