@@ -412,12 +412,12 @@ export default function SupervisorDrivers() {
                       </View>
                       <View style={styles.monthlyMissionBottom}>
                         <Text style={styles.monthlyMissionPct}>
-                          {Math.round(((drv.monthlyContainers || 50) / (drv.monthlyTarget || 150)) * 100)}% of 150 TEU Target Completed
+                          {Math.round(((drv.monthlyContainers || 50) / (drv.monthlyTarget || 150)) * 100)}% of 150 Containers Target Completed
                         </Text>
                         {(drv.monthlyContainers || 50) >= 50 && (
                           <View style={styles.milestonePill}>
                             <Ionicons name="trophy" size={10} color="#00363d" />
-                            <Text style={styles.milestonePillText}>50+ TEU MILESTONE</Text>
+                            <Text style={styles.milestonePillText}>50+ CONTAINERS MILESTONE</Text>
                           </View>
                         )}
                       </View>
@@ -562,7 +562,7 @@ export default function SupervisorDrivers() {
                           {selectedDriver.monthlyContainers || 50} / {selectedDriver.monthlyTarget || 150} Containers
                         </Text>
                         <Text style={{ fontSize: 10, color: '#22ef7e', fontWeight: '700', marginTop: 2 }}>
-                          {Math.round(((selectedDriver.monthlyContainers || 50) / (selectedDriver.monthlyTarget || 150)) * 100)}% of 150 TEU Target
+                          {Math.round(((selectedDriver.monthlyContainers || 50) / (selectedDriver.monthlyTarget || 150)) * 100)}% of 150 Containers Target
                         </Text>
                       </View>
                     </View>

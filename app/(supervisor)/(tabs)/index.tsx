@@ -381,7 +381,7 @@ export default function SupervisorHomeDashboard() {
 
           <View style={[styles.metricCard, { width: metricCardWidth }]}>
             <View style={styles.metricCardHeader}>
-              <Text style={styles.metricLabel}>CONTAINERS (TEU)</Text>
+              <Text style={styles.metricLabel}>CONTAINERS</Text>
               <Ionicons name="cube" size={16} color="#00e5ff" />
             </View>
             <Text style={[styles.metricValue, { color: '#00e5ff' }]}>{stats.totalContainersTransportedToday}</Text>
@@ -602,7 +602,7 @@ export default function SupervisorHomeDashboard() {
             <View style={styles.panelSummaryDivider} />
             <View style={styles.panelSummaryItem}>
               <Text style={[styles.panelSummaryNum, { color: '#feb300' }]}>{terminalWiseStats.grandTotalContainers}</Text>
-              <Text style={styles.panelSummaryLabel}>Containers Moved (TEU)</Text>
+              <Text style={styles.panelSummaryLabel}>Containers Moved</Text>
             </View>
             <View style={styles.panelSummaryDivider} />
             <View style={styles.panelSummaryItem}>
@@ -750,7 +750,7 @@ export default function SupervisorHomeDashboard() {
               <Text style={styles.repRow}>• Completed Discharges: <Text style={styles.repVal}>{stats.completedTripsToday}</Text></Text>
               <Text style={styles.repRow}>• Active In-Transit: <Text style={styles.repVal}>{stats.activeTrips}</Text></Text>
               <Text style={styles.repRow}>• Gate Pass Approvals: <Text style={styles.repVal}>{stats.approvedTrips}</Text></Text>
-              <Text style={styles.repRow}>• Total Containers: <Text style={styles.repVal}>{stats.totalContainersTransportedToday} TEU</Text></Text>
+              <Text style={styles.repRow}>• Total Containers: <Text style={styles.repVal}>{stats.totalContainersTransportedToday} Containers</Text></Text>
               <Text style={styles.repRow}>• Reporting Date: <Text style={styles.repVal}>{currentDateFormatted}</Text></Text>
             </View>
 
