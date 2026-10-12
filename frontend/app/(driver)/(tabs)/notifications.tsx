@@ -18,9 +18,11 @@ import {
   DriverMessage,
   MessageCategory,
 } from '../../../src/store/driverMessageStore';
+import { useResponsive } from '../../../src/hooks/useResponsive';
 
 export default function DriverNotifications() {
   const user = useAuthStore((s) => s.user);
+  const { topInset, bottomInset, contentMaxWidth, containerPaddingHorizontal } = useResponsive();
 
   // Store state
   const messages = useDriverMessageStore((s) => s.messages);
@@ -145,7 +147,18 @@ export default function DriverNotifications() {
   return (
     <View style={styles.container}>
       {/* ─── TELEMATICS HEADER ─── */}
-      <View style={styles.header}>
+      <View
+        style={[
+          styles.header,
+          {
+            paddingTop: Math.max(topInset, 16),
+            paddingHorizontal: containerPaddingHorizontal,
+            maxWidth: contentMaxWidth,
+            width: '100%',
+            alignSelf: 'center',
+          },
+        ]}
+      >
         <View style={styles.headerTop}>
           <View style={styles.brandBadge}>
             <Ionicons name="radio" size={13} color="#00e5ff" />
@@ -278,7 +291,17 @@ export default function DriverNotifications() {
       {/* ─── MESSAGES LIST ─── */}
       <ScrollView
         style={styles.listContainer}
-        contentContainerStyle={styles.listContent}
+        contentContainerStyle={[
+          styles.listContent,
+          {
+            paddingHorizontal: containerPaddingHorizontal,
+            paddingBottom: Math.max(bottomInset + 24, 40),
+            maxWidth: contentMaxWidth,
+            width: '100%',
+            alignSelf: 'center',
+          },
+        ]}
+        showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -660,8 +683,6 @@ const styles = StyleSheet.create({
   },
   header: {
     backgroundColor: '#08101a',
-    paddingTop: 52,
-    paddingHorizontal: 16,
     paddingBottom: 14,
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(0, 229, 255, 0.15)',

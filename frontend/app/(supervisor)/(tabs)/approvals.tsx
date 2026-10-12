@@ -20,8 +20,10 @@ import { tripService } from '../../../src/services/tripService';
 import { useMockTripStore } from '../../../src/store/mockTripStore';
 import { radius, spacing } from '../../../src/theme';
 import { resolveCheNumber, resolveOperator } from '../../../src/config/fleet';
+import { useResponsive } from '../../../src/hooks/useResponsive';
 
 export default function SupervisorApprovals() {
+  const { topInset, bottomInset, contentMaxWidth, containerPaddingHorizontal } = useResponsive();
   const user = useAuthStore((s) => s.user);
   const [trips, setTrips] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -120,7 +122,17 @@ export default function SupervisorApprovals() {
   return (
     <View style={styles.container}>
       <ScrollView
-        contentContainerStyle={styles.scroll}
+        contentContainerStyle={[
+          styles.scroll,
+          {
+            paddingTop: Math.max(topInset, 16),
+            paddingBottom: Math.max(bottomInset + 30, 40),
+            paddingHorizontal: containerPaddingHorizontal,
+            maxWidth: contentMaxWidth,
+            alignSelf: 'center',
+            width: '100%',
+          },
+        ]}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#00e5ff" />}
         keyboardShouldPersistTaps="handled"
       >
@@ -319,9 +331,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#0e141d',
   },
   scroll: {
-    paddingHorizontal: 16,
-    paddingTop: 48,
-    paddingBottom: 40,
     gap: 14,
   },
 

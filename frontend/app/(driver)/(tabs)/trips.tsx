@@ -17,6 +17,7 @@ import API_BASE_URL from '../../../src/config/api';
 import { useAuthStore } from '../../../src/store/authStore';
 import { colors, radius, spacing } from '../../../src/theme';
 import { useMockTripStore } from '../../../src/store/mockTripStore';
+import { useResponsive } from '../../../src/hooks/useResponsive';
 
 const TERMINALS = ['CWIT', 'JCT', 'ECT', 'UCT', 'SAGT', 'CICT'];
 
@@ -31,6 +32,7 @@ function showMessage(title: string, message: string) {
 export default function DriverJobQueue() {
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
+  const { topInset, bottomInset, contentMaxWidth, containerPaddingHorizontal } = useResponsive();
 
   const [trips, setTrips] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -152,7 +154,18 @@ export default function DriverJobQueue() {
   return (
     <View style={styles.container}>
       {/* ─── Header ─── */}
-      <View style={styles.header}>
+      <View
+        style={[
+          styles.header,
+          {
+            paddingTop: Math.max(topInset, 16),
+            paddingHorizontal: containerPaddingHorizontal,
+            maxWidth: contentMaxWidth,
+            width: '100%',
+            alignSelf: 'center',
+          },
+        ]}
+      >
         <View style={styles.headerTop}>
           <View>
             <Text style={styles.headerSuper}>{new Date().toLocaleDateString('en-LK', { weekday: 'long', day: 'numeric', month: 'long' }).toUpperCase()}</Text>
@@ -170,7 +183,17 @@ export default function DriverJobQueue() {
 
       <ScrollView
         style={styles.scrollContent}
-        contentContainerStyle={styles.scrollInside}
+        contentContainerStyle={[
+          styles.scrollInside,
+          {
+            paddingHorizontal: containerPaddingHorizontal,
+            paddingBottom: Math.max(bottomInset + 24, 40),
+            maxWidth: contentMaxWidth,
+            width: '100%',
+            alignSelf: 'center',
+          },
+        ]}
+        showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -416,8 +439,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#0e141d',
   },
   header: {
-    paddingTop: 48,
-    paddingHorizontal: spacing.margin,
     paddingBottom: 12,
     backgroundColor: 'rgba(14, 20, 29, 0.96)',
     borderBottomWidth: 1,

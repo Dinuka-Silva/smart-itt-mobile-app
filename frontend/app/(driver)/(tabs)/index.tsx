@@ -24,6 +24,7 @@ import { useMockTripStore } from '../../../src/store/mockTripStore';
 import { useDriverMessageStore } from '../../../src/store/driverMessageStore';
 import axios from 'axios';
 import API_BASE_URL from '../../../src/config/api';
+import { useResponsive } from '../../../src/hooks/useResponsive';
 
 const TERMINALS = ['CICT', 'CWIT', 'ECT', 'JCT', 'UCT', 'SAGT'] as const;
 type TerminalCode = (typeof TERMINALS)[number];
@@ -33,6 +34,7 @@ export default function DriverHomeDashboard() {
   const logout = useAuthStore((s) => s.logout);
   const router = useRouter();
   const unreadMessagesCount = useDriverMessageStore((s) => s.messages.filter((m) => !m.read).length);
+  const { topInset, bottomInset, contentMaxWidth, containerPaddingHorizontal, summaryCardWidth } = useResponsive();
 
   // Trips & Dashboard State
   const [trips, setTrips] = useState<any[]>([]);
@@ -261,9 +263,20 @@ export default function DriverHomeDashboard() {
   return (
     <View style={styles.container}>
       <ScrollView
-        contentContainerStyle={styles.scroll}
+        contentContainerStyle={[
+          styles.scroll,
+          {
+            paddingTop: Math.max(topInset, 16),
+            paddingBottom: Math.max(bottomInset + 30, 48),
+            paddingHorizontal: containerPaddingHorizontal,
+            maxWidth: contentMaxWidth,
+            width: '100%',
+            alignSelf: 'center',
+          },
+        ]}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); loadData(); }} tintColor="#00e5ff" />}
         keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
       >
         {/* ─── A. DRIVER HEADER ─── */}
         <View style={styles.header}>
@@ -330,7 +343,7 @@ export default function DriverHomeDashboard() {
 
         {/* ─── B. DRIVER SUMMARY CARDS (LIVE BACKEND METRICS) ─── */}
         <View style={styles.summaryGrid}>
-          <View style={styles.summaryCard}>
+          <View style={[styles.summaryCard, { width: summaryCardWidth }]}>
             <View style={styles.summaryCardHeader}>
               <Text style={styles.summaryCardTitle}>ACTIVE TRIPS</Text>
               <Ionicons name="navigate" size={16} color="#00e5ff" />
@@ -341,7 +354,7 @@ export default function DriverHomeDashboard() {
             <Text style={styles.summaryCardSub}>Live on route</Text>
           </View>
 
-          <View style={styles.summaryCard}>
+          <View style={[styles.summaryCard, { width: summaryCardWidth }]}>
             <View style={styles.summaryCardHeader}>
               <Text style={styles.summaryCardTitle}>COMPLETED TODAY</Text>
               <Ionicons name="checkmark-done-circle" size={16} color="#22ef7e" />
@@ -352,7 +365,7 @@ export default function DriverHomeDashboard() {
             <Text style={styles.summaryCardSub}>Shift total</Text>
           </View>
 
-          <View style={styles.summaryCard}>
+          <View style={[styles.summaryCard, { width: summaryCardWidth }]}>
             <View style={styles.summaryCardHeader}>
               <Text style={styles.summaryCardTitle}>CONTAINERS</Text>
               <Ionicons name="cube" size={16} color="#feb300" />
@@ -363,7 +376,7 @@ export default function DriverHomeDashboard() {
             <Text style={styles.summaryCardSub}>Transported TEU</Text>
           </View>
 
-          <View style={styles.summaryCard}>
+          <View style={[styles.summaryCard, { width: summaryCardWidth }]}>
             <View style={styles.summaryCardHeader}>
               <Text style={styles.summaryCardTitle}>PENDING APPROVAL</Text>
               <Ionicons name="time" size={16} color="#ff9800" />
@@ -995,9 +1008,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#0e141d',
   },
   scroll: {
-    paddingHorizontal: 16,
-    paddingTop: 48,
-    paddingBottom: 40,
+    flexGrow: 1,
     gap: 14,
   },
 

@@ -16,11 +16,13 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../../src/store/authStore';
 import { authService } from '../../src/services/authService';
 import { colors, radius, spacing } from '../../src/theme';
+import { useResponsive } from '../../src/hooks/useResponsive';
 
 export default function LoginScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ prefillUser?: string }>();
   const login = useAuthStore((s) => s.login);
+  const { topInset, bottomInset, containerPaddingHorizontal } = useResponsive();
 
   const [username, setUsername] = useState(params.prefillUser || 'DRV-00001');
   const [password, setPassword] = useState(
@@ -115,7 +117,18 @@ export default function LoginScreen() {
 
   return (
     <View style={styles.root}>
-      <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
+      <ScrollView
+        contentContainerStyle={[
+          styles.scroll,
+          {
+            paddingTop: Math.max(topInset, 20),
+            paddingBottom: Math.max(bottomInset + 20, 36),
+            paddingHorizontal: containerPaddingHorizontal,
+          },
+        ]}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
         {/* Brand Header */}
         <View style={styles.hero}>
           <View style={styles.companyPill}>
@@ -292,7 +305,7 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   hero: {
-    paddingTop: 48,
+    paddingTop: 12,
     paddingBottom: 20,
     alignItems: 'center',
     gap: 8,

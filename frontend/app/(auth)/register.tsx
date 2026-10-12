@@ -24,6 +24,7 @@ import {
   resolveOperator,
   resolveTrailerSize,
 } from '../../src/config/fleet';
+import { useResponsive } from '../../src/hooks/useResponsive';
 
 export const SCK_FLEET_VEHICLES = SCK_FLEET;
 
@@ -34,6 +35,7 @@ export function findFleetVehicle(input?: string) {
 export default function DriverRegisterScreen() {
   const router = useRouter();
   const login = useAuthStore((s) => s.login);
+  const { topInset, bottomInset, contentMaxWidth, containerPaddingHorizontal } = useResponsive();
 
   // Form states
   const [fullName, setFullName] = useState('');
@@ -236,7 +238,21 @@ export default function DriverRegisterScreen() {
 
   return (
     <View style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
+      <ScrollView
+        contentContainerStyle={[
+          styles.scroll,
+          {
+            paddingTop: Math.max(topInset, 16),
+            paddingBottom: Math.max(bottomInset + 24, 40),
+            paddingHorizontal: containerPaddingHorizontal,
+            maxWidth: Math.max(contentMaxWidth, 680),
+            width: '100%',
+            alignSelf: 'center',
+          },
+        ]}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
         {/* Top Header Bar */}
         <View style={styles.topBar}>
           <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
@@ -902,7 +918,7 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   topBar: {
-    paddingTop: 48,
+    paddingTop: 4,
     paddingBottom: 12,
   },
   backBtn: {

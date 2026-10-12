@@ -18,6 +18,7 @@ import { tripService } from '../../../src/services/tripService';
 import { driverService } from '../../../src/services/driverService';
 import { radius, spacing } from '../../../src/theme';
 import { SCK_FLEET, resolveCheNumber, resolveOperator, findFleetVehicle } from '../../../src/config/fleet';
+import { useResponsive } from '../../../src/hooks/useResponsive';
 
 const ALL_TERMINALS = ['ALL', 'CWIT', 'JCT', 'ECT', 'UCT', 'SAGT', 'CICT'] as const;
 
@@ -38,6 +39,7 @@ export interface ExcelExportRow {
 }
 
 export default function SupervisorReports() {
+  const { topInset, bottomInset, contentMaxWidth, containerPaddingHorizontal } = useResponsive();
   const user = useAuthStore((s) => s.user);
 
   const [refreshing, setRefreshing] = useState(false);
@@ -735,7 +737,18 @@ export default function SupervisorReports() {
   return (
     <View style={styles.container}>
       <ScrollView
-        contentContainerStyle={styles.scroll}
+        contentContainerStyle={[
+          styles.scroll,
+          {
+            paddingTop: Math.max(topInset, 16),
+            paddingBottom: Math.max(bottomInset + 30, 48),
+            paddingHorizontal: containerPaddingHorizontal,
+            maxWidth: contentMaxWidth,
+            width: '100%',
+            alignSelf: 'center',
+          },
+        ]}
+        showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#00e5ff" />}
         keyboardShouldPersistTaps="handled"
       >
@@ -1536,8 +1549,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#0e141d',
   },
   scroll: {
-    padding: spacing.margin,
-    paddingBottom: 40,
+    flexGrow: 1,
     gap: 16,
   },
 

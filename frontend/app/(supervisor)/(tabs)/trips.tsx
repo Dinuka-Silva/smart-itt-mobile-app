@@ -19,6 +19,7 @@ import { tripService } from '../../../src/services/tripService';
 import { useMockTripStore } from '../../../src/store/mockTripStore';
 import { colors, radius, spacing } from '../../../src/theme';
 import { resolveCheNumber, resolveOperator } from '../../../src/config/fleet';
+import { useResponsive } from '../../../src/hooks/useResponsive';
 
 const DRIVER_PHOTO_POOL = [
   'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80',
@@ -298,11 +299,23 @@ export default function SupervisorMissionDispatcher() {
 
   const supervisorName = user?.name || user?.fullName || 'Nimal Silva';
   const supervisorInitials = supervisorName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase();
+  const { topInset, bottomInset, contentMaxWidth, containerPaddingHorizontal } = useResponsive();
 
   return (
     <View style={styles.container}>
       <ScrollView
-        contentContainerStyle={styles.scroll}
+        contentContainerStyle={[
+          styles.scroll,
+          {
+            paddingTop: Math.max(topInset, 16),
+            paddingBottom: Math.max(bottomInset + 30, 48),
+            paddingHorizontal: containerPaddingHorizontal,
+            maxWidth: contentMaxWidth,
+            width: '100%',
+            alignSelf: 'center',
+          },
+        ]}
+        showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#00e5ff" />}
         keyboardShouldPersistTaps="handled"
       >
@@ -735,9 +748,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#0e141d',
   },
   scroll: {
-    paddingHorizontal: 16,
-    paddingTop: 48,
-    paddingBottom: 40,
+    flexGrow: 1,
     gap: 14,
   },
 
