@@ -39,14 +39,16 @@ export function useResponsive(): ResponsiveLayout {
   const containerPaddingHorizontal = isSmallMobile
     ? 10
     : isMobile
-    ? 14
+    ? 12
     : isTablet
-    ? 24
+    ? 20
     : 32;
 
-  // Safe area insets with sensible defaults for notched devices
-  const topInset = Math.max(insets.top, Platform.OS === 'android' ? 24 : 16);
-  const bottomInset = Math.max(insets.bottom, Platform.OS === 'ios' ? 16 : 8);
+  // Safe area insets with rock-solid defaults for iPhone notches, Dynamic Island, and Android status bars
+  // iPhones with notches/Dynamic Island report 44px to 59px. Ensure at least 44 on iOS when not in fullscreen.
+  const minIosTop = Platform.OS === 'ios' ? 44 : 24;
+  const topInset = Math.max(insets.top, minIosTop);
+  const bottomInset = Math.max(insets.bottom, Platform.OS === 'ios' ? 20 : 10);
 
   // Responsive grid columns
   const numSummaryCols = isDesktop ? 4 : isTablet ? 3 : isSmallMobile ? 1 : 2;
