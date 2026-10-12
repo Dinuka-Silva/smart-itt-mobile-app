@@ -73,7 +73,9 @@ export default function SupervisorDrivers() {
       cheNumber: f.cheNumber,
       operator: f.operator,
       status: f.status || 'ACTIVE',
-      totalTrips: 20 + ((idx * 7) % 35),
+      monthlyTarget: 150,
+      monthlyContainers: 50 + ((idx * 4) % 65),
+      totalTrips: 50 + ((idx * 4) % 65),
       createdAt: '2024-02-15T08:30:00',
       profilePhoto: DRIVER_PHOTO_POOL[idx % DRIVER_PHOTO_POOL.length],
       coverImage: DRIVER_COVER_POOL[idx % DRIVER_COVER_POOL.length],
@@ -85,7 +87,11 @@ export default function SupervisorDrivers() {
       const res = await axios.get(`${API_BASE_URL}/drivers`);
       const list = Array.isArray(res.data) ? res.data : [];
       if (list.length > 0) {
-        setDrivers(list);
+        setDrivers(list.map((d: any, i: number) => ({
+          ...d,
+          monthlyTarget: d.monthlyTarget || 150,
+          monthlyContainers: d.monthlyContainers || (50 + ((i * 4) % 65)),
+        })));
       } else {
         setDrivers(getFallbackDrivers());
       }
@@ -383,6 +389,40 @@ export default function SupervisorDrivers() {
                       </View>
                     </View>
 
+                    {/* Monthly Mission Target Bar (150 Containers Target) */}
+                    <View style={styles.monthlyMissionCard}>
+                      <View style={styles.monthlyMissionTop}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                          <Ionicons name="flag" size={12} color="#feb300" />
+                          <Text style={styles.monthlyMissionTitle}>MISSION (THIS MONTH TARGET)</Text>
+                        </View>
+                        <Text style={styles.monthlyMissionStat}>
+                          <Text style={styles.monthlyMissionHighlight}>{drv.monthlyContainers || 50}</Text> / {drv.monthlyTarget || 150} Containers
+                        </Text>
+                      </View>
+                      <View style={styles.progressBarTrack}>
+                        <View
+                          style={[
+                            styles.progressBarFill,
+                            {
+                              width: `${Math.min(100, Math.round(((drv.monthlyContainers || 50) / (drv.monthlyTarget || 150)) * 100))}%`,
+                            },
+                          ]}
+                        />
+                      </View>
+                      <View style={styles.monthlyMissionBottom}>
+                        <Text style={styles.monthlyMissionPct}>
+                          {Math.round(((drv.monthlyContainers || 50) / (drv.monthlyTarget || 150)) * 100)}% of 150 TEU Target Completed
+                        </Text>
+                        {(drv.monthlyContainers || 50) >= 50 && (
+                          <View style={styles.milestonePill}>
+                            <Ionicons name="trophy" size={10} color="#00363d" />
+                            <Text style={styles.milestonePillText}>50+ TEU MILESTONE</Text>
+                          </View>
+                        )}
+                      </View>
+                    </View>
+
                     {/* Footer Row: Inspect Button */}
                     <View style={styles.cardFooterRow}>
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
@@ -517,9 +557,12 @@ export default function SupervisorDrivers() {
                         <Text style={styles.dossierItemVal}>{selectedDriver.operator}</Text>
                       </View>
                       <View style={styles.dossierItemHalf}>
-                        <Text style={styles.dossierItemLabel}>MISSIONS COMPLETED</Text>
-                        <Text style={[styles.dossierItemVal, { color: '#22ef7e', fontWeight: '800' }]}>
-                          {selectedDriver.totalTrips || 42} Container Trips
+                        <Text style={styles.dossierItemLabel}>MISSION (THIS MONTH TARGET)</Text>
+                        <Text style={[styles.dossierItemVal, { color: '#feb300', fontWeight: '900' }]}>
+                          {selectedDriver.monthlyContainers || 50} / {selectedDriver.monthlyTarget || 150} Containers
+                        </Text>
+                        <Text style={{ fontSize: 10, color: '#22ef7e', fontWeight: '700', marginTop: 2 }}>
+                          {Math.round(((selectedDriver.monthlyContainers || 50) / (selectedDriver.monthlyTarget || 150)) * 100)}% of 150 TEU Target
                         </Text>
                       </View>
                     </View>
@@ -934,6 +977,73 @@ const styles = StyleSheet.create({
     color: '#feb300',
     fontSize: 10,
     fontWeight: '800',
+  },
+  // ─── MONTHLY MISSION PROGRESS BAR ───
+  monthlyMissionCard: {
+    backgroundColor: '#101621',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#1d2736',
+    padding: 8,
+    gap: 6,
+  },
+  monthlyMissionTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  monthlyMissionTitle: {
+    color: '#849396',
+    fontSize: 9,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
+  monthlyMissionStat: {
+    color: '#dde2f0',
+    fontSize: 10,
+    fontWeight: '700',
+  },
+  monthlyMissionHighlight: {
+    color: '#feb300',
+    fontWeight: '900',
+    fontSize: 11,
+  },
+  progressBarTrack: {
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#18202d',
+    overflow: 'hidden',
+    width: '100%',
+  },
+  progressBarFill: {
+    height: '100%',
+    borderRadius: 3,
+    backgroundColor: '#feb300',
+  },
+  monthlyMissionBottom: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  monthlyMissionPct: {
+    color: '#849396',
+    fontSize: 9,
+    fontWeight: '600',
+  },
+  milestonePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: '#feb300',
+    borderRadius: 3,
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+  },
+  milestonePillText: {
+    color: '#00363d',
+    fontSize: 8,
+    fontWeight: '900',
+    letterSpacing: 0.3,
   },
 
   cardFooterRow: {

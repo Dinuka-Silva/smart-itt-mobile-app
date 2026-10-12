@@ -24,15 +24,6 @@ import { colors, radius, spacing } from '../../../src/theme';
 import { resolveCheNumber, resolveOperator, findFleetVehicle } from '../../../src/config/fleet';
 import { useResponsive } from '../../../src/hooks/useResponsive';
 
-const TERMINALS = ['ALL', 'CICT', 'CWIT', 'ECT', 'JCT', 'UCT', 'SAGT'] as const;
-const STATUS_FILTERS = ['ALL', 'PENDING_APPROVAL', 'IN_PROGRESS', 'COMPLETED', 'APPROVED'] as const;
-
-const DATE_FILTER_OPTIONS = [
-  { id: 'ALL', label: 'ALL DATES' },
-  { id: 'TODAY', label: 'TODAY' },
-  { id: 'YESTERDAY', label: 'YESTERDAY' },
-  { id: 'OLDER', label: 'PREVIOUS DATES' },
-] as const;
 
 const DRIVER_PHOTO_POOL = [
   'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80',
@@ -79,11 +70,6 @@ export default function SupervisorHomeDashboard() {
   const [drivers, setDrivers] = useState<DriverProfile[]>([]);
   const [refreshing, setRefreshing] = useState(false);
 
-  // Filters & Search
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedTerminal, setSelectedTerminal] = useState<string>('ALL');
-  const [selectedStatus, setSelectedStatus] = useState<string>('ALL');
-  const [selectedDateFilter, setSelectedDateFilter] = useState<string>('ALL');
 
   // Terminal Consolidated Panel Filter States (Weekly, Monthly, Daily)
   const [terminalPanelPeriod, setTerminalPanelPeriod] = useState<'WEEKLY' | 'MONTHLY' | 'TODAY' | 'ALL'>('WEEKLY');
@@ -185,103 +171,6 @@ export default function SupervisorHomeDashboard() {
     year: 'numeric',
   }).toUpperCase();
 
-  // Filtered trips for Trip Monitoring
-  const filteredTrips = useMemo(() => {
-    return trips.filter((t) => {
-      // 1. Terminal Filter
-      if (selectedTerminal !== 'ALL') {
-        const matchesOrigin = t.sourceTerminal === selectedTerminal;
-        const matchesDest = t.destTerminal === selectedTerminal;
-        if (!matchesOrigin && !matchesDest) return false;
-      }
-
-      // 2. Status Filter
-      if (selectedStatus !== 'ALL') {
-        if (t.status !== selectedStatus) return false;
-      }
-
-      // 3. Search query
-      if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase().trim();
-        const tripNum = (t.tripNumber || '').toLowerCase();
-        const vessel = (t.vesselName || '').toLowerCase();
-        const veh = (t.vehicleNumber || '').toLowerCase();
-        const chai = resolveCheNumber(t.vehicleNumber, t.chassisNumber || t.cheNumber).toLowerCase();
-        const driver = (t.driverName || '').toLowerCase();
-        const contMatches = (t.containers || []).some((c: any) =>
-          (c.containerNumber || '').toLowerCase().includes(q)
-        );
-
-        if (!tripNum.includes(q) && !vessel.includes(q) && !veh.includes(q) && !chai.includes(q) && !driver.includes(q) && !contMatches) {
-          return false;
-        }
-      }
-
-      return true;
-    });
-  }, [trips, selectedTerminal, selectedStatus, searchQuery]);
-
-  // Date-wise grouped trips for Trip Monitoring
-  const tripsByDate = useMemo(() => {
-    const todayStr = new Date().toISOString().slice(0, 10);
-    const yesterdayDate = new Date();
-    yesterdayDate.setDate(yesterdayDate.getDate() - 1);
-    const yesterdayStr = yesterdayDate.toISOString().slice(0, 10);
-
-    const groups: {
-      [key: string]: {
-        dateKey: string;
-        displayDate: string;
-        isToday: boolean;
-        isYesterday: boolean;
-        trips: any[];
-        totalContainers: number;
-      };
-    } = {};
-
-    filteredTrips.forEach((t) => {
-      const rawDate = t.operationDate || t.startTime || t.createdAt || new Date().toISOString();
-      const dateKey = rawDate.slice(0, 10);
-
-      // Date Filter Check
-      if (selectedDateFilter === 'TODAY' && dateKey !== todayStr) return;
-      if (selectedDateFilter === 'YESTERDAY' && dateKey !== yesterdayStr) return;
-      if (selectedDateFilter === 'OLDER' && (dateKey === todayStr || dateKey === yesterdayStr)) return;
-
-      if (!groups[dateKey]) {
-        const isToday = dateKey === todayStr;
-        const isYesterday = dateKey === yesterdayStr;
-        let displayDate = dateKey;
-        try {
-          const dObj = new Date(dateKey + 'T00:00:00');
-          displayDate = dObj.toLocaleDateString('en-US', {
-            weekday: 'short',
-            month: 'short',
-            day: 'numeric',
-            year: 'numeric',
-          });
-        } catch {}
-
-        groups[dateKey] = {
-          dateKey,
-          displayDate,
-          isToday,
-          isYesterday,
-          trips: [],
-          totalContainers: 0,
-        };
-      }
-
-      const driverIndex = Math.abs((t.driverName || 'Kamal').charCodeAt(0) + (t.id || '1').charCodeAt(0)) % DRIVER_PHOTO_POOL.length;
-      const driverPhoto = t.driverPhoto || DRIVER_PHOTO_POOL[driverIndex];
-
-      groups[dateKey].trips.push({ ...t, driverPhoto });
-      groups[dateKey].totalContainers += (t.containers?.length || 1);
-    });
-
-    // Sort descending by date (newest first)
-    return Object.values(groups).sort((a, b) => b.dateKey.localeCompare(a.dateKey));
-  }, [filteredTrips, selectedDateFilter]);
 
   // Terminal-Wise Consolidated Analytics with Weekly & Monthly Filtering
   const terminalWiseStats = useMemo(() => {
@@ -597,214 +486,25 @@ export default function SupervisorHomeDashboard() {
               );
             })
           )}
-        </View>
-
-        {/* ─── C. LIVE TRIP MONITORING (DATE-WISE BREAKDOWN) ─── */}
-        <View style={styles.sectionWrap}>
-          <View style={styles.sectionTitleRow}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
-              <Ionicons name="radio" size={18} color="#00e5ff" />
-              <Text style={styles.sectionTitle}>LIVE TRIP MONITORING</Text>
-            </View>
-            <View style={styles.dateWiseCountPill}>
-              <Ionicons name="calendar-outline" size={11} color="#00e5ff" />
-              <Text style={styles.dateWiseCountPillText}>{tripsByDate.length} DATES</Text>
-            </View>
-          </View>
-
-          {/* Search Bar */}
-          <View style={styles.searchBarWrap}>
-            <Ionicons name="search" size={16} color="#849396" style={{ marginRight: 8 }} />
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Search by Trip ID, Container, Vehicle, Vessel, Driver..."
-              placeholderTextColor="#849396"
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-            />
-            {searchQuery.length > 0 && (
-              <TouchableOpacity onPress={() => setSearchQuery('')}>
-                <Ionicons name="close-circle" size={16} color="#849396" />
-              </TouchableOpacity>
-            )}
-          </View>
-
-          {/* Quick Date Filters Chips */}
-          <View style={{ gap: 4 }}>
-            <Text style={styles.filterSubLabel}>DATE SELECTION</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterChipsScroll}>
-              {DATE_FILTER_OPTIONS.map((df) => (
-                <TouchableOpacity
-                  key={df.id}
-                  style={[
-                    styles.filterChip,
-                    selectedDateFilter === df.id && styles.filterChipActiveDate,
-                  ]}
-                  onPress={() => setSelectedDateFilter(df.id)}
-                >
-                  <Ionicons
-                    name={df.id === 'TODAY' ? 'today' : 'calendar'}
-                    size={11}
-                    color={selectedDateFilter === df.id ? '#00363d' : '#849396'}
-                    style={{ marginRight: 4 }}
-                  />
-                  <Text
-                    style={[
-                      styles.filterChipText,
-                      selectedDateFilter === df.id && styles.filterChipTextActiveDate,
-                    ]}
-                  >
-                    {df.label}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          </View>
-
-          {/* Terminal Filters Chips */}
-          <View style={{ gap: 4 }}>
-            <Text style={styles.filterSubLabel}>TERMINAL CLEARANCE</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterChipsScroll}>
-              {TERMINALS.map((term) => (
-                <TouchableOpacity
-                  key={term}
-                  style={[styles.filterChip, selectedTerminal === term && styles.filterChipActive]}
-                  onPress={() => setSelectedTerminal(term)}
-                >
-                  <Text style={[styles.filterChipText, selectedTerminal === term && styles.filterChipTextActive]}>
-                    {term}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          </View>
-
-          {/* Status Filters Chips */}
-          <View style={{ gap: 4 }}>
-            <Text style={styles.filterSubLabel}>MISSION STATUS</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterChipsScroll}>
-              {STATUS_FILTERS.map((st) => (
-                <TouchableOpacity
-                  key={st}
-                  style={[styles.filterChip, selectedStatus === st && styles.filterChipActiveCyan]}
-                  onPress={() => setSelectedStatus(st)}
-                >
-                  <Text style={[styles.filterChipText, selectedStatus === st && styles.filterChipTextActiveCyan]}>
-                    {st}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          </View>
-
-          {/* Trips List - Date Wise Grouping */}
-          <View style={{ gap: 14 }}>
-            {tripsByDate.length === 0 ? (
-              <View style={styles.emptyPendingCard}>
-                <Ionicons name="calendar-outline" size={28} color="#849396" />
-                <Text style={styles.emptyPendingText}>NO TRIPS RECORDED FOR THIS CRITERIA</Text>
-                <Text style={styles.emptyPendingSub}>Select "ALL DATES" or clear the search filter.</Text>
+          {/* Quick link to Trips Section for all trip details */}
+          <TouchableOpacity
+            style={styles.viewAllTripsLink}
+            activeOpacity={0.85}
+            onPress={() => router.push('/(supervisor)/(tabs)/trips' as any)}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 }}>
+              <View style={styles.viewAllTripsIconBox}>
+                <Ionicons name="list-circle" size={24} color="#00e5ff" />
               </View>
-            ) : (
-              tripsByDate.map((group) => (
-                <View key={group.dateKey} style={styles.dateGroupWrap}>
-                  {/* Date Header Banner */}
-                  <View style={styles.dateGroupHeader}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                      <Ionicons name="calendar" size={14} color="#00e5ff" />
-                      <Text style={styles.dateGroupTitle}>{group.displayDate.toUpperCase()}</Text>
-                      {group.isToday && (
-                        <View style={styles.todayPill}>
-                          <Text style={styles.todayPillText}>TODAY</Text>
-                        </View>
-                      )}
-                      {group.isYesterday && (
-                        <View style={styles.yesterdayPill}>
-                          <Text style={styles.yesterdayPillText}>YESTERDAY</Text>
-                        </View>
-                      )}
-                    </View>
-                    <View style={styles.dateGroupCountBadge}>
-                      <Text style={styles.dateGroupCountText}>
-                        {group.trips.length} TRIPS • {group.totalContainers} CONTAINERS
-                      </Text>
-                    </View>
-                  </View>
-
-                  {/* Trips for this Date */}
-                  <View style={{ gap: 10, marginTop: 8 }}>
-                    {group.trips.map((t) => {
-                      const count20 = (t.containers || []).filter((c: any) => (c.size || '').includes('20')).length;
-                      const count40 = (t.containers || []).filter((c: any) => (c.size || '').includes('40')).length;
-                      return (
-                        <View key={t.id} style={styles.monitoringCard}>
-                          <View style={styles.monHeader}>
-                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                              {t.driverPhoto ? (
-                                <Image source={{ uri: t.driverPhoto }} style={styles.monDriverThumb} />
-                              ) : (
-                                <View style={styles.monDriverThumbFallback}>
-                                  <Text style={styles.monDriverThumbText}>{(t.driverName || 'K')[0]}</Text>
-                                </View>
-                              )}
-                              <View>
-                                <Text style={styles.monTripId}>{t.tripNumber || `ITT-${t.id?.slice(0, 6)}`}</Text>
-                                <Text style={styles.monDriverNameSmall}>
-                                  {t.driverName || 'Kamal Perera'} {t.driverCode ? `(${t.driverCode})` : ''}
-                                </Text>
-                              </View>
-                            </View>
-
-                            <View
-                              style={[
-                                styles.monStatusBadge,
-                                t.status === 'COMPLETED' ? styles.badgeGreen :
-                                t.status === 'IN_PROGRESS' ? styles.badgeCyan :
-                                t.status === 'PENDING_APPROVAL' ? styles.badgeAmber : styles.badgeDefault,
-                              ]}
-                            >
-                              <Text style={styles.monStatusText}>{t.status}</Text>
-                            </View>
-                          </View>
-
-                          <View style={styles.monRouteBox}>
-                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                              <Ionicons name="boat" size={13} color="#00e5ff" />
-                              <Text style={styles.monRouteText}>
-                                {t.sourceTerminal} ➔ {t.destTerminal}
-                              </Text>
-                            </View>
-                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                              <Ionicons name="time-outline" size={12} color="#feb300" />
-                              <Text style={styles.monTime}>
-                                {t.operationTime || (t.startTime ? new Date(t.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '09:00 AM')}
-                              </Text>
-                            </View>
-                          </View>
-
-                          <View style={styles.monSpecsRow}>
-                            <Text style={styles.monSpecItem}>Truck: <Text style={styles.monSpecBoldHighlight}>{t.vehicleNumber || 'LY 5234'}</Text></Text>
-                            <Text style={styles.monSpecItem}>CHE: <Text style={styles.monSpecBoldCyan}>{resolveCheNumber(t.vehicleNumber, t.chassisNumber || t.cheNumber)}</Text></Text>
-                            <Text style={styles.monSpecItem}>Vessel: <Text style={styles.monSpecBold}>{t.vesselName || 'MV Colombo Star'}</Text></Text>
-                            <Text style={styles.monSpecItem}>Cargo: <Text style={styles.monSpecBoldGreen}>{count20 > 0 ? `${count20}×20FT ` : ''}{count40 > 0 ? `${count40}×40FT` : ''}</Text></Text>
-                          </View>
-
-                          {t.containers && t.containers.length > 0 && (
-                            <View style={styles.monContainersRow}>
-                              <Ionicons name="cube" size={13} color="#00e5ff" />
-                              <Text style={styles.monContainersText}>
-                                {t.containers.map((c: any) => `${c.containerNumber} (${c.size})`).join('  •  ')}
-                              </Text>
-                            </View>
-                          )}
-                        </View>
-                      );
-                    })}
-                  </View>
-                </View>
-              ))
-            )}
-          </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.viewAllTripsTitle}>VIEW COMPLETE TRIP DETAILS</Text>
+                <Text style={styles.viewAllTripsSub}>
+                  Live active trips, completed missions, terminal filters & date-wise records are available in the Trips tab.
+                </Text>
+              </View>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color="#00e5ff" />
+          </TouchableOpacity>
         </View>
 
         {/* ─── E. DRIVER MANAGEMENT VIEW ─── */}
@@ -1439,6 +1139,39 @@ const styles = StyleSheet.create({
     color: '#ff5252',
     fontWeight: '800',
     fontSize: 10,
+  },
+
+  // ─── VIEW ALL TRIPS LINK ───
+  viewAllTripsLink: {
+    backgroundColor: 'rgba(0, 229, 255, 0.05)',
+    borderRadius: radius.DEFAULT,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 229, 255, 0.25)',
+    padding: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 8,
+  },
+  viewAllTripsIconBox: {
+    width: 38,
+    height: 38,
+    borderRadius: 8,
+    backgroundColor: 'rgba(0, 229, 255, 0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  viewAllTripsTitle: {
+    color: '#00e5ff',
+    fontWeight: '800',
+    fontSize: 12,
+    letterSpacing: 0.5,
+  },
+  viewAllTripsSub: {
+    color: '#849396',
+    fontSize: 10,
+    marginTop: 2,
+    lineHeight: 14,
   },
 
   // ─── SEARCH & FILTER CHIPS ───
