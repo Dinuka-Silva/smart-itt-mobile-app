@@ -21,7 +21,6 @@ import { dashboardService, DriverDashboardStats } from '../../../src/services/da
 import { driverService } from '../../../src/services/driverService';
 import { colors, radius, spacing } from '../../../src/theme';
 import { useMockTripStore } from '../../../src/store/mockTripStore';
-import { useDriverMessageStore } from '../../../src/store/driverMessageStore';
 import axios from 'axios';
 import API_BASE_URL from '../../../src/config/api';
 import { useResponsive } from '../../../src/hooks/useResponsive';
@@ -33,7 +32,6 @@ export default function DriverHomeDashboard() {
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
   const router = useRouter();
-  const unreadMessagesCount = useDriverMessageStore((s) => s.messages.filter((m) => !m.read).length);
   const { topInset, bottomInset, contentMaxWidth, containerPaddingHorizontal, summaryCardWidth } = useResponsive();
 
   // Trips & Dashboard State
@@ -51,7 +49,6 @@ export default function DriverHomeDashboard() {
   const [isOnline, setIsOnline] = useState(true);
 
   // Modals state
-  const [notificationsModalVisible, setNotificationsModalVisible] = useState(false);
   const [allowanceModalVisible, setAllowanceModalVisible] = useState(false);
   const [damageReportModalVisible, setDamageReportModalVisible] = useState(false);
   const [supervisorModalVisible, setSupervisorModalVisible] = useState(false);
@@ -313,19 +310,6 @@ export default function DriverHomeDashboard() {
             >
               <View style={[styles.statusDot, { backgroundColor: isOnline ? '#22ef7e' : '#ff5252' }]} />
               <Text style={styles.statusToggleText}>{isOnline ? 'ONLINE' : 'OFFLINE'}</Text>
-            </TouchableOpacity>
-
-            {/* Notification button with live badge */}
-            <TouchableOpacity
-              style={styles.headerIconBtn}
-              onPress={() => router.push('/(driver)/(tabs)/notifications')}
-            >
-              <Ionicons name="chatbubbles" size={18} color="#00e5ff" />
-              {unreadMessagesCount > 0 && (
-                <View style={styles.unreadBadge}>
-                  <Text style={styles.unreadBadgeText}>{unreadMessagesCount}</Text>
-                </View>
-              )}
             </TouchableOpacity>
 
             {/* Logout button */}
@@ -766,13 +750,6 @@ export default function DriverHomeDashboard() {
               <Text style={styles.tileTitle}>Trip History</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.quickActionTile} onPress={() => router.push('/(driver)/(tabs)/notifications')}>
-              <View style={[styles.tileIconCircle, { backgroundColor: 'rgba(0, 229, 255, 0.15)' }]}>
-                <Ionicons name="chatbubbles" size={20} color="#00e5ff" />
-              </View>
-              <Text style={styles.tileTitle}>Dispatch Comms</Text>
-            </TouchableOpacity>
-
             <TouchableOpacity style={styles.quickActionTile} onPress={() => setAllowanceModalVisible(true)}>
               <View style={[styles.tileIconCircle, { backgroundColor: 'rgba(34, 239, 126, 0.15)' }]}>
                 <Ionicons name="cash" size={20} color="#22ef7e" />
@@ -904,66 +881,6 @@ export default function DriverHomeDashboard() {
             <TouchableOpacity style={[styles.modalSubmitBtn, { backgroundColor: '#ff5252' }]} onPress={handleReportDamage}>
               <Ionicons name="shield-outline" size={18} color="#fff" />
               <Text style={[styles.modalSubmitBtnText, { color: '#fff' }]}>SUBMIT DAMAGE INCIDENT</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
-
-      {/* ─── MODAL 4: NOTIFICATIONS ─── */}
-      <Modal visible={notificationsModalVisible} transparent animationType="fade">
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalCard}>
-            <View style={styles.modalHeader}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <Ionicons name="notifications" size={20} color="#00e5ff" />
-                <Text style={styles.modalTitle}>DISPATCH NOTIFICATIONS</Text>
-              </View>
-              <TouchableOpacity onPress={() => setNotificationsModalVisible(false)}>
-                <Ionicons name="close" size={22} color="#849396" />
-              </TouchableOpacity>
-            </View>
-
-            <View style={{ gap: 10 }}>
-              <View style={styles.notifItem}>
-                <Ionicons name="checkmark-circle" size={18} color="#22ef7e" />
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.notifTitle}>Trip ITT-00001 Approved</Text>
-                  <Text style={styles.notifSub}>Gate pass confirmed by Supervisor Nimal Silva.</Text>
-                </View>
-              </View>
-              <View style={styles.notifItem}>
-                <Ionicons name="information-circle" size={18} color="#00e5ff" />
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.notifTitle}>New ITT Job Assigned</Text>
-                  <Text style={styles.notifSub}>Transfer from CICT Bay-7 to JCT Bay-3.</Text>
-                </View>
-              </View>
-              <View style={styles.notifItem}>
-                <Ionicons name="cash" size={18} color="#feb300" />
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.notifTitle}>Allowance Credited</Text>
-                  <Text style={styles.notifSub}>LKR 2,500 credited for completed mission.</Text>
-                </View>
-              </View>
-            </View>
-
-            <TouchableOpacity
-              style={[styles.modalSubmitBtn, { backgroundColor: '#00e5ff', marginTop: 14 }]}
-              onPress={() => {
-                setNotificationsModalVisible(false);
-                router.push('/(driver)/(tabs)/notifications');
-              }}
-            >
-              <Text style={[styles.modalSubmitBtnText, { color: '#080e17' }]}>
-                OPEN FULL DISPATCH COMMUNICATIONS HUB
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.modalSubmitBtn, { backgroundColor: 'transparent', borderWidth: 1, borderColor: '#242a34', marginTop: 8 }]}
-              onPress={() => setNotificationsModalVisible(false)}
-            >
-              <Text style={styles.modalSubmitBtnText}>CLOSE</Text>
             </TouchableOpacity>
           </View>
         </View>
