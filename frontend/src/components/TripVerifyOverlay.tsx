@@ -70,6 +70,14 @@ function VerifyBody(props: VerifyProps) {
         <Row label="Vessel" value={props.vesselName} />
         <Row label="Loading terminal" value={props.sourceTerminal} />
         <Row label="Destination(s)" value={props.destTerminals} />
+        <Row
+          label="Chassis load"
+          value={
+            props.containers.length === 1 && props.containers[0].size === '40FT'
+              ? '1 × 40FT (Full Chassis Capacity)'
+              : `${props.containers.length} × 20FT (${props.containers.length}/2 Chassis Slots)`
+          }
+        />
         {props.containers.map((c, i) => (
           <View key={`${c.containerNumber}-${i}`} style={styles.containerRow}>
             <Ionicons name="cube-outline" size={16} color={colors.accent} />

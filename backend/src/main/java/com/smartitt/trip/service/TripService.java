@@ -50,6 +50,20 @@ public class TripService {
 
         UUID driverUuid = resolveDriverUuid(req.getDriverId());
 
+        // Validate chassis capacity: 1 trip can carry only 1x 40FT OR up to 2x 20FT containers
+        if (req.getContainers() != null && !req.getContainers().isEmpty()) {
+            long count20 = req.getContainers().stream()
+                    .filter(c -> "20FT".equalsIgnoreCase(c.getSize()))
+                    .count();
+            long count40 = req.getContainers().stream()
+                    .filter(c -> !"20FT".equalsIgnoreCase(c.getSize()))
+                    .count();
+            if (count40 > 1 || (count40 >= 1 && count20 > 0) || count20 > 2) {
+                throw new IllegalArgumentException(
+                        "Chassis capacity exceeded: A single trip can carry only 1 40FT container OR up to 2 20FT containers.");
+            }
+        }
+
         // Driver loads containers → confirms trip → waits for supervisor
         Trip trip = Trip.builder()
                 .tripNumber(tripNumber)

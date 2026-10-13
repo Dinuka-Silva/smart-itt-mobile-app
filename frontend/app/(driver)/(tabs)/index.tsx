@@ -609,6 +609,13 @@ export default function DriverHomeDashboard() {
                 <Text style={styles.chassisTag}>CHE: {activeTrip.chassisNumber || user?.cheNumber || 'SCK 100'}</Text>
               </View>
 
+              <View style={styles.chassisRuleBadge}>
+                <Ionicons name="shield-checkmark" size={12} color="#22ef7e" />
+                <Text style={styles.chassisRuleBadgeText}>
+                  Chassis Load: <Text style={{ color: '#00e5ff', fontWeight: '800' }}>{count40Ft > 0 ? '1 × 40FT' : `${count20Ft || activeTrip.containers?.length || 1} × 20FT`}</Text> · Policy: Max 1×40FT or 2×20FT only
+                </Text>
+              </View>
+
               {(activeTrip.containers || []).map((c: any, idx: number) => (
                 <View key={c.id || idx} style={styles.containerItemRow}>
                   <View style={styles.containerBadge}>
@@ -3119,6 +3126,24 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 4,
+  },
+  chassisRuleBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(0, 229, 255, 0.08)',
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 229, 255, 0.25)',
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+    marginBottom: 4,
+  },
+  chassisRuleBadgeText: {
+    color: '#849396',
+    fontSize: 9.5,
+    fontWeight: '700',
+    flex: 1,
   },
   containerItemRow: {
     flexDirection: 'row',

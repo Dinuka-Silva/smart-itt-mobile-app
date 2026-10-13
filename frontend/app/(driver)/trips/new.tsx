@@ -278,6 +278,16 @@ function ContainerCard({
         ))}
       </View>
 
+      {/* Chassis Capacity Guidance */}
+      <View style={cc.capacityGuidanceBox}>
+        <Ionicons name="information-circle" size={14} color="#00e5ff" />
+        <Text style={cc.capacityGuidanceText}>
+          {is20FT
+            ? '20FT Mode: Up to 2 × 20FT containers allowed per trip on chassis.'
+            : '40FT Mode: Exactly 1 × 40FT container allowed per trip on chassis.'}
+        </Text>
+      </View>
+
       {/* Container numbers — 2 inputs for 20FT, 1 for 40FT */}
       {is20FT ? (
         <>
@@ -430,6 +440,24 @@ const cc = StyleSheet.create({
     borderRadius: radius.md, padding: 10, marginBottom: 4,
   },
   damageAlertText: { fontSize: 12, fontWeight: '700', color: '#ff5252', flex: 1 },
+  capacityGuidanceBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(0, 229, 255, 0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 229, 255, 0.25)',
+    borderRadius: radius.md,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    marginBottom: 12,
+  },
+  capacityGuidanceText: {
+    color: '#00e5ff',
+    fontSize: 11,
+    fontWeight: '700',
+    flex: 1,
+  },
 });
 
 // ────────────────────────────────────────────────────────────────
@@ -824,8 +852,30 @@ export default function NewTripScreen() {
         <View style={styles.summaryBox}>
           <Text style={styles.summaryTitle}>5. Trip Summary</Text>
           <View style={styles.summaryRow}>
-            <Text style={styles.summaryKey}>Containers</Text>
-            <Text style={styles.summaryVal}>{containers.length}</Text>
+            <Text style={styles.summaryKey}>Chassis Cargo</Text>
+            <Text style={[styles.summaryVal, { color: '#00e5ff', fontWeight: '800' }]}>
+              {containers[0]?.size === '40FT'
+                ? '1 × 40FT Container'
+                : `${containers[0]?.containerNumber2?.trim() ? 2 : 1} × 20FT Container${containers[0]?.containerNumber2?.trim() ? 's' : ''}`}
+            </Text>
+          </View>
+          <View style={styles.summaryRow}>
+            <Text style={styles.summaryKey}>Chassis Capacity</Text>
+            <Text style={[styles.summaryVal, { color: '#22ef7e', fontWeight: '800' }]}>
+              {containers[0]?.size === '40FT'
+                ? '1/1 (40FT Slot Full)'
+                : containers[0]?.containerNumber2?.trim()
+                ? '2/2 (20FT Slots Full)'
+                : '1/2 (20FT Slot)'}
+            </Text>
+          </View>
+          <View style={styles.summaryRow}>
+            <Text style={styles.summaryKey}>Total Containers</Text>
+            <Text style={styles.summaryVal}>
+              {containers[0]?.size === '40FT'
+                ? '1 Container'
+                : `${containers[0]?.containerNumber2?.trim() ? 2 : 1} Containers`}
+            </Text>
           </View>
           <View style={styles.summaryRow}>
             <Text style={styles.summaryKey}>Loading terminal</Text>
@@ -851,6 +901,12 @@ export default function NewTripScreen() {
           <View style={styles.summaryRow}>
             <Text style={styles.summaryKey}>Vehicle / Chai</Text>
             <Text style={styles.summaryVal}>{user?.vehicleNumber || 'WP-DA-4521'} / {user?.chaiNumber || '—'}</Text>
+          </View>
+          <View style={styles.chassisRulePill}>
+            <Ionicons name="shield-checkmark" size={13} color="#22ef7e" />
+            <Text style={styles.chassisRulePillText}>
+              Chassis Policy: 1 Trip can carry only 1 × 40FT or up to 2 × 20FT containers.
+            </Text>
           </View>
         </View>
 
@@ -1031,4 +1087,22 @@ const styles = StyleSheet.create({
   },
   startBtnDisabled: { opacity: 0.5 },
   startBtnText: { color: '#00363d', fontSize: 16, fontWeight: '900', letterSpacing: 0.5 },
+  chassisRulePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(34, 239, 126, 0.1)',
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(34, 239, 126, 0.3)',
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    marginTop: 6,
+  },
+  chassisRulePillText: {
+    color: '#22ef7e',
+    fontSize: 11,
+    fontWeight: '700',
+    flex: 1,
+  },
 });

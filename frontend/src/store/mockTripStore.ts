@@ -82,7 +82,7 @@ const initialTrips: MockTrip[] = [
     startTime: todayISO,
     createdAt: todayISO,
     containers: [
-      { id: 'c-101', containerNumber: 'MSKU-88219-0', size: '40FT', isoType: '40HC', status: 'IN_TRANSIT', destTerminal: 'JCT', damageStatus: 'NONE' },
+      { id: 'c-101', containerNumber: 'MSKU-88219-0', size: '20FT', isoType: '20GP', status: 'IN_TRANSIT', destTerminal: 'JCT', damageStatus: 'NONE' },
       { id: 'c-102', containerNumber: 'TGHU-33012-9', size: '20FT', isoType: '20GP', status: 'IN_TRANSIT', destTerminal: 'JCT', damageStatus: 'DAMAGED' },
     ],
   },
