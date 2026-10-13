@@ -287,7 +287,7 @@ export default function DriverProfileScreen() {
         {/* ─── Header with Cover Background & Editable Avatar ─── */}
         <View style={styles.header}>
           {/* Background Cover Image Banner */}
-          <View style={[styles.coverBannerWrap, { paddingTop: topInset, height: 140 + topInset }]}>
+          <View style={[styles.coverBannerWrap, { height: 155 + topInset }]}>
             {coverImage ? (
               <Image source={{ uri: coverImage }} style={styles.coverImage} />
             ) : (
@@ -302,7 +302,7 @@ export default function DriverProfileScreen() {
 
             {/* Edit Cover Photo Button */}
             <TouchableOpacity
-              style={styles.editCoverBtn}
+              style={[styles.editCoverBtn, { top: Math.max(topInset + 10, 16) }]}
               activeOpacity={0.8}
               onPress={() => handleOpenPhotoPicker('cover')}
             >
@@ -539,12 +539,10 @@ const styles = StyleSheet.create({
   // ─── Cover Image Banner ───
   coverBannerWrap: {
     width: '100%',
-    height: 140,
+    height: 155,
     backgroundColor: '#0c1522',
     position: 'relative',
     overflow: 'hidden',
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   coverImage: {
     ...StyleSheet.absoluteFill,
@@ -577,26 +575,28 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(10, 16, 26, 0.45)',
   },
   editCoverBtn: {
+    position: 'absolute',
+    right: 14,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
+    gap: 6,
     backgroundColor: 'rgba(8, 14, 23, 0.88)',
-    paddingHorizontal: 16,
-    paddingVertical: 9,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
     borderRadius: 20,
     borderWidth: 1.5,
     borderColor: '#00e5ff',
-    zIndex: 10,
-    elevation: 4,
+    zIndex: 25,
+    elevation: 6,
     shadowColor: '#00e5ff',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.35,
+    shadowOpacity: 0.4,
     shadowRadius: 6,
   },
   editCoverBtnText: {
     color: '#00e5ff',
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '800',
     letterSpacing: 0.5,
   },
