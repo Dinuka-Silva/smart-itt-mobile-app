@@ -175,6 +175,16 @@ export default function DriverContainers() {
         </View>
       )}
 
+      {/* ITT Haulage Capacity Rule Banner */}
+      {!loading && (
+        <View style={styles.policyNoticeBox}>
+          <Ionicons name="information-circle" size={15} color="#00e5ff" />
+          <Text style={styles.policyNoticeText}>
+            ITT Haulage Rule: 1 Trip can transport only 1 × 40FT container OR up to 2 × 20FT containers.
+          </Text>
+        </View>
+      )}
+
       {loading ? (
         <ActivityIndicator size="large" color="#00e5ff" style={{ marginTop: 30 }} />
       ) : filteredContainers.length === 0 ? (
@@ -343,6 +353,25 @@ const styles = StyleSheet.create({
   },
   summaryValue: { fontSize: 26, fontWeight: '900' },
   summaryLabel: { fontSize: 11, color: '#849396', marginTop: 4, fontWeight: '800' },
+  policyNoticeBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: 'rgba(0, 229, 255, 0.08)',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 229, 255, 0.25)',
+    marginHorizontal: 16,
+    marginTop: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  policyNoticeText: {
+    color: '#00e5ff',
+    fontSize: 11,
+    fontWeight: '700',
+    flex: 1,
+  },
   emptyBox: {
     alignItems: 'center', justifyContent: 'center', padding: 36,
     backgroundColor: '#161c25', borderRadius: 8, margin: 16, borderWidth: 1, borderColor: '#242a34',
