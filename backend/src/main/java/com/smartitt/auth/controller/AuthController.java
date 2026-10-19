@@ -31,4 +31,24 @@ public class AuthController {
     public ResponseEntity<AuthResponse> registerDriver(@RequestBody @Valid DriverRegisterRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(authService.registerDriver(request));
     }
+
+    @PostMapping("/register/supervisor")
+    @Operation(summary = "Register a new port terminal supervisor")
+    public ResponseEntity<AuthResponse> registerSupervisor(@RequestBody @Valid com.smartitt.auth.dto.SupervisorRegisterRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(authService.registerSupervisor(request));
+    }
+
+    @PostMapping("/logout")
+    @Operation(summary = "Logout driver and mark vehicle as inactive")
+    public ResponseEntity<Void> logout(@RequestBody(required = false) java.util.Map<String, String> body) {
+        String identifier = body != null ? body.get("identifier") : null;
+        if (identifier == null && body != null) {
+            identifier = body.get("driverCode");
+        }
+        if (identifier == null && body != null) {
+            identifier = body.get("username");
+        }
+        authService.logout(identifier);
+        return ResponseEntity.ok().build();
+    }
 }

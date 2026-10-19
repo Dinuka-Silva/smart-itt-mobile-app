@@ -46,6 +46,30 @@ public class Vehicle {
     @Builder.Default
     private String status = "ACTIVE"; // ACTIVE, MAINTENANCE, IN_TRANSIT, INACTIVE
 
+    @Column(name = "license_issued_date")
+    private java.time.LocalDate licenseIssuedDate;
+
+    @Column(name = "license_expiry_date")
+    private java.time.LocalDate licenseExpiryDate;
+
+    public Long getDaysUntilExpiry() {
+        if (licenseExpiryDate == null) return null;
+        return java.time.temporal.ChronoUnit.DAYS.between(java.time.LocalDate.now(), licenseExpiryDate);
+    }
+
+    public boolean isRenewalDue() {
+        Long days = getDaysUntilExpiry();
+        return days != null && days <= 30; // within 1 month
+    }
+
+    public String getLicenseStatus() {
+        Long days = getDaysUntilExpiry();
+        if (days == null) return "UNKNOWN";
+        if (days < 0) return "EXPIRED";
+        if (days <= 30) return "RENEWAL_DUE";
+        return "VALID";
+    }
+
     @Column(name = "created_at", nullable = false, updatable = false)
     @Builder.Default
     private LocalDateTime createdAt = LocalDateTime.now();

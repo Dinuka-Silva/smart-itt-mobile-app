@@ -36,10 +36,21 @@ public class DriverProfileResponse {
     private String profilePhoto;
     private String coverImage;
     private String vehicleNumber;
-
     private String chassisNumber; // SCK number (CHE No)
     private String cheNumber;     // Alias for chassisNumber
+    private String operator;      // Fleet Operator name
     private String status;
+
+    // Assigned Vehicle Revenue License details (valid for 1 year from issued date)
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    private LocalDate vehicleLicenseIssuedDate;
+
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    private LocalDate vehicleLicenseExpiryDate;
+
+    private Long vehicleLicenseDaysLeft;
+    private Boolean vehicleLicenseRenewalDue;
+    private String vehicleLicenseStatus;
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

@@ -18,6 +18,15 @@ public class VehicleResponse {
     private String cheNumber;     // Alias for chassisNumber
     private String operator;      // SCK Logistics, SDR LINK, E3 Logistics
     private String trailerSize;   // 40FT standard ITT container chassis
-    private String status;        // ACTIVE, MAINTENANCE, INACTIVE
+    private String status;        // ACTIVE, MAINTENANCE, INACTIVE, IN_TRANSIT
     private UUID assignedDriverId;
+    private String driverCode;
+    private String driverName;
+    private String driverMobile;
+
+    private java.time.LocalDate licenseIssuedDate;
+    private java.time.LocalDate licenseExpiryDate;
+    private Long daysUntilExpiry;
+    private boolean renewalDue;
+    private String licenseStatus; // VALID, RENEWAL_DUE, EXPIRED
 }

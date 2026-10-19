@@ -26,6 +26,7 @@ public class DriverService {
 
     private final DriverRepository driverRepository;
     private final UserRepository userRepository;
+    private final com.smartitt.vehicle.repository.VehicleRepository vehicleRepository;
 
     @Transactional(readOnly = true)
     public DriverProfileResponse getCurrentDriverProfile() {
@@ -104,6 +105,26 @@ public class DriverService {
     public DriverProfileResponse mapToProfileResponse(Driver driver) {
         if (driver == null) return null;
 
+        java.time.LocalDate vLicIssued = null;
+        java.time.LocalDate vLicExpiry = null;
+        Long vLicDays = null;
+        Boolean vLicRenewalDue = false;
+        String vLicStatus = "VALID";
+        String operator = null;
+
+        if (driver.getVehicleNumber() != null && !driver.getVehicleNumber().isBlank()) {
+            var vehicleOpt = vehicleRepository.findByVehicleNumber(driver.getVehicleNumber());
+            if (vehicleOpt.isPresent()) {
+                var v = vehicleOpt.get();
+                vLicIssued = v.getLicenseIssuedDate();
+                vLicExpiry = v.getLicenseExpiryDate();
+                vLicDays = v.getDaysUntilExpiry();
+                vLicRenewalDue = v.isRenewalDue();
+                vLicStatus = v.getLicenseStatus();
+                operator = v.getOperator();
+            }
+        }
+
         return DriverProfileResponse.builder()
                 .id(driver.getId() != null ? driver.getId().toString() : null)
                 .driverCode(driver.getDriverCode())
@@ -124,7 +145,13 @@ public class DriverService {
                 .vehicleNumber(driver.getVehicleNumber())
                 .chassisNumber(driver.getChassisNumber())
                 .cheNumber(driver.getChassisNumber())
+                .operator(operator)
                 .status(driver.getStatus() != null ? driver.getStatus().name() : AccountStatus.ACTIVE.name())
+                .vehicleLicenseIssuedDate(vLicIssued)
+                .vehicleLicenseExpiryDate(vLicExpiry)
+                .vehicleLicenseDaysLeft(vLicDays)
+                .vehicleLicenseRenewalDue(vLicRenewalDue)
+                .vehicleLicenseStatus(vLicStatus)
                 .createdAt(driver.getCreatedAt())
                 .updatedAt(driver.getUpdatedAt())
                 .build();

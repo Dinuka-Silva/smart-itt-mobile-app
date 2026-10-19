@@ -22,6 +22,7 @@ public interface DriverRepository extends JpaRepository<Driver, UUID> {
 
     boolean existsByDriverCode(String driverCode);
     boolean existsByVehicleNumber(String vehicleNumber);
+    Optional<Driver> findByVehicleNumber(String vehicleNumber);
     boolean existsByDrivingLicenceNumber(String licenceNumber);
 
     @Query("SELECT MAX(d.driverCode) FROM Driver d WHERE d.driverCode LIKE 'DRV-%'")

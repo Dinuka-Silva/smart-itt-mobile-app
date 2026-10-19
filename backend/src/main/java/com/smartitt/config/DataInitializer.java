@@ -91,8 +91,21 @@ public class DataInitializer implements CommandLineRunner {
             Vehicle.builder().chassisNumber("SCK 125").vehicleNumber("LY 5600").operator("E3 Logistics").trailerSize("40FT").status("ACTIVE").build()
         );
 
+        LocalDate today = LocalDate.now();
+
         if (vehicleRepository.count() == 0) {
             log.info("Seeding SCK ITT Vehicle Fleet (24 vehicles across SCK Logistics, SDR LINK, E3 Logistics)...");
+            for (Vehicle v : authoritativeFleet) {
+                // By default: license valid for 1 year
+                if ("LY 5234".equals(v.getVehicleNumber()) || "LY 6528".equals(v.getVehicleNumber())) {
+                    // Due for renewal in 18 days (triggers the 1-month renewal warning!)
+                    v.setLicenseIssuedDate(today.minusYears(1).plusDays(18));
+                    v.setLicenseExpiryDate(v.getLicenseIssuedDate().plusYears(1));
+                } else {
+                    v.setLicenseIssuedDate(today.minusMonths(2));
+                    v.setLicenseExpiryDate(v.getLicenseIssuedDate().plusYears(1));
+                }
+            }
             vehicleRepository.saveAll(authoritativeFleet);
             log.info("Successfully seeded all 24 fleet vehicles into database.");
         } else {
@@ -104,9 +117,20 @@ public class DataInitializer implements CommandLineRunner {
                     existing.setChassisNumber(v.getChassisNumber());
                     existing.setOperator(v.getOperator());
                     existing.setTrailerSize(v.getTrailerSize());
-                    existing.setStatus("ACTIVE");
+                    if (existing.getStatus() == null) existing.setStatus("ACTIVE");
+                    if (existing.getLicenseIssuedDate() == null) {
+                        if ("LY 5234".equals(existing.getVehicleNumber()) || "LY 6528".equals(existing.getVehicleNumber())) {
+                            existing.setLicenseIssuedDate(today.minusYears(1).plusDays(18));
+                            existing.setLicenseExpiryDate(existing.getLicenseIssuedDate().plusYears(1));
+                        } else {
+                            existing.setLicenseIssuedDate(today.minusMonths(2));
+                            existing.setLicenseExpiryDate(existing.getLicenseIssuedDate().plusYears(1));
+                        }
+                    }
                     vehicleRepository.save(existing);
                 } else {
+                    v.setLicenseIssuedDate(today.minusMonths(2));
+                    v.setLicenseExpiryDate(v.getLicenseIssuedDate().plusYears(1));
                     vehicleRepository.save(v);
                 }
             }

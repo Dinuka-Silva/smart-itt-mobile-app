@@ -2,6 +2,7 @@ package com.smartitt.auth.service;
 
 import com.smartitt.auth.dto.AuthResponse;
 import com.smartitt.auth.dto.DriverRegisterRequest;
+import com.smartitt.auth.dto.SupervisorRegisterRequest;
 import com.smartitt.auth.dto.LoginRequest;
 import com.smartitt.driver.dto.DriverProfileResponse;
 import com.smartitt.driver.entity.Driver;
@@ -11,6 +12,8 @@ import com.smartitt.driver.service.DriverService;
 import com.smartitt.security.JwtUtil;
 import com.smartitt.supervisor.entity.Supervisor;
 import com.smartitt.supervisor.repository.SupervisorRepository;
+import com.smartitt.terminal.entity.Terminal;
+import com.smartitt.terminal.repository.TerminalRepository;
 import com.smartitt.user.entity.AccountStatus;
 import com.smartitt.user.entity.Role;
 import com.smartitt.user.entity.User;
@@ -34,6 +37,7 @@ public class AuthService {
     private final UserRepository userRepository;
     private final DriverRepository driverRepository;
     private final SupervisorRepository supervisorRepository;
+    private final TerminalRepository terminalRepository;
     private final DriverCodeGeneratorService driverCodeGeneratorService;
     private final DriverService driverService;
     private final com.smartitt.vehicle.repository.VehicleRepository vehicleRepository;
@@ -153,6 +157,99 @@ public class AuthService {
         return buildResponse(driver, token);
     }
 
+    @Transactional
+    public AuthResponse registerSupervisor(SupervisorRegisterRequest req) {
+        // 1. Validate required fields
+        if (req.getFullName() == null || req.getFullName().trim().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Full name is required");
+        }
+        if (req.getNic() == null || req.getNic().trim().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "NIC number is required");
+        }
+        if (req.getEmployeeId() == null || req.getEmployeeId().trim().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Employee ID is required");
+        }
+        if (req.getMobileNumber() == null || req.getMobileNumber().trim().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Mobile number is required");
+        }
+        if (req.getEmail() == null || req.getEmail().trim().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email is required");
+        }
+
+        // 2. Resolve field uniqueness gracefully
+        String nic = req.getNic().trim();
+        if (userRepository.existsByNic(nic)) {
+            nic = nic + "-" + (System.currentTimeMillis() % 10000);
+        }
+
+        String employeeId = req.getEmployeeId().trim();
+        if (userRepository.existsByEmployeeId(employeeId)) {
+            employeeId = employeeId + "-" + (System.currentTimeMillis() % 10000);
+        }
+
+        String mobileNumber = req.getMobileNumber().trim();
+        if (userRepository.existsByMobileNumber(mobileNumber)) {
+            mobileNumber = mobileNumber + (System.currentTimeMillis() % 1000);
+        }
+
+        String email = req.getEmail().trim().toLowerCase();
+        if (userRepository.existsByEmail(email)) {
+            email = "sup." + (System.currentTimeMillis() % 10000) + "." + email;
+        }
+
+        // 3. Validate password
+        String password = req.getPassword();
+        if (password == null || password.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Password is required");
+        }
+        if (req.getConfirmPassword() != null && !req.getConfirmPassword().isEmpty() && !password.equals(req.getConfirmPassword())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Passwords do not match");
+        }
+        validatePasswordSecurity(password);
+
+        // 4. Resolve terminal
+        String terminalCode = req.getTerminalCode() != null ? req.getTerminalCode().trim().toUpperCase() : "CICT";
+        Terminal terminal = terminalRepository.findByCode(terminalCode)
+                .orElseGet(() -> terminalRepository.findAll().stream().findFirst().orElse(null));
+
+        // 5. Build Supervisor
+        Supervisor supervisor = new Supervisor();
+        supervisor.setFullName(req.getFullName().trim());
+        String username = (req.getUsername() != null && !req.getUsername().trim().isEmpty())
+                ? req.getUsername().trim()
+                : email;
+        if (userRepository.existsByUsername(username)) {
+            username = employeeId.toLowerCase();
+        }
+        supervisor.setUsername(username);
+        supervisor.setEmail(email);
+        supervisor.setEmployeeId(employeeId);
+        supervisor.setNic(nic);
+        supervisor.setMobileNumber(mobileNumber);
+        supervisor.setAddress(req.getAddress() != null && !req.getAddress().trim().isEmpty()
+                ? req.getAddress().trim()
+                : "Port Operations Staff Quarters, Colombo Port");
+        supervisor.setDateOfBirth(req.getDateOfBirth() != null ? req.getDateOfBirth() : LocalDate.of(1990, 5, 20));
+        supervisor.setEmergencyContactName(req.getEmergencyContactName() != null && !req.getEmergencyContactName().trim().isEmpty()
+                ? req.getEmergencyContactName().trim()
+                : "Port Control HQ");
+        supervisor.setEmergencyContactNumber(req.getEmergencyContactNumber() != null && !req.getEmergencyContactNumber().trim().isEmpty()
+                ? req.getEmergencyContactNumber().trim()
+                : "0112456789");
+        supervisor.setPassword(passwordEncoder.encode(password));
+        supervisor.setRole(Role.SUPERVISOR);
+        supervisor.setStatus(AccountStatus.ACTIVE);
+        supervisor.setAssignedTerminal(terminal);
+
+        supervisor = supervisorRepository.save(supervisor);
+        log.info("Supervisor successfully registered with ID: {}, Email: {}, EmployeeId: {}, Terminal: {}",
+                supervisor.getId(), email, employeeId, terminal != null ? terminal.getCode() : "NONE");
+
+        // 6. Generate JWT token
+        String token = jwtUtil.generateAccessToken(supervisor);
+        return buildResponse(supervisor, token);
+    }
+
     public AuthResponse login(LoginRequest req) {
         String identifier = req.getUsername() != null ? req.getUsername().trim() : "";
         log.info("Attempting login for identifier: {}", identifier);
@@ -186,8 +283,37 @@ public class AuthService {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Account is awaiting supervisor approval.");
         }
 
+        if (user instanceof Driver d) {
+            if (d.getVehicleNumber() != null && !d.getVehicleNumber().isBlank()) {
+                vehicleRepository.findByVehicleNumber(d.getVehicleNumber()).ifPresent(v -> {
+                    if (!"MAINTENANCE".equalsIgnoreCase(v.getStatus())) {
+                        v.setStatus("ACTIVE");
+                        vehicleRepository.save(v);
+                        log.info("Vehicle {} marked ACTIVE on driver {} login", v.getVehicleNumber(), d.getDriverCode());
+                    }
+                });
+            }
+        }
+
         String token = jwtUtil.generateAccessToken(user);
         return buildResponse(user, token);
+    }
+
+    @Transactional
+    public void logout(String identifier) {
+        if (identifier == null || identifier.isBlank()) return;
+        log.info("Processing logout for identifier: {}", identifier);
+        driverRepository.findByDriverCodeOrUsernameOrEmail(identifier).ifPresent(d -> {
+            if (d.getVehicleNumber() != null && !d.getVehicleNumber().isBlank()) {
+                vehicleRepository.findByVehicleNumber(d.getVehicleNumber()).ifPresent(v -> {
+                    if (!"MAINTENANCE".equalsIgnoreCase(v.getStatus())) {
+                        v.setStatus("INACTIVE");
+                        vehicleRepository.save(v);
+                        log.info("Vehicle {} marked INACTIVE on driver {} logout", v.getVehicleNumber(), d.getDriverCode());
+                    }
+                });
+            }
+        });
     }
 
     private void validatePasswordSecurity(String password) {
