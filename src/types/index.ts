@@ -22,7 +22,7 @@ export interface FleetVehicle {
   vehicleNumber: string;     // Prime Mover Tractor License (LY 5234...)
   operator: FleetOperator;
   trailerSize: '40FT' | '2x20FT' | string;
-  status: 'ACTIVE' | 'MAINTENANCE' | 'IN_TRANSIT';
+  status: 'ACTIVE' | 'MAINTENANCE' | 'IN_TRANSIT' | 'INACTIVE';
   driverCode?: string;
   driverName?: string;
   driverMobile?: string;
@@ -33,6 +33,11 @@ export interface FleetVehicle {
   hitchStatus?: 'EMPTY' | 'LOADED_40FT' | 'LOADED_2x20FT';
   currentLocation?: string;
   tyreWearScore?: number; // e.g. 96%
+  licenseIssuedDate?: string; // YYYY-MM-DD (updated by admin)
+  licenseExpiryDate?: string; // YYYY-MM-DD (valid for 1 year from issued date)
+  daysUntilExpiry?: number;
+  renewalDue?: boolean; // triggers when within 30 days
+  licenseStatus?: 'VALID' | 'RENEWAL_DUE' | 'EXPIRED';
 }
 
 export type AccountStatus = 'ACTIVE' | 'SUSPENDED' | 'DEACTIVATED';

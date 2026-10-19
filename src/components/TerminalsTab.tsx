@@ -1,14 +1,5 @@
 import React, { useState } from 'react';
-import {
-  Building2,
-  ArrowRight,
-  TrendingUp,
-  Activity,
-  AlertTriangle,
-  Clock,
-  Layers,
-  ShieldCheck,
-} from 'lucide-react';
+import { Building2, Layers } from 'lucide-react';
 import { TerminalInfo, TerminalCode } from '../types';
 
 interface TerminalsTabProps {
@@ -16,9 +7,11 @@ interface TerminalsTabProps {
 }
 
 export const TerminalsTab: React.FC<TerminalsTabProps> = ({ terminals }) => {
-  const [selectedTerminal, setSelectedTerminal] = useState<TerminalCode>('JCT');
+  const [selectedTerminal, setSelectedTerminal] = useState<TerminalCode | null>(null);
 
-  const activeTerm = terminals.find((t) => t.code === selectedTerminal) || terminals[0];
+  const handleSelect = (code: TerminalCode) => {
+    setSelectedTerminal((prev) => (prev === code ? null : code));
+  };
 
   // Inter-terminal traffic exchange matrix
   const matrix: Record<TerminalCode, Record<TerminalCode, number>> = {
@@ -49,7 +42,7 @@ export const TerminalsTab: React.FC<TerminalsTabProps> = ({ terminals }) => {
           <button
             key={t.code}
             className={`btn ${selectedTerminal === t.code ? 'btn-primary' : 'btn-secondary'}`}
-            onClick={() => setSelectedTerminal(t.code)}
+            onClick={() => handleSelect(t.code)}
             style={{
               borderColor: selectedTerminal === t.code ? t.color : undefined,
               gap: '8px',
@@ -69,132 +62,6 @@ export const TerminalsTab: React.FC<TerminalsTabProps> = ({ terminals }) => {
             </span>
           </button>
         ))}
-      </div>
-
-      {/* Selected Terminal Focus Panel */}
-      <div
-        className="panel"
-        style={{
-          borderLeft: `4px solid ${activeTerm.color}`,
-          padding: '24px',
-          background: 'linear-gradient(135deg, rgba(17, 26, 46, 0.95) 0%, rgba(14, 21, 38, 0.95) 100%)',
-        }}
-      >
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'flex-start',
-            flexWrap: 'wrap',
-            gap: '16px',
-            marginBottom: '20px',
-          }}
-        >
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <span
-                style={{
-                  fontFamily: 'var(--font-display)',
-                  fontSize: '28px',
-                  fontWeight: 800,
-                  color: activeTerm.color,
-                }}
-              >
-                {activeTerm.code}
-              </span>
-              <span className="badge badge-active">{activeTerm.congestionLevel} CONGESTION</span>
-            </div>
-            <h4 style={{ fontSize: '15px', color: '#f1f5f9', fontWeight: 600, marginTop: '2px' }}>
-              {activeTerm.fullName}
-            </h4>
-          </div>
-
-          <div style={{ display: 'flex', gap: '20px' }}>
-            <div style={{ textAlign: 'right' }}>
-              <span style={{ fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase' }}>
-                Average Dwell
-              </span>
-              <div
-                style={{
-                  fontFamily: 'var(--font-mono)',
-                  fontSize: '20px',
-                  fontWeight: 800,
-                  color: '#fbbf24',
-                }}
-              >
-                {activeTerm.avgDwellMinutes} mins
-              </div>
-            </div>
-            <div style={{ textAlign: 'right' }}>
-              <span style={{ fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase' }}>
-                Daily TEU
-              </span>
-              <div
-                style={{
-                  fontFamily: 'var(--font-mono)',
-                  fontSize: '20px',
-                  fontWeight: 800,
-                  color: '#34d399',
-                }}
-              >
-                {activeTerm.teuHandledToday} TEU
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Corridor Breakdown to Other 5 Terminals */}
-        <h4
-          style={{
-            fontSize: '13px',
-            textTransform: 'uppercase',
-            letterSpacing: '0.05em',
-            color: '#94a3b8',
-            marginBottom: '12px',
-          }}
-        >
-          Corridor Route Distribution from {activeTerm.code}
-        </h4>
-        <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(5, 1fr)' }}>
-          {terminals
-            .filter((t) => t.code !== activeTerm.code)
-            .map((target) => {
-              const transferCount = matrix[activeTerm.code][target.code] || 0;
-              return (
-                <div
-                  key={target.code}
-                  style={{
-                    background: 'var(--bg-input)',
-                    border: '1px solid var(--border-subtle)',
-                    borderRadius: 'var(--radius-md)',
-                    padding: '12px 14px',
-                  }}
-                >
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      marginBottom: '6px',
-                    }}
-                  >
-                    <span style={{ fontWeight: 800, color: target.color }}>{target.code}</span>
-                    <span
-                      style={{
-                        fontFamily: 'var(--font-mono)',
-                        fontSize: '16px',
-                        fontWeight: 800,
-                        color: '#f1f5f9',
-                      }}
-                    >
-                      {transferCount} runs
-                    </span>
-                  </div>
-                  <div style={{ fontSize: '11px', color: '#64748b' }}>{target.fullName.split(' ')[0]} Berth</div>
-                </div>
-              );
-            })}
-        </div>
       </div>
 
       {/* 6x6 Inter-Terminal Exchange Matrix Table */}
@@ -225,8 +92,16 @@ export const TerminalsTab: React.FC<TerminalsTabProps> = ({ terminals }) => {
             <tbody>
               {terminals.map((origin) => {
                 let rowTotal = 0;
+                const isSelected = selectedTerminal === origin.code;
                 return (
-                  <tr key={origin.code}>
+                  <tr
+                    key={origin.code}
+                    style={{
+                      background: isSelected ? 'rgba(14, 165, 233, 0.12)' : undefined,
+                      boxShadow: isSelected ? `inset 3px 0 0 ${origin.color}` : undefined,
+                      transition: 'background 0.2s ease',
+                    }}
+                  >
                     <td style={{ textAlign: 'left', fontWeight: 800, color: origin.color, whiteSpace: 'nowrap' }}>
                       {origin.code} ({origin.fullName.split(' ')[0]})
                     </td>

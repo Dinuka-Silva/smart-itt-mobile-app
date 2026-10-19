@@ -11,29 +11,37 @@ import {
   ArrowUpRight,
   TrendingUp,
 } from 'lucide-react';
-import { DashboardStats, TerminalInfo, IttTrip } from '../types';
+import { DashboardStats, TerminalInfo, IttTrip, FleetVehicle } from '../types';
 
 interface OverviewTabProps {
   stats: DashboardStats;
   terminals: TerminalInfo[];
   trips: IttTrip[];
+  vehicles?: FleetVehicle[];
   onApproveTrip: (tripId: string) => void;
   onRejectTrip: (tripId: string) => void;
   onViewTrip: (trip: IttTrip) => void;
   onNavigateToTab: (tab: any) => void;
+  onUpdateLicense?: (vehicleNumber: string, issuedDate?: string) => void;
 }
 
 export const OverviewTab: React.FC<OverviewTabProps> = ({
   stats,
   terminals,
   trips,
+  vehicles = [],
   onApproveTrip,
   onRejectTrip,
   onViewTrip,
   onNavigateToTab,
+  onUpdateLicense,
 }) => {
   const pendingTrips = trips.filter((t) => t.status === 'PENDING_APPROVAL');
   const activeTrips = trips.filter((t) => t.status === 'IN_PROGRESS');
+
+  const renewalDueVehicles = vehicles.filter(
+    (v) => v.renewalDue === true || (v.daysUntilExpiry !== undefined && v.daysUntilExpiry !== null && v.daysUntilExpiry <= 30)
+  );
 
   return (
     <div>
@@ -76,6 +84,110 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
           </button>
         </div>
       </div>
+
+      {/* ─── URGENT VEHICLE LICENSE RENEWAL NOTIFICATION BANNER (DISAPPEARS WHEN NO VEHICLES WITHIN 30 DAYS) ─── */}
+      {renewalDueVehicles.length > 0 && (
+        <div
+          className="card"
+          style={{
+            padding: '14px 18px',
+            marginBottom: '18px',
+            background: 'linear-gradient(90deg, rgba(239, 68, 68, 0.14) 0%, rgba(245, 158, 11, 0.08) 60%, rgba(15, 23, 42, 0.8) 100%)',
+            border: '1px solid rgba(239, 68, 68, 0.45)',
+            boxShadow: '0 0 16px rgba(239, 68, 68, 0.15)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '14px',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', flex: 1, minWidth: '280px' }}>
+            <div
+              style={{
+                width: '36px',
+                height: '36px',
+                borderRadius: '8px',
+                background: 'rgba(239, 68, 68, 0.2)',
+                border: '1px solid rgba(239, 68, 68, 0.5)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+              }}
+            >
+              <AlertTriangle size={20} color="#f87171" />
+            </div>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                <span style={{ fontWeight: 800, fontSize: '13px', color: '#fca5a5', letterSpacing: '0.04em' }}>
+                  ⚠️ VEHICLE REVENUE LICENSE RENEWAL NOTIFICATION ({renewalDueVehicles.length} PRIME MOVER{renewalDueVehicles.length > 1 ? 'S' : ''} DUE WITHIN 30 DAYS)
+                </span>
+                <span className="badge badge-amber" style={{ fontSize: '10px' }}>
+                  1-MONTH WINDOW
+                </span>
+              </div>
+              <p style={{ margin: '4px 0 6px 0', fontSize: '11px', color: '#cbd5e1', lineHeight: 1.4 }}>
+                The following vehicle revenue licenses are expiring within 1 month. Admin updating or renewing each license certifies it for <b>1 year</b>, immediately clearing the notification across Driver Cockpits, Supervisor Panel, and Admin Dashboard:
+              </p>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                {renewalDueVehicles.map((rv) => (
+                  <span
+                    key={rv.id}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '5px',
+                      background: 'rgba(15, 23, 42, 0.7)',
+                      border: '1px solid rgba(245, 158, 11, 0.4)',
+                      borderRadius: '6px',
+                      padding: '2px 8px',
+                      fontSize: '11px',
+                      fontFamily: 'monospace',
+                      color: '#fef08a',
+                    }}
+                  >
+                    <strong>{rv.cheNumber}</strong> ({rv.vehicleNumber}) —{' '}
+                    <span style={{ color: rv.daysUntilExpiry != null && rv.daysUntilExpiry <= 0 ? '#f87171' : '#f59e0b' }}>
+                      {rv.daysUntilExpiry != null ? (rv.daysUntilExpiry <= 0 ? 'EXPIRED' : `${rv.daysUntilExpiry}d left`) : 'Renewal Due'}
+                    </span>
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+            {onUpdateLicense && (
+              <button
+                className="btn btn-primary btn-sm"
+                onClick={() => {
+                  renewalDueVehicles.forEach((rv) => onUpdateLicense(rv.vehicleNumber));
+                }}
+                style={{
+                  background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                  borderColor: '#10b981',
+                  color: '#ffffff',
+                  fontWeight: 700,
+                  fontSize: '11px',
+                  gap: '6px',
+                }}
+                title="Certify all due vehicles for 1 full year from today"
+              >
+                <CheckCircle2 size={13} />
+                <span>Renew All (1 Yr Valid)</span>
+              </button>
+            )}
+            <button
+              className="btn btn-secondary btn-sm"
+              onClick={() => onNavigateToTab('fleet')}
+              style={{ fontSize: '11px', gap: '5px', borderColor: 'rgba(239, 68, 68, 0.5)', color: '#fca5a5' }}
+            >
+              <span>Manage Fleet Licenses</span>
+              <ArrowRight size={12} />
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* SCK Logistics Daily Operations Banner */}
       <div

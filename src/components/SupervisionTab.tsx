@@ -727,11 +727,11 @@ export const SupervisionTab: React.FC<SupervisionTabProps> = ({
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <Truck size={16} color="#f59e0b" />
               <h3 style={{ fontSize: '14px', fontWeight: 700, margin: 0 }}>
-                SCK Heavy Prime Mover Fleet & Telematics Control ({filteredVehicles.length} Units)
+                SCK Heavy Prime Mover Fleet & Telematics Control (15 Units)
               </h3>
             </div>
             <span style={{ fontSize: '11px', color: '#94a3b8' }}>
-              Chassis telematics, fuel levels, 40FT tri-axle skeletal hitch status, and PM maintenance
+              Authoritative port chassis telematics, assigned drivers, and live fleet status
             </span>
           </div>
 
@@ -742,16 +742,22 @@ export const SupervisionTab: React.FC<SupervisionTabProps> = ({
                   <th style={{ minWidth: '120px', whiteSpace: 'nowrap' }}>CHE Unit</th>
                   <th style={{ minWidth: '130px', whiteSpace: 'nowrap' }}>Tractor License</th>
                   <th style={{ minWidth: '140px', whiteSpace: 'nowrap' }}>Operator / Owner</th>
-                  <th style={{ minWidth: '120px', whiteSpace: 'nowrap' }}>Fleet Status</th>
-                  <th style={{ minWidth: '150px', whiteSpace: 'nowrap' }}>Fuel / Battery Level</th>
-                  <th style={{ minWidth: '150px', whiteSpace: 'nowrap' }}>Assigned Driver</th>
+                  <th style={{ minWidth: '130px', whiteSpace: 'nowrap' }}>Fleet Status</th>
+                  <th style={{ minWidth: '180px', whiteSpace: 'nowrap' }}>Assigned Driver</th>
                   <th style={{ minWidth: '120px', whiteSpace: 'nowrap' }}>Next Service</th>
                   <th style={{ minWidth: '140px', whiteSpace: 'nowrap', textAlign: 'right' }}>Fleet Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredVehicles.map((vehicle) => {
-                  const fuel = vehicle.fuelLevel || 85;
+                  const statusColor =
+                    vehicle.status === 'ACTIVE'
+                      ? '#10b981'
+                      : vehicle.status === 'IN_TRANSIT'
+                      ? '#06b6d4'
+                      : vehicle.status === 'MAINTENANCE'
+                      ? '#f59e0b'
+                      : '#94a3b8';
 
                   return (
                     <tr key={vehicle.id}>
@@ -790,45 +796,30 @@ export const SupervisionTab: React.FC<SupervisionTabProps> = ({
                             height: '28px',
                             borderRadius: '6px',
                             fontWeight: 700,
-                            color:
-                              vehicle.status === 'ACTIVE'
-                                ? '#10b981'
-                                : vehicle.status === 'IN_TRANSIT'
-                                ? '#06b6d4'
-                                : '#f43f5e',
+                            color: statusColor,
                             background: 'rgba(15, 23, 42, 0.8)',
+                            borderColor: statusColor + '55',
                           }}
                         >
                           <option value="ACTIVE">ACTIVE</option>
+                          <option value="INACTIVE">INACTIVE</option>
                           <option value="IN_TRANSIT">IN TRANSIT</option>
                           <option value="MAINTENANCE">MAINTENANCE</option>
                         </select>
                       </td>
                       <td>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <div style={{ flex: 1, background: 'rgba(255,255,255,0.08)', height: '6px', borderRadius: '3px', overflow: 'hidden' }}>
-                            <div
-                              style={{
-                                width: `${fuel}%`,
-                                height: '100%',
-                                background: fuel > 50 ? '#10b981' : fuel > 25 ? '#f59e0b' : '#f43f5e',
-                              }}
-                            />
-                          </div>
-                          <span style={{ fontSize: '11px', fontFamily: 'monospace', color: '#cbd5e1' }}>{fuel}%</span>
-                        </div>
-                      </td>
-                      <td>
                         {vehicle.driverName ? (
                           <div>
-                            <div style={{ fontWeight: 600, fontSize: '12px', color: '#f8fafc' }}>
+                            <div style={{ fontWeight: 700, fontSize: '12px', color: '#f8fafc' }}>
                               {vehicle.driverName}
                             </div>
-                            <div style={{ fontSize: '10px', color: '#64748b' }}>{vehicle.driverCode}</div>
+                            <div style={{ fontSize: '11px', color: '#64748b' }}>
+                              {vehicle.driverCode} {vehicle.driverMobile ? `• ${vehicle.driverMobile}` : ''}
+                            </div>
                           </div>
                         ) : (
                           <span style={{ fontSize: '11px', color: '#64748b', fontStyle: 'italic' }}>
-                            Unassigned
+                            Unassigned Pool
                           </span>
                         )}
                       </td>
@@ -847,10 +838,11 @@ export const SupervisionTab: React.FC<SupervisionTabProps> = ({
                           style={{
                             padding: '4px 8px',
                             fontSize: '11px',
-                            color: vehicle.status === 'MAINTENANCE' ? '#10b981' : '#f87171',
+                            color: vehicle.status === 'MAINTENANCE' ? '#10b981' : '#f59e0b',
+                            borderColor: vehicle.status === 'MAINTENANCE' ? 'rgba(16, 185, 129, 0.3)' : 'rgba(245, 158, 11, 0.3)',
                           }}
                         >
-                          {vehicle.status === 'MAINTENANCE' ? 'Clear PM' : 'Flag PM'}
+                          {vehicle.status === 'MAINTENANCE' ? 'Exit Maint' : 'Set Maint'}
                         </button>
                       </td>
                     </tr>

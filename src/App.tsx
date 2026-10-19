@@ -14,11 +14,35 @@ import { TripDetailModal } from './components/TripDetailModal';
 import { AddVehicleModal } from './components/AddVehicleModal';
 import { AddDriverModal } from './components/AddDriverModal';
 import { CreateTripModal } from './components/CreateTripModal';
+import { LoginPage, WebUser } from './components/LoginPage';
 
 import { adminDataService } from './services/dataService';
 import { IttTrip } from './types';
 
+const USER_KEY = 'smart_itt_web_user';
+const TOKEN_KEY = 'smart_itt_web_token';
+
 export function App() {
+  // ─── Auth ──────────────────────────────────────────────────────────────────
+  const [currentUser, setCurrentUser] = useState<WebUser | null>(() => {
+    try {
+      const raw = localStorage.getItem(USER_KEY);
+      if (raw) return JSON.parse(raw) as WebUser;
+    } catch {}
+    return null;
+  });
+
+  const handleLogin = (user: WebUser) => {
+    setCurrentUser(user);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem(USER_KEY);
+    localStorage.removeItem(TOKEN_KEY);
+    setCurrentUser(null);
+  };
+
+  // ─── Navigation ────────────────────────────────────────────────────────────
   const [currentTab, setCurrentTab] = useState<AdminTab>(() => {
     const params = new URLSearchParams(window.location.search);
     const hash = window.location.hash.replace('#', '');
@@ -38,7 +62,7 @@ export function App() {
   });
   const [, setTick] = useState(0);
 
-  // Modals
+  // ─── Modals ────────────────────────────────────────────────────────────────
   const [addVehicleOpen, setAddVehicleOpen] = useState(false);
   const [addDriverOpen, setAddDriverOpen] = useState(false);
   const [createTripOpen, setCreateTripOpen] = useState(false);
@@ -52,6 +76,12 @@ export function App() {
     return unsubscribe;
   }, []);
 
+  // ─── Show login screen if not authenticated ─────────────────────────────
+  if (!currentUser) {
+    return <LoginPage onLogin={handleLogin} />;
+  }
+
+  // ─── Data ──────────────────────────────────────────────────────────────────
   const stats = adminDataService.getDashboardStats();
   const terminals = adminDataService.getTerminals();
   const vehicles = adminDataService.getVehicles();
@@ -59,9 +89,9 @@ export function App() {
   const trips = adminDataService.getTrips();
   const supervisors = adminDataService.getSupervisors();
 
-  // Handlers
+  // ─── Handlers ─────────────────────────────────────────────────────────────
   const handleApproveTrip = (tripId: string) => {
-    adminDataService.approveTrip(tripId);
+    adminDataService.approveTrip(tripId, currentUser.name);
     if (inspectedTrip && inspectedTrip.id === tripId) {
       setInspectedTrip(adminDataService.getTripById(tripId) || null);
     }
@@ -69,12 +99,11 @@ export function App() {
 
   const handleRejectTrip = (tripId: string, reason?: string) => {
     if (!reason) {
-      // If called without reason, open inspect modal to prompt reason
       const target = trips.find((t) => t.id === tripId);
       if (target) setInspectedTrip(target);
       return;
     }
-    adminDataService.rejectTrip(tripId, reason);
+    adminDataService.rejectTrip(tripId, reason, currentUser.name);
     if (inspectedTrip && inspectedTrip.id === tripId) {
       setInspectedTrip(adminDataService.getTripById(tripId) || null);
     }
@@ -105,7 +134,7 @@ export function App() {
 
       {/* Main Administrative Viewport */}
       <div className="main-viewport">
-        <Navbar />
+        <Navbar currentUser={currentUser} onLogout={handleLogout} />
 
         <main className="content-area">
           {currentTab === 'overview' && (
@@ -113,10 +142,12 @@ export function App() {
               stats={stats}
               terminals={terminals}
               trips={trips}
+              vehicles={vehicles}
               onApproveTrip={handleApproveTrip}
               onRejectTrip={(id) => handleRejectTrip(id)}
               onViewTrip={setInspectedTrip}
               onNavigateToTab={setCurrentTab}
+              onUpdateLicense={(id, date) => adminDataService.updateVehicleLicense(id, date)}
             />
           )}
 
@@ -152,6 +183,7 @@ export function App() {
             <FleetTab
               vehicles={vehicles}
               onUpdateStatus={(id, status) => adminDataService.updateVehicleStatus(id, status)}
+              onUpdateLicense={(id, date) => adminDataService.updateVehicleLicense(id, date)}
               onOpenAddVehicleModal={() => setAddVehicleOpen(true)}
             />
           )}
