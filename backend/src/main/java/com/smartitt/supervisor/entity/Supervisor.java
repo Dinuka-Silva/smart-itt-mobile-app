@@ -20,7 +20,7 @@ import lombok.Setter;
 public class Supervisor extends User {
 
     @ManyToOne
-    @JoinColumn(name = "assigned_terminal_id", nullable = false)
+    @JoinColumn(name = "assigned_terminal_id", nullable = true)
     private Terminal assignedTerminal;
 
 }

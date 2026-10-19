@@ -29,7 +29,7 @@ export interface SupervisorRegisterRequest {
   employeeId: string;
   mobileNumber: string;
   email: string;
-  terminalCode: string; // CICT, SAGT, JCT, ECT, CWIT, UCT
+  terminalCode?: string; // Optional: Supervisors oversee all port terminals
   address?: string;
   dateOfBirth?: string;
   emergencyContactName?: string;

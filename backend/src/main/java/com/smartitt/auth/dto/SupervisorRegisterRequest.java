@@ -30,8 +30,8 @@ public class SupervisorRegisterRequest {
     @NotBlank(message = "Email is required")
     private String email;
 
-    @NotBlank(message = "Assigned terminal code is required")
-    private String terminalCode; // e.g., CICT, SAGT, JCT, ECT, CWIT, UCT
+    // Optional: Supervisors oversee all port terminals across the SLPA network
+    private String terminalCode;
 
     private String address;
 

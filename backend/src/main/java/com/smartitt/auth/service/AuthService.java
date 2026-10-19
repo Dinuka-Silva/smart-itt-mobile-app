@@ -207,10 +207,11 @@ public class AuthService {
         }
         validatePasswordSecurity(password);
 
-        // 4. Resolve terminal
-        String terminalCode = req.getTerminalCode() != null ? req.getTerminalCode().trim().toUpperCase() : "CICT";
-        Terminal terminal = terminalRepository.findByCode(terminalCode)
-                .orElseGet(() -> terminalRepository.findAll().stream().findFirst().orElse(null));
+        // 4. Resolve terminal (supervisors oversee the entire port network, optional assignment)
+        Terminal terminal = null;
+        if (req.getTerminalCode() != null && !req.getTerminalCode().trim().isEmpty()) {
+            terminal = terminalRepository.findByCode(req.getTerminalCode().trim().toUpperCase()).orElse(null);
+        }
 
         // 5. Build Supervisor
         Supervisor supervisor = new Supervisor();
