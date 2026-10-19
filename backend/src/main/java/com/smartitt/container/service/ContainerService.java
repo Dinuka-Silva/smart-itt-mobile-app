@@ -53,7 +53,33 @@ public class ContainerService {
             checkDigitValid = (expectedCheckDigit == actualCheckDigit);
         }
 
-        // Check duplicates in active trip or database
+        // STEP 1: Check 4 uppercase letters followed by 7 numbers (Total 11 characters)
+        if (!formatValid) {
+            return ValidateContainerResponse.builder()
+                    .valid(false)
+                    .normalizedNumber(normalized)
+                    .isoFormatValid(false)
+                    .checkDigitValid(false)
+                    .duplicate(false)
+                    .message("Invalid format: Container number must be 4 uppercase letters followed by 7 digits (e.g., MSCU1234567).")
+                    .build();
+        }
+
+        // STEP 2: Check ISO 6346 Standard Check Digit
+        if (!checkDigitValid) {
+            return ValidateContainerResponse.builder()
+                    .valid(false)
+                    .normalizedNumber(normalized)
+                    .isoFormatValid(true)
+                    .checkDigitValid(false)
+                    .expectedCheckDigit(expectedCheckDigit)
+                    .actualCheckDigit(actualCheckDigit)
+                    .duplicate(false)
+                    .message("ISO 6346 Check Digit Mismatch: Expected check digit " + expectedCheckDigit + ", but found " + actualCheckDigit + ".")
+                    .build();
+        }
+
+        // STEP 3: Check duplicates in active trip or database
         UUID parsedTripId = null;
         if (tripId != null && !tripId.trim().isEmpty() && !tripId.equals("null") && !tripId.equals("undefined")) {
             try {
@@ -65,8 +91,8 @@ public class ContainerService {
             return ValidateContainerResponse.builder()
                     .valid(false)
                     .normalizedNumber(normalized)
-                    .isoFormatValid(formatValid)
-                    .checkDigitValid(checkDigitValid)
+                    .isoFormatValid(true)
+                    .checkDigitValid(true)
                     .expectedCheckDigit(expectedCheckDigit)
                     .actualCheckDigit(actualCheckDigit)
                     .duplicate(true)
@@ -83,8 +109,8 @@ public class ContainerService {
                 return ValidateContainerResponse.builder()
                         .valid(false)
                         .normalizedNumber(normalized)
-                        .isoFormatValid(formatValid)
-                        .checkDigitValid(checkDigitValid)
+                        .isoFormatValid(true)
+                        .checkDigitValid(true)
                         .expectedCheckDigit(expectedCheckDigit)
                         .actualCheckDigit(actualCheckDigit)
                         .duplicate(true)
@@ -94,30 +120,6 @@ public class ContainerService {
                         .message("Duplicate: Container " + normalized + " is currently loaded on active Trip #" + t.getTripNumber() + " at " + t.getSourceTerminal() + ".")
                         .build();
             }
-        }
-
-        if (!formatValid) {
-            return ValidateContainerResponse.builder()
-                    .valid(false)
-                    .normalizedNumber(normalized)
-                    .isoFormatValid(false)
-                    .checkDigitValid(false)
-                    .duplicate(false)
-                    .message("Invalid format: Container number must be 4 uppercase letters followed by 7 digits (e.g., MSCU1234567).")
-                    .build();
-        }
-
-        if (!checkDigitValid) {
-            return ValidateContainerResponse.builder()
-                    .valid(false)
-                    .normalizedNumber(normalized)
-                    .isoFormatValid(true)
-                    .checkDigitValid(false)
-                    .expectedCheckDigit(expectedCheckDigit)
-                    .actualCheckDigit(actualCheckDigit)
-                    .duplicate(false)
-                    .message("ISO 6346 Check Digit Mismatch: Expected check digit " + expectedCheckDigit + ", but found " + actualCheckDigit + ".")
-                    .build();
         }
 
         return ValidateContainerResponse.builder()

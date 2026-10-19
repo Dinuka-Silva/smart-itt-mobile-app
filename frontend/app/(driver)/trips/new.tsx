@@ -129,19 +129,20 @@ function ContainerValidationPill({
   const [valResult, setValResult] = useState<ValidateContainerResult | null>(null);
   const [checking, setChecking] = useState(false);
 
+  const clean = normalizeContainerNumber(containerNumber);
+
   useEffect(() => {
-    const clean = normalizeContainerNumber(containerNumber);
-    if (!clean || clean.length < 4) {
+    if (!clean) {
       setValResult(null);
       return;
     }
 
-    // 1. Instant client-side validation
+    // 1. Instant client-side check (4 uppercase letters + 7 numbers, then ISO 6346 modulus-11)
     const clientRes = validateIsoClientSide(clean);
     setValResult(clientRes);
 
-    // 2. Authoritative backend duplicate check if format valid
-    if (clientRes.isoFormatValid) {
+    // 2. Authoritative backend duplicate check if format & check digit valid
+    if (clientRes.valid) {
       let cancelled = false;
       setChecking(true);
       containerService.validateContainer(clean)
@@ -163,41 +164,119 @@ function ContainerValidationPill({
     return (
       <View style={vp.hintWrap}>
         <Ionicons name="information-circle-outline" size={13} color="#849396" />
-        <Text style={vp.hintText}>ISO 6346: 4 letters + 6 digits + 1 check digit (e.g. MSCU7721892)</Text>
+        <Text style={vp.hintText}>
+          ISO 6346: 4 Uppercase Letters + 7 Numbers (e.g. MSCU7721892)
+        </Text>
       </View>
     );
   }
 
-  if (!valResult) return null;
+  // Live breakdown
+  const letters = clean.slice(0, 4);
+  const suffix = clean.slice(4);
+  const lettersValid = /^[A-Z]{4}$/.test(letters);
+  const numbersValid = /^\d{7}$/.test(suffix);
 
   return (
-    <View style={[vp.wrap, valResult.valid ? vp.wrapValid : vp.wrapInvalid]}>
-      <Ionicons
-        name={valResult.valid ? 'checkmark-circle' : 'alert-circle'}
-        size={14}
-        color={valResult.valid ? '#22ef7e' : '#ff5252'}
-      />
-      <Text style={[vp.msg, { color: valResult.valid ? '#22ef7e' : '#ff5252' }]}>
-        {valResult.message}
-      </Text>
-      {checking && <ActivityIndicator size="small" color="#00e5ff" style={{ marginLeft: 4 }} />}
+    <View style={vp.container}>
+      {/* Real-time two-stage progress chips */}
+      <View style={vp.stepsRow}>
+        <View style={[vp.stepChip, lettersValid ? vp.stepChipValid : vp.stepChipPending]}>
+          <Ionicons
+            name={lettersValid ? 'checkmark-circle' : 'ellipse-outline'}
+            size={11}
+            color={lettersValid ? '#22ef7e' : '#849396'}
+          />
+          <Text style={[vp.stepChipText, lettersValid && { color: '#22ef7e' }]}>
+            4 Letters ({Math.min(clean.replace(/[^A-Z]/g, '').length, 4)}/4)
+          </Text>
+        </View>
 
-      {!valResult.checkDigitValid && valResult.expectedCheckDigit >= 0 && (
-        <TouchableOpacity
-          style={vp.fixBtn}
-          onPress={() => {
-            const base = normalizeContainerNumber(containerNumber).slice(0, 10);
-            onFixCheckDigit(`${base}${valResult.expectedCheckDigit}`);
-          }}
+        <View style={[vp.stepChip, numbersValid ? vp.stepChipValid : vp.stepChipPending]}>
+          <Ionicons
+            name={numbersValid ? 'checkmark-circle' : 'ellipse-outline'}
+            size={11}
+            color={numbersValid ? '#22ef7e' : '#849396'}
+          />
+          <Text style={[vp.stepChipText, numbersValid && { color: '#22ef7e' }]}>
+            7 Numbers ({Math.min(suffix.replace(/\D/g, '').length, 7)}/7)
+          </Text>
+        </View>
+
+        <View
+          style={[
+            vp.stepChip,
+            valResult?.valid
+              ? vp.stepChipValid
+              : valResult?.isoFormatValid && !valResult?.checkDigitValid
+              ? vp.stepChipError
+              : vp.stepChipPending,
+          ]}
         >
-          <Text style={vp.fixBtnText}>FIX TO {valResult.expectedCheckDigit}</Text>
-        </TouchableOpacity>
+          <Ionicons
+            name={
+              valResult?.valid
+                ? 'shield-checkmark'
+                : valResult?.isoFormatValid && !valResult?.checkDigitValid
+                ? 'alert-circle'
+                : 'ellipse-outline'
+            }
+            size={11}
+            color={
+              valResult?.valid
+                ? '#22ef7e'
+                : valResult?.isoFormatValid && !valResult?.checkDigitValid
+                ? '#ff5252'
+                : '#849396'
+            }
+          />
+          <Text
+            style={[
+              vp.stepChipText,
+              valResult?.valid && { color: '#22ef7e' },
+              valResult?.isoFormatValid && !valResult?.checkDigitValid && { color: '#ff5252' },
+            ]}
+          >
+            ISO Standard
+          </Text>
+        </View>
+      </View>
+
+      {/* Validation Message Box */}
+      {valResult && (
+        <View style={[vp.wrap, valResult.valid ? vp.wrapValid : vp.wrapInvalid]}>
+          <Ionicons
+            name={valResult.valid ? 'checkmark-circle' : 'alert-circle'}
+            size={14}
+            color={valResult.valid ? '#22ef7e' : '#ff5252'}
+          />
+          <Text style={[vp.msg, { color: valResult.valid ? '#22ef7e' : '#ff5252' }]}>
+            {valResult.message}
+          </Text>
+          {checking && <ActivityIndicator size="small" color="#00e5ff" style={{ marginLeft: 4 }} />}
+
+          {!valResult.checkDigitValid && valResult.expectedCheckDigit >= 0 && valResult.isoFormatValid && (
+            <TouchableOpacity
+              style={vp.fixBtn}
+              onPress={() => {
+                const base = normalizeContainerNumber(containerNumber).slice(0, 10);
+                onFixCheckDigit(`${base}${valResult.expectedCheckDigit}`);
+              }}
+              activeOpacity={0.8}
+            >
+              <Text style={vp.fixBtnText}>FIX CHECK DIGIT TO {valResult.expectedCheckDigit}</Text>
+            </TouchableOpacity>
+          )}
+        </View>
       )}
     </View>
   );
 }
 
 const vp = StyleSheet.create({
+  container: {
+    marginBottom: 12,
+  },
   hintWrap: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -211,13 +290,45 @@ const vp = StyleSheet.create({
     color: '#849396',
     fontWeight: '500',
   },
+  stepsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: -2,
+    marginBottom: 6,
+    flexWrap: 'wrap',
+  },
+  stepChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 999,
+    borderWidth: 1,
+  },
+  stepChipPending: {
+    backgroundColor: '#0a101a',
+    borderColor: '#1d2633',
+  },
+  stepChipValid: {
+    backgroundColor: 'rgba(34, 239, 126, 0.08)',
+    borderColor: 'rgba(34, 239, 126, 0.3)',
+  },
+  stepChipError: {
+    backgroundColor: 'rgba(255, 82, 82, 0.08)',
+    borderColor: 'rgba(255, 82, 82, 0.3)',
+  },
+  stepChipText: {
+    fontSize: 10,
+    color: '#849396',
+    fontWeight: '700',
+  },
   wrap: {
     flexDirection: 'row',
     alignItems: 'center',
     flexWrap: 'wrap',
     gap: 6,
-    marginTop: -4,
-    marginBottom: 12,
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 8,
@@ -239,11 +350,11 @@ const vp = StyleSheet.create({
   fixBtn: {
     backgroundColor: '#00e5ff',
     paddingHorizontal: 8,
-    paddingVertical: 3,
+    paddingVertical: 4,
     borderRadius: 4,
   },
   fixBtnText: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '800',
     color: '#00363d',
   },
@@ -297,6 +408,7 @@ function ContainerCard({
             placeholder="e.g. MSCU7721892"
             placeholderTextColor="#849396"
             autoCapitalize="characters"
+            maxLength={11}
             value={entry.containerNumber}
             onChangeText={(v) => onChange('containerNumber', normalizeContainerNumber(v))}
           />
@@ -311,6 +423,7 @@ function ContainerCard({
             placeholder="e.g. TCKU3456789"
             placeholderTextColor="#849396"
             autoCapitalize="characters"
+            maxLength={11}
             value={entry.containerNumber2}
             onChangeText={(v) => onChange('containerNumber2', normalizeContainerNumber(v))}
           />
@@ -327,6 +440,7 @@ function ContainerCard({
             placeholder="e.g. MSCU7721892"
             placeholderTextColor="#849396"
             autoCapitalize="characters"
+            maxLength={11}
             value={entry.containerNumber}
             onChangeText={(v) => onChange('containerNumber', normalizeContainerNumber(v))}
           />
@@ -526,22 +640,38 @@ export default function NewTripScreen() {
           return;
         }
 
-        // A. Format validation: 4 letters + 7 numbers
+        // STEP 1: Strict Format Check — Must contain exactly 4 uppercase letters followed by 7 numbers
         if (!isValidIsoFormat(cNum)) {
+          let reason = 'Must contain exactly 4 uppercase letters followed by 7 numbers (e.g. MSCU7721892).';
+          if (cNum.length !== 11) {
+            reason = `Entered ${cNum.length} characters. Exactly 11 characters required (4 uppercase letters + 7 numbers).`;
+          } else {
+            const prefix = cNum.slice(0, 4);
+            const digits = cNum.slice(4);
+            if (!/^[A-Z]{4}$/.test(prefix)) {
+              reason = `Prefix "${prefix}" must contain 4 uppercase letters (A-Z).`;
+            } else if (!/^\d{7}$/.test(digits)) {
+              reason = `Suffix "${digits}" must contain 7 numeric digits (0-9).`;
+            }
+          }
+
           showAlert(
-            'Invalid Format',
-            `${contLabel} (${cNum}) must follow ISO standard: 4 uppercase letters followed by 7 numbers (e.g. MSCU7721892).`
+            'Invalid Container Format',
+            `${contLabel} (${cNum}) is invalid.\n\n${reason}\n\nPlease verify 4 uppercase letters + 7 numbers before proceeding.`
           );
           return;
         }
 
-        // B. ISO 6346 Check Digit Validation
+        // STEP 2: Strict ISO Standard Check — Modulus-11 check digit verification
         const expectedDigit = computeCheckDigit(cNum);
         const actualDigit = parseInt(cNum[10], 10);
         if (expectedDigit !== actualDigit) {
           showAlert(
-            'Check Digit Mismatch',
-            `${contLabel} (${cNum}) failed ISO 6346 check digit validation.\n\nEntered Check Digit: ${actualDigit}\nExpected Check Digit: ${expectedDigit}\n\nPlease correct the container number before proceeding.`
+            'ISO 6346 Standard Mismatch',
+            `${contLabel} (${cNum}) failed the international ISO 6346 check digit standard.\n\n` +
+            `• Entered Check Digit: ${actualDigit}\n` +
+            `• Required ISO Check Digit: ${expectedDigit}\n\n` +
+            `Please correct the container number to: ${cNum.slice(0, 10)}${expectedDigit}`
           );
           return;
         }
