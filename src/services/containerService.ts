@@ -72,8 +72,33 @@ export function validateIsoClientSide(raw: string): ValidateContainerResult {
     };
   }
 
+  // STEP 1: Verify 4 uppercase letters followed by 7 numeric digits (Total: 11 characters)
   const formatValid = isValidIsoFormat(clean);
   if (!formatValid) {
+    let detail = 'Must be 4 uppercase letters followed by 7 numbers (e.g. MSCU7721892).';
+    if (clean.length < 11) {
+      const letters = clean.slice(0, 4);
+      const isPrefixLetters = /^[A-Z]*$/.test(letters);
+      if (!isPrefixLetters) {
+        detail = 'Prefix must be 4 uppercase letters (e.g. MSCU).';
+      } else if (clean.length < 4) {
+        detail = `Enter 4 letters first (${clean.length}/4 letters).`;
+      } else {
+        const digitsCount = clean.length - 4;
+        detail = `Enter 7 numbers (${digitsCount}/7 digits entered).`;
+      }
+    } else if (clean.length > 11) {
+      detail = `Container number exceeds 11 characters (${clean.length}/11).`;
+    } else {
+      const prefix = clean.slice(0, 4);
+      const suffix = clean.slice(4);
+      if (!/^[A-Z]{4}$/.test(prefix)) {
+        detail = `Prefix "${prefix}" must contain exactly 4 uppercase letters (A-Z).`;
+      } else if (!/^\d{7}$/.test(suffix)) {
+        detail = `Suffix "${suffix}" must contain exactly 7 numeric digits (0-9).`;
+      }
+    }
+
     return {
       valid: false,
       isoFormatValid: false,
@@ -81,11 +106,12 @@ export function validateIsoClientSide(raw: string): ValidateContainerResult {
       expectedCheckDigit: -1,
       actualCheckDigit: -1,
       duplicate: false,
-      message: 'Format error: Must be 4 letters + 7 numbers (e.g. MSCU1234567).',
+      message: `Format: ${detail}`,
       normalizedNumber: clean,
     };
   }
 
+  // STEP 2: Verify ISO 6346 Standard Check Digit (Modulus-11)
   const expected = computeCheckDigit(clean);
   const actual = parseInt(clean.charAt(10), 10);
   const checkDigitValid = expected === actual;
@@ -98,7 +124,7 @@ export function validateIsoClientSide(raw: string): ValidateContainerResult {
       expectedCheckDigit: expected,
       actualCheckDigit: actual,
       duplicate: false,
-      message: `ISO 6346 check digit mismatch: calculated check digit is ${expected}, but container ends with ${actual}.`,
+      message: `ISO 6346 Check Digit Mismatch: calculated is ${expected}, but container ends with ${actual}.`,
       normalizedNumber: clean,
     };
   }
@@ -110,7 +136,7 @@ export function validateIsoClientSide(raw: string): ValidateContainerResult {
     expectedCheckDigit: expected,
     actualCheckDigit: actual,
     duplicate: false,
-    message: `Container ${clean} is ISO 6346 verified.`,
+    message: `✓ ISO 6346 Standard Verified: ${clean} (Check digit ${actual} matches algorithm).`,
     normalizedNumber: clean,
   };
 }
