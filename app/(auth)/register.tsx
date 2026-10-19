@@ -55,7 +55,6 @@ export default function DriverRegisterScreen() {
   const [regRole, setRegRole] = useState<'DRIVER' | 'SUPERVISOR'>(
     params.role?.toLowerCase() === 'supervisor' ? 'SUPERVISOR' : 'DRIVER'
   );
-  const [assignedTerminal, setAssignedTerminal] = useState('CICT');
 
   // Form states
   const [fullName, setFullName] = useState('');
@@ -102,7 +101,6 @@ export default function DriverRegisterScreen() {
       setMobileNumber(`071${randomSuffix}99`);
       setAddress('No. 12, Galle Face Road, Colombo 03');
       setDateOfBirth('1990-05-20');
-      setAssignedTerminal('CICT');
       setEmail(`supervisor${randomSuffix}@smartitt.lk`);
       setEmergencyContactName('Amara Silva (Spouse)');
       setEmergencyContactNumber('0719876543');
@@ -177,7 +175,6 @@ export default function DriverRegisterScreen() {
         employeeId: resolvedEmployeeId,
         mobileNumber: resolvedMobile,
         email: resolvedEmail,
-        terminalCode: assignedTerminal,
         address: resolvedAddress,
         dateOfBirth: dateOfBirth.trim() || '1990-05-20',
         emergencyContactName: resolvedEmergencyName,
@@ -194,7 +191,6 @@ export default function DriverRegisterScreen() {
           ...response.user,
           role: 'SUPERVISOR',
           token: response.token,
-          terminalCode: assignedTerminal,
           fullName: resolvedFullName,
           nic: resolvedNic,
           employeeId: resolvedEmployeeId,
@@ -215,7 +211,6 @@ export default function DriverRegisterScreen() {
           role: 'SUPERVISOR',
           name: resolvedFullName,
           token: `mock-sup-token-${Date.now()}`,
-          terminalCode: assignedTerminal,
           fullName: resolvedFullName,
           nic: resolvedNic,
           employeeId: resolvedEmployeeId,
@@ -590,59 +585,21 @@ export default function DriverRegisterScreen() {
             <View style={styles.cardHeader}>
               <Ionicons name="briefcase" size={18} color="#feb300" />
               <Text style={[styles.cardHeaderText, { color: '#feb300' }]}>
-                2. PORT SUPERVISOR APPOINTMENT & TERMINAL ASSIGNMENT
+                2. PORT SUPERVISOR APPOINTMENT & EMPLOYMENT DETAILS
               </Text>
             </View>
 
-            {/* Assigned Port Terminal Picker */}
-            <View style={styles.fieldGroup}>
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-                <Text style={styles.fieldLabel}>ASSIGNED PORT TERMINAL *</Text>
-                <View style={styles.cheBadgeInline}>
-                  <Ionicons name="location" size={11} color="#00ff88" />
-                  <Text style={styles.cheBadgeInlineText}>{assignedTerminal} SELECTED</Text>
-                </View>
+            {/* Supervisory Operational Scope Banner */}
+            <View style={[styles.terminalDetailBanner, { borderColor: '#feb300', marginBottom: 16 }]}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <Ionicons name="shield-checkmark" size={16} color="#feb300" />
+                <Text style={[styles.terminalDetailName, { color: '#feb300' }]}>
+                  PORT-WIDE SUPERVISORY APPOINTMENT
+                </Text>
               </View>
-
-              <View style={styles.terminalGrid}>
-                {PORT_TERMINALS.map((t) => {
-                  const isSel = assignedTerminal === t.code;
-                  return (
-                    <TouchableOpacity
-                      key={t.code}
-                      style={[
-                        styles.terminalCard,
-                        isSel && { borderColor: t.color, backgroundColor: `${t.color}20` },
-                      ]}
-                      onPress={() => setAssignedTerminal(t.code)}
-                      activeOpacity={0.8}
-                    >
-                      <View style={[styles.terminalDot, { backgroundColor: t.color }]} />
-                      <Text style={[styles.terminalCardCode, isSel && { color: t.color }]}>
-                        {t.code}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
-
-              {/* Selected Terminal Specs */}
-              {(() => {
-                const termInfo = PORT_TERMINALS.find((t) => t.code === assignedTerminal) || PORT_TERMINALS[0];
-                return (
-                  <View style={[styles.terminalDetailBanner, { borderColor: termInfo.color }]}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                      <Ionicons name="boat" size={16} color={termInfo.color} />
-                      <Text style={[styles.terminalDetailName, { color: termInfo.color }]}>
-                        {termInfo.code} — {termInfo.name}
-                      </Text>
-                    </View>
-                    <Text style={styles.terminalDetailDesc}>
-                      Operational Authorization: Inter-Terminal Transport (ITT) Gate Clearance, Container Corridor Telematics & CHE Fleet Supervision.
-                    </Text>
-                  </View>
-                );
-              })()}
+              <Text style={styles.terminalDetailDesc}>
+                Supervisors are authorized across the full SLPA inter-terminal mesh (CICT, SAGT, JCT, ECT, CWIT, UCT) with gate pass approval, container corridor telematics, and CHE fleet dispatch clearance.
+              </Text>
             </View>
 
             <View style={styles.fieldGroup}>
@@ -1072,7 +1029,7 @@ export default function DriverRegisterScreen() {
           <ScrollView contentContainerStyle={styles.modalScroll}>
             {(() => {
               const isSupervisorPass = registeredUser?.role === 'SUPERVISOR' || regRole === 'SUPERVISOR';
-              const termCode = registeredUser?.terminalCode || assignedTerminal || 'CICT';
+              const termCode = registeredUser?.terminalCode || 'CICT';
               const termObj = PORT_TERMINALS.find((t) => t.code === termCode) || PORT_TERMINALS[0];
 
               return (
@@ -1243,9 +1200,9 @@ export default function DriverRegisterScreen() {
                       {isSupervisorPass ? (
                         <>
                           <View style={styles.detailItem}>
-                            <Text style={styles.detailItemLabel}>ASSIGNED TERMINAL</Text>
-                            <Text style={[styles.detailItemValueMono, { color: termObj.color, fontWeight: '900' }]}>
-                              {termObj.code}
+                            <Text style={styles.detailItemLabel}>SUPERVISORY SCOPE</Text>
+                            <Text style={[styles.detailItemValueMono, { color: '#feb300', fontWeight: '900' }]}>
+                              ALL PORT TERMINALS
                             </Text>
                           </View>
                           <View style={styles.detailItem}>
@@ -1278,15 +1235,15 @@ export default function DriverRegisterScreen() {
                       <View style={styles.sectionTitleRow}>
                         <Ionicons name="boat" size={14} color="#feb300" />
                         <Text style={[styles.detailsSectionTitle, { color: '#feb300' }]}>
-                          PORT TERMINAL APPOINTMENT &amp; AUTHORITY CLEARANCE
+                          PORT AUTHORITY APPOINTMENT &amp; CLEARANCE
                         </Text>
                       </View>
 
                       <View style={styles.vehicleBox}>
                         <View style={styles.vehicleRow}>
-                          <Text style={styles.vehicleProp}>DESIGNATED TERMINAL:</Text>
-                          <Text style={[styles.vehicleVal, { color: termObj.color, fontWeight: '900' }]}>
-                            {termObj.code} — {termObj.name}
+                          <Text style={styles.vehicleProp}>AUTHORITY SCOPE:</Text>
+                          <Text style={[styles.vehicleVal, { color: '#feb300', fontWeight: '900' }]}>
+                            CENTRAL MESH · ALL 6 TERMINALS
                           </Text>
                         </View>
                         <View style={styles.vehicleRow}>
