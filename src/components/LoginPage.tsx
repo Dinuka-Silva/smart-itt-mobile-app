@@ -106,6 +106,11 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
 
   return (
     <div style={s.root}>
+      {/* ── watermark background ── */}
+      <div style={s.watermarkWrap}>
+        <img src="/sck-logo.png" alt="" style={s.watermarkImage} />
+      </div>
+
       {/* ── grid overlay ── */}
       <div style={s.gridOverlay} />
 
@@ -234,7 +239,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
         {/* ══ FOOTER ════════════════════════════════════════════ */}
         <div style={s.footerWrap}>
           <div style={s.footerLogoBox}>
-            <img src="/sck-logo.png" alt="SCK" style={{ width: 44, height: 44, borderRadius: 22, objectFit: 'contain' }}
+            <img src="/sck-logo.png" alt="SCK" style={{ width: 44, height: 44, borderRadius: 12, objectFit: 'contain' }}
               onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
           </div>
           <div style={s.footerText}>SCK LOGISTICS (PVT) LTD · PORT &amp; TERMINAL TELEMATICS</div>
@@ -270,6 +275,23 @@ const s: Record<string, React.CSSProperties> = {
     overflow: 'auto',
     zIndex: 9999,
   },
+  watermarkWrap: {
+    position: 'fixed',
+    inset: 0,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    pointerEvents: 'none',
+    zIndex: 0,
+    overflow: 'hidden',
+  },
+  watermarkImage: {
+    width: 'min(75vw, 440px)',
+    height: 'min(75vw, 440px)',
+    objectFit: 'contain',
+    opacity: 0.065,
+    userSelect: 'none',
+  },
   gridOverlay: {
     position: 'fixed',
     inset: 0,
@@ -277,6 +299,7 @@ const s: Record<string, React.CSSProperties> = {
                       linear-gradient(90deg,rgba(0,229,255,0.03) 1px,transparent 1px)`,
     backgroundSize: '48px 48px',
     pointerEvents: 'none',
+    zIndex: 1,
   },
   scroll: {
     position: 'relative',
@@ -287,6 +310,7 @@ const s: Record<string, React.CSSProperties> = {
     display: 'flex',
     flexDirection: 'column',
     gap: '0px',
+    zIndex: 2,
   },
   /* hero */
   hero: {
@@ -313,20 +337,21 @@ const s: Record<string, React.CSSProperties> = {
     letterSpacing: '1.2px',
   },
   logoBadge: {
-    width: '76px',
-    height: '76px',
-    borderRadius: '18px',
-    background: '#0e141d',
-    border: '1.5px solid rgba(0,229,255,0.4)',
+    width: '86px',
+    height: '86px',
+    borderRadius: '22px',
+    background: '#070c14',
+    border: '1.5px solid #dfa837',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
-    boxShadow: '0 4px 24px rgba(0,229,255,0.10)',
+    boxShadow: '0 6px 28px rgba(223,168,55,0.22)',
   },
   heroLogo: {
-    width: '74px',
-    height: '74px',
+    width: '84px',
+    height: '84px',
+    borderRadius: '20px',
     objectFit: 'contain',
   },
   brandTitle: {
@@ -459,15 +484,15 @@ const s: Record<string, React.CSSProperties> = {
   footerLogoBox: {
     width: '48px',
     height: '48px',
-    borderRadius: '24px',
-    background: '#ffffff',
+    borderRadius: '14px',
+    background: '#070c14',
     border: '1.5px solid #dfa837',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
     marginBottom: '4px',
-    boxShadow: '0 2px 10px rgba(0,0,0,0.3)',
+    boxShadow: '0 2px 10px rgba(0,0,0,0.5)',
   },
   footerText: {
     fontSize: '9px',
