@@ -117,13 +117,14 @@ export default function LoginScreen() {
 
   return (
     <View style={styles.root}>
-      {/* Background Watermark with low opacity */}
-      <View style={styles.watermarkWrap} pointerEvents="none">
+      {/* Whole Icon Fullscreen Background with dark overlay */}
+      <View style={styles.backgroundWrap} pointerEvents="none">
         <Image
           source={require('../../assets/icon.png')}
-          style={styles.watermarkImage}
-          resizeMode="contain"
+          style={styles.backgroundImage}
+          resizeMode="cover"
         />
+        <View style={styles.backgroundOverlay} />
       </View>
 
       <ScrollView
@@ -143,13 +144,6 @@ export default function LoginScreen() {
           <View style={styles.companyPill}>
             <Ionicons name="shield-checkmark" size={13} color="#00e5ff" />
             <Text style={styles.companyPillText}>POWERED BY SCK LOGISTICS</Text>
-          </View>
-          <View style={styles.logoBadge}>
-            <Image
-              source={require('../../assets/icon.png')}
-              style={styles.heroLogo}
-              resizeMode="contain"
-            />
           </View>
           <Text
             style={styles.brandTitle}
@@ -327,23 +321,30 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: '#0e141d',
+    backgroundColor: '#070c14',
   },
-  watermarkWrap: {
+  backgroundWrap: {
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    alignItems: 'center',
-    justifyContent: 'center',
     zIndex: 0,
+    overflow: 'hidden',
+    backgroundColor: '#070c14',
   },
-  watermarkImage: {
-    width: '88%',
-    maxWidth: 400,
-    aspectRatio: 1,
-    opacity: 0.08,
+  backgroundImage: {
+    width: '100%',
+    height: '100%',
+    opacity: 0.18,
+  },
+  backgroundOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(7, 12, 20, 0.40)',
   },
   scroll: {
     flexGrow: 1,
@@ -356,7 +357,7 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   hero: {
-    paddingTop: 12,
+    paddingTop: 16,
     paddingBottom: 20,
     alignItems: 'center',
     gap: 8,
@@ -378,27 +379,6 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     color: '#00e5ff',
     letterSpacing: 1.2,
-  },
-  logoBadge: {
-    width: 86,
-    height: 86,
-    borderRadius: 22,
-    backgroundColor: '#070c14',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1.5,
-    borderColor: '#dfa837',
-    elevation: 8,
-    shadowColor: '#dfa837',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 10,
-    overflow: 'hidden',
-  },
-  heroLogo: {
-    width: 84,
-    height: 84,
-    borderRadius: 20,
   },
   brandTitle: {
     fontSize: 22,
