@@ -68,7 +68,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentUser, onLogout }) => {
           <span>SCK LOGISTICS • PORT OF COLOMBO</span>
         </div>
         <div className="brand-text">
-          <h1>SMART ITT Operations Cockpit</h1>
+          <h1>SMART ITT ADMIN PANEL</h1>
           <p>Supervisory Control • Driver Telematics &amp; Vehicle Management</p>
         </div>
       </div>

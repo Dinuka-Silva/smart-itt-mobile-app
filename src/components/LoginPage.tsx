@@ -134,7 +134,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
               onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
           </div>
 
-          <div style={s.brandTitle}>SCK ITT PROJECT</div>
+          <div style={s.brandTitle}>SMART ITT ADMIN PANEL</div>
           <div style={s.brandSubtitle}>INTER-TERMINAL TRANSPORTATION MANAGEMENT SYSTEM</div>
 
           {/* online badge */}

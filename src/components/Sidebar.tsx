@@ -54,8 +54,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
           />
         </div>
         <div className="sidebar-title">
-          <span style={{ color: '#06b6d4', fontWeight: 800 }}>SCK LOGISTICS</span>
-          <span style={{ fontSize: '11px', color: '#94a3b8' }}>ITT Operations HQ</span>
+          <span style={{ color: '#06b6d4', fontWeight: 800 }}>SMART ITT</span>
+          <span style={{ fontSize: '11px', color: '#94a3b8' }}>ADMIN PANEL</span>
         </div>
       </div>
 
