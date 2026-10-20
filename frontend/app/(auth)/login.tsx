@@ -117,6 +117,15 @@ export default function LoginScreen() {
 
   return (
     <View style={styles.root}>
+      {/* Background Watermark with low opacity */}
+      <View style={styles.watermarkWrap} pointerEvents="none">
+        <Image
+          source={require('../../assets/icon.png')}
+          style={styles.watermarkImage}
+          resizeMode="contain"
+        />
+      </View>
+
       <ScrollView
         contentContainerStyle={[
           styles.scroll,
@@ -320,6 +329,22 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#0e141d',
   },
+  watermarkWrap: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 0,
+  },
+  watermarkImage: {
+    width: '88%',
+    maxWidth: 400,
+    aspectRatio: 1,
+    opacity: 0.08,
+  },
   scroll: {
     flexGrow: 1,
     paddingHorizontal: spacing.margin,
@@ -328,6 +353,7 @@ const styles = StyleSheet.create({
     maxWidth: 480,
     width: '100%',
     alignSelf: 'center',
+    zIndex: 1,
   },
   hero: {
     paddingTop: 12,
@@ -354,21 +380,25 @@ const styles = StyleSheet.create({
     letterSpacing: 1.2,
   },
   logoBadge: {
-    width: 76,
-    height: 76,
-    borderRadius: 18,
-    backgroundColor: '#0e141d',
+    width: 86,
+    height: 86,
+    borderRadius: 22,
+    backgroundColor: '#070c14',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1.5,
-    borderColor: 'rgba(0, 229, 255, 0.4)',
+    borderColor: '#dfa837',
     elevation: 8,
+    shadowColor: '#dfa837',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
     overflow: 'hidden',
   },
   heroLogo: {
-    width: 74,
-    height: 74,
-    borderRadius: 16,
+    width: 84,
+    height: 84,
+    borderRadius: 20,
   },
   brandTitle: {
     fontSize: 22,
@@ -528,8 +558,8 @@ const styles = StyleSheet.create({
   footerLogoContainer: {
     width: 48,
     height: 48,
-    borderRadius: 24,
-    backgroundColor: '#ffffff',
+    borderRadius: 14,
+    backgroundColor: '#070c14',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 4,
@@ -541,7 +571,7 @@ const styles = StyleSheet.create({
   footerLogo: {
     width: 44,
     height: 44,
-    borderRadius: 22,
+    borderRadius: 12,
   },
   footer: {
     fontSize: 9,
