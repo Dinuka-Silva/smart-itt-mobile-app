@@ -45,6 +45,17 @@
       "expo-status-bar",
       "expo-sqlite",
       "expo-secure-store"
-    ]
+    ],
+    "extra": {
+      "router": {
+        "asyncRoutes": {
+          "web": true
+        }
+      },
+      "eas": {
+        "projectId": "1ad5e88c-4aa7-4fd0-80af-38fd90585c49"
+      }
+    },
+    "owner": "dinuka-silva"
   }
 }

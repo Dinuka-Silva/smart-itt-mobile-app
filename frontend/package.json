@@ -29,13 +29,16 @@
   },
   "devDependencies": {
     "@types/react": "~19.3.0",
+    "eas-cli": "^26.0.0",
     "typescript": "~6.0.3"
   },
   "scripts": {
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "build:apk": "eas build -p android --profile preview",
+    "build:aab": "eas build -p android --profile production"
   },
   "private": true
 }
