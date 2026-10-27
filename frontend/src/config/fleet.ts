@@ -200,19 +200,7 @@ export const SCK_FLEET: FleetVehicle[] = [
     assignedDriver: { driverCode: 'DRV-00020', driverName: 'Sanath Jayasuriya', mobile: '+94 77 777 8899' },
   },
 
-  // ─── 3. SCK LOGISTICS ADDITIONAL (CHE 125, 126, 127) ───
-  {
-    id: 'fl-125',
-    cheNumber: 'SCK 125',
-    vehicleNumber: 'LY-5650',
-    operator: 'SCK Logistics',
-    trailerSize: '40FT',
-    status: 'ACTIVE',
-    portPassNumber: 'SLPA-VPP-125',
-    portPassExpiryDate: '2026-11-10',
-    portPassStatus: 'RENEWAL_DUE',
-    assignedDriver: { driverCode: 'DRV-00023', driverName: 'Kusal Mendis', mobile: '+94 77 987 6565' },
-  },
+  // ─── 3. SCK LOGISTICS ADDITIONAL (CHE 126, 127) ───
   {
     id: 'fl-126',
     cheNumber: 'SCK 126',

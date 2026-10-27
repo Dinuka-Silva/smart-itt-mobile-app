@@ -63,7 +63,6 @@ const INITIAL_VEHICLES: AdminVehicle[] = [
   { id: 'v-13', vehicleNumber: 'LY-6438', chassisNumber: 'SCK 112', cheNumber: 'SCK 112', operator: 'SCK Logistics', trailerSize: '40FT', status: 'ACTIVE', driverName: 'Tillakaratne Dilshan', driverCode: 'DRV-00013', driverMobile: '0779876555', licenseStatus: 'VALID', daysUntilExpiry: 200, licenseIssuedDate: '2026-05-10', licenseExpiryDate: '2027-05-10', portPassNumber: 'SLPA-VPP-112', portPassExpiryDate: '2027-04-25', portPassStatus: 'VALID', portPassDaysUntilExpiry: 180, totalTrips: 49 },
   { id: 'v-14', vehicleNumber: 'LY-6429', chassisNumber: 'SCK 113', cheNumber: 'SCK 113', operator: 'SCK Logistics', trailerSize: '40FT', status: 'ACTIVE', driverName: 'Aravinda de Silva', driverCode: 'DRV-00014', driverMobile: '0779876556', licenseStatus: 'VALID', daysUntilExpiry: 275, licenseIssuedDate: '2026-07-28', licenseExpiryDate: '2027-07-28', portPassNumber: 'SLPA-VPP-113', portPassExpiryDate: '2027-07-15', portPassStatus: 'VALID', portPassDaysUntilExpiry: 261, totalTrips: 58 },
   { id: 'v-15', vehicleNumber: 'LY-6433', chassisNumber: 'SCK 114', cheNumber: 'SCK 114', operator: 'SCK Logistics', trailerSize: '40FT', status: 'ACTIVE', driverName: 'Arjuna Ranatunga', driverCode: 'DRV-00015', driverMobile: '0779876557', licenseStatus: 'VALID', daysUntilExpiry: 340, licenseIssuedDate: '2026-10-01', licenseExpiryDate: '2027-10-01', portPassNumber: 'SLPA-VPP-114', portPassExpiryDate: '2027-09-18', portPassStatus: 'VALID', portPassDaysUntilExpiry: 326, totalTrips: 51 },
-  { id: 'v-16', vehicleNumber: 'LY-5650', chassisNumber: 'SCK 125', cheNumber: 'SCK 125', operator: 'SCK Logistics', trailerSize: '40FT', status: 'ACTIVE', driverName: 'Kusal Mendis', driverCode: 'DRV-00023', driverMobile: '0779876565', licenseStatus: 'VALID', daysUntilExpiry: 180, licenseIssuedDate: '2026-04-10', licenseExpiryDate: '2027-04-10', portPassNumber: 'SLPA-VPP-125', portPassExpiryDate: '2026-11-10', portPassStatus: 'RENEWAL_DUE', portPassDaysUntilExpiry: 14, totalTrips: 26 },
   { id: 'v-17', vehicleNumber: 'LY-5654', chassisNumber: 'SCK 126', cheNumber: 'SCK 126', operator: 'SCK Logistics', trailerSize: '40FT', status: 'MAINTENANCE', driverName: 'Upul Tharanga', driverCode: 'DRV-00016', driverMobile: '0779876558', licenseStatus: 'VALID', daysUntilExpiry: 130, licenseIssuedDate: '2026-03-01', licenseExpiryDate: '2027-03-01', portPassNumber: 'SLPA-VPP-126', portPassExpiryDate: '2027-05-15', portPassStatus: 'VALID', portPassDaysUntilExpiry: 200, totalTrips: 39 },
   { id: 'v-18', vehicleNumber: 'LY-2147', chassisNumber: 'SCK 127', cheNumber: 'SCK 127', operator: 'SCK Logistics', trailerSize: '40FT', status: 'ACTIVE', driverName: 'Marvan Atapattu', driverCode: 'DRV-00017', driverMobile: '0779876559', licenseStatus: 'VALID', daysUntilExpiry: 215, licenseIssuedDate: '2026-05-25', licenseExpiryDate: '2027-05-25', portPassNumber: 'SLPA-VPP-127', portPassExpiryDate: '2027-06-20', portPassStatus: 'VALID', portPassDaysUntilExpiry: 236, totalTrips: 42 },
 
@@ -99,7 +98,7 @@ const INITIAL_DRIVERS: AdminDriver[] = [
   { id: 'd-20', driverCode: 'DRV-00020', fullName: 'Kusal Perera', employeeId: 'DRV020', mobileNumber: '0779876562', nic: '199012345697', status: 'ACTIVE', vehicleNumber: 'LY-6530', chassisNumber: 'SCK 119', cheNumber: 'SCK 119', licenseNumber: 'LIC-001253', licenseExpiryDate: '2029-04-10', portPassNumber: 'SLPA-DPP-020', portPassExpiryDate: '2027-04-14', portPassStatus: 'VALID', portPassDaysLeft: 169, address: 'No. 23, Hekitta Road, Wattala', email: 'kusal.drv@smartitt.lk', emergencyContactName: 'S. Perera (Brother)', emergencyContactNumber: '0723344556', totalTrips: 14 },
   { id: 'd-21', driverCode: 'DRV-00021', fullName: 'Wanindu Hasaranga', employeeId: 'DRV021', mobileNumber: '0779876563', nic: '199712345698', status: 'ACTIVE', vehicleNumber: 'LY-6531', chassisNumber: 'SCK 120', cheNumber: 'SCK 120', licenseNumber: 'LIC-001254', licenseExpiryDate: '2028-10-30', portPassNumber: 'SLPA-DPP-021', portPassExpiryDate: '2027-03-31', portPassStatus: 'VALID', portPassDaysLeft: 155, address: 'No. 56, Church Road, Mattakkuliya', email: 'wanindu.drv@smartitt.lk', emergencyContactName: 'W. Hasaranga (Brother)', emergencyContactNumber: '0724455667', totalTrips: 12 },
   { id: 'd-22', driverCode: 'DRV-00022', fullName: 'Dasun Shanaka', employeeId: 'DRV022', mobileNumber: '0779876564', nic: '199112345699', status: 'ACTIVE', vehicleNumber: 'LY-6532', chassisNumber: 'SCK 121', cheNumber: 'SCK 121', licenseNumber: 'LIC-001255', licenseExpiryDate: '2029-01-20', portPassNumber: 'SLPA-DPP-022', portPassExpiryDate: '2027-07-16', portPassStatus: 'VALID', portPassDaysLeft: 262, address: 'No. 71, Modara Street, Colombo 15', email: 'dasun.drv@smartitt.lk', emergencyContactName: 'D. Shanaka (Father)', emergencyContactNumber: '0725566778', totalTrips: 11 },
-  { id: 'd-23', driverCode: 'DRV-00023', fullName: 'Kusal Mendis', employeeId: 'DRV023', mobileNumber: '0779876565', nic: '199312345677', status: 'ACTIVE', vehicleNumber: 'LY-5650', chassisNumber: 'SCK 125', cheNumber: 'SCK 125', licenseNumber: 'LIC-001256', licenseExpiryDate: '2029-02-15', portPassNumber: 'SLPA-DPP-023', portPassExpiryDate: '2026-11-06', portPassStatus: 'RENEWAL_DUE', portPassDaysLeft: 10, address: 'No. 18, Bloemendhal Road, Colombo 13', email: 'kusal.mendis@smartitt.lk', emergencyContactName: 'P. Mendis (Father)', emergencyContactNumber: '0779911223', totalTrips: 20 },
+  { id: 'd-23', driverCode: 'DRV-00023', fullName: 'Kusal Mendis', employeeId: 'DRV023', mobileNumber: '0779876565', nic: '199312345677', status: 'ACTIVE', vehicleNumber: undefined, chassisNumber: undefined, cheNumber: undefined, licenseNumber: 'LIC-001256', licenseExpiryDate: '2029-02-15', portPassNumber: 'SLPA-DPP-023', portPassExpiryDate: '2026-11-06', portPassStatus: 'RENEWAL_DUE', portPassDaysLeft: 10, address: 'No. 18, Bloemendhal Road, Colombo 13', email: 'kusal.mendis@smartitt.lk', emergencyContactName: 'P. Mendis (Father)', emergencyContactNumber: '0779911223', totalTrips: 20 },
 ];
 
 class AdminFleetStore {
@@ -111,10 +110,10 @@ class AdminFleetStore {
     try {
       const remote = await adminService.getVehicles(search, operator, status);
       if (Array.isArray(remote) && remote.length > 0) {
-        // Merge remote vehicles while keeping any local newly added vehicles
-        const remotePlates = new Set(remote.map((r: any) => (r.vehicleNumber || '').toUpperCase()));
-        const localNew = this.vehicles.filter(v => !remotePlates.has(v.vehicleNumber.toUpperCase()));
-        this.vehicles = [...localNew, ...remote.map((r: any) => ({
+        const filteredRemote = remote.filter((r: any) => r.vehicleNumber !== 'LY-5650');
+        const remotePlates = new Set(filteredRemote.map((r: any) => (r.vehicleNumber || '').toUpperCase()));
+        const localNew = this.vehicles.filter(v => !remotePlates.has(v.vehicleNumber.toUpperCase()) && v.vehicleNumber !== 'LY-5650');
+        this.vehicles = [...localNew, ...filteredRemote.map((r: any) => ({
           id: r.id || `v-${r.vehicleNumber}`,
           vehicleNumber: r.vehicleNumber,
           chassisNumber: r.chassisNumber || r.cheNumber || 'SCK 100',
@@ -140,6 +139,7 @@ class AdminFleetStore {
       // Backend offline: use memory state
     }
 
+    this.vehicles = this.vehicles.filter(v => v.vehicleNumber !== 'LY-5650');
     let filtered = [...this.vehicles];
     if (operator && operator !== 'ALL') {
       filtered = filtered.filter(v => v.operator === operator);

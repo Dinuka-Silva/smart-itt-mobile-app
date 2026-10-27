@@ -70,8 +70,21 @@ public class DataInitializer implements CommandLineRunner {
     }
 
     private void seedVehicles() {
+        vehicleRepository.findByVehicleNumber("LY-5650").ifPresent(v -> {
+            log.info("Removing deprecated vehicle LY-5650 from fleet database");
+            driverRepository.findAll().stream()
+                .filter(d -> "LY-5650".equals(d.getVehicleNumber()))
+                .forEach(d -> {
+                    d.setVehicle(null);
+                    d.setVehicleNumber(null);
+                    d.setChassisNumber(null);
+                    driverRepository.save(d);
+                });
+            vehicleRepository.delete(v);
+        });
+
         List<Vehicle> authoritativeFleet = List.of(
-            // SCK Logistics Fleet (SCK 100 - 114, 125, 126, 127)
+            // SCK Logistics Fleet (SCK 100 - 114, 126, 127)
             Vehicle.builder().chassisNumber("SCK 100").vehicleNumber("LY-6439").operator("SCK Logistics").trailerSize("40FT").status("ACTIVE").build(),
             Vehicle.builder().chassisNumber("SCK 101").vehicleNumber("LY-6434").operator("SCK Logistics").trailerSize("40FT").status("ACTIVE").build(),
             Vehicle.builder().chassisNumber("SCK 102").vehicleNumber("LY-6435").operator("SCK Logistics").trailerSize("40FT").status("ACTIVE").build(),
@@ -87,7 +100,6 @@ public class DataInitializer implements CommandLineRunner {
             Vehicle.builder().chassisNumber("SCK 112").vehicleNumber("LY-6438").operator("SCK Logistics").trailerSize("40FT").status("ACTIVE").build(),
             Vehicle.builder().chassisNumber("SCK 113").vehicleNumber("LY-6429").operator("SCK Logistics").trailerSize("40FT").status("ACTIVE").build(),
             Vehicle.builder().chassisNumber("SCK 114").vehicleNumber("LY-6433").operator("SCK Logistics").trailerSize("40FT").status("ACTIVE").build(),
-            Vehicle.builder().chassisNumber("SCK 125").vehicleNumber("LY-5650").operator("SCK Logistics").trailerSize("40FT").status("ACTIVE").build(),
             Vehicle.builder().chassisNumber("SCK 126").vehicleNumber("LY-5654").operator("SCK Logistics").trailerSize("40FT").status("ACTIVE").build(),
             Vehicle.builder().chassisNumber("SCK 127").vehicleNumber("LY-2147").operator("SCK Logistics").trailerSize("40FT").status("ACTIVE").build(),
 
@@ -116,7 +128,7 @@ public class DataInitializer implements CommandLineRunner {
             }
 
             // Port Pass Renewal Date
-            if ("LY-5650".equals(v.getVehicleNumber()) || "LY-6439".equals(v.getVehicleNumber())) {
+            if ("LY-6439".equals(v.getVehicleNumber())) {
                 // Due for port pass renewal in 14 days
                 v.setPortPassExpiryDate(today.plusDays(14));
             } else {
@@ -211,7 +223,7 @@ public class DataInitializer implements CommandLineRunner {
             {"DRV-00020", "Kusal Perera", "kusal.drv@smartitt.lk", "DRV020", "199012345697", "0779876562", "LY-6530", "SCK 119", "LIC-001253"},
             {"DRV-00021", "Wanindu Hasaranga", "wanindu.drv@smartitt.lk", "DRV021", "199712345698", "0779876563", "LY-6531", "SCK 120", "LIC-001254"},
             {"DRV-00022", "Dasun Shanaka", "dasun.drv@smartitt.lk", "DRV022", "199112345699", "0779876564", "LY-6532", "SCK 121", "LIC-001255"},
-            {"DRV-00023", "Kusal Mendis", "kusal.mendis@smartitt.lk", "DRV023", "199312345677", "0779876565", "LY-5650", "SCK 125", "LIC-001256"}
+            {"DRV-00023", "Kusal Mendis", "kusal.mendis@smartitt.lk", "DRV023", "199312345677", "0779876565", null, null, "LIC-001256"}
         };
 
         LocalDate today = LocalDate.now();
