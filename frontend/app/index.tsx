@@ -16,6 +16,8 @@ export default function Index() {
       router.replace('/(auth)/login');
     } else if (user.role === 'DRIVER') {
       router.replace('/(driver)/(tabs)');
+    } else if (user.role === 'ADMIN') {
+      router.replace('/(admin)/(tabs)');
     } else {
       router.replace('/(supervisor)/(tabs)');
     }

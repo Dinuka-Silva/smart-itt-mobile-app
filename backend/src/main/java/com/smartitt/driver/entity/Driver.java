@@ -32,5 +32,29 @@ public class Driver extends User {
 
     @Column(name = "chassis_number", length = 50)
     private String chassisNumber; // SCK number / CHE number (e.g., "SCK 100")
+
+    @Column(name = "port_pass_number", length = 50)
+    private String portPassNumber;
+
+    @Column(name = "port_pass_expiry_date")
+    private LocalDate portPassExpiryDate; // Driver Port Pass Renewal Date
+
+    public Long getPortPassDaysUntilExpiry() {
+        if (portPassExpiryDate == null) return null;
+        return java.time.temporal.ChronoUnit.DAYS.between(LocalDate.now(), portPassExpiryDate);
+    }
+
+    public boolean isPortPassRenewalDue() {
+        Long days = getPortPassDaysUntilExpiry();
+        return days != null && days <= 30;
+    }
+
+    public String getPortPassStatus() {
+        Long days = getPortPassDaysUntilExpiry();
+        if (days == null) return "UNKNOWN";
+        if (days < 0) return "EXPIRED";
+        if (days <= 30) return "RENEWAL_DUE";
+        return "VALID";
+    }
 }
 

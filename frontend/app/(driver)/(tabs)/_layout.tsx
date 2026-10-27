@@ -39,7 +39,7 @@ export default function DriverTabsLayout() {
         options={{
           title: 'Home',
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? 'home' : 'home-outline'} size={24} color={color} />
+            <Ionicons name={focused ? 'home' : 'home-outline'} size={24} color={color as any} />
           ),
         }}
       />
@@ -48,7 +48,7 @@ export default function DriverTabsLayout() {
         options={{
           title: 'My Trips',
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? 'trail-sign' : 'trail-sign-outline'} size={24} color={color} />
+            <Ionicons name={focused ? 'trail-sign' : 'trail-sign-outline'} size={24} color={color as any} />
           ),
         }}
       />
@@ -57,7 +57,7 @@ export default function DriverTabsLayout() {
         options={{
           title: 'Containers',
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? 'cube' : 'cube-outline'} size={24} color={color} />
+            <Ionicons name={focused ? 'cube' : 'cube-outline'} size={24} color={color as any} />
           ),
         }}
       />
@@ -66,7 +66,7 @@ export default function DriverTabsLayout() {
         options={{
           title: 'Profile',
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? 'person' : 'person-outline'} size={24} color={color} />
+            <Ionicons name={focused ? 'person' : 'person-outline'} size={24} color={color as any} />
           ),
         }}
       />

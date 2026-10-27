@@ -26,6 +26,8 @@ export interface DriverProfile {
   vehicleLicenseDaysLeft?: number;
   vehicleLicenseRenewalDue?: boolean;
   vehicleLicenseStatus?: 'VALID' | 'RENEWAL_DUE' | 'EXPIRED';
+  driverPortPassExpiryDate?: string;
+  vehiclePortPassExpiryDate?: string;
   status: string;
   createdAt?: string;
   updatedAt?: string;
@@ -68,6 +70,11 @@ export const driverService = {
       profilePhoto,
       coverImage,
     });
+    return response.data;
+  },
+
+  async updateDriver(idOrCode: string, payload: Partial<DriverProfile>): Promise<DriverProfile> {
+    const response = await apiClient.put<DriverProfile>(`/drivers/${idOrCode}`, payload);
     return response.data;
   },
 };

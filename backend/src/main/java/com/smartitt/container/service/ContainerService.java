@@ -53,7 +53,19 @@ public class ContainerService {
             checkDigitValid = (expectedCheckDigit == actualCheckDigit);
         }
 
-        // STEP 1: Check 4 uppercase letters followed by 7 numbers (Total 11 characters)
+        // STEP 1: Check if input contains symbols
+        if (containerNumber != null && containerNumber.matches(".*[^a-zA-Z0-9].*")) {
+            return ValidateContainerResponse.builder()
+                    .valid(false)
+                    .normalizedNumber(normalized)
+                    .isoFormatValid(false)
+                    .checkDigitValid(false)
+                    .duplicate(false)
+                    .message("Symbols are not allowed. Please enter 7 numbers without symbols (e.g. MSCU7721892).")
+                    .build();
+        }
+
+        // STEP 2: Check 4 uppercase letters followed by 7 numbers (Total 11 characters)
         if (!formatValid) {
             return ValidateContainerResponse.builder()
                     .valid(false)
@@ -61,11 +73,11 @@ public class ContainerService {
                     .isoFormatValid(false)
                     .checkDigitValid(false)
                     .duplicate(false)
-                    .message("Invalid format: Container number must be 4 uppercase letters followed by 7 digits (e.g., MSCU1234567).")
+                    .message("Invalid format: Container number must be 4 uppercase letters followed by 7 digits without symbols (e.g., MSCU1234567).")
                     .build();
         }
 
-        // STEP 2: Check ISO 6346 Standard Check Digit
+        // STEP 3: Check if it is correct according to ISO 6346 standard
         if (!checkDigitValid) {
             return ValidateContainerResponse.builder()
                     .valid(false)
@@ -75,11 +87,11 @@ public class ContainerService {
                     .expectedCheckDigit(expectedCheckDigit)
                     .actualCheckDigit(actualCheckDigit)
                     .duplicate(false)
-                    .message("ISO 6346 Check Digit Mismatch: Expected check digit " + expectedCheckDigit + ", but found " + actualCheckDigit + ".")
+                    .message("Format Valid (4 Letters + 7 Numbers). ISO 6346 Check Digit Mismatch: Expected " + expectedCheckDigit + ", but found " + actualCheckDigit + ".")
                     .build();
         }
 
-        // STEP 3: Check duplicates in active trip or database
+        // STEP 4: Check duplicates in active trip or database
         UUID parsedTripId = null;
         if (tripId != null && !tripId.trim().isEmpty() && !tripId.equals("null") && !tripId.equals("undefined")) {
             try {
@@ -130,7 +142,7 @@ public class ContainerService {
                 .expectedCheckDigit(expectedCheckDigit)
                 .actualCheckDigit(actualCheckDigit)
                 .duplicate(false)
-                .message("Container " + normalized + " verified successfully (ISO 6346 check digit valid).")
+                .message("Container " + normalized + " verified successfully (4 letters + 7 numbers without symbols).")
                 .build();
     }
 

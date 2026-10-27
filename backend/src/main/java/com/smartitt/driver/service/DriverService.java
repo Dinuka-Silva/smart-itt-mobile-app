@@ -152,6 +152,11 @@ public class DriverService {
                 .vehicleLicenseDaysLeft(vLicDays)
                 .vehicleLicenseRenewalDue(vLicRenewalDue)
                 .vehicleLicenseStatus(vLicStatus)
+                .portPassNumber(driver.getPortPassNumber())
+                .portPassExpiryDate(driver.getPortPassExpiryDate())
+                .portPassDaysLeft(driver.getPortPassDaysUntilExpiry())
+                .portPassRenewalDue(driver.isPortPassRenewalDue())
+                .portPassStatus(driver.getPortPassStatus())
                 .createdAt(driver.getCreatedAt())
                 .updatedAt(driver.getUpdatedAt())
                 .build();
@@ -176,6 +181,79 @@ public class DriverService {
         if (coverImage != null) {
             driver.setCoverImage(coverImage);
         }
+        driverRepository.save(driver);
+        return mapToProfileResponse(driver);
+    }
+
+    @Transactional
+    public DriverProfileResponse updateDriverDetails(String idOrCode, java.util.Map<String, Object> body) {
+        Driver driver;
+        try {
+            UUID uuid = UUID.fromString(idOrCode);
+            driver = driverRepository.findById(uuid)
+                    .orElseGet(() -> driverRepository.findByDriverCode(idOrCode)
+                            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Driver not found: " + idOrCode)));
+        } catch (IllegalArgumentException e) {
+            driver = driverRepository.findByDriverCode(idOrCode)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Driver not found: " + idOrCode));
+        }
+
+        if (body.containsKey("fullName") && body.get("fullName") != null) {
+            driver.setFullName(String.valueOf(body.get("fullName")));
+        }
+        if (body.containsKey("name") && body.get("name") != null) {
+            driver.setFullName(String.valueOf(body.get("name")));
+        }
+        if (body.containsKey("mobileNumber") && body.get("mobileNumber") != null) {
+            driver.setMobileNumber(String.valueOf(body.get("mobileNumber")));
+        }
+        if (body.containsKey("contact") && body.get("contact") != null) {
+            driver.setMobileNumber(String.valueOf(body.get("contact")));
+        }
+        if (body.containsKey("email") && body.get("email") != null) {
+            driver.setEmail(String.valueOf(body.get("email")));
+        }
+        if (body.containsKey("address") && body.get("address") != null) {
+            driver.setAddress(String.valueOf(body.get("address")));
+        }
+        if (body.containsKey("nic") && body.get("nic") != null) {
+            driver.setNic(String.valueOf(body.get("nic")));
+        }
+        if (body.containsKey("licenseNumber") && body.get("licenseNumber") != null) {
+            driver.setDrivingLicenceNumber(String.valueOf(body.get("licenseNumber")));
+        }
+        if (body.containsKey("drivingLicenceNumber") && body.get("drivingLicenceNumber") != null) {
+            driver.setDrivingLicenceNumber(String.valueOf(body.get("drivingLicenceNumber")));
+        }
+        if (body.containsKey("licenseExpiryDate") && body.get("licenseExpiryDate") != null) {
+            try {
+                driver.setLicenseExpiryDate(java.time.LocalDate.parse(String.valueOf(body.get("licenseExpiryDate"))));
+            } catch (Exception ignored) {}
+        }
+        if (body.containsKey("dateOfBirth") && body.get("dateOfBirth") != null) {
+            try {
+                driver.setDateOfBirth(java.time.LocalDate.parse(String.valueOf(body.get("dateOfBirth"))));
+            } catch (Exception ignored) {}
+        }
+        if (body.containsKey("emergencyContactName") && body.get("emergencyContactName") != null) {
+            driver.setEmergencyContactName(String.valueOf(body.get("emergencyContactName")));
+        }
+        if (body.containsKey("emergencyContactNumber") && body.get("emergencyContactNumber") != null) {
+            driver.setEmergencyContactNumber(String.valueOf(body.get("emergencyContactNumber")));
+        }
+        if (body.containsKey("vehicleNumber") && body.get("vehicleNumber") != null) {
+            driver.setVehicleNumber(String.valueOf(body.get("vehicleNumber")));
+        }
+        if (body.containsKey("truckNumber") && body.get("truckNumber") != null) {
+            driver.setVehicleNumber(String.valueOf(body.get("truckNumber")));
+        }
+        if (body.containsKey("chassisNumber") && body.get("chassisNumber") != null) {
+            driver.setChassisNumber(String.valueOf(body.get("chassisNumber")));
+        }
+        if (body.containsKey("cheNumber") && body.get("cheNumber") != null) {
+            driver.setChassisNumber(String.valueOf(body.get("cheNumber")));
+        }
+
         driverRepository.save(driver);
         return mapToProfileResponse(driver);
     }

@@ -14,6 +14,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
 import { useAuthStore } from '../../../src/store/authStore';
+import { driverService } from '../../../src/services/driverService';
 import API_BASE_URL from '../../../src/config/api';
 import { colors, radius, spacing, shadow } from '../../../src/theme';
 import { useResponsive } from '../../../src/hooks/useResponsive';
@@ -26,6 +27,7 @@ import {
   isValidIsoFormat,
   computeCheckDigit,
   validateIsoClientSide,
+  hasSymbols,
   ValidateContainerResult,
 } from '../../../src/services/containerService';
 
@@ -35,16 +37,25 @@ const POPULAR_VESSELS = ['MSC Aurora', 'Maersk Line', 'CMA CGM', 'Evergreen', 'C
 
 interface ContainerEntry {
   containerNumber: string;
-  containerNumber2?: string; // only used when size is 20FT
+  containerNumber2?: string; // used when dual 20FT
   size: '20FT' | '40FT';
+  loadType?: '1x20FT' | '2x20FT' | '40FT';
   destTerminal: string;
   sealNumber?: string;
   damageStatus?: string;
   remarks?: string;
+  isReturnContainer?: boolean;
 }
 
 function emptyContainer(defaultDest: string): ContainerEntry {
-  return { containerNumber: '', containerNumber2: '', size: '40FT', destTerminal: defaultDest };
+  return {
+    containerNumber: '',
+    containerNumber2: '',
+    size: '20FT',
+    loadType: '1x20FT',
+    destTerminal: defaultDest,
+    isReturnContainer: false,
+  };
 }
 
 // ────────────────────────────────────────────────────────────────
@@ -103,8 +114,8 @@ const tp = StyleSheet.create({
   label: { fontSize: 13, fontWeight: '700', color: '#849396', marginBottom: 8 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   btn: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingHorizontal: 13,
+    paddingVertical: 9,
     borderRadius: radius.md,
     backgroundColor: '#080e17',
     borderWidth: 1,
@@ -129,20 +140,22 @@ function ContainerValidationPill({
   const [valResult, setValResult] = useState<ValidateContainerResult | null>(null);
   const [checking, setChecking] = useState(false);
 
-  const clean = normalizeContainerNumber(containerNumber);
+  const raw = (containerNumber || '').trim();
+  const hasSyms = hasSymbols(raw);
+  const clean = normalizeContainerNumber(raw);
 
   useEffect(() => {
-    if (!clean) {
+    if (!raw) {
       setValResult(null);
       return;
     }
 
-    // 1. Instant client-side check (4 uppercase letters + 7 numbers, then ISO 6346 modulus-11)
-    const clientRes = validateIsoClientSide(clean);
+    // 1. Instant client-side check (4 uppercase letters + 7 numbers, rejects symbols)
+    const clientRes = validateIsoClientSide(raw);
     setValResult(clientRes);
 
-    // 2. Authoritative backend duplicate check if format & check digit valid
-    if (clientRes.valid) {
+    // 2. Authoritative backend duplicate check if format valid and no symbols
+    if (clientRes.valid && !hasSyms) {
       let cancelled = false;
       setChecking(true);
       containerService.validateContainer(clean)
@@ -160,12 +173,12 @@ function ContainerValidationPill({
     }
   }, [containerNumber]);
 
-  if (!containerNumber || containerNumber.trim().length === 0) {
+  if (!raw) {
     return (
       <View style={vp.hintWrap}>
         <Ionicons name="information-circle-outline" size={13} color="#849396" />
         <Text style={vp.hintText}>
-          ISO 6346: 4 Uppercase Letters + 7 Numbers (e.g. MSCU7721892)
+          Format: 4 Letters + 7 Numbers without symbols (e.g. MSCU7721892)
         </Text>
       </View>
     );
@@ -179,7 +192,7 @@ function ContainerValidationPill({
 
   return (
     <View style={vp.container}>
-      {/* Real-time two-stage progress chips */}
+      {/* Real-time three-stage progress chips */}
       <View style={vp.stepsRow}>
         <View style={[vp.stepChip, lettersValid ? vp.stepChipValid : vp.stepChipPending]}>
           <Ionicons
@@ -210,6 +223,8 @@ function ContainerValidationPill({
               ? vp.stepChipValid
               : valResult?.isoFormatValid && !valResult?.checkDigitValid
               ? vp.stepChipError
+              : hasSyms
+              ? vp.stepChipError
               : vp.stepChipPending,
           ]}
         >
@@ -219,6 +234,8 @@ function ContainerValidationPill({
                 ? 'shield-checkmark'
                 : valResult?.isoFormatValid && !valResult?.checkDigitValid
                 ? 'alert-circle'
+                : hasSyms
+                ? 'alert-circle'
                 : 'ellipse-outline'
             }
             size={11}
@@ -226,6 +243,8 @@ function ContainerValidationPill({
               valResult?.valid
                 ? '#22ef7e'
                 : valResult?.isoFormatValid && !valResult?.checkDigitValid
+                ? '#ff5252'
+                : hasSyms
                 ? '#ff5252'
                 : '#849396'
             }
@@ -235,9 +254,16 @@ function ContainerValidationPill({
               vp.stepChipText,
               valResult?.valid && { color: '#22ef7e' },
               valResult?.isoFormatValid && !valResult?.checkDigitValid && { color: '#ff5252' },
+              hasSyms && { color: '#ff5252' },
             ]}
           >
-            ISO Standard
+            {hasSyms
+              ? 'Symbols Found'
+              : valResult?.valid
+              ? 'ISO Verified'
+              : valResult?.isoFormatValid && !valResult?.checkDigitValid
+              ? 'ISO Mismatch'
+              : 'ISO Standard'}
           </Text>
         </View>
       </View>
@@ -255,11 +281,21 @@ function ContainerValidationPill({
           </Text>
           {checking && <ActivityIndicator size="small" color="#00e5ff" style={{ marginLeft: 4 }} />}
 
-          {!valResult.checkDigitValid && valResult.expectedCheckDigit >= 0 && valResult.isoFormatValid && (
+          {hasSyms && (
+            <TouchableOpacity
+              style={vp.fixBtn}
+              onPress={() => onFixCheckDigit(clean)}
+              activeOpacity={0.8}
+            >
+              <Text style={vp.fixBtnText}>REMOVE SYMBOLS</Text>
+            </TouchableOpacity>
+          )}
+
+          {!valResult.checkDigitValid && valResult.expectedCheckDigit >= 0 && valResult.isoFormatValid && !hasSyms && (
             <TouchableOpacity
               style={vp.fixBtn}
               onPress={() => {
-                const base = normalizeContainerNumber(containerNumber).slice(0, 10);
+                const base = clean.slice(0, 10);
                 onFixCheckDigit(`${base}${valResult.expectedCheckDigit}`);
               }}
               activeOpacity={0.8}
@@ -372,35 +408,66 @@ function ContainerCard({
   onChange: (field: keyof ContainerEntry, value: string) => void;
   loadingTerminal: string;
 }) {
-  const is20FT = entry.size === '20FT';
+  const currentLoadType = entry.loadType || (entry.size === '40FT' ? '40FT' : '1x20FT');
+  const isTwin20 = currentLoadType === '2x20FT';
+  const isSingle20 = currentLoadType === '1x20FT';
+  const is40FT = currentLoadType === '40FT';
+
   return (
     <View style={cc.card}>
-      {/* Size selection — first, so inputs react immediately */}
-      <Text style={cc.fieldLabel}>Container Size</Text>
+      {/* Load type selection: 1x20FT, 2x20FT, 40FT */}
+      <Text style={cc.fieldLabel}>Container Load Configuration</Text>
       <View style={cc.sizeRow}>
-        {(['20FT', '40FT'] as const).map((s) => (
-          <TouchableOpacity
-            key={s}
-            style={[cc.sizeBtn, entry.size === s && cc.sizeBtnActive]}
-            onPress={() => onChange('size', s)}
-          >
-            <Text style={[cc.sizeTxt, entry.size === s && cc.sizeTxtActive]}>{s}</Text>
-          </TouchableOpacity>
-        ))}
+        <TouchableOpacity
+          style={[cc.sizeBtn, isSingle20 && cc.sizeBtnActive]}
+          onPress={() => {
+            onChange('loadType', '1x20FT');
+            onChange('size', '20FT');
+            onChange('containerNumber2', '');
+          }}
+        >
+          <Text style={[cc.sizeTxt, isSingle20 && cc.sizeTxtActive]}>1 × 20FT</Text>
+          <Text style={[cc.subSizeTxt, isSingle20 && cc.subSizeTxtActive]}>Single 20FT</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[cc.sizeBtn, isTwin20 && cc.sizeBtnActive]}
+          onPress={() => {
+            onChange('loadType', '2x20FT');
+            onChange('size', '20FT');
+          }}
+        >
+          <Text style={[cc.sizeTxt, isTwin20 && cc.sizeTxtActive]}>2 × 20FT</Text>
+          <Text style={[cc.subSizeTxt, isTwin20 && cc.subSizeTxtActive]}>Twin / Dual</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[cc.sizeBtn, is40FT && cc.sizeBtnActive]}
+          onPress={() => {
+            onChange('loadType', '40FT');
+            onChange('size', '40FT');
+            onChange('containerNumber2', '');
+          }}
+        >
+          <Text style={[cc.sizeTxt, is40FT && cc.sizeTxtActive]}>1 × 40FT</Text>
+          <Text style={[cc.subSizeTxt, is40FT && cc.subSizeTxtActive]}>Standard 40FT</Text>
+        </TouchableOpacity>
       </View>
 
       {/* Chassis Capacity Guidance */}
       <View style={cc.capacityGuidanceBox}>
         <Ionicons name="information-circle" size={14} color="#00e5ff" />
         <Text style={cc.capacityGuidanceText}>
-          {is20FT
-            ? '20FT Mode: Up to 2 × 20FT containers allowed per trip on chassis.'
-            : '40FT Mode: Exactly 1 × 40FT container allowed per trip on chassis.'}
+          {isSingle20
+            ? '1 × 20FT Mode: Driver loaded 1 × 20ft container (1 TEU / ~14.0T).'
+            : isTwin20
+            ? '2 × 20FT Mode: Driver loaded 2 × 20ft twin containers on chassis (2 TEU / ~26.5T).'
+            : '40FT Mode: Driver loaded 1 × 40ft container on chassis (2 TEU / ~26.5T).'}
         </Text>
       </View>
 
-      {/* Container numbers — 2 inputs for 20FT, 1 for 40FT */}
-      {is20FT ? (
+      {/* Container numbers */}
+      {isTwin20 ? (
         <>
           <Text style={cc.fieldLabel}>Container No. 1 * (Manual Entry)</Text>
           <TextInput
@@ -408,9 +475,9 @@ function ContainerCard({
             placeholder="e.g. MSCU7721892"
             placeholderTextColor="#849396"
             autoCapitalize="characters"
-            maxLength={11}
+            maxLength={16}
             value={entry.containerNumber}
-            onChangeText={(v) => onChange('containerNumber', normalizeContainerNumber(v))}
+            onChangeText={(v) => onChange('containerNumber', v.toUpperCase())}
           />
           <ContainerValidationPill
             containerNumber={entry.containerNumber}
@@ -423,9 +490,9 @@ function ContainerCard({
             placeholder="e.g. TCKU3456789"
             placeholderTextColor="#849396"
             autoCapitalize="characters"
-            maxLength={11}
+            maxLength={16}
             value={entry.containerNumber2}
-            onChangeText={(v) => onChange('containerNumber2', normalizeContainerNumber(v))}
+            onChangeText={(v) => onChange('containerNumber2', v.toUpperCase())}
           />
           <ContainerValidationPill
             containerNumber={entry.containerNumber2 || ''}
@@ -434,15 +501,17 @@ function ContainerCard({
         </>
       ) : (
         <>
-          <Text style={cc.fieldLabel}>Container Number * (Manual Entry)</Text>
+          <Text style={cc.fieldLabel}>
+            {isSingle20 ? 'Container Number * (Single 20FT Manual Entry)' : 'Container Number * (40FT Manual Entry)'}
+          </Text>
           <TextInput
             style={cc.input}
             placeholder="e.g. MSCU7721892"
             placeholderTextColor="#849396"
             autoCapitalize="characters"
-            maxLength={11}
+            maxLength={16}
             value={entry.containerNumber}
-            onChangeText={(v) => onChange('containerNumber', normalizeContainerNumber(v))}
+            onChangeText={(v) => onChange('containerNumber', v.toUpperCase())}
           />
           <ContainerValidationPill
             containerNumber={entry.containerNumber}
@@ -495,6 +564,52 @@ function ContainerCard({
           <Text style={cc.damageAlertText}>DAMAGE TANK — Supervisor will be notified of container damage</Text>
         </View>
       )}
+
+      {/* Return Container Marking Function */}
+      <Text style={[cc.fieldLabel, { marginTop: 8 }]}>Container Category / Return Container Function</Text>
+      <View style={cc.damageRow}>
+        <TouchableOpacity
+          style={[
+            cc.damageBtn,
+            !entry.isReturnContainer && { backgroundColor: 'rgba(0, 229, 255, 0.12)', borderColor: '#00e5ff' },
+          ]}
+          onPress={() => onChange('isReturnContainer', 'false')}
+        >
+          <Ionicons
+            name="cube-outline"
+            size={14}
+            color={!entry.isReturnContainer ? '#00e5ff' : '#849396'}
+          />
+          <Text style={[cc.damageTxt, !entry.isReturnContainer && { color: '#00e5ff' }]}>
+            📦 STANDARD FREIGHT
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[
+            cc.damageBtn,
+            entry.isReturnContainer && { backgroundColor: 'rgba(254, 179, 0, 0.16)', borderColor: '#feb300' },
+          ]}
+          onPress={() => onChange('isReturnContainer', 'true')}
+        >
+          <Ionicons
+            name="return-down-back"
+            size={14}
+            color={entry.isReturnContainer ? '#feb300' : '#849396'}
+          />
+          <Text style={[cc.damageTxt, entry.isReturnContainer && { color: '#feb300' }]}>
+            🔄 RETURN CONTAINER
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      {entry.isReturnContainer && (
+        <View style={[cc.damageAlert, { backgroundColor: 'rgba(254, 179, 0, 0.12)', borderColor: '#feb300' }]}>
+          <Ionicons name="repeat" size={15} color="#feb300" />
+          <Text style={[cc.damageAlertText, { color: '#feb300' }]}>
+            RETURN CONTAINER MARKED — Tagged for empty repositioning / export return in supervisor reports.
+          </Text>
+        </View>
+      )}
     </View>
   );
 }
@@ -532,8 +647,10 @@ const cc = StyleSheet.create({
     borderColor: '#242a34',
   },
   sizeBtnActive: { backgroundColor: 'rgba(0, 229, 255, 0.15)', borderColor: '#00e5ff' },
-  sizeTxt: { fontSize: 14, fontWeight: '700', color: '#849396' },
+  sizeTxt: { fontSize: 13, fontWeight: '700', color: '#849396' },
   sizeTxtActive: { color: '#00e5ff' },
+  subSizeTxt: { fontSize: 10, fontWeight: '600', color: '#687787', marginTop: 2 },
+  subSizeTxtActive: { color: '#00e5ff' },
   row: { flexDirection: 'row', alignItems: 'flex-start' },
 
   // Damage status
@@ -580,13 +697,91 @@ const cc = StyleSheet.create({
 export default function NewTripScreen() {
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
-  const { topInset, bottomInset, contentMaxWidth, containerPaddingHorizontal } = useResponsive();
+  const updateUser = useAuthStore((s) => s.updateUser);
+  const { width, topInset, bottomInset, contentMaxWidth, containerPaddingHorizontal, isSmallMobile } = useResponsive();
+
+  const getLiveTime = () =>
+    new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+
+  // Editable Driver Details State
+  const [isEditingDriver, setIsEditingDriver] = useState(false);
+  const [driverName, setDriverName] = useState(user?.name || 'Kamal Perera');
+  const [driverContact, setDriverContact] = useState(user?.mobileNumber || '+94 77 123 4567');
+  const [driverTruck, setDriverTruck] = useState(user?.vehicleNumber || 'LY-6439');
+  const [driverChe, setDriverChe] = useState(user?.chassisNumber || user?.cheNumber || 'CHE 100');
+  const [savingDriver, setSavingDriver] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      if (user.name) setDriverName(user.name);
+      if (user.mobileNumber) setDriverContact(user.mobileNumber);
+      if (user.vehicleNumber) setDriverTruck(user.vehicleNumber);
+      if (user.chassisNumber || user.cheNumber) setDriverChe(user.chassisNumber || user.cheNumber || 'CHE 100');
+    }
+  }, [user]);
+
+  const handleSaveDriverDetails = async () => {
+    if (!driverName.trim()) {
+      showAlert('Required', 'Please enter a valid driver name.');
+      return;
+    }
+    setSavingDriver(true);
+    try {
+      const trimmedName = driverName.trim();
+      const trimmedContact = driverContact.trim();
+      const trimmedTruck = driverTruck.trim().toUpperCase();
+      const trimmedChe = driverChe.trim().toUpperCase();
+
+      updateUser({
+        name: trimmedName,
+        mobileNumber: trimmedContact,
+        vehicleNumber: trimmedTruck,
+        chassisNumber: trimmedChe,
+        cheNumber: trimmedChe,
+      });
+
+      const driverIdentifier = user?.driverCode || user?.driverId || user?.username || 'DRV-00001';
+      await driverService.updateDriver(driverIdentifier, {
+        fullName: trimmedName,
+        mobileNumber: trimmedContact,
+        vehicleNumber: trimmedTruck,
+        chassisNumber: trimmedChe,
+      });
+      setIsEditingDriver(false);
+      showAlert('Saved', 'Driver & Vehicle details updated successfully.');
+    } catch {
+      setIsEditingDriver(false);
+      showAlert('Saved Locally', 'Driver details updated for current mission.');
+    } finally {
+      setSavingDriver(false);
+    }
+  };
 
   const [vesselName, setVesselName] = useState('MSC Aurora');
   const [sourceTerminal, setSourceTerminal] = useState('CICT');
-  const [operationDate, setOperationDate] = useState(new Date().toISOString().split('T')[0]);
-  const [operationTime, setOperationTime] = useState('08:00');
 
+  const getLiveTimeWithSeconds = () =>
+    new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+  const getLiveDate = () =>
+    new Date().toISOString().split('T')[0];
+
+  const [liveClock, setLiveClock] = useState(getLiveTimeWithSeconds);
+  const [operationDate, setOperationDate] = useState(getLiveDate);
+  const [operationTime, setOperationTime] = useState(getLiveTime);
+  const [dispatchTime, setDispatchTime] = useState(getLiveTime);
+
+  useEffect(() => {
+    // Automatically count live time every second and keep operation date in sync
+    const interval = setInterval(() => {
+      const now = new Date();
+      setLiveClock(now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }));
+      const hm = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+      setOperationTime(hm);
+      setDispatchTime(hm);
+      setOperationDate(now.toISOString().split('T')[0]);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   const [notes, setNotes] = useState('');
   const [loading, setLoading] = useState(false);
@@ -599,7 +794,8 @@ export default function NewTripScreen() {
   const updateContainer = (idx: number, field: keyof ContainerEntry, value: string) => {
     setContainers((prev) => {
       const next = [...prev];
-      next[idx] = { ...next[idx], [field]: value };
+      const val = field === 'isReturnContainer' ? value === 'true' : value;
+      next[idx] = { ...next[idx], [field]: val };
       return next;
     });
   };
@@ -625,24 +821,39 @@ export default function NewTripScreen() {
 
     for (let i = 0; i < containers.length; i++) {
       const entry = containers[i];
+      const loadType = entry.loadType || (entry.size === '40FT' ? '40FT' : '1x20FT');
       const numbersToValidate = [entry.containerNumber];
-      if (entry.size === '20FT' && entry.containerNumber2 && entry.containerNumber2.trim()) {
+      if (loadType === '2x20FT') {
+        if (!entry.containerNumber2 || !entry.containerNumber2.trim()) {
+          showAlert('Required', `Please enter Container ${i + 1} (#2) number for the 2 × 20FT twin configuration.`);
+          return;
+        }
         numbersToValidate.push(entry.containerNumber2);
       }
 
       for (let j = 0; j < numbersToValidate.length; j++) {
-        const raw = numbersToValidate[j];
-        const cNum = normalizeContainerNumber(raw);
+        const raw = (numbersToValidate[j] || '').trim();
         const contLabel = numbersToValidate.length > 1 ? `Container ${i + 1} (#${j + 1})` : `Container ${i + 1}`;
 
-        if (!cNum) {
+        if (!raw) {
           showAlert('Required', `Please manually enter ${contLabel} number.`);
           return;
         }
 
-        // STEP 1: Strict Format Check — Must contain exactly 4 uppercase letters followed by 7 numbers
+        // Check if symbols entered
+        if (hasSymbols(raw)) {
+          showAlert(
+            'Symbols Not Allowed',
+            `${contLabel} ("${raw}") contains symbols.\n\nSymbols are not allowed. Please enter 4 uppercase letters followed by 7 numbers without symbols (e.g. MSCU7721892).`
+          );
+          return;
+        }
+
+        const cNum = raw.toUpperCase();
+
+        // STEP 1: Format Check — Must contain exactly 4 uppercase letters followed by 7 numbers without symbols
         if (!isValidIsoFormat(cNum)) {
-          let reason = 'Must contain exactly 4 uppercase letters followed by 7 numbers (e.g. MSCU7721892).';
+          let reason = 'Must contain exactly 4 uppercase letters followed by 7 numbers without symbols (e.g. MSCU7721892).';
           if (cNum.length !== 11) {
             reason = `Entered ${cNum.length} characters. Exactly 11 characters required (4 uppercase letters + 7 numbers).`;
           } else {
@@ -651,24 +862,24 @@ export default function NewTripScreen() {
             if (!/^[A-Z]{4}$/.test(prefix)) {
               reason = `Prefix "${prefix}" must contain 4 uppercase letters (A-Z).`;
             } else if (!/^\d{7}$/.test(digits)) {
-              reason = `Suffix "${digits}" must contain 7 numeric digits (0-9).`;
+              reason = `Suffix "${digits}" must contain 7 numeric digits (0-9 without symbols).`;
             }
           }
 
           showAlert(
             'Invalid Container Format',
-            `${contLabel} (${cNum}) is invalid.\n\n${reason}\n\nPlease verify 4 uppercase letters + 7 numbers before proceeding.`
+            `${contLabel} (${cNum}) is invalid.\n\n${reason}\n\nPlease verify 4 uppercase letters + 7 numbers without symbols before proceeding.`
           );
           return;
         }
 
-        // STEP 2: Strict ISO Standard Check — Modulus-11 check digit verification
+        // STEP 2: Verify ISO 6346 Standard Check Digit
         const expectedDigit = computeCheckDigit(cNum);
         const actualDigit = parseInt(cNum[10], 10);
         if (expectedDigit !== actualDigit) {
           showAlert(
             'ISO 6346 Standard Mismatch',
-            `${contLabel} (${cNum}) failed the international ISO 6346 check digit standard.\n\n` +
+            `${contLabel} (${cNum}) has valid 4 letters + 7 numbers format, but check digit does not match ISO 6346 standard.\n\n` +
             `• Entered Check Digit: ${actualDigit}\n` +
             `• Required ISO Check Digit: ${expectedDigit}\n\n` +
             `Please correct the container number to: ${cNum.slice(0, 10)}${expectedDigit}`
@@ -724,41 +935,57 @@ export default function NewTripScreen() {
     setLoading(true);
     const allTripContainers: any[] = [];
     containers.forEach((c, i) => {
+      const isRet = !!c.isReturnContainer;
+      const loadType = c.loadType || (c.size === '40FT' ? '40FT' : '1x20FT');
       allTripContainers.push({
         id: `CONT-${Date.now()}-${i}-1`,
         containerNumber: c.containerNumber.trim().toUpperCase(),
         size: c.size,
+        loadType: loadType,
         destTerminal: c.destTerminal,
         sealNumber: c.sealNumber,
         damageStatus: c.damageStatus,
         remarks: c.remarks,
+        isReturn: isRet,
+        cargoType: isRet ? 'RETURN' : 'STANDARD',
       });
-      if (c.size === '20FT' && c.containerNumber2 && c.containerNumber2.trim()) {
+      if (loadType === '2x20FT' && c.containerNumber2 && c.containerNumber2.trim()) {
         allTripContainers.push({
           id: `CONT-${Date.now()}-${i}-2`,
           containerNumber: c.containerNumber2.trim().toUpperCase(),
           size: '20FT',
+          loadType: '2x20FT',
           destTerminal: c.destTerminal,
           sealNumber: c.sealNumber,
           damageStatus: c.damageStatus,
           remarks: c.remarks,
+          isReturn: isRet,
+          cargoType: isRet ? 'RETURN' : 'STANDARD',
         });
       }
     });
+
+    const hasReturn = allTripContainers.some((c) => c.isReturn);
 
     try {
       // Build payload — one trip with multiple containers, each with own destTerminal
       // We use the first container's destTerminal as the trip-level destTerminal
       const tripDestTerminal = containers[0].destTerminal;
 
+      const assignedVeh = driverTruck || user?.vehicleNumber || 'LY-6439';
+      const assignedChe = resolveCheNumber(assignedVeh, driverChe || user?.chassisNumber || user?.cheNumber);
+      const assignedOp = resolveOperator(assignedVeh, user?.operator);
+
       const payload = {
         driverId: user?.driverId || user?.id,
         vesselName: vesselName.trim(),
         operationDate,
         operationTime,
-        vehicleNumber: user?.vehicleNumber || 'LY 5234',
-        chassisNumber: user?.chassisNumber || user?.cheNumber || 'SCK 100',
-        chaiNumber: user?.chassisNumber || user?.cheNumber || 'SCK 100',
+        dispatchTime,
+        isReturn: hasReturn,
+        vehicleNumber: assignedVeh,
+        chassisNumber: assignedChe,
+        chaiNumber: assignedChe,
         sourceTerminal,
         destTerminal: tripDestTerminal,
         notes: notes.trim() || undefined,
@@ -769,23 +996,21 @@ export default function NewTripScreen() {
           sealNumber: c.sealNumber,
           damageStatus: c.damageStatus,
           remarks: c.remarks,
+          isReturn: c.isReturn,
+          cargoType: c.cargoType,
         })),
       };
 
       const res = await axios.post(`${API_BASE_URL}/trips`, payload);
       const createdTrip = res.data;
 
-      const assignedVeh = user?.vehicleNumber || 'LY 5234';
-      const assignedChe = resolveCheNumber(assignedVeh, user?.chassisNumber || user?.cheNumber);
-      const assignedOp = resolveOperator(assignedVeh, user?.operator);
-
       // Immediately sync with client mockTripStore so both Driver and Supervisor tabs reflect this trip in real time
       useMockTripStore.getState().addTrip({
         id: createdTrip.id,
         tripNumber: createdTrip.tripNumber || createdTrip.id,
         driverId: user?.driverId || user?.id || 'demo-driver',
-        driverCode: user?.driverId || 'DRV-00001',
-        driverName: user?.name || user?.fullName || 'Kamal Perera',
+        driverCode: user?.driverCode || user?.driverId || 'DRV-00001',
+        driverName: driverName || user?.name || user?.fullName || 'Kamal Perera',
         vehicleNumber: assignedVeh,
         chassisNumber: assignedChe,
         chaiNumber: assignedChe,
@@ -793,11 +1018,13 @@ export default function NewTripScreen() {
         vesselName: vesselName.trim(),
         operationDate,
         operationTime,
+        dispatchTime,
+        isReturn: hasReturn,
         sourceTerminal,
         destTerminal: tripDestTerminal,
         notes,
-        status: 'PENDING_APPROVAL',
-        containers: allTripContainers,
+        status: 'IN_PROGRESS',
+        containers: allTripContainers.map((c) => ({ ...c, status: 'IN_TRANSIT' })),
         startTime: new Date().toISOString(),
         createdAt: new Date().toISOString(),
       });
@@ -807,8 +1034,8 @@ export default function NewTripScreen() {
     } catch (err: any) {
       console.warn('Backend unavailable — simulating successful trip creation for demo mode.');
       
-      const fallbackVeh = user?.vehicleNumber || 'LY 5234';
-      const fallbackChe = resolveCheNumber(fallbackVeh, user?.chassisNumber || user?.cheNumber);
+      const fallbackVeh = driverTruck || user?.vehicleNumber || 'LY-6439';
+      const fallbackChe = resolveCheNumber(fallbackVeh, driverChe || user?.chassisNumber || user?.cheNumber);
       const fallbackOp = resolveOperator(fallbackVeh, user?.operator);
 
       const newTripId = `ITT-${new Date().getFullYear()}-${Math.floor(100000 + Math.random() * 900000)}`;
@@ -816,7 +1043,7 @@ export default function NewTripScreen() {
         id: newTripId,
         tripNumber: newTripId,
         driverId: user?.driverId || user?.id || 'demo-driver',
-        driverName: user?.name || 'Demo Driver',
+        driverName: driverName || user?.name || 'Demo Driver',
         vehicleNumber: fallbackVeh,
         chassisNumber: fallbackChe,
         chaiNumber: fallbackChe,
@@ -824,11 +1051,13 @@ export default function NewTripScreen() {
         vesselName: vesselName.trim(),
         operationDate,
         operationTime,
+        dispatchTime,
+        isReturn: hasReturn,
         sourceTerminal,
         destTerminal: containers[0].destTerminal,
         notes,
-        status: 'PENDING_APPROVAL',
-        containers: allTripContainers,
+        status: 'IN_PROGRESS',
+        containers: allTripContainers.map((c) => ({ ...c, status: 'IN_TRANSIT' })),
         startTime: new Date().toISOString(),
       });
 
@@ -870,19 +1099,121 @@ export default function NewTripScreen() {
         <View style={[styles.content, { paddingHorizontal: containerPaddingHorizontal }]}>
         {/* Driver info card */}
         <View style={styles.infoCard}>
-          <Text style={styles.sectionTitle}>1. Driver Details</Text>
-          <View style={styles.infoRow}>
-            <View>
-              <Text style={styles.infoLabel}>Driver Name</Text>
-              <Text style={styles.infoValue}>{user?.name || 'Kamal Perera'}</Text>
-              <Text style={styles.infoSub}>Driver Code: {user?.driverCode || user?.employeeId || 'DRV-1001'}</Text>
-              <Text style={styles.infoSub}>Contact: {user?.mobileNumber || '+94 77 123 4567'}</Text>
-            </View>
-            <View style={styles.truckBadge}>
-              <Text style={styles.truckLabel}>TRUCK</Text>
-              <Text style={styles.truckValue}>{user?.vehicleNumber || 'WP-DA-4521'}</Text>
-            </View>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+            <Text style={styles.sectionTitle}>1. Driver Details</Text>
+            <TouchableOpacity
+              style={styles.editDriverBtn}
+              onPress={() => {
+                if (isEditingDriver) {
+                  handleSaveDriverDetails();
+                } else {
+                  setIsEditingDriver(true);
+                }
+              }}
+              activeOpacity={0.8}
+            >
+              <Ionicons name={isEditingDriver ? "checkmark-circle" : "create-outline"} size={14} color="#00e5ff" />
+              <Text style={styles.editDriverBtnText}>
+                {isEditingDriver ? (savingDriver ? "SAVING..." : "SAVE DETAILS") : "EDIT DETAILS"}
+              </Text>
+            </TouchableOpacity>
           </View>
+
+          {isEditingDriver ? (
+            <View style={styles.driverEditForm}>
+              <Text style={styles.driverFieldLabel}>Driver Full Name *</Text>
+              <TextInput
+                style={styles.driverInput}
+                value={driverName}
+                onChangeText={setDriverName}
+                placeholder="Enter driver name"
+                placeholderTextColor="#849396"
+              />
+
+              <Text style={styles.driverFieldLabel}>Mobile Contact Number *</Text>
+              <TextInput
+                style={styles.driverInput}
+                value={driverContact}
+                onChangeText={setDriverContact}
+                placeholder="+94 77 XXXXXXX"
+                placeholderTextColor="#849396"
+              />
+
+              <View style={{ flexDirection: (isSmallMobile || width < 400) ? 'column' : 'row', gap: 10 }}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.driverFieldLabel}>Truck / Vehicle No *</Text>
+                  <TextInput
+                    style={styles.driverInput}
+                    value={driverTruck}
+                    onChangeText={setDriverTruck}
+                    placeholder="e.g. LY-6439"
+                    placeholderTextColor="#849396"
+                    autoCapitalize="characters"
+                  />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.driverFieldLabel}>CHE / Chassis No *</Text>
+                  <TextInput
+                    style={styles.driverInput}
+                    value={driverChe}
+                    onChangeText={setDriverChe}
+                    placeholder="e.g. CHE 100"
+                    placeholderTextColor="#849396"
+                    autoCapitalize="characters"
+                  />
+                </View>
+              </View>
+
+              <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: 8, marginTop: 4 }}>
+                <TouchableOpacity
+                  style={styles.driverCancelBtn}
+                  onPress={() => {
+                    setDriverName(user?.name || 'Kamal Perera');
+                    setDriverContact(user?.mobileNumber || '+94 77 123 4567');
+                    setDriverTruck(user?.vehicleNumber || 'LY-6439');
+                    setDriverChe(user?.chassisNumber || user?.cheNumber || 'CHE 100');
+                    setIsEditingDriver(false);
+                  }}
+                >
+                  <Text style={styles.driverCancelBtnText}>CANCEL</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.driverSaveBtn}
+                  onPress={handleSaveDriverDetails}
+                  disabled={savingDriver}
+                >
+                  {savingDriver ? (
+                    <ActivityIndicator size="small" color="#00363d" />
+                  ) : (
+                    <>
+                      <Ionicons name="checkmark" size={14} color="#00363d" />
+                      <Text style={styles.driverSaveBtnText}>SAVE DETAILS</Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+              </View>
+            </View>
+          ) : (
+            <View style={[styles.infoRow, { flexWrap: 'wrap', gap: 10 }]}>
+              <View style={{ flex: 1, minWidth: 140 }}>
+                <Text style={styles.infoLabel}>Driver Name</Text>
+                <Text style={styles.infoValue}>{driverName}</Text>
+                <Text style={styles.infoSub}>Driver Code: {user?.driverCode || user?.employeeId || 'DRV-1001'}</Text>
+                <Text style={styles.infoSub}>Contact: {driverContact}</Text>
+              </View>
+              <View style={{ alignItems: isSmallMobile ? 'flex-start' : 'flex-end', gap: 6, flexShrink: 0 }}>
+                <View style={styles.truckBadge}>
+                  <Text style={styles.truckLabel}>TRUCK</Text>
+                  <Text style={styles.truckValue}>{driverTruck}</Text>
+                </View>
+                <View style={[styles.truckBadge, { backgroundColor: 'rgba(0, 229, 255, 0.12)', borderColor: '#00e5ff' }]}>
+                  <Text style={[styles.truckLabel, { color: '#00e5ff' }]}>CHE NO</Text>
+                  <Text style={[styles.truckValue, { color: '#00e5ff' }]}>{driverChe}</Text>
+                </View>
+              </View>
+            </View>
+          )}
         </View>
 
         {/* Vessel */}
@@ -920,23 +1251,50 @@ export default function NewTripScreen() {
             accentColor="#00e5ff"
           />
 
-          <Text style={styles.fieldLabel}>Operation Date</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="YYYY-MM-DD"
-            placeholderTextColor="#849396"
-            value={operationDate}
-            onChangeText={setOperationDate}
-          />
-          
-          <Text style={styles.fieldLabel}>Operation Time</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="HH:MM"
-            placeholderTextColor="#849396"
-            value={operationTime}
-            onChangeText={setOperationTime}
-          />
+          {/* Automatic Operation Date & Live Counting Time */}
+          <View style={styles.autoTimingCard}>
+            <View style={styles.autoTimingHeader}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <View style={styles.livePulseDotGreen} />
+                <Text style={styles.autoTimingTitle}>AUTOMATIC OPERATION DATE & LIVE START TIME</Text>
+              </View>
+              <View style={styles.autoBadge}>
+                <Ionicons name="sparkles" size={11} color="#00e5ff" />
+                <Text style={styles.autoBadgeText}>AUTO LIVE</Text>
+              </View>
+            </View>
+
+            <View style={[styles.autoTimingGrid, (isSmallMobile || width < 440) && { flexDirection: 'column' }]}>
+              {/* Automatic Date Block */}
+              <View style={styles.autoTimingCol}>
+                <Text style={styles.autoTimingLabel}>OPERATION DATE (AUTOMATIC)</Text>
+                <View style={styles.autoTimingBox}>
+                  <Ionicons name="calendar" size={16} color="#feb300" />
+                  <Text style={styles.autoDateText}>{operationDate}</Text>
+                  <View style={styles.autoTodayTag}>
+                    <Text style={styles.autoTodayTagText}>TODAY</Text>
+                  </View>
+                </View>
+              </View>
+
+              {/* Live Counting Time Block */}
+              <View style={styles.autoTimingCol}>
+                <Text style={styles.autoTimingLabel}>START TIME (COUNTING LIVE)</Text>
+                <View style={styles.autoTimingBox}>
+                  <Ionicons name="time" size={16} color="#00e5ff" />
+                  <Text style={styles.autoClockText}>{liveClock}</Text>
+                  <View style={styles.liveTag}>
+                    <View style={styles.liveBlinkDot} />
+                    <Text style={styles.liveTagText}>LIVE</Text>
+                  </View>
+                </View>
+              </View>
+            </View>
+
+            <Text style={styles.autoTimingHelp}>
+              The operation date is set automatically to today, and start time is continuously counting live for accurate ITT dispatch tracking.
+            </Text>
+          </View>
         </View>
 
 
@@ -984,27 +1342,31 @@ export default function NewTripScreen() {
           <View style={styles.summaryRow}>
             <Text style={styles.summaryKey}>Chassis Cargo</Text>
             <Text style={[styles.summaryVal, { color: '#00e5ff', fontWeight: '800' }]}>
-              {containers[0]?.size === '40FT'
+              {containers[0]?.loadType === '40FT' || containers[0]?.size === '40FT'
                 ? '1 × 40FT Container'
-                : `${containers[0]?.containerNumber2?.trim() ? 2 : 1} × 20FT Container${containers[0]?.containerNumber2?.trim() ? 's' : ''}`}
+                : containers[0]?.loadType === '1x20FT'
+                ? '1 × 20FT Container (Single)'
+                : '2 × 20FT Containers (Twin)'}
             </Text>
           </View>
           <View style={styles.summaryRow}>
             <Text style={styles.summaryKey}>Chassis Capacity</Text>
             <Text style={[styles.summaryVal, { color: '#22ef7e', fontWeight: '800' }]}>
-              {containers[0]?.size === '40FT'
+              {containers[0]?.loadType === '40FT' || containers[0]?.size === '40FT'
                 ? '1/1 (40FT Slot Full)'
-                : containers[0]?.containerNumber2?.trim()
-                ? '2/2 (20FT Slots Full)'
-                : '1/2 (20FT Slot)'}
+                : containers[0]?.loadType === '1x20FT'
+                ? '1/2 (Single 20FT Loaded)'
+                : '2/2 (20FT Twin Slots Full)'}
             </Text>
           </View>
           <View style={styles.summaryRow}>
             <Text style={styles.summaryKey}>Total Containers</Text>
             <Text style={styles.summaryVal}>
-              {containers[0]?.size === '40FT'
+              {containers[0]?.loadType === '40FT' || containers[0]?.size === '40FT'
                 ? '1 Container'
-                : `${containers[0]?.containerNumber2?.trim() ? 2 : 1} Containers`}
+                : containers[0]?.loadType === '1x20FT'
+                ? '1 Container'
+                : '2 Containers'}
             </Text>
           </View>
           <View style={styles.summaryRow}>
@@ -1029,13 +1391,15 @@ export default function NewTripScreen() {
             </View>
           )}
           <View style={styles.summaryRow}>
-            <Text style={styles.summaryKey}>Vehicle / Chai</Text>
-            <Text style={styles.summaryVal}>{user?.vehicleNumber || 'WP-DA-4521'} / {user?.chaiNumber || '—'}</Text>
+            <Text style={styles.summaryKey}>Vehicle / CHE</Text>
+            <Text style={styles.summaryVal}>
+              {driverTruck || user?.vehicleNumber || 'LY-6439'} / {driverChe || user?.chaiNumber || user?.chassisNumber || 'CHE 100'}
+            </Text>
           </View>
           <View style={styles.chassisRulePill}>
             <Ionicons name="shield-checkmark" size={13} color="#22ef7e" />
             <Text style={styles.chassisRulePillText}>
-              Chassis Policy: 1 Trip can carry only 1 × 40FT or up to 2 × 20FT containers.
+              Chassis Policy: 1 Trip can carry 1 × 20FT (Single), 2 × 20FT (Twin), or 1 × 40FT.
             </Text>
           </View>
         </View>
@@ -1065,9 +1429,12 @@ export default function NewTripScreen() {
           disabled={loading}
         >
           {loading ? (
-            <ActivityIndicator color="#fff" />
+            <ActivityIndicator color="#00363d" />
           ) : (
-            <Text style={styles.startBtnText}>Verify & send to supervisor</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+              <Ionicons name="play-circle" size={20} color="#00363d" />
+              <Text style={styles.startBtnText}>Start Trip & Begin Transport</Text>
+            </View>
           )}
         </TouchableOpacity>
       </View>
@@ -1078,19 +1445,22 @@ export default function NewTripScreen() {
           vesselName={vesselName}
           sourceTerminal={sourceTerminal}
           destTerminals={[...new Set(containers.map((c) => c.destTerminal))].join(', ')}
-          vehicleNumber={user?.vehicleNumber}
-          driverName={user?.name}
+          vehicleNumber={driverTruck || user?.vehicleNumber || 'LY-6439'}
+          driverName={driverName || user?.name || 'Kamal Perera'}
           containers={containers.flatMap((c) => {
+            const currentLoadType = c.loadType || (c.size === '40FT' ? '40FT' : '1x20FT');
             const list = [{
               containerNumber: c.containerNumber.trim().toUpperCase(),
               size: c.size,
               destTerminal: c.destTerminal,
+              isReturn: c.isReturnContainer,
             }];
-            if (c.size === '20FT' && c.containerNumber2 && c.containerNumber2.trim()) {
+            if (currentLoadType === '2x20FT' && c.containerNumber2 && c.containerNumber2.trim()) {
               list.push({
                 containerNumber: c.containerNumber2.trim().toUpperCase(),
                 size: '20FT',
                 destTerminal: c.destTerminal,
+                isReturn: c.isReturnContainer,
               });
             }
             return list;
@@ -1107,7 +1477,10 @@ export default function NewTripScreen() {
           mode="sent"
           tripNumber={sentTripNumber}
           vesselName={vesselName}
-          containerCount={containers.reduce((acc, c) => acc + (c.size === '20FT' && c.containerNumber2 && c.containerNumber2.trim() ? 2 : 1), 0)}
+          containerCount={containers.reduce((acc, c) => {
+            const currentLoadType = c.loadType || (c.size === '40FT' ? '40FT' : '1x20FT');
+            return acc + (currentLoadType === '2x20FT' && c.containerNumber2 && c.containerNumber2.trim() ? 2 : 1);
+          }, 0)}
           onDone={goHomeAfterSend}
         />
       )}
@@ -1234,5 +1607,196 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '700',
     flex: 1,
+  },
+  editDriverBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(0, 229, 255, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 229, 255, 0.4)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  editDriverBtnText: {
+    color: '#00e5ff',
+    fontSize: 11,
+    fontWeight: '800',
+  },
+  driverEditForm: {
+    marginTop: 8,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: '#242a34',
+  },
+  driverFieldLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#849396',
+    marginBottom: 4,
+    marginTop: 6,
+    textTransform: 'uppercase',
+  },
+  driverInput: {
+    backgroundColor: '#080e17',
+    borderWidth: 1,
+    borderColor: '#242a34',
+    borderRadius: radius.md,
+    color: '#dde2f0',
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    fontSize: 13,
+    fontWeight: '600',
+    marginBottom: 4,
+    ...(Platform.OS === 'web' && { outlineStyle: 'none', cursor: 'text' } as any),
+  },
+  driverCancelBtn: {
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: radius.md,
+    backgroundColor: '#1d2633',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  driverCancelBtnText: {
+    color: '#849396',
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  driverSaveBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: radius.md,
+    backgroundColor: '#00e5ff',
+    justifyContent: 'center',
+  },
+  driverSaveBtnText: {
+    color: '#00363d',
+    fontSize: 11,
+    fontWeight: '800',
+  },
+  autoTimingCard: {
+    backgroundColor: '#080e17',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 229, 255, 0.3)',
+    borderRadius: radius.md,
+    padding: 12,
+    marginTop: 8,
+    marginBottom: 8,
+  },
+  autoTimingHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  autoTimingTitle: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#00e5ff',
+    letterSpacing: 0.5,
+  },
+  autoBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(0, 229, 255, 0.12)',
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 229, 255, 0.3)',
+  },
+  autoBadgeText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#00e5ff',
+  },
+  autoTimingGrid: {
+    flexDirection: 'row',
+    gap: 10,
+    marginBottom: 8,
+  },
+  autoTimingCol: {
+    flex: 1,
+  },
+  autoTimingLabel: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#849396',
+    marginBottom: 4,
+    textTransform: 'uppercase',
+  },
+  autoTimingBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#0f1622',
+    borderWidth: 1,
+    borderColor: '#242a34',
+    borderRadius: radius.md,
+    paddingHorizontal: 10,
+    paddingVertical: 10,
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  autoDateText: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#feb300',
+    letterSpacing: 0.5,
+  },
+  autoClockText: {
+    fontSize: 13,
+    fontWeight: '900',
+    color: '#00e5ff',
+    letterSpacing: 1,
+  },
+  autoTodayTag: {
+    backgroundColor: 'rgba(254, 179, 0, 0.16)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  autoTodayTagText: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: '#feb300',
+  },
+  liveTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(34, 239, 126, 0.15)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  liveBlinkDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#22ef7e',
+  },
+  livePulseDotGreen: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#22ef7e',
+  },
+  liveTagText: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: '#22ef7e',
+  },
+  autoTimingHelp: {
+    fontSize: 10,
+    color: '#849396',
+    lineHeight: 14,
+    marginTop: 2,
   },
 });

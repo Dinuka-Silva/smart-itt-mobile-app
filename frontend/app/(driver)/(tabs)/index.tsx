@@ -25,6 +25,7 @@ import { useMockTripStore } from '../../../src/store/mockTripStore';
 import axios from 'axios';
 import API_BASE_URL from '../../../src/config/api';
 import { useResponsive } from '../../../src/hooks/useResponsive';
+import { getTripTimingDetails } from '../../../src/utils/tripDateUtils';
 
 const TERMINALS = ['CICT', 'CWIT', 'ECT', 'JCT', 'UCT', 'SAGT'] as const;
 type TerminalCode = (typeof TERMINALS)[number];
@@ -126,9 +127,28 @@ export default function DriverHomeDashboard() {
       const merged = Array.from(byId.values());
       setTrips(merged);
 
-      // 2. Fetch live dashboard metrics
+      // 2. Fetch live dashboard metrics & compute dynamic live counts
       const stats = await dashboardService.getDriverDashboard(driverId);
-      setDashboardStats(stats);
+      const completedCount = merged.filter((t) => t.status === 'COMPLETED' || t.status === 'APPROVED').length;
+      const activeCount = merged.filter((t) => t.status === 'IN_PROGRESS' || t.status === 'ARRIVED').length;
+      const pendingCount = merged.filter((t) => t.status === 'PENDING_APPROVAL').length;
+      let containersDelivered = 0;
+      merged.forEach((t) => {
+        if (t.status === 'COMPLETED' || t.status === 'APPROVED') {
+          containersDelivered += (t.containers?.length || 1);
+        }
+      });
+
+      setDashboardStats({
+        ...stats,
+        activeTrips: activeCount,
+        completedTripsToday: completedCount,
+        containersTransportedToday: containersDelivered || stats.containersTransportedToday,
+        tripsPendingApproval: pendingCount,
+        approvedAllowance: completedCount * 2500,
+        pendingAllowance: pendingCount * 2500,
+        activeTrip: merged.find((t) => t.status === 'IN_PROGRESS' || t.status === 'ARRIVED' || t.status === 'PENDING_APPROVAL') || null,
+      });
       setIsOnline(true);
 
       // 3. Fetch driver profile to sync assigned vehicle and 1-year revenue license metrics
@@ -143,11 +163,15 @@ export default function DriverHomeDashboard() {
       setTrips(demoTrips);
       setIsOnline(false);
       // Fallback calculations from local store
-      const activeCount = demoTrips.filter((t) => t.status === 'IN_PROGRESS').length;
       const completedCount = demoTrips.filter((t) => t.status === 'COMPLETED' || t.status === 'APPROVED').length;
+      const activeCount = demoTrips.filter((t) => t.status === 'IN_PROGRESS' || t.status === 'ARRIVED').length;
       const pendingCount = demoTrips.filter((t) => t.status === 'PENDING_APPROVAL').length;
       let containersCount = 0;
-      demoTrips.forEach((t) => { containersCount += (t.containers?.length || 0); });
+      demoTrips.forEach((t) => {
+        if (t.status === 'COMPLETED' || t.status === 'APPROVED') {
+          containersCount += (t.containers?.length || 0);
+        }
+      });
 
       setDashboardStats({
         activeTrips: activeCount,
@@ -156,7 +180,7 @@ export default function DriverHomeDashboard() {
         tripsPendingApproval: pendingCount,
         approvedAllowance: completedCount * 2500,
         pendingAllowance: pendingCount * 2500,
-        activeTrip: demoTrips.find((t) => t.status === 'IN_PROGRESS') || null,
+        activeTrip: demoTrips.find((t) => t.status === 'IN_PROGRESS' || t.status === 'ARRIVED' || t.status === 'PENDING_APPROVAL') || null,
       });
     } finally {
       setRefreshing(false);
@@ -189,7 +213,7 @@ export default function DriverHomeDashboard() {
 
   const driverName = driverProfile?.fullName || user?.name || user?.fullName || 'Kamal Perera';
   const driverCode = driverProfile?.driverCode || user?.driverCode || user?.username || 'DRV-00001';
-  const vehicleNumber = driverProfile?.vehicleNumber || user?.vehicleNumber || activeTrip?.vehicleNumber || 'LY 5234';
+  const vehicleNumber = driverProfile?.vehicleNumber || user?.vehicleNumber || activeTrip?.vehicleNumber || 'LY-6439';
   const initials = driverName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase();
   const driverPhoto = driverProfile?.profilePhoto || user?.profilePhoto || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80';
 
@@ -200,6 +224,15 @@ export default function DriverHomeDashboard() {
     Math.round((new Date(vehicleLicenseExpiryDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
   );
   const vehicleLicenseRenewalDue = driverProfile?.vehicleLicenseRenewalDue ?? user?.vehicleLicenseRenewalDue ?? (vehicleLicenseDaysLeft <= 30);
+
+  // Driver Port Pass & Vehicle Port Pass Expiry (SLPA Gate Pass - 5 days renewal warning check)
+  const driverPortPassExpiryDate = driverProfile?.driverPortPassExpiryDate || user?.driverPortPassExpiryDate || '2026-11-15';
+  const driverPortPassDaysLeft = Math.round((new Date(driverPortPassExpiryDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+  const driverPortPassRenewalDue = driverPortPassDaysLeft <= 5;
+
+  const vehiclePortPassExpiryDate = driverProfile?.vehiclePortPassExpiryDate || user?.vehiclePortPassExpiryDate || '2026-11-20';
+  const vehiclePortPassDaysLeft = Math.round((new Date(vehiclePortPassExpiryDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+  const vehiclePortPassRenewalDue = vehiclePortPassDaysLeft <= 5;
 
   // Container counts for active trip
   const count20Ft = (activeTrip?.containers || []).filter((c: any) => c.size === '20FT' || c.size === 'FT_20').length;
@@ -258,26 +291,35 @@ export default function DriverHomeDashboard() {
     }
   };
 
-  // 3. COMPLETE TRIP HANDLER
+  // 3. COMPLETE TRIP HANDLER -> SENDS TO SUPERVISOR FOR CONFIRMATION
   const handleCompleteActiveTrip = async (tripId: string) => {
     setActionInProgress(true);
     try {
       const trip = trips.find((t) => t.id === tripId);
+      const time = new Date().toISOString();
       const containerUpdates = (trip?.containers || []).map((c: any) => ({
         containerId: c.id,
         unloadedTerminal: c.unloadedTerminal || trip?.destTerminal || 'ECT',
       }));
 
-      await axios.patch(`${API_BASE_URL}/trips/${tripId}/complete`, { containerUpdates });
-      useMockTripStore.getState().unloadContainer(tripId, trip?.containers?.[0]?.id || 'c-1', new Date().toISOString());
-      useMockTripStore.getState().updateTripStatus(tripId, 'COMPLETED');
+      try {
+        await axios.patch(`${API_BASE_URL}/trips/${tripId}/complete`, { containerUpdates });
+      } catch {}
+
+      useMockTripStore.getState().unloadContainer(tripId, trip?.containers?.[0]?.id || 'c-1', time, trip?.destTerminal);
+      useMockTripStore.getState().updateTripStatus(tripId, 'PENDING_APPROVAL');
       await loadData();
-      Alert.alert('Trip Completed! 🎉', 'All containers safely discharged. Trip permanently saved to your My Trips archive!');
+      Alert.alert(
+        'Delivery Completed! 📋',
+        'Containers discharged successfully. Completed trip has been sent to the Operations Supervisor for confirmation. Once confirmed, your completed trip count and earnings will update!'
+      );
     } catch {
-      useMockTripStore.getState().unloadContainer(tripId, 'c-1', new Date().toISOString());
-      useMockTripStore.getState().updateTripStatus(tripId, 'COMPLETED');
+      useMockTripStore.getState().updateTripStatus(tripId, 'PENDING_APPROVAL');
       await loadData();
-      Alert.alert('Trip Completed! 🎉', 'All containers safely discharged. Trip permanently saved to your My Trips archive!');
+      Alert.alert(
+        'Delivery Completed! 📋',
+        'Containers discharged successfully. Completed trip has been sent to the Operations Supervisor for confirmation. Once confirmed, your completed trip count and earnings will update!'
+      );
     } finally {
       setActionInProgress(false);
     }
@@ -432,6 +474,54 @@ export default function DriverHomeDashboard() {
               </Text>
             </View>
             <Ionicons name="chevron-forward" size={16} color="#f59e0b" />
+          </TouchableOpacity>
+        )}
+
+        {/* ─── PORT PASS EXPIRY REMINDER (DRIVER & VEHICLE PORT PASSES - ACTIVE WITHIN 5 DAYS) ─── */}
+        {(driverPortPassRenewalDue || vehiclePortPassRenewalDue) && (
+          <TouchableOpacity
+            activeOpacity={0.85}
+            onPress={() => router.push('/(driver)/(tabs)/profile')}
+            style={[styles.vehicleLicenseAlertCard, { borderColor: '#feb300', backgroundColor: 'rgba(254, 179, 0, 0.08)' }]}
+          >
+            <View style={[styles.vehicleLicenseAlertIcon, { backgroundColor: 'rgba(254, 179, 0, 0.2)' }]}>
+              <Ionicons name="card" size={20} color="#feb300" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+                <Text style={[styles.vehicleLicenseAlertTitle, { color: '#feb300' }]}>
+                  PORT PASS RENEWAL WARNING (EXPIRING WITHIN 5 DAYS)
+                </Text>
+                <View style={[styles.vehicleLicenseBadge, { backgroundColor: '#feb300' }]}>
+                  <Text style={[styles.vehicleLicenseBadgeText, { color: '#00363d' }]}>
+                    ACTION REQUIRED
+                  </Text>
+                </View>
+              </View>
+
+              <View style={{ gap: 4 }}>
+                {driverPortPassRenewalDue && (
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <Ionicons name="person-circle" size={13} color="#00e5ff" />
+                    <Text style={{ fontSize: 12, color: '#dde2f0', fontWeight: '700' }}>
+                      Driver Port Pass: <Text style={{ color: '#00e5ff' }}>{driverPortPassExpiryDate}</Text> ({driverPortPassDaysLeft <= 0 ? 'EXPIRED' : `${driverPortPassDaysLeft} days left - RENEW NOW`})
+                    </Text>
+                  </View>
+                )}
+                {vehiclePortPassRenewalDue && (
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <Ionicons name="bus" size={13} color="#feb300" />
+                    <Text style={{ fontSize: 12, color: '#dde2f0', fontWeight: '700' }}>
+                      Vehicle Port Pass: <Text style={{ color: '#feb300' }}>{vehiclePortPassExpiryDate}</Text> ({vehiclePortPassDaysLeft <= 0 ? 'EXPIRED' : `${vehiclePortPassDaysLeft} days left - RENEW NOW`})
+                    </Text>
+                  </View>
+                )}
+              </View>
+              <Text style={[styles.vehicleLicenseAlertBody, { marginTop: 4, color: '#bac9cc' }]}>
+                Sri Lanka Ports Authority (SLPA) gate clearance pass is within 5 days of expiration. Please renew immediately to avoid terminal gate-in lockout.
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={16} color="#feb300" />
           </TouchableOpacity>
         )}
 
@@ -625,6 +715,52 @@ export default function DriverHomeDashboard() {
               )}
             </View>
 
+            {/* ─── TRIP STARTED DATE TIME & END TIME DETAILS ─── */}
+            {(() => {
+              const timing = getTripTimingDetails(activeTrip);
+              return (
+                <View style={styles.missionTimingPanel}>
+                  <View style={styles.missionTimingCol}>
+                    <View style={styles.missionTimingHeader}>
+                      <Ionicons name="play-circle" size={12} color="#00e5ff" />
+                      <Text style={styles.missionTimingLabel}>STARTED DATE & TIME</Text>
+                    </View>
+                    <Text style={styles.missionTimingDate}>{timing.startDate}</Text>
+                    <Text style={styles.missionTimingTime}>{timing.startTime}</Text>
+                  </View>
+
+                  <View style={styles.missionTimingDivider}>
+                    <Ionicons name="arrow-forward" size={14} color="#3a4756" />
+                    {timing.duration && (
+                      <View style={styles.missionDurationPill}>
+                        <Ionicons name="timer-outline" size={10} color="#22ef7e" />
+                        <Text style={styles.missionDurationText}>{timing.duration}</Text>
+                      </View>
+                    )}
+                  </View>
+
+                  <View style={styles.missionTimingCol}>
+                    <View style={styles.missionTimingHeader}>
+                      <Ionicons
+                        name={timing.isCompleted ? 'checkmark-circle' : timing.isPending ? 'time' : 'navigate-circle'}
+                        size={12}
+                        color={timing.statusColor}
+                      />
+                      <Text style={[styles.missionTimingLabel, { color: timing.statusColor }]}>
+                        {timing.isCompleted ? 'COMPLETED DATE & TIME' : timing.isPending ? 'DISCHARGED (AWAITING SIGN-OFF)' : 'CURRENT STATUS'}
+                      </Text>
+                    </View>
+                    <Text style={[styles.missionTimingDate, !timing.isCompleted && !timing.isPending && { color: '#849396' }]}>
+                      {timing.endDate}
+                    </Text>
+                    <Text style={[styles.missionTimingTime, { color: timing.statusColor }]}>
+                      {timing.endTime}
+                    </Text>
+                  </View>
+                </View>
+              );
+            })()}
+
             {/* 2. Route & Terminal Pair */}
             <View style={styles.routePairBox}>
               <View style={styles.routeCol}>
@@ -684,7 +820,7 @@ export default function DriverHomeDashboard() {
 
             {/* 4. DYNAMIC NOTIFICATIONS & ACTION BUTTONS */}
 
-            {/* STATE A: Awaiting Supervisor Confirmation */}
+            {/* STATE A: Awaiting Supervisor Confirmation After Trip Delivery */}
             {activeTrip.status === 'PENDING_APPROVAL' && (
               <View style={styles.notificationBannerPending}>
                 <View style={styles.notificationBannerHeader}>
@@ -694,44 +830,37 @@ export default function DriverHomeDashboard() {
                   </Text>
                 </View>
                 <Text style={styles.notificationBannerMsg}>
-                  Your trip details have been submitted to the operations tower. Please wait until the supervisor verifies the containers and grants your gate pass.
+                  Trip delivered and containers discharged at {activeTrip.destTerminal || 'destination'}! Your completed trip has been sent to the Operations Supervisor. As soon as the supervisor verifies and confirms, your completed trip count (+1) and allowance will update automatically.
                 </Text>
                 <View style={styles.pendingActionInfoRow}>
                   <ActivityIndicator size="small" color="#feb300" />
                   <Text style={styles.pendingWaitingText}>
-                    Checking for supervisor approval in real-time...
+                    Awaiting supervisor sign-off to update completed trip count...
                   </Text>
                 </View>
               </View>
             )}
 
-            {/* STATE B: Supervisor Confirmed Trip -> START THE TRIP BUTTON */}
+            {/* STATE B: Supervisor Confirmed Trip */}
             {activeTrip.status === 'APPROVED' && (
               <View style={styles.notificationBannerApproved}>
                 <View style={styles.notificationBannerHeader}>
                   <Ionicons name="checkmark-circle" size={22} color="#22ef7e" />
                   <Text style={styles.notificationBannerTitleApproved}>
-                    SUPERVISOR CONFIRMED THE TRIP!
+                    SUPERVISOR CONFIRMED THE TRIP! 🎉
                   </Text>
                 </View>
                 <Text style={styles.notificationBannerMsgApproved}>
-                  Gate pass validated. You are cleared to depart {activeTrip.sourceTerminal || 'origin terminal'}. Tap below to start the trip.
+                  Your delivery has been officially confirmed by the operations supervisor! Your completed trip count and driver allowance have been updated.
                 </Text>
 
                 <TouchableOpacity
-                  style={styles.startTripPrimaryBtn}
-                  onPress={() => handleStartActiveTrip(activeTrip.id)}
-                  disabled={actionInProgress}
+                  style={[styles.startTripPrimaryBtn, { backgroundColor: '#22ef7e' }]}
+                  onPress={() => router.push('/(driver)/trips/new')}
                   activeOpacity={0.88}
                 >
-                  {actionInProgress ? (
-                    <ActivityIndicator color="#00363d" size="small" />
-                  ) : (
-                    <>
-                      <Ionicons name="play-circle" size={24} color="#00363d" />
-                      <Text style={styles.startTripPrimaryBtnText}>START THE TRIP NOW</Text>
-                    </>
-                  )}
+                  <Ionicons name="add-circle" size={22} color="#00363d" />
+                  <Text style={styles.startTripPrimaryBtnText}>START NEXT TRIP</Text>
                 </TouchableOpacity>
               </View>
             )}
@@ -769,7 +898,7 @@ export default function DriverHomeDashboard() {
               </View>
             )}
 
-            {/* STATE D: Arrived At Terminal -> COMPLETE TRIP BUTTON */}
+            {/* STATE D: Arrived At Terminal -> COMPLETE TRIP & SEND TO SUPERVISOR */}
             {activeTrip.status === 'ARRIVED' && (
               <View style={styles.notificationBannerArrived}>
                 <View style={styles.notificationBannerHeader}>
@@ -779,7 +908,7 @@ export default function DriverHomeDashboard() {
                   </Text>
                 </View>
                 <Text style={styles.notificationBannerMsg}>
-                  Containers are ready to be discharged from chassis {activeTrip.chassisNumber || user?.cheNumber || 'SCK 100'}. Once crane offloading is done, tap Complete Trip to archive your run.
+                  Containers are ready to be discharged from chassis {activeTrip.chassisNumber || user?.cheNumber || 'CHE 100'}. Once crane offloading is done, tap below to submit completed trip to your supervisor for confirmation.
                 </Text>
 
                 <TouchableOpacity
@@ -792,8 +921,8 @@ export default function DriverHomeDashboard() {
                     <ActivityIndicator color="#00363d" size="small" />
                   ) : (
                     <>
-                      <Ionicons name="checkmark-done-circle" size={24} color="#00363d" />
-                      <Text style={styles.completeTripBtnText}>COMPLETE TRIP & DISCHARGE</Text>
+                      <Ionicons name="paper-plane" size={22} color="#00363d" />
+                      <Text style={styles.completeTripBtnText}>COMPLETE TRIP & SEND TO SUPERVISOR</Text>
                     </>
                   )}
                 </TouchableOpacity>
@@ -806,11 +935,11 @@ export default function DriverHomeDashboard() {
                 <View style={styles.notificationBannerHeader}>
                   <Ionicons name="trophy" size={22} color="#22ef7e" />
                   <Text style={styles.notificationBannerTitleCompleted}>
-                    TRIP SUCCESSFULLY COMPLETED!
+                    TRIP CONFIRMED & COMPLETED! 🎉
                   </Text>
                 </View>
                 <Text style={styles.notificationBannerMsg}>
-                  This mission has been completed and stored in your My Trips archive. You can start a new trip below.
+                  Supervisor has verified and confirmed this delivery. Your completed trip count (+1) and earnings have been updated!
                 </Text>
               </View>
             )}
@@ -2330,6 +2459,69 @@ const styles = StyleSheet.create({
       },
   terminalChipTextActive: {
     color: '#00e5ff',
+  },
+
+  missionTimingPanel: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#080e17',
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: '#1e293b',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginBottom: 12,
+    gap: 8,
+  },
+  missionTimingCol: {
+    flex: 1,
+    gap: 2,
+  },
+  missionTimingHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginBottom: 2,
+  },
+  missionTimingLabel: {
+    fontSize: 8.5,
+    fontWeight: '800',
+    color: '#00e5ff',
+    letterSpacing: 0.4,
+  },
+  missionTimingDate: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#dde2f0',
+  },
+  missionTimingTime: {
+    fontSize: 12,
+    fontWeight: '900',
+    color: '#00e5ff',
+    letterSpacing: 0.2,
+  },
+  missionTimingDivider: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 3,
+    paddingHorizontal: 2,
+  },
+  missionDurationPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: 'rgba(34, 239, 126, 0.12)',
+    paddingHorizontal: 5,
+    paddingVertical: 2,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(34, 239, 126, 0.3)',
+  },
+  missionDurationText: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: '#22ef7e',
   },
 
   errorBox: {

@@ -57,10 +57,21 @@ public class SecurityConfig {
                     "/swagger-ui/**",
                     "/swagger-ui.html",
                     "/api-docs/**",
-                    "/v3/api-docs/**"
+                    "/v3/api-docs/**",
+                    "/h2-console/**"
                 ).permitAll()
-                // All authenticated requests - open for now to allow frontend integration
-                .anyRequest().permitAll()
+                // Admin-only endpoints
+                .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
+                // Supervisor + Admin can access approval and report endpoints
+                .requestMatchers(
+                    "/api/v1/approvals/**",
+                    "/api/v1/reports/**",
+                    "/api/v1/dashboard"
+                ).hasAnyRole("SUPERVISOR", "ADMIN")
+                // Dashboard for drivers
+                .requestMatchers("/api/v1/dashboard/driver/**").hasAnyRole("DRIVER", "ADMIN")
+                // All other authenticated endpoints
+                .anyRequest().authenticated()
             )
             .addFilterBefore(apiKeyAuthFilter, UsernamePasswordAuthenticationFilter.class)
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);

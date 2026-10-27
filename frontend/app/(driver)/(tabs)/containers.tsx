@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -18,14 +18,17 @@ import { useMockTripStore } from '../../../src/store/mockTripStore';
 import { useFocusEffect } from 'expo-router';
 import { useResponsive } from '../../../src/hooks/useResponsive';
 
+const ALL_TERMINALS = ['All', 'CICT', 'CWIT', 'ECT', 'JCT', 'SAGT', 'UCT'] as const;
+
 export default function DriverContainers() {
   const user = useAuthStore((s) => s.user);
-  const { topInset, bottomInset, contentMaxWidth, containerPaddingHorizontal } = useResponsive();
+  const { topInset, bottomInset, contentMaxWidth, containerPaddingHorizontal, isSmallMobile } = useResponsive();
   const [containers, setContainers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string>('All');
+  const [selectedTerminal, setSelectedTerminal] = useState<string>('All');
 
   const fetchContainers = useCallback(async () => {
     try {
@@ -95,13 +98,25 @@ export default function DriverContainers() {
 
   const onRefresh = () => { setRefreshing(true); fetchContainers(); };
 
-  const filteredContainers = containers.filter((c) => {
-    if (selectedDate === 'All') return true;
-    return c.tripDate?.startsWith(selectedDate);
-  });
+  const filteredContainers = useMemo(() => {
+    return containers
+      .filter((c) => {
+        if (selectedDate !== 'All' && !c.tripDate?.startsWith(selectedDate)) return false;
+        if (selectedTerminal !== 'All') {
+          const dest = (c.destTerminal || '').toUpperCase();
+          if (dest !== selectedTerminal.toUpperCase()) return false;
+        }
+        return true;
+      })
+      .sort((a, b) => {
+        const termCmp = (a.destTerminal || '').localeCompare(b.destTerminal || '');
+        if (termCmp !== 0) return termCmp;
+        return (b.tripDate || '').localeCompare(a.tripDate || '');
+      });
+  }, [containers, selectedDate, selectedTerminal]);
 
-  const ft20 = filteredContainers.filter((c) => (c.size || '').includes('20')).length;
-  const ft40 = filteredContainers.filter((c) => (c.size || '').includes('40')).length;
+  const ft20 = filteredContainers.filter((c: any) => (c.size || '').includes('20')).length;
+  const ft40 = filteredContainers.filter((c: any) => (c.size || '').includes('40')).length;
 
   const getStatusLabel = (containerStatus: string, tripStatus: string) => {
     if (tripStatus === 'COMPLETED' || tripStatus === 'APPROVED') return 'DELIVERED';
@@ -159,17 +174,17 @@ export default function DriverContainers() {
 
       {/* Summary Cards */}
       {!loading && (
-        <View style={styles.summaryRow}>
+        <View style={[styles.summaryRow, { paddingHorizontal: containerPaddingHorizontal }]}>
           <View style={[styles.summaryCard, { borderLeftColor: '#00e5ff' }]}>
-            <Text style={[styles.summaryValue, { color: '#00e5ff' }]}>{ft20}</Text>
+            <Text style={[styles.summaryValue, { color: '#00e5ff', fontSize: isSmallMobile ? 20 : 26 }]}>{ft20}</Text>
             <Text style={styles.summaryLabel}>20FT</Text>
           </View>
           <View style={[styles.summaryCard, { borderLeftColor: '#feb300' }]}>
-            <Text style={[styles.summaryValue, { color: '#feb300' }]}>{ft40}</Text>
+            <Text style={[styles.summaryValue, { color: '#feb300', fontSize: isSmallMobile ? 20 : 26 }]}>{ft40}</Text>
             <Text style={styles.summaryLabel}>40FT</Text>
           </View>
           <View style={[styles.summaryCard, { borderLeftColor: '#22ef7e' }]}>
-            <Text style={[styles.summaryValue, { color: '#22ef7e' }]}>{filteredContainers.length}</Text>
+            <Text style={[styles.summaryValue, { color: '#22ef7e', fontSize: isSmallMobile ? 20 : 26 }]}>{filteredContainers.length}</Text>
             <Text style={styles.summaryLabel}>TOTAL</Text>
           </View>
         </View>
@@ -177,7 +192,7 @@ export default function DriverContainers() {
 
       {/* ITT Haulage Capacity Rule Banner */}
       {!loading && (
-        <View style={styles.policyNoticeBox}>
+        <View style={[styles.policyNoticeBox, { marginHorizontal: containerPaddingHorizontal }]}>
           <Ionicons name="information-circle" size={15} color="#00e5ff" />
           <Text style={styles.policyNoticeText}>
             ITT Haulage Rule: 1 Trip can transport only 1 × 40FT container OR up to 2 × 20FT containers.
@@ -185,27 +200,91 @@ export default function DriverContainers() {
         </View>
       )}
 
+      {/* Discharge Terminal Filter & Terminalwise Sorting Carousel */}
+      {!loading && (
+        <View style={{ marginHorizontal: containerPaddingHorizontal, marginTop: 10, marginBottom: 4 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6, flexWrap: 'wrap', gap: 6 }}>
+            <Text style={{ fontSize: 10, fontWeight: '800', color: '#849396', letterSpacing: 0.6 }}>
+              DISCHARGE TERMINAL FILTER & SORT
+            </Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+              <Ionicons name="swap-vertical" size={11} color="#00e5ff" />
+              <Text style={{ fontSize: 9, fontWeight: '800', color: '#00e5ff' }}>SORTED: DISCHARGE TERMINAL</Text>
+            </View>
+          </View>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingBottom: 4 }}>
+            {ALL_TERMINALS.map((term) => {
+              const isActive = selectedTerminal === term;
+              return (
+                <TouchableOpacity
+                  key={term}
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 6,
+                    paddingHorizontal: 12,
+                    paddingVertical: 6,
+                    borderRadius: 6,
+                    backgroundColor: isActive ? '#00e5ff' : '#161c25',
+                    borderWidth: 1,
+                    borderColor: isActive ? '#00e5ff' : '#242a34',
+                  }}
+                  onPress={() => setSelectedTerminal(term)}
+                  activeOpacity={0.8}
+                >
+                  <Ionicons
+                    name={term === 'All' ? 'layers' : 'boat'}
+                    size={12}
+                    color={isActive ? '#00363d' : '#849396'}
+                  />
+                  <Text
+                    style={{
+                      fontSize: 11,
+                      fontWeight: '800',
+                      color: isActive ? '#00363d' : '#dde2f0',
+                    }}
+                  >
+                    {term === 'All' ? 'ALL TERMINALS' : term}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+        </View>
+      )}
+
       {loading ? (
         <ActivityIndicator size="large" color="#00e5ff" style={{ marginTop: 30 }} />
       ) : filteredContainers.length === 0 ? (
-        <View style={styles.emptyBox}>
+        <View style={[styles.emptyBox, { marginHorizontal: containerPaddingHorizontal }]}>
           <Ionicons name="cube-outline" size={42} color="#849396" style={{ marginBottom: 12 }} />
           <Text style={styles.emptyTitle}>NO CONTAINERS</Text>
           <Text style={styles.emptySubtitle}>No containers match the selected date</Text>
         </View>
       ) : (
-        filteredContainers.map((c, idx) => {
+        filteredContainers.map((c: any, idx: number) => {
           const statusLabel = getStatusLabel(c.status || '', c.tripStatus || '');
           const { bg, text } = getStatusColor(statusLabel);
           const sizeLabel = (c.size || 'FT_40').replace('FT_', '') + 'FT';
 
           return (
-            <View key={c.id || idx} style={styles.card}>
+            <View
+              key={c.id || idx}
+              style={[
+                styles.card,
+                {
+                  marginHorizontal: containerPaddingHorizontal,
+                  padding: isSmallMobile ? 12 : 16,
+                },
+              ]}
+            >
               {/* Container Number + Size */}
-              <View style={styles.cardHeader}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <View style={[styles.cardHeader, { flexWrap: 'wrap', gap: 8 }]}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexShrink: 1 }}>
                   <Ionicons name="cube" size={16} color="#00e5ff" />
-                  <Text style={styles.containerNum}>{c.containerNumber}</Text>
+                  <Text style={[styles.containerNum, { fontSize: isSmallMobile ? 14 : 16 }]}>
+                    {(c.containerNumber || '').replace(/[^A-Za-z0-9]/g, '').toUpperCase()}
+                  </Text>
                 </View>
                 <View style={[
                   styles.sizeBadge,
@@ -346,12 +425,12 @@ const styles = StyleSheet.create({
   },
   headerTitle: { fontSize: 18, fontWeight: '900', color: '#dde2f0', letterSpacing: 0.8 },
   headerSub: { color: '#849396', fontSize: 13, marginTop: 4 },
-  summaryRow: { flexDirection: 'row', paddingHorizontal: 16, marginTop: 16, gap: 10 },
+  summaryRow: { flexDirection: 'row', marginTop: 14, gap: 8 },
   summaryCard: {
-    flex: 1, backgroundColor: '#161c25', borderRadius: 8, padding: 14,
+    flex: 1, backgroundColor: '#161c25', borderRadius: 8, padding: 10,
     borderLeftWidth: 4, borderWidth: 1, borderColor: '#242a34',
   },
-  summaryValue: { fontSize: 26, fontWeight: '900' },
+  summaryValue: { fontSize: 24, fontWeight: '900' },
   summaryLabel: { fontSize: 11, color: '#849396', marginTop: 4, fontWeight: '800' },
   policyNoticeBox: {
     flexDirection: 'row',
@@ -411,8 +490,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center', alignItems: 'center', padding: 20,
   },
   modalContent: {
-    backgroundColor: '#161c25', borderRadius: 12, padding: 20,
-    width: '100%', maxWidth: 350, borderWidth: 1, borderColor: '#242a34',
+    backgroundColor: '#161c25', borderRadius: 12, padding: 16,
+    width: '92%', maxWidth: 360, borderWidth: 1, borderColor: '#242a34',
   },
   modalTitle: { color: '#dde2f0', fontSize: 16, fontWeight: '900', marginBottom: 16, textAlign: 'center' },
   dateOption: {

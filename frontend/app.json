@@ -6,9 +6,20 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#070c14"
+    },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.smartitt.app"
+      "bundleIdentifier": "com.smartitt.app",
+      "splash": {
+        "image": "./assets/splash-icon.png",
+        "resizeMode": "contain",
+        "backgroundColor": "#070c14"
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -18,11 +29,16 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "package": "com.smartitt.app",
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "splash": {
+        "image": "./assets/splash-icon.png",
+        "resizeMode": "contain",
+        "backgroundColor": "#070c14"
+      }
     },
     "web": {
       "favicon": "./assets/favicon.png",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#070c14"
     },
     "plugins": [
       "expo-router",

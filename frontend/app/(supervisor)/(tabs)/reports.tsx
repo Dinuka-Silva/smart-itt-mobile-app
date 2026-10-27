@@ -25,12 +25,17 @@ const ALL_TERMINALS = ['ALL', 'CWIT', 'JCT', 'ECT', 'UCT', 'SAGT', 'CICT'] as co
 export interface ExcelExportRow {
   date: string;
   time: string;
+  startTime?: string;
+  dispatchDate?: string;
+  dispatchTime?: string;
+  completedDate?: string;
   driverIdentifier: string;
   driverName: string;
   vehicleNo: string;
   cheNo: string;
   container: string;
   sizeOfContainer: string;
+  containerType: 'RETURN' | 'STANDARD';
   damageOrNot: string;
   loadTerminal: string;
   dischargeTerminal: string;
@@ -55,6 +60,8 @@ export default function SupervisorReports() {
 
   // 2. Terminal: 'ALL' or specific terminal code ('JCT', 'CICT', etc.)
   const [selectedTerminal, setSelectedTerminal] = useState<string>('ALL');
+  // 3. Terminal-wise Sorting Field (Default: DISCHARGE_TERMINAL)
+  const [sortField, setSortField] = useState<'DISCHARGE_TERMINAL' | 'DATE_TIME'>('DISCHARGE_TERMINAL');
 
   // Helper date formatting functions
   const formatDateISO = (d: Date) => d.toISOString().split('T')[0];
@@ -237,9 +244,12 @@ export default function SupervisorReports() {
           driverId: bt.driverId,
           driverCode: bt.driverCode || bt.driverId,
           driverName: bt.driverName || `Driver ${bt.driverId.slice(0, 8)}`,
-          vehicleNumber: bt.vehicleNumber || 'LY 5234',
+          vehicleNumber: bt.vehicleNumber || 'LY-6439',
           chassisNumber: resolveCheNumber(bt.vehicleNumber, bt.chassisNumber),
           vesselName: bt.vesselName || 'Port Vessel',
+          operationTime: bt.operationTime,
+          dispatchTime: bt.dispatchTime,
+          isReturn: bt.isReturn,
           sourceTerminal: bt.sourceTerminal || 'CICT',
           destTerminal: bt.destTerminal || 'JCT',
           status: bt.status || 'IN_PROGRESS',
@@ -252,6 +262,8 @@ export default function SupervisorReports() {
             destTerminal: c.destinationTerminal || bt.destTerminal || 'JCT',
             status: c.unloadedAt ? 'DISCHARGED' : 'IN_TRANSIT',
             damageStatus: c.damageStatus || 'NONE',
+            isReturn: c.isReturn,
+            cargoType: c.cargoType,
           })),
         } as any);
       }
@@ -277,14 +289,14 @@ export default function SupervisorReports() {
         if (!tripDatePart || tripDatePart !== selectedDate) return false;
       }
 
-      // 2. Terminal Filter (matched against Load Terminal or Discharge Terminal)
+      // 2. Discharge Terminal Filter
       if (selectedTerminal !== 'ALL') {
-        const sourceMatch = (trip.sourceTerminal || '').toUpperCase() === selectedTerminal.toUpperCase();
-        const destMatch = (trip.destTerminal || '').toUpperCase() === selectedTerminal.toUpperCase();
+        const targetTerm = selectedTerminal.toUpperCase();
+        const destMatch = (trip.destTerminal || '').toUpperCase() === targetTerm;
         const containerDestMatch = (trip.containers || []).some(
-          (c: any) => (c.destTerminal || '').toUpperCase() === selectedTerminal.toUpperCase()
+          (c: any) => (c.destTerminal || '').toUpperCase() === targetTerm
         );
-        if (!sourceMatch && !destMatch && !containerDestMatch) return false;
+        if (!destMatch && !containerDestMatch) return false;
       }
 
       // 3. Driver Filter (matched against driverId, driverCode, or driverName)
@@ -320,21 +332,31 @@ export default function SupervisorReports() {
       const driverIdentifier = t.driverCode || t.driverId || 'DRV-00001';
       const driverName = t.driverName || 'Kamal Perera';
       const vMatch = findFleetVehicle(t.vehicleNumber);
-      const vehicleNo = t.vehicleNumber || vMatch?.vehicleNumber || 'LY 5234';
+      const vehicleNo = t.vehicleNumber || vMatch?.vehicleNumber || 'LY-6439';
       const cheNo = resolveCheNumber(vehicleNo, t.chassisNumber || t.chaiNumber);
       const loadTerminal = t.sourceTerminal || 'CICT';
+
+      const startTime = t.operationTime || timeFormatted;
+      const dispatchDate = t.operationDate || (t.startTime ? t.startTime.slice(0, 10) : dateFormatted);
+      const dispatchTime = t.dispatchTime || t.operationTime || timeFormatted;
+      const completedDate = t.endTime ? t.endTime.slice(0, 10) : t.dischargedAt ? t.dischargedAt.slice(0, 10) : (t.status === 'COMPLETED' ? dispatchDate : '—');
 
       const containers = t.containers || [];
       if (containers.length === 0) {
         rows.push({
           date: dateFormatted,
           time: timeFormatted,
+          startTime,
+          dispatchDate,
+          dispatchTime,
+          completedDate,
           driverIdentifier,
           driverName,
           vehicleNo,
           cheNo,
           container: 'N/A',
           sizeOfContainer: '—',
+          containerType: t.isReturn ? 'RETURN' : 'STANDARD',
           damageOrNot: 'NO DAMAGE',
           loadTerminal,
           dischargeTerminal: t.destTerminal || 'JCT',
@@ -378,15 +400,22 @@ export default function SupervisorReports() {
               ? `${c1.destTerminal}, ${c2.destTerminal}`
               : c1.destTerminal || t.destTerminal || 'JCT';
 
+          const isRet = !!c1.isReturn || !!c2.isReturn || c1.cargoType === 'RETURN' || c2.cargoType === 'RETURN' || !!t.isReturn;
+
           rows.push({
             date: dateFormatted,
             time: timeFormatted,
+            startTime,
+            dispatchDate,
+            dispatchTime,
+            completedDate,
             driverIdentifier,
             driverName,
             vehicleNo,
             cheNo,
             container: containerStr,
             sizeOfContainer: '2x 20FT',
+            containerType: isRet ? 'RETURN' : 'STANDARD',
             damageOrNot,
             loadTerminal,
             dischargeTerminal: destStr,
@@ -400,15 +429,22 @@ export default function SupervisorReports() {
             (c1.remarks && /damage/i.test(c1.remarks)) ||
             (t.notes && /damage/i.test(t.notes));
 
+          const isRet = !!c1.isReturn || c1.cargoType === 'RETURN' || !!t.isReturn;
+
           rows.push({
             date: dateFormatted,
             time: timeFormatted,
+            startTime,
+            dispatchDate,
+            dispatchTime,
+            completedDate,
             driverIdentifier,
             driverName,
             vehicleNo,
             cheNo,
             container: c1.containerNumber || 'N/A',
             sizeOfContainer: '20FT',
+            containerType: isRet ? 'RETURN' : 'STANDARD',
             damageOrNot: isDamaged ? 'DAMAGED' : 'NO DAMAGE',
             loadTerminal,
             dischargeTerminal: c1.destTerminal || t.destTerminal || 'JCT',
@@ -425,15 +461,22 @@ export default function SupervisorReports() {
           (c.remarks && /damage/i.test(c.remarks)) ||
           (t.notes && /damage/i.test(t.notes));
 
+        const isRet = !!c.isReturn || c.cargoType === 'RETURN' || !!t.isReturn;
+
         rows.push({
           date: dateFormatted,
           time: timeFormatted,
+          startTime,
+          dispatchDate,
+          dispatchTime,
+          completedDate,
           driverIdentifier,
           driverName,
           vehicleNo,
           cheNo,
-          container: c.containerNumber || 'N/A',
+          container: (c.containerNumber || 'N/A').replace(/[^A-Za-z0-9]/g, '').toUpperCase(),
           sizeOfContainer: c.size || '40FT',
+          containerType: isRet ? 'RETURN' : 'STANDARD',
           damageOrNot: isDamaged ? 'DAMAGED' : 'NO DAMAGE',
           loadTerminal,
           dischargeTerminal: c.destTerminal || t.destTerminal || 'JCT',
@@ -443,11 +486,23 @@ export default function SupervisorReports() {
       });
     });
 
+    // Terminal-wise Sorting (Default: by Discharge Terminal, secondary by Date & Time)
+    if (sortField === 'DISCHARGE_TERMINAL') {
+      rows.sort((a, b) => {
+        const termCmp = (a.dischargeTerminal || '').localeCompare(b.dischargeTerminal || '');
+        if (termCmp !== 0) return termCmp;
+        return `${b.date} ${b.time}`.localeCompare(`${a.date} ${a.time}`);
+      });
+    } else {
+      rows.sort((a, b) => `${b.date} ${b.time}`.localeCompare(`${a.date} ${a.time}`));
+    }
+
     return rows;
-  }, [filteredTrips]);
+  }, [filteredTrips, sortField]);
 
   // Metrics
   const totalContainers = excelDataRows.length;
+  const returnContainersCount = excelDataRows.filter((r) => r.containerType === 'RETURN').length;
   const damagedCount = excelDataRows.filter((r) => r.damageOrNot === 'DAMAGED').length;
   const completedTripsCount = filteredTrips.filter(
     (t) => t.status === 'COMPLETED' || t.status === 'APPROVED'
@@ -465,7 +520,10 @@ export default function SupervisorReports() {
       <Row>
         <Cell><Data ss:Type="Number">${idx + 1}</Data></Cell>
         <Cell><Data ss:Type="String">${r.date}</Data></Cell>
-        <Cell><Data ss:Type="String">${r.time}</Data></Cell>
+        <Cell><Data ss:Type="String">${r.startTime || r.time}</Data></Cell>
+        <Cell><Data ss:Type="String">${r.dispatchDate || r.date}</Data></Cell>
+        <Cell><Data ss:Type="String">${r.dispatchTime || '—'}</Data></Cell>
+        <Cell><Data ss:Type="String">${r.completedDate || '—'}</Data></Cell>
         <Cell><Data ss:Type="String">${r.tripNumber}</Data></Cell>
         <Cell><Data ss:Type="String">${r.driverIdentifier}</Data></Cell>
         <Cell><Data ss:Type="String">${r.driverName}</Data></Cell>
@@ -473,6 +531,7 @@ export default function SupervisorReports() {
         <Cell><Data ss:Type="String">${r.cheNo}</Data></Cell>
         <Cell><Data ss:Type="String">${r.container}</Data></Cell>
         <Cell><Data ss:Type="String">${r.sizeOfContainer}</Data></Cell>
+        <Cell><Data ss:Type="String">${r.containerType === 'RETURN' ? 'RETURN CONTAINER' : 'STANDARD FREIGHT'}</Data></Cell>
         <Cell><Data ss:Type="String">${r.damageOrNot}</Data></Cell>
         <Cell><Data ss:Type="String">${r.loadTerminal}</Data></Cell>
         <Cell><Data ss:Type="String">${r.dischargeTerminal}</Data></Cell>
@@ -496,8 +555,11 @@ export default function SupervisorReports() {
   <Table>
    <Row ss:StyleID="Header">
     <Cell><Data ss:Type="String">#</Data></Cell>
-    <Cell><Data ss:Type="String">Date</Data></Cell>
-    <Cell><Data ss:Type="String">Time</Data></Cell>
+    <Cell><Data ss:Type="String">Operation Date</Data></Cell>
+    <Cell><Data ss:Type="String">Start Time</Data></Cell>
+    <Cell><Data ss:Type="String">Dispatch Date</Data></Cell>
+    <Cell><Data ss:Type="String">Dispatch Time</Data></Cell>
+    <Cell><Data ss:Type="String">Completed Date</Data></Cell>
     <Cell><Data ss:Type="String">Trip Number</Data></Cell>
     <Cell><Data ss:Type="String">Driver ID</Data></Cell>
     <Cell><Data ss:Type="String">Driver Name</Data></Cell>
@@ -505,6 +567,7 @@ export default function SupervisorReports() {
     <Cell><Data ss:Type="String">CHE / SCK No</Data></Cell>
     <Cell><Data ss:Type="String">Container Number</Data></Cell>
     <Cell><Data ss:Type="String">Size</Data></Cell>
+    <Cell><Data ss:Type="String">Container Type</Data></Cell>
     <Cell><Data ss:Type="String">Damage Status</Data></Cell>
     <Cell><Data ss:Type="String">Load Terminal</Data></Cell>
     <Cell><Data ss:Type="String">Discharge Terminal</Data></Cell>
@@ -545,18 +608,21 @@ export default function SupervisorReports() {
 
     const reportTitle = `SMART ITT — Official Dispatch & Terminal Operations Report`;
     const genDate = new Date().toLocaleString();
-    const filterSummary = `Date: ${selectedDate || 'All Recorded Dates'} | Terminal: ${selectedTerminal} | Driver: ${selectedDriver}`;
+    const filterSummary = `Date: ${selectedDate || 'All Recorded Dates'} | Discharge Terminal: ${selectedTerminal} | Driver: ${selectedDriver} | Sorting: ${sortField === 'DISCHARGE_TERMINAL' ? 'Terminal-wise (Discharge Terminal)' : 'Date/Time'}`;
 
     const tableRows = excelDataRows.map((r, i) => `
       <tr style="background-color: ${i % 2 === 0 ? '#f8fafd' : '#ffffff'};">
         <td style="text-align: center; font-weight: bold; padding: 6px 8px;">${i + 1}</td>
-        <td style="padding: 6px 8px;">${r.date}<br/><small style="color: #666;">${r.time}</small></td>
+        <td style="padding: 6px 8px;"><b>${r.date}</b><br/><small style="color: #00838f; font-weight: bold;">Start: ${r.startTime || r.time}</small></td>
+        <td style="padding: 6px 8px;"><b>${r.dispatchDate || r.date}</b><br/><small style="color: #2e7d32; font-weight: bold;">Disp: ${r.dispatchTime || '—'}</small></td>
+        <td style="padding: 6px 8px; color: #546e7a;">${r.completedDate || '—'}</td>
         <td style="padding: 6px 8px; font-weight: 600; color: #005662;">${r.tripNumber}</td>
         <td style="padding: 6px 8px;">${r.driverName}<br/><small style="color: #666;">ID: ${r.driverIdentifier}</small></td>
         <td style="padding: 6px 8px;"><b>${r.vehicleNo}</b></td>
         <td style="padding: 6px 8px; font-weight: bold; color: #00838f;">${r.cheNo}</td>
         <td style="padding: 6px 8px; font-family: monospace; font-weight: bold;">${r.container}</td>
         <td style="padding: 6px 8px; text-align: center;"><span style="background: #e0f2f1; padding: 2px 6px; border-radius: 4px; font-size: 11px;">${r.sizeOfContainer}</span></td>
+        <td style="padding: 6px 8px; text-align: center;"><span style="background: ${r.containerType === 'RETURN' ? '#fff8e1' : '#e0f7fa'}; color: ${r.containerType === 'RETURN' ? '#b78103' : '#006064'}; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold;">${r.containerType === 'RETURN' ? '🔄 RETURN' : '📦 STANDARD'}</span></td>
         <td style="padding: 6px 8px; text-align: center; color: ${r.damageOrNot === 'DAMAGED' ? '#d32f2f' : '#2e7d32'}; font-weight: bold;">${r.damageOrNot}</td>
         <td style="padding: 6px 8px;">${r.loadTerminal} ➔ ${r.dischargeTerminal}</td>
         <td style="padding: 6px 8px; text-align: center;"><span style="background: #e8f5e9; color: #1b5e20; padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 11px;">${r.status}</span></td>
@@ -673,13 +739,14 @@ export default function SupervisorReports() {
     <thead>
       <tr>
         <th style="width: 30px; text-align: center;">#</th>
-        <th>Date & Time</th>
+        <th>Date / Start & Disp</th>
         <th>Trip #</th>
         <th>Driver Info</th>
         <th>Vehicle No</th>
         <th>CHE / SCK No</th>
         <th>Container No</th>
         <th style="text-align: center;">Size</th>
+        <th style="text-align: center;">Container Type</th>
         <th style="text-align: center;">Condition</th>
         <th>Terminal Route</th>
         <th style="text-align: center;">Status</th>
@@ -1026,14 +1093,14 @@ export default function SupervisorReports() {
             </View>
           </View>
 
-          {/* ── B. TERMINAL SELECTOR ── */}
+          {/* ── B. DISCHARGE TERMINAL SELECTOR ── */}
           <View style={styles.filterBlock}>
             <View style={styles.filterLabelRow}>
-              <Ionicons name="business" size={14} color="#00e5ff" />
-              <Text style={styles.filterLabel}>SELECT TERMINAL (LOAD / DISCHARGE)</Text>
+              <Ionicons name="boat" size={14} color="#00e5ff" />
+              <Text style={styles.filterLabel}>SELECT DISCHARGE TERMINAL (DESTINATION)</Text>
               {selectedTerminal !== 'ALL' && (
                 <View style={styles.activeFilterPill}>
-                  <Text style={styles.activeFilterPillText}>{selectedTerminal}</Text>
+                  <Text style={styles.activeFilterPillText}>DISCHARGE: {selectedTerminal}</Text>
                 </View>
               )}
             </View>
@@ -1053,7 +1120,7 @@ export default function SupervisorReports() {
                       color={isActive ? '#00363d' : '#849396'}
                     />
                     <Text style={[styles.terminalChipText, isActive && styles.terminalChipTextActive]}>
-                      {term === 'ALL' ? 'ALL TERMINALS' : term}
+                      {term === 'ALL' ? 'ALL DISCHARGE TERMINALS' : term}
                     </Text>
                   </TouchableOpacity>
                 );
@@ -1110,6 +1177,11 @@ export default function SupervisorReports() {
           </View>
           <View style={styles.summaryDivider} />
           <View style={styles.summaryItem}>
+            <Text style={[styles.summaryNumber, { color: '#feb300' }]}>{returnContainersCount}</Text>
+            <Text style={styles.summaryLabel}>RETURNS</Text>
+          </View>
+          <View style={styles.summaryDivider} />
+          <View style={styles.summaryItem}>
             <Text style={[styles.summaryNumber, { color: '#22ef7e' }]}>{completedTripsCount}</Text>
             <Text style={styles.summaryLabel}>COMPLETED</Text>
           </View>
@@ -1136,26 +1208,49 @@ export default function SupervisorReports() {
             </View>
           </View>
 
-          <View style={styles.viewToggleRow}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+            {/* Terminalwise Sorting Toggle Button */}
             <TouchableOpacity
-              style={[styles.toggleBtn, viewMode === 'EXCEL' && styles.toggleBtnActive]}
-              onPress={() => setViewMode('EXCEL')}
+              style={[styles.sortBtn, sortField === 'DISCHARGE_TERMINAL' && styles.sortBtnActive]}
+              onPress={() => setSortField((p) => (p === 'DISCHARGE_TERMINAL' ? 'DATE_TIME' : 'DISCHARGE_TERMINAL'))}
+              activeOpacity={0.8}
             >
-              <Ionicons name="grid-outline" size={14} color={viewMode === 'EXCEL' ? '#00363d' : '#849396'} />
-              <Text style={[styles.toggleBtnText, viewMode === 'EXCEL' && styles.toggleBtnTextActive]}>
-                EXCEL
+              <Ionicons
+                name="swap-vertical"
+                size={13}
+                color={sortField === 'DISCHARGE_TERMINAL' ? '#00363d' : '#00e5ff'}
+              />
+              <Text
+                style={[
+                  styles.sortBtnText,
+                  sortField === 'DISCHARGE_TERMINAL' && styles.sortBtnTextActive,
+                ]}
+              >
+                {sortField === 'DISCHARGE_TERMINAL' ? 'SORTED: DISCHARGE TERMINAL (A-Z)' : 'SORTED: DATE / TIME'}
               </Text>
             </TouchableOpacity>
 
-            <TouchableOpacity
-              style={[styles.toggleBtn, viewMode === 'CARDS' && styles.toggleBtnActive]}
-              onPress={() => setViewMode('CARDS')}
-            >
-              <Ionicons name="albums-outline" size={14} color={viewMode === 'CARDS' ? '#00363d' : '#849396'} />
-              <Text style={[styles.toggleBtnText, viewMode === 'CARDS' && styles.toggleBtnTextActive]}>
-                CARDS
-              </Text>
-            </TouchableOpacity>
+            <View style={styles.viewToggleRow}>
+              <TouchableOpacity
+                style={[styles.toggleBtn, viewMode === 'EXCEL' && styles.toggleBtnActive]}
+                onPress={() => setViewMode('EXCEL')}
+              >
+                <Ionicons name="grid-outline" size={14} color={viewMode === 'EXCEL' ? '#00363d' : '#849396'} />
+                <Text style={[styles.toggleBtnText, viewMode === 'EXCEL' && styles.toggleBtnTextActive]}>
+                  EXCEL
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.toggleBtn, viewMode === 'CARDS' && styles.toggleBtnActive]}
+                onPress={() => setViewMode('CARDS')}
+              >
+                <Ionicons name="albums-outline" size={14} color={viewMode === 'CARDS' ? '#00363d' : '#849396'} />
+                <Text style={[styles.toggleBtnText, viewMode === 'CARDS' && styles.toggleBtnTextActive]}>
+                  CARDS
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
 
@@ -1175,18 +1270,38 @@ export default function SupervisorReports() {
                 <View>
                   {/* Table Header Row */}
                   <View style={styles.tableRowHeader}>
-                    <Text style={[styles.thCell, { width: 44, textAlign: 'center' }]}>#</Text>
-                    <Text style={[styles.thCell, { width: 95 }]}>DATE</Text>
-                    <Text style={[styles.thCell, { width: 85 }]}>TIME</Text>
-                    <Text style={[styles.thCell, { width: 120 }]}>DRIVER ID</Text>
-                    <Text style={[styles.thCell, { width: 135 }]}>DRIVER NAME</Text>
-                    <Text style={[styles.thCell, { width: 115 }]}>VEHICLE NO</Text>
-                    <Text style={[styles.thCell, { width: 105 }]}>CHE NO</Text>
-                    <Text style={[styles.thCell, { width: 220 }]}>CONTAINER(S)</Text>
-                    <Text style={[styles.thCell, { width: 125 }]}>SIZE OF CONTAINER</Text>
-                    <Text style={[styles.thCell, { width: 120 }]}>DAMAGE OR NOT</Text>
-                    <Text style={[styles.thCell, { width: 110 }]}>LOAD TERMINAL</Text>
-                    <Text style={[styles.thCell, { width: 130 }]}>DISCHARGE TERMINAL</Text>
+                    <Text style={[styles.thCell, { width: 40, textAlign: 'center' }]}>#</Text>
+                    <TouchableOpacity
+                      style={{ width: 95 }}
+                      onPress={() => setSortField('DATE_TIME')}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={[styles.thCell, { width: 95, color: sortField === 'DATE_TIME' ? '#00e5ff' : '#bac9cc' }]}>
+                        START DATE {sortField === 'DATE_TIME' ? '▼' : ''}
+                      </Text>
+                    </TouchableOpacity>
+                    <Text style={[styles.thCell, { width: 85 }]}>START TIME</Text>
+                    <Text style={[styles.thCell, { width: 105 }]}>DISPATCH DATE</Text>
+                    <Text style={[styles.thCell, { width: 95 }]}>DISPATCH TIME</Text>
+                    <Text style={[styles.thCell, { width: 110 }]}>COMPLETED DATE</Text>
+                    <Text style={[styles.thCell, { width: 115 }]}>DRIVER ID</Text>
+                    <Text style={[styles.thCell, { width: 130 }]}>DRIVER NAME</Text>
+                    <Text style={[styles.thCell, { width: 110 }]}>VEHICLE NO</Text>
+                    <Text style={[styles.thCell, { width: 100 }]}>CHE NO</Text>
+                    <Text style={[styles.thCell, { width: 210 }]}>CONTAINER(S)</Text>
+                    <Text style={[styles.thCell, { width: 110 }]}>SIZE</Text>
+                    <Text style={[styles.thCell, { width: 135 }]}>CONTAINER TYPE</Text>
+                    <Text style={[styles.thCell, { width: 115 }]}>DAMAGE OR NOT</Text>
+                    <Text style={[styles.thCell, { width: 105 }]}>LOAD TERMINAL</Text>
+                    <TouchableOpacity
+                      style={{ width: 130 }}
+                      onPress={() => setSortField('DISCHARGE_TERMINAL')}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={[styles.thCell, { width: 130, color: sortField === 'DISCHARGE_TERMINAL' ? '#00e5ff' : '#bac9cc' }]}>
+                        DISCHARGE TERMINAL {sortField === 'DISCHARGE_TERMINAL' ? '▲' : ''}
+                      </Text>
+                    </TouchableOpacity>
                     <Text style={[styles.thCell, { width: 105 }]}>TRIP NUMBER</Text>
                   </View>
 
@@ -1201,36 +1316,45 @@ export default function SupervisorReports() {
                         key={`${row.tripNumber}-${row.container}-${idx}`}
                         style={[styles.tableRow, isEven ? styles.tableRowEven : styles.tableRowOdd]}
                       >
-                        <Text style={[styles.tdCell, { width: 44, textAlign: 'center', color: '#849396' }]}>
+                        <Text style={[styles.tdCell, { width: 40, textAlign: 'center', color: '#849396' }]}>
                           {idx + 1}
                         </Text>
                         <Text style={[styles.tdCell, { width: 95, fontWeight: '700', color: '#00e5ff' }]}>
                           {row.date}
                         </Text>
-                        <Text style={[styles.tdCell, { width: 85, color: '#bac9cc' }]}>
-                          {row.time}
+                        <Text style={[styles.tdCell, { width: 85, color: '#00e5ff', fontWeight: '700' }]}>
+                          {row.startTime || row.time}
                         </Text>
-                        <View style={[styles.tdCellWrap, { width: 120 }]}>
+                        <Text style={[styles.tdCell, { width: 105, color: '#feb300', fontWeight: '700' }]}>
+                          {row.dispatchDate || row.date}
+                        </Text>
+                        <Text style={[styles.tdCell, { width: 95, color: '#22ef7e', fontWeight: '700' }]}>
+                          {row.dispatchTime || '—'}
+                        </Text>
+                        <Text style={[styles.tdCell, { width: 110, color: '#38ef7d', fontWeight: '700' }]}>
+                          {row.completedDate || '—'}
+                        </Text>
+                        <View style={[styles.tdCellWrap, { width: 115 }]}>
                           <View style={styles.driverCodeBadge}>
                             <Text style={styles.driverCodeBadgeText}>{row.driverIdentifier}</Text>
                           </View>
                         </View>
-                        <Text style={[styles.tdCell, { width: 135, fontWeight: '700', color: '#dde2f0' }]}>
+                        <Text style={[styles.tdCell, { width: 130, fontWeight: '700', color: '#dde2f0' }]}>
                           {row.driverName}
                         </Text>
-                        <View style={[styles.tdCellWrap, { width: 115 }]}>
+                        <View style={[styles.tdCellWrap, { width: 110 }]}>
                           <View style={styles.vehicleBadge}>
                             <Ionicons name="bus" size={11} color="#feb300" />
                             <Text style={styles.vehicleBadgeText}>{row.vehicleNo}</Text>
                           </View>
                         </View>
-                        <View style={[styles.tdCellWrap, { width: 105 }]}>
+                        <View style={[styles.tdCellWrap, { width: 100 }]}>
                           <View style={styles.cheBadge}>
                             <Ionicons name="hardware-chip" size={10} color="#00e5ff" />
                             <Text style={styles.cheBadgeText}>{row.cheNo}</Text>
                           </View>
                         </View>
-                        <View style={[styles.tdCellWrap, { width: 220 }]}>
+                        <View style={[styles.tdCellWrap, { width: 210 }]}>
                           <Text style={[styles.containerText, isDual20 ? styles.dualContainerText : null]}>
                             {row.container}
                           </Text>
@@ -1240,14 +1364,38 @@ export default function SupervisorReports() {
                             </View>
                           )}
                         </View>
-                        <View style={[styles.tdCellWrap, { width: 125 }]}>
+                        <View style={[styles.tdCellWrap, { width: 110 }]}>
                           <View style={[styles.sizePill, isDual20 ? styles.sizePillDual : null]}>
                             <Text style={[styles.sizePillText, isDual20 ? styles.sizePillTextDual : null]}>
                               {row.sizeOfContainer}
                             </Text>
                           </View>
                         </View>
-                        <View style={[styles.tdCellWrap, { width: 120 }]}>
+                        <View style={[styles.tdCellWrap, { width: 135 }]}>
+                          <View
+                            style={[
+                              styles.dualBadgePill,
+                              row.containerType === 'RETURN'
+                                ? { backgroundColor: 'rgba(254, 179, 0, 0.16)', borderColor: '#feb300' }
+                                : { backgroundColor: 'rgba(0, 229, 255, 0.12)', borderColor: '#00e5ff' },
+                            ]}
+                          >
+                            <Ionicons
+                              name={row.containerType === 'RETURN' ? 'return-down-back' : 'cube-outline'}
+                              size={11}
+                              color={row.containerType === 'RETURN' ? '#feb300' : '#00e5ff'}
+                            />
+                            <Text
+                              style={[
+                                styles.dualBadgePillText,
+                                row.containerType === 'RETURN' ? { color: '#feb300' } : { color: '#00e5ff' },
+                              ]}
+                            >
+                              {row.containerType === 'RETURN' ? '🔄 RETURN' : '📦 STANDARD'}
+                            </Text>
+                          </View>
+                        </View>
+                        <View style={[styles.tdCellWrap, { width: 115 }]}>
                           <View style={[styles.damageBadge, isDamaged ? styles.damageBadgeRed : styles.damageBadgeGreen]}>
                             <Ionicons
                               name={isDamaged ? 'warning' : 'checkmark-circle'}
@@ -1259,7 +1407,7 @@ export default function SupervisorReports() {
                             </Text>
                           </View>
                         </View>
-                        <Text style={[styles.tdCell, { width: 110, fontWeight: '800', color: '#feb300' }]}>
+                        <Text style={[styles.tdCell, { width: 105, fontWeight: '800', color: '#feb300' }]}>
                           {row.loadTerminal}
                         </Text>
                         <Text style={[styles.tdCell, { width: 130, fontWeight: '800', color: '#22ef7e' }]}>
@@ -1311,6 +1459,51 @@ export default function SupervisorReports() {
                     </View>
                   </View>
 
+                  <View style={[styles.specBadgesRow, { marginTop: 4, flexWrap: 'wrap', gap: 6 }]}>
+                    <View
+                      style={[
+                        styles.dualBadgePill,
+                        r.containerType === 'RETURN'
+                          ? { backgroundColor: 'rgba(254, 179, 0, 0.16)', borderColor: '#feb300' }
+                          : { backgroundColor: 'rgba(0, 229, 255, 0.12)', borderColor: '#00e5ff' },
+                      ]}
+                    >
+                      <Ionicons
+                        name={r.containerType === 'RETURN' ? 'return-down-back' : 'cube-outline'}
+                        size={11}
+                        color={r.containerType === 'RETURN' ? '#feb300' : '#00e5ff'}
+                      />
+                      <Text
+                        style={[
+                          styles.dualBadgePillText,
+                          r.containerType === 'RETURN' ? { color: '#feb300' } : { color: '#00e5ff' },
+                        ]}
+                      >
+                        {r.containerType === 'RETURN' ? '🔄 RETURN CONTAINER' : '📦 STANDARD FREIGHT'}
+                      </Text>
+                    </View>
+                    <View style={styles.cheBadge}>
+                      <Ionicons name="time" size={10} color="#00e5ff" />
+                      <Text style={[styles.cheBadgeText, { color: '#00e5ff' }]}>
+                        Start: {r.date} {r.startTime || r.time}
+                      </Text>
+                    </View>
+                    <View style={[styles.cheBadge, { borderColor: 'rgba(34, 239, 126, 0.3)', backgroundColor: 'rgba(34, 239, 126, 0.1)' }]}>
+                      <Ionicons name="send" size={10} color="#22ef7e" />
+                      <Text style={[styles.cheBadgeText, { color: '#22ef7e' }]}>
+                        Disp Date: {r.dispatchDate || r.date} · Disp Time: {r.dispatchTime || '—'}
+                      </Text>
+                    </View>
+                    {r.completedDate ? (
+                      <View style={[styles.cheBadge, { borderColor: 'rgba(56, 239, 125, 0.3)', backgroundColor: 'rgba(56, 239, 125, 0.1)' }]}>
+                        <Ionicons name="checkmark-done" size={10} color="#38ef7d" />
+                        <Text style={[styles.cheBadgeText, { color: '#38ef7d' }]}>
+                          Done Date: {r.completedDate}
+                        </Text>
+                      </View>
+                    ) : null}
+                  </View>
+
                   <View style={styles.cardRow}>
                     <Text style={styles.cardLabel}>CONTAINER(S):</Text>
                     <Text style={styles.cardValCyan}>{r.container} ({r.sizeOfContainer})</Text>
@@ -1324,8 +1517,20 @@ export default function SupervisorReports() {
                   </View>
 
                   <View style={styles.cardRow}>
-                    <Text style={styles.cardLabel}>TIMESTAMP / TRIP:</Text>
-                    <Text style={styles.cardValWhite}>{r.date} {r.time} · {r.tripNumber}</Text>
+                    <Text style={styles.cardLabel}>DISPATCH STAMP:</Text>
+                    <Text style={styles.cardValWhite}>{r.dispatchDate || r.date} at {r.dispatchTime || '—'}</Text>
+                  </View>
+
+                  <View style={styles.cardRow}>
+                    <Text style={styles.cardLabel}>COMPLETED DATE:</Text>
+                    <Text style={[styles.cardValWhite, { color: r.completedDate ? '#38ef7d' : '#849396' }]}>
+                      {r.completedDate || 'In Progress / Open'}
+                    </Text>
+                  </View>
+
+                  <View style={styles.cardRow}>
+                    <Text style={styles.cardLabel}>START / TRIP:</Text>
+                    <Text style={styles.cardValWhite}>{r.date} {r.startTime || r.time} · {r.tripNumber}</Text>
                   </View>
                 </View>
               ))
@@ -2397,5 +2602,29 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     fontSize: 12,
     letterSpacing: 0.6,
+  },
+  sortBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: radius.DEFAULT,
+    backgroundColor: 'rgba(0, 229, 255, 0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 229, 255, 0.25)',
+  },
+  sortBtnActive: {
+    backgroundColor: '#00e5ff',
+    borderColor: '#00e5ff',
+  },
+  sortBtnText: {
+    color: '#00e5ff',
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
+  sortBtnTextActive: {
+    color: '#00363d',
   },
 });

@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { storage } from '../services/storage';
 import apiClient from '../services/api';
 
-export type UserRole = 'DRIVER' | 'SUPERVISOR';
+export type UserRole = 'DRIVER' | 'SUPERVISOR' | 'ADMIN';
 
 export interface User {
   id: string;
@@ -38,6 +38,9 @@ export interface User {
   vehicleLicenseDaysLeft?: number;
   vehicleLicenseRenewalDue?: boolean;
   vehicleLicenseStatus?: 'VALID' | 'RENEWAL_DUE' | 'EXPIRED';
+  driverPortPassExpiryDate?: string;
+  vehiclePortPassExpiryDate?: string;
+  supervisorPortPassExpiryDate?: string;
 }
 
 interface AuthState {

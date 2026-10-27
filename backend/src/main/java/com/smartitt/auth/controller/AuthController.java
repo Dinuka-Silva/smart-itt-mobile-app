@@ -38,6 +38,27 @@ public class AuthController {
         return ResponseEntity.status(HttpStatus.CREATED).body(authService.registerSupervisor(request));
     }
 
+    @PostMapping("/forgot-password/verify")
+    @Operation(summary = "Verify username and registration ID number for password reset")
+    public ResponseEntity<com.smartitt.auth.dto.PasswordResetResponse> verifyIdentityForPasswordReset(
+            @RequestBody @Valid com.smartitt.auth.dto.ForgotPasswordVerifyRequest request) {
+        return ResponseEntity.ok(authService.verifyIdentityForPasswordReset(request));
+    }
+
+    @PostMapping("/reset-password")
+    @Operation(summary = "Reset password using verified username and registration ID number")
+    public ResponseEntity<com.smartitt.auth.dto.PasswordResetResponse> resetPassword(
+            @RequestBody @Valid com.smartitt.auth.dto.ResetPasswordRequest request) {
+        return ResponseEntity.ok(authService.resetPassword(request));
+    }
+
+    @PostMapping("/change-password")
+    @Operation(summary = "Change password for operator")
+    public ResponseEntity<com.smartitt.auth.dto.PasswordResetResponse> changePassword(
+            @RequestBody @Valid com.smartitt.auth.dto.ChangePasswordRequest request) {
+        return ResponseEntity.ok(authService.changePassword(request));
+    }
+
     @PostMapping("/logout")
     @Operation(summary = "Logout driver and mark vehicle as inactive")
     public ResponseEntity<Void> logout(@RequestBody(required = false) java.util.Map<String, String> body) {

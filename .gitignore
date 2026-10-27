@@ -24,6 +24,9 @@ Thumbs.db
 backend/target/
 frontend/dist/
 frontend/web-build/
+web/dist/
+dist/
+.expo/
 *.class
 *.jar
 *.war

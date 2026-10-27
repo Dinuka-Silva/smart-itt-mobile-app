@@ -23,6 +23,7 @@ import { useMockTripStore } from '../../../src/store/mockTripStore';
 import { colors, radius, spacing } from '../../../src/theme';
 import { resolveCheNumber, resolveOperator, findFleetVehicle } from '../../../src/config/fleet';
 import { useResponsive } from '../../../src/hooks/useResponsive';
+import { getTripTimingDetails } from '../../../src/utils/tripDateUtils';
 
 
 const DRIVER_PHOTO_POOL = [
@@ -92,7 +93,6 @@ export default function SupervisorHomeDashboard() {
     try {
       // 1. Fetch live dashboard metrics
       const dashMetrics = await dashboardService.getSupervisorDashboard();
-      setStats(dashMetrics);
 
       // 2. Fetch live trips from backend
       const apiTrips = await tripService.getTrips();
@@ -100,7 +100,24 @@ export default function SupervisorHomeDashboard() {
       const byId = new Map<string, any>();
       tripList.forEach((t) => byId.set(t.id, t));
       mockTrips.forEach((t) => { if (!byId.has(t.id)) byId.set(t.id, t); });
-      setTrips(Array.from(byId.values()));
+      const mergedTrips = Array.from(byId.values());
+      setTrips(mergedTrips);
+
+      const compTripsCount = mergedTrips.filter((t) => t.status === 'COMPLETED' || t.status === 'APPROVED').length;
+      const inProgCount = mergedTrips.filter((t) => t.status === 'IN_PROGRESS' || t.status === 'ARRIVED').length;
+      const pendingCount = mergedTrips.filter((t) => t.status === 'PENDING_APPROVAL').length;
+      const totalConts = mergedTrips
+        .filter((t) => t.status === 'COMPLETED' || t.status === 'APPROVED')
+        .reduce((acc, t) => acc + (t.containers?.length || 1), 0);
+
+      setStats({
+        ...dashMetrics,
+        completedTripsToday: compTripsCount,
+        activeTrips: inProgCount,
+        tripsPendingApproval: pendingCount,
+        totalTripsToday: mergedTrips.length,
+        totalContainersTransportedToday: totalConts > 0 ? totalConts : dashMetrics.totalContainersTransportedToday,
+      });
 
       // 3. Fetch registered drivers
       try {
@@ -117,9 +134,9 @@ export default function SupervisorHomeDashboard() {
             employeeId: 'DRV001',
             nic: '198512345678',
             mobileNumber: '0779876543',
-            vehicleNumber: 'LY 5234',
-            chassisNumber: 'SCK 100',
-            cheNumber: 'SCK 100',
+            vehicleNumber: 'LY-6439',
+            chassisNumber: 'CHE 100',
+            cheNumber: 'CHE 100',
             operator: 'SCK Logistics',
             status: 'ACTIVE',
           },
@@ -156,6 +173,16 @@ export default function SupervisorHomeDashboard() {
     } catch (e) {
       console.warn('Dashboard loading fallback:', e);
       setTrips(mockTrips);
+      const compTripsCount = mockTrips.filter((t) => t.status === 'COMPLETED' || t.status === 'APPROVED').length;
+      const inProgCount = mockTrips.filter((t) => t.status === 'IN_PROGRESS' || t.status === 'ARRIVED').length;
+      const pendingCount = mockTrips.filter((t) => t.status === 'PENDING_APPROVAL').length;
+      setStats((prev) => ({
+        ...prev,
+        completedTripsToday: compTripsCount,
+        activeTrips: inProgCount,
+        tripsPendingApproval: pendingCount,
+        totalTripsToday: mockTrips.length,
+      }));
     } finally {
       setRefreshing(false);
     }
@@ -170,6 +197,14 @@ export default function SupervisorHomeDashboard() {
     day: 'numeric',
     year: 'numeric',
   }).toUpperCase();
+
+  // Supervisor Port Pass Expiry Logic (SLPA security gate clearance)
+  const supervisorPassExpiry = user?.supervisorPortPassExpiryDate || '2026-11-18';
+  const supervisorPassDaysLeft = Math.round(
+    (new Date(supervisorPassExpiry).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+  );
+  const isSupervisorPassExpired = supervisorPassDaysLeft <= 0;
+  const isSupervisorPassRenewalDue = supervisorPassDaysLeft <= 30;
 
 
   // Terminal-Wise Consolidated Analytics with Weekly & Monthly Filtering
@@ -248,13 +283,13 @@ export default function SupervisorHomeDashboard() {
   // Approval actions
   const handleApproveTrip = async (trip: any) => {
     try {
-      await tripService.approveTrip(trip.id, user?.id || 'sup-001', 'Approved by Operations Supervisor');
-      useMockTripStore.getState().updateTripStatus(trip.id, 'APPROVED');
-      Alert.alert('Gate Pass Approved', `Trip ${trip.tripNumber || trip.id} is approved.`);
+      await tripService.approveTrip(trip.id, user?.id || 'sup-001', 'Delivery confirmed & trip approved by Operations Supervisor');
+      useMockTripStore.getState().updateTripStatus(trip.id, 'COMPLETED');
+      Alert.alert('Trip Delivery Confirmed & Approved ✅', `Trip ${trip.tripNumber || trip.id} is confirmed. Main trip count and driver completed count updated!`);
       await loadDashboardData();
     } catch {
-      useMockTripStore.getState().updateTripStatus(trip.id, 'APPROVED');
-      Alert.alert('Gate Pass Approved (Local)', `Trip ${trip.tripNumber || trip.id} is approved.`);
+      useMockTripStore.getState().updateTripStatus(trip.id, 'COMPLETED');
+      Alert.alert('Trip Delivery Confirmed & Approved ✅', `Trip ${trip.tripNumber || trip.id} is confirmed. Main trip count and driver completed count updated!`);
       await loadDashboardData();
     }
   };
@@ -318,6 +353,26 @@ export default function SupervisorHomeDashboard() {
                 <View style={styles.rolePill}>
                   <Text style={styles.rolePillText}>PORT OPERATIONS SUPERVISOR</Text>
                 </View>
+                <View style={[
+                  styles.supervisorPassBadge,
+                  isSupervisorPassExpired
+                    ? styles.supervisorPassBadgeExpired
+                    : isSupervisorPassRenewalDue
+                    ? styles.supervisorPassBadgeWarning
+                    : styles.supervisorPassBadgeValid,
+                ]}>
+                  <Ionicons
+                    name="shield-checkmark"
+                    size={11}
+                    color={isSupervisorPassExpired ? '#ff5252' : isSupervisorPassRenewalDue ? '#feb300' : '#22ef7e'}
+                  />
+                  <Text style={[
+                    styles.supervisorPassBadgeText,
+                    { color: isSupervisorPassExpired ? '#ff5252' : isSupervisorPassRenewalDue ? '#feb300' : '#22ef7e' },
+                  ]}>
+                    PORT PASS: {supervisorPassExpiry} ({isSupervisorPassExpired ? 'EXPIRED' : `${supervisorPassDaysLeft}d`})
+                  </Text>
+                </View>
                 <Text style={styles.dateText}>{currentDateFormatted}</Text>
               </View>
             </View>
@@ -339,6 +394,79 @@ export default function SupervisorHomeDashboard() {
               <Ionicons name="log-out-outline" size={18} color="#ff5252" />
             </TouchableOpacity>
           </View>
+        </View>
+
+        {/* ─── SUPERVISOR PORT PASS PERMIT CARD (SLPA GATE CLEARANCE) ─── */}
+        <View style={styles.supervisorPermitCard}>
+          <View style={styles.supervisorPermitHeader}>
+            <View style={styles.supervisorPermitIconWrap}>
+              <Ionicons name="shield-checkmark" size={22} color="#feb300" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 6 }}>
+                <Text style={styles.supervisorPermitTitle}>SUPERVISOR PORT PERMIT & GATE PASS</Text>
+                <View style={[
+                  styles.permitStatusPill,
+                  isSupervisorPassExpired
+                    ? { backgroundColor: 'rgba(255, 82, 82, 0.15)', borderColor: '#ff5252' }
+                    : isSupervisorPassRenewalDue
+                    ? { backgroundColor: 'rgba(254, 179, 0, 0.15)', borderColor: '#feb300' }
+                    : { backgroundColor: 'rgba(34, 239, 126, 0.15)', borderColor: '#22ef7e' },
+                ]}>
+                  <View style={[
+                    styles.permitStatusDot,
+                    { backgroundColor: isSupervisorPassExpired ? '#ff5252' : isSupervisorPassRenewalDue ? '#feb300' : '#22ef7e' }
+                  ]} />
+                  <Text style={[
+                    styles.permitStatusText,
+                    { color: isSupervisorPassExpired ? '#ff5252' : isSupervisorPassRenewalDue ? '#feb300' : '#22ef7e' }
+                  ]}>
+                    {isSupervisorPassExpired
+                      ? 'EXPIRED'
+                      : isSupervisorPassRenewalDue
+                      ? `RENEWAL DUE (${supervisorPassDaysLeft}D)`
+                      : 'VALID PERMIT'}
+                  </Text>
+                </View>
+              </View>
+              <Text style={styles.supervisorPermitSub}>
+                SLPA ALL-TERMINAL GATE CLEARANCE · CICT · SAGT · CWIT · ECT · JCT · UCT
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.supervisorPermitGrid}>
+            <View style={[styles.supervisorPermitCol, { minWidth: isSmallMobile ? '48%' : '23%' }]}>
+              <Text style={styles.supervisorPermitLabel}>SUPERVISOR PASS NO</Text>
+              <Text style={styles.supervisorPermitVal}>SLPA-SUP-2026-8841</Text>
+            </View>
+            <View style={[styles.supervisorPermitCol, { minWidth: isSmallMobile ? '48%' : '23%' }]}>
+              <Text style={styles.supervisorPermitLabel}>EMPLOYEE ID</Text>
+              <Text style={styles.supervisorPermitVal}>{user?.employeeId || 'SUP001'}</Text>
+            </View>
+            <View style={[styles.supervisorPermitCol, { minWidth: isSmallMobile ? '48%' : '23%' }]}>
+              <Text style={styles.supervisorPermitLabel}>PORT PASS EXPIRY DATE</Text>
+              <Text style={[styles.supervisorPermitVal, { color: isSupervisorPassRenewalDue ? '#feb300' : '#22ef7e' }]}>
+                {supervisorPassExpiry}
+              </Text>
+            </View>
+            <View style={[styles.supervisorPermitCol, { minWidth: isSmallMobile ? '48%' : '23%' }]}>
+              <Text style={styles.supervisorPermitLabel}>TIME REMAINING</Text>
+              <Text style={[styles.supervisorPermitVal, { color: isSupervisorPassRenewalDue ? '#feb300' : '#00e5ff' }]}>
+                {isSupervisorPassExpired ? 'Expired' : `${supervisorPassDaysLeft} Days`}
+              </Text>
+            </View>
+          </View>
+
+          {isSupervisorPassRenewalDue && (
+            <View style={styles.permitNoticeWrap}>
+              <Ionicons name="warning-outline" size={16} color="#feb300" style={{ marginTop: 1 }} />
+              <Text style={styles.permitNoticeText}>
+                <Text style={{ fontWeight: '800', color: '#feb300' }}>Renewal Advisory: </Text>
+                Your supervisor port pass expires in {supervisorPassDaysLeft} days. Submit renewal form at SLPA Port Security Clearance Division to retain unrestricted multi-terminal oversight access.
+              </Text>
+            </View>
+          )}
         </View>
 
         {/* ─── VEHICLE REVENUE LICENSE RENEWAL ALERT (Disappears when no renewals within 30 days) ─── */}
@@ -368,6 +496,59 @@ export default function SupervisorHomeDashboard() {
                 )}
               </View>
             </View>
+          );
+        })()}
+
+        {/* ─── PORT PASS EXPIRY REMINDER (SLPA SECURITY GATE PASSES - DRIVER & VEHICLE) ─── */}
+        {(() => {
+          const expiringPassDrivers = drivers.map((d: any) => {
+            const drvPassExpiry = d.driverPortPassExpiryDate || '2026-11-15';
+            const vehPassExpiry = d.vehiclePortPassExpiryDate || '2026-11-20';
+            const drvDays = Math.round((new Date(drvPassExpiry).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+            const vehDays = Math.round((new Date(vehPassExpiry).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+            return {
+              ...d,
+              drvPassExpiry,
+              vehPassExpiry,
+              drvDays,
+              vehDays,
+              isNearExpiry: drvDays <= 30 || vehDays <= 30,
+            };
+          }).filter((d: any) => d.isNearExpiry);
+
+          if (expiringPassDrivers.length === 0) return null;
+
+          return (
+            <TouchableOpacity
+              activeOpacity={0.88}
+              onPress={() => router.push('/(supervisor)/(tabs)/drivers')}
+              style={[styles.licenseAlertBanner, { borderColor: '#feb300', backgroundColor: 'rgba(254, 179, 0, 0.09)' }]}
+            >
+              <View style={[styles.licenseAlertIconWrap, { backgroundColor: 'rgba(254, 179, 0, 0.2)' }]}>
+                <Ionicons name="card" size={20} color="#feb300" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 2 }}>
+                  <Text style={[styles.licenseAlertTitle, { color: '#feb300' }]}>
+                    ⚠️ PORT PASS RENEWAL ADVISORY ({expiringPassDrivers.length} OPERATOR{expiringPassDrivers.length > 1 ? 'S' : ''})
+                  </Text>
+                  <View style={{ backgroundColor: '#feb300', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 }}>
+                    <Text style={{ fontSize: 9, fontWeight: '800', color: '#00363d' }}>SLPA CLEARANCE</Text>
+                  </View>
+                </View>
+                {expiringPassDrivers.slice(0, 3).map((d: any) => (
+                  <Text key={d.id || d.driverCode} style={[styles.licenseAlertBody, { color: '#dde2f0' }]}>
+                    • <Text style={{ fontWeight: '700', color: '#00e5ff' }}>{d.fullName || d.driverCode}</Text> ({d.vehicleNumber}) — Driver Pass: <Text style={{ color: d.drvDays <= 30 ? '#feb300' : '#22ef7e' }}>{d.drvPassExpiry} ({d.drvDays}d)</Text> | Truck Pass: <Text style={{ color: d.vehDays <= 30 ? '#feb300' : '#22ef7e' }}>{d.vehPassExpiry} ({d.vehDays}d)</Text>
+                  </Text>
+                ))}
+                {expiringPassDrivers.length > 3 && (
+                  <Text style={[styles.licenseAlertBody, { color: '#feb300', fontWeight: '700' }]}>
+                    + {expiringPassDrivers.length - 3} more operators due for SLPA security renewal. Tap to view Driver Fleet.
+                  </Text>
+                )}
+              </View>
+              <Ionicons name="chevron-forward" size={16} color="#feb300" />
+            </TouchableOpacity>
           );
         })()}
 
@@ -433,7 +614,7 @@ export default function SupervisorHomeDashboard() {
           <View style={styles.sectionTitleRow}>
             <Ionicons name="shield-checkmark" size={18} color="#feb300" />
             <Text style={[styles.sectionTitle, { color: '#feb300' }]}>
-              PENDING GATE PASS APPROVALS ({pendingTrips.length})
+              PENDING DELIVERY CONFIRMATION & APPROVALS ({pendingTrips.length})
             </Text>
           </View>
 
@@ -453,11 +634,11 @@ export default function SupervisorHomeDashboard() {
                     <View>
                       <Text style={styles.pendingTripId}>{trip.tripNumber || `ITT-${trip.id?.slice(0, 6)}`}</Text>
                       <Text style={styles.pendingDriver}>
-                        Driver: {trip.driverName || 'Kamal Perera'} · Truck: {trip.vehicleNumber || 'LY 5234'} · CHE: {resolveCheNumber(trip.vehicleNumber, trip.chassisNumber)}
+                        Driver: {trip.driverName || 'Kamal Perera'} · Truck: {trip.vehicleNumber || 'LY-6439'} · CHE: {resolveCheNumber(trip.vehicleNumber, trip.chassisNumber)}
                       </Text>
                     </View>
                     <View style={styles.pendingAwaitingTag}>
-                      <Text style={styles.pendingAwaitingTagText}>AWAITING GATE PASS</Text>
+                      <Text style={styles.pendingAwaitingTagText}>DELIVERY COMPLETED · AWAITING SIGN-OFF</Text>
                     </View>
                   </View>
 
@@ -480,6 +661,52 @@ export default function SupervisorHomeDashboard() {
                     </Text>
                   </View>
 
+                  {/* ─── TRIP STARTED DATE TIME & END TIME DETAILS ─── */}
+                  {(() => {
+                    const timing = getTripTimingDetails(trip);
+                    return (
+                      <View style={styles.pendingTimingPanel}>
+                        <View style={styles.pendingTimingCol}>
+                          <View style={styles.pendingTimingHeader}>
+                            <Ionicons name="play-circle" size={12} color="#00e5ff" />
+                            <Text style={styles.pendingTimingLabel}>STARTED DATE & TIME</Text>
+                          </View>
+                          <Text style={styles.pendingTimingDate}>{timing.startDate}</Text>
+                          <Text style={styles.pendingTimingTime}>{timing.startTime}</Text>
+                        </View>
+
+                        <View style={styles.pendingTimingDivider}>
+                          <Ionicons name="arrow-forward" size={13} color="#3a4756" />
+                          {timing.duration && (
+                            <View style={styles.pendingDurationPill}>
+                              <Ionicons name="timer-outline" size={10} color="#22ef7e" />
+                              <Text style={styles.pendingDurationText}>{timing.duration}</Text>
+                            </View>
+                          )}
+                        </View>
+
+                        <View style={styles.pendingTimingCol}>
+                          <View style={styles.pendingTimingHeader}>
+                            <Ionicons
+                              name={timing.isCompleted ? 'checkmark-circle' : timing.isPending ? 'time' : 'navigate-circle'}
+                              size={12}
+                              color={timing.statusColor}
+                            />
+                            <Text style={[styles.pendingTimingLabel, { color: timing.statusColor }]}>
+                              {timing.isCompleted ? 'COMPLETED DATE & TIME' : timing.isPending ? 'DISCHARGED (AWAITING SIGN-OFF)' : 'CURRENT STATUS'}
+                            </Text>
+                          </View>
+                          <Text style={[styles.pendingTimingDate, !timing.isCompleted && !timing.isPending && { color: '#849396' }]}>
+                            {timing.endDate}
+                          </Text>
+                          <Text style={[styles.pendingTimingTime, { color: timing.statusColor }]}>
+                            {timing.endTime}
+                          </Text>
+                        </View>
+                      </View>
+                    );
+                  })()}
+
                   {/* Containers manifest list */}
                   {trip.containers && trip.containers.length > 0 && (
                     <View style={styles.pendingContainersList}>
@@ -501,7 +728,7 @@ export default function SupervisorHomeDashboard() {
                       onPress={() => handleApproveTrip(trip)}
                     >
                       <Ionicons name="checkmark-circle" size={16} color="#00363d" />
-                      <Text style={styles.approveBtnText}>APPROVE GATE PASS</Text>
+                      <Text style={styles.approveBtnText}>CONFIRM & APPROVE TRIP</Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity
@@ -553,7 +780,7 @@ export default function SupervisorHomeDashboard() {
                   <View style={{ flex: 1 }}>
                     <Text style={styles.driverFullName}>{drv.fullName}</Text>
                     <Text style={styles.driverDetails}>
-                      Code: {drv.driverCode} · Truck: {drv.vehicleNumber || 'LY 5234'} · CHE: {resolveCheNumber(drv.vehicleNumber, drv.chassisNumber)} · Tel: {drv.mobileNumber}
+                      Code: {drv.driverCode} · Truck: {drv.vehicleNumber || 'LY-6439'} · CHE: {resolveCheNumber(drv.vehicleNumber, drv.chassisNumber)} · Tel: {drv.mobileNumber}
                     </Text>
                   </View>
                   <View style={styles.driverActivePill}>
@@ -977,6 +1204,133 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
 
+  // ─── SUPERVISOR PORT PASS BADGE & PERMIT CARD ───
+  supervisorPassBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 6,
+    paddingVertical: 1.5,
+    borderRadius: 4,
+    borderWidth: 1,
+  },
+  supervisorPassBadgeValid: {
+    backgroundColor: 'rgba(34, 239, 126, 0.12)',
+    borderColor: 'rgba(34, 239, 126, 0.35)',
+  },
+  supervisorPassBadgeWarning: {
+    backgroundColor: 'rgba(254, 179, 0, 0.12)',
+    borderColor: 'rgba(254, 179, 0, 0.35)',
+  },
+  supervisorPassBadgeExpired: {
+    backgroundColor: 'rgba(255, 82, 82, 0.12)',
+    borderColor: 'rgba(255, 82, 82, 0.35)',
+  },
+  supervisorPassBadgeText: {
+    fontSize: 9,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
+
+  supervisorPermitCard: {
+    backgroundColor: '#161c25',
+    borderRadius: radius.DEFAULT,
+    borderWidth: 1,
+    borderColor: 'rgba(254, 179, 0, 0.35)',
+    padding: 14,
+    gap: 12,
+  },
+  supervisorPermitHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  supervisorPermitIconWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: 8,
+    backgroundColor: 'rgba(254, 179, 0, 0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(254, 179, 0, 0.3)',
+  },
+  supervisorPermitTitle: {
+    color: '#feb300',
+    fontSize: 11,
+    fontWeight: '900',
+    letterSpacing: 0.8,
+  },
+  supervisorPermitSub: {
+    color: '#849396',
+    fontSize: 9,
+    fontWeight: '700',
+    marginTop: 2,
+    letterSpacing: 0.4,
+  },
+  permitStatusPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+  },
+  permitStatusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  permitStatusText: {
+    fontSize: 9,
+    fontWeight: '900',
+    letterSpacing: 0.6,
+  },
+  supervisorPermitGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+    backgroundColor: '#080e17',
+    borderRadius: radius.sm,
+    padding: 10,
+    borderWidth: 1,
+    borderColor: '#242a34',
+  },
+  supervisorPermitCol: {
+    flex: 1,
+    gap: 2,
+  },
+  supervisorPermitLabel: {
+    color: '#849396',
+    fontSize: 8,
+    fontWeight: '800',
+    letterSpacing: 0.6,
+    textTransform: 'uppercase',
+  },
+  supervisorPermitVal: {
+    color: '#dde2f0',
+    fontSize: 12,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
+  permitNoticeWrap: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
+    backgroundColor: 'rgba(254, 179, 0, 0.08)',
+    borderRadius: radius.sm,
+    padding: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(254, 179, 0, 0.25)',
+  },
+  permitNoticeText: {
+    flex: 1,
+    color: '#dde2f0',
+    fontSize: 10,
+    lineHeight: 14,
+  },
+
   // ─── 6 SUMMARY METRIC CARDS ───
   metricsGrid: {
     flexDirection: 'row',
@@ -1107,6 +1461,68 @@ const styles = StyleSheet.create({
   pendingSpecHighlight: {
     color: '#dde2f0',
     fontWeight: '700',
+  },
+  pendingTimingPanel: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#080e17',
+    borderRadius: radius.sm,
+    borderWidth: 1,
+    borderColor: '#1e293b',
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    gap: 8,
+    marginVertical: 4,
+  },
+  pendingTimingCol: {
+    flex: 1,
+    gap: 1,
+  },
+  pendingTimingHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginBottom: 2,
+  },
+  pendingTimingLabel: {
+    fontSize: 8.5,
+    fontWeight: '800',
+    color: '#00e5ff',
+    letterSpacing: 0.4,
+  },
+  pendingTimingDate: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#dde2f0',
+  },
+  pendingTimingTime: {
+    fontSize: 12,
+    fontWeight: '900',
+    color: '#00e5ff',
+    letterSpacing: 0.2,
+  },
+  pendingTimingDivider: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 3,
+    paddingHorizontal: 2,
+  },
+  pendingDurationPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: 'rgba(34, 239, 126, 0.12)',
+    paddingHorizontal: 5,
+    paddingVertical: 2,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(34, 239, 126, 0.3)',
+  },
+  pendingDurationText: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: '#22ef7e',
   },
   pendingContainersList: {
     gap: 4,

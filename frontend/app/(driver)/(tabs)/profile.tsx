@@ -17,6 +17,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../../../src/store/authStore';
 import { driverService, DriverProfile } from '../../../src/services/driverService';
+import { authService } from '../../../src/services/authService';
 import { colors, radius, spacing, shadow } from '../../../src/theme';
 import { useResponsive } from '../../../src/hooks/useResponsive';
 
@@ -82,7 +83,7 @@ export default function DriverProfileScreen() {
   const setVehicleStatus = useAuthStore((s) => s.setVehicleStatus);
   const logout = useAuthStore((s) => s.logout);
   const router = useRouter();
-  const { topInset, bottomInset, contentMaxWidth, containerPaddingHorizontal } = useResponsive();
+  const { width, topInset, bottomInset, contentMaxWidth, containerPaddingHorizontal, isSmallMobile } = useResponsive();
 
   const [profile, setProfile] = useState<DriverProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -102,6 +103,196 @@ export default function DriverProfileScreen() {
   const [pickerModalVisible, setPickerModalVisible] = useState(false);
   const [pickerType, setPickerType] = useState<'avatar' | 'cover'>('avatar');
   const [customUrlInput, setCustomUrlInput] = useState('');
+
+  // Edit Driver Details Modal State
+  const [editModalVisible, setEditModalVisible] = useState(false);
+  const [savingDetails, setSavingDetails] = useState(false);
+  const [formFullName, setFormFullName] = useState('');
+  const [formMobileNumber, setFormMobileNumber] = useState('');
+  const [formEmail, setFormEmail] = useState('');
+  const [formAddress, setFormAddress] = useState('');
+  const [formNic, setFormNic] = useState('');
+  const [formEmployeeId, setFormEmployeeId] = useState('');
+  const [formLicenseNumber, setFormLicenseNumber] = useState('');
+  const [formLicenseExpiryDate, setFormLicenseExpiryDate] = useState('');
+  const [formDriverPortPassExpiry, setFormDriverPortPassExpiry] = useState('');
+  const [formVehiclePortPassExpiry, setFormVehiclePortPassExpiry] = useState('');
+  const [formVehicleNumber, setFormVehicleNumber] = useState('');
+  const [formChassisNumber, setFormChassisNumber] = useState('');
+  const [formDateOfBirth, setFormDateOfBirth] = useState('');
+  const [formEmergencyContactName, setFormEmergencyContactName] = useState('');
+  const [formEmergencyContactNumber, setFormEmergencyContactNumber] = useState('');
+
+  // Change Password Modal State
+  const [passwordModalVisible, setPasswordModalVisible] = useState(false);
+  const [currentPasswordInput, setCurrentPasswordInput] = useState('');
+  const [newPasswordInput, setNewPasswordInput] = useState('');
+  const [confirmPasswordInput, setConfirmPasswordInput] = useState('');
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [changingPassword, setChangingPassword] = useState(false);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+
+  const handleOpenChangePasswordModal = () => {
+    setCurrentPasswordInput('');
+    setNewPasswordInput('');
+    setConfirmPasswordInput('');
+    setPasswordError(null);
+    setPasswordModalVisible(true);
+  };
+
+  const handleSavePasswordChange = async () => {
+    setPasswordError(null);
+    const cleanCurrent = currentPasswordInput.trim();
+    const cleanNew = newPasswordInput.trim();
+    const cleanConfirm = confirmPasswordInput.trim();
+
+    if (!cleanCurrent) {
+      setPasswordError('Please enter your current password.');
+      return;
+    }
+    if (!cleanNew) {
+      setPasswordError('Please enter a new password.');
+      return;
+    }
+    if (cleanNew.length < 6) {
+      setPasswordError('New password must be at least 6 characters long.');
+      return;
+    }
+    if (cleanNew !== cleanConfirm) {
+      setPasswordError('New passwords do not match. Please re-enter.');
+      return;
+    }
+    if (cleanCurrent === cleanNew) {
+      setPasswordError('New password cannot be the same as your current password.');
+      return;
+    }
+
+    setChangingPassword(true);
+    try {
+      const username = user?.username || user?.driverCode || profile?.driverCode || 'DRV-00001';
+      await authService.changePassword({
+        username,
+        currentPassword: cleanCurrent,
+        newPassword: cleanNew,
+        confirmPassword: cleanConfirm,
+      });
+
+      setPasswordModalVisible(false);
+      const successMsg =
+        'Your security password was changed successfully! When you next sign in, you must use this newly updated password. Your old password will be rejected.';
+      if (Platform.OS === 'web') {
+        window.alert(successMsg);
+      } else {
+        Alert.alert('Password Updated', successMsg);
+      }
+    } catch (err: any) {
+      setPasswordError(
+        err?.message || 'Failed to change password. Please verify your current password.'
+      );
+    } finally {
+      setChangingPassword(false);
+    }
+  };
+
+  const handleOpenEditModal = () => {
+    setFormFullName(profile?.fullName || user?.name || '');
+    setFormMobileNumber(profile?.mobileNumber || user?.mobileNumber || '');
+    setFormEmail(profile?.email || user?.email || '');
+    setFormAddress(profile?.address || user?.address || '');
+    setFormNic(profile?.nic || user?.nic || '');
+    setFormEmployeeId(profile?.employeeId || user?.employeeId || '');
+    setFormLicenseNumber(profile?.licenseNumber || user?.licenseNumber || '');
+    setFormLicenseExpiryDate(profile?.licenseExpiryDate || user?.licenseExpiryDate || '2028-09-15');
+    setFormDriverPortPassExpiry(profile?.driverPortPassExpiryDate || user?.driverPortPassExpiryDate || '2026-11-15');
+    setFormVehiclePortPassExpiry(profile?.vehiclePortPassExpiryDate || user?.vehiclePortPassExpiryDate || '2026-11-20');
+    setFormVehicleNumber(profile?.vehicleNumber || user?.vehicleNumber || 'LY-6439');
+    setFormChassisNumber(profile?.chassisNumber || user?.chassisNumber || user?.cheNumber || 'CHE 100');
+    setFormDateOfBirth(profile?.dateOfBirth || user?.dateOfBirth || '1988-06-14');
+    setFormEmergencyContactName(profile?.emergencyContactName || user?.emergencyContactName || '');
+    setFormEmergencyContactNumber(profile?.emergencyContactNumber || user?.emergencyContactNumber || '');
+    setEditModalVisible(true);
+  };
+
+  const handleSaveDriverDetails = async () => {
+    if (!formFullName.trim()) {
+      if (Platform.OS === 'web') window.alert('Please enter your full name');
+      else Alert.alert('Required', 'Please enter your full name');
+      return;
+    }
+    setSavingDetails(true);
+    const driverId = profile?.id || user?.id || user?.driverCode || 'DRV-00001';
+
+    const payload: Partial<DriverProfile> = {
+      fullName: formFullName.trim(),
+      mobileNumber: formMobileNumber.trim(),
+      email: formEmail.trim(),
+      address: formAddress.trim(),
+      nic: formNic.trim(),
+      employeeId: formEmployeeId.trim(),
+      licenseNumber: formLicenseNumber.trim(),
+      licenseExpiryDate: formLicenseExpiryDate.trim(),
+      driverPortPassExpiryDate: formDriverPortPassExpiry.trim(),
+      vehiclePortPassExpiryDate: formVehiclePortPassExpiry.trim(),
+      vehicleNumber: formVehicleNumber.trim().toUpperCase(),
+      chassisNumber: formChassisNumber.trim().toUpperCase(),
+      cheNumber: formChassisNumber.trim().toUpperCase(),
+      dateOfBirth: formDateOfBirth.trim(),
+      emergencyContactName: formEmergencyContactName.trim(),
+      emergencyContactNumber: formEmergencyContactNumber.trim(),
+    };
+
+    try {
+      await driverService.updateDriver(driverId, payload);
+      updateUser({
+        name: payload.fullName,
+        mobileNumber: payload.mobileNumber,
+        email: payload.email,
+        address: payload.address,
+        nic: payload.nic,
+        employeeId: payload.employeeId,
+        licenseNumber: payload.licenseNumber,
+        licenseExpiryDate: payload.licenseExpiryDate,
+        driverPortPassExpiryDate: payload.driverPortPassExpiryDate,
+        vehiclePortPassExpiryDate: payload.vehiclePortPassExpiryDate,
+        vehicleNumber: payload.vehicleNumber,
+        chassisNumber: payload.chassisNumber,
+        cheNumber: payload.cheNumber,
+        dateOfBirth: payload.dateOfBirth,
+        emergencyContactName: payload.emergencyContactName,
+        emergencyContactNumber: payload.emergencyContactNumber,
+      });
+      setProfile((prev) => (prev ? { ...prev, ...payload } : (payload as any)));
+      setEditModalVisible(false);
+      if (Platform.OS === 'web') window.alert('Driver profile credentials updated successfully!');
+      else Alert.alert('Success', 'Driver profile credentials updated successfully!');
+    } catch {
+      updateUser({
+        name: payload.fullName,
+        mobileNumber: payload.mobileNumber,
+        email: payload.email,
+        address: payload.address,
+        nic: payload.nic,
+        employeeId: payload.employeeId,
+        licenseNumber: payload.licenseNumber,
+        licenseExpiryDate: payload.licenseExpiryDate,
+        driverPortPassExpiryDate: payload.driverPortPassExpiryDate,
+        vehiclePortPassExpiryDate: payload.vehiclePortPassExpiryDate,
+        vehicleNumber: payload.vehicleNumber,
+        chassisNumber: payload.chassisNumber,
+        cheNumber: payload.cheNumber,
+        dateOfBirth: payload.dateOfBirth,
+        emergencyContactName: payload.emergencyContactName,
+        emergencyContactNumber: payload.emergencyContactNumber,
+      });
+      setProfile((prev) => (prev ? { ...prev, ...payload } : (payload as any)));
+      setEditModalVisible(false);
+      if (Platform.OS === 'web') window.alert('Profile updated locally!');
+      else Alert.alert('Saved', 'Profile updated locally!');
+    } finally {
+      setSavingDetails(false);
+    }
+  };
 
   const fetchProfile = useCallback(async () => {
     try {
@@ -307,8 +498,8 @@ export default function DriverProfileScreen() {
   const dateOfBirth = profile?.dateOfBirth || user?.dateOfBirth || '—';
   const emergencyContactName = profile?.emergencyContactName || user?.emergencyContactName || '—';
   const emergencyContactNumber = profile?.emergencyContactNumber || user?.emergencyContactNumber || '—';
-  const vehicleNumber = profile?.vehicleNumber || user?.vehicleNumber || 'LY 5234';
-  const chassisNumber = profile?.chassisNumber || user?.chassisNumber || user?.cheNumber || 'SCK 100';
+  const vehicleNumber = profile?.vehicleNumber || user?.vehicleNumber || 'LY-6439';
+  const chassisNumber = profile?.chassisNumber || user?.chassisNumber || user?.cheNumber || 'CHE 100';
   const operatorName = profile?.operator || user?.operator || 'SCK Logistics';
   const email = profile?.email || user?.email || '—';
   const status = profile?.status || user?.status || 'ACTIVE';
@@ -322,6 +513,15 @@ export default function DriverProfileScreen() {
     Math.round((new Date(vehicleLicenseExpiryDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
   );
   const vehicleLicenseRenewalDue = profile?.vehicleLicenseRenewalDue ?? user?.vehicleLicenseRenewalDue ?? (vehicleLicenseDaysLeft <= 30);
+
+  // SLPA Security Port Pass Permits (5-day warning check)
+  const driverPortPassExpiryDate = profile?.driverPortPassExpiryDate || user?.driverPortPassExpiryDate || '2026-11-15';
+  const driverPortPassDaysLeft = Math.round((new Date(driverPortPassExpiryDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+  const driverPortPassRenewalDue = driverPortPassDaysLeft <= 5;
+
+  const vehiclePortPassExpiryDate = profile?.vehiclePortPassExpiryDate || user?.vehiclePortPassExpiryDate || '2026-11-20';
+  const vehiclePortPassDaysLeft = Math.round((new Date(vehiclePortPassExpiryDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+  const vehiclePortPassRenewalDue = vehiclePortPassDaysLeft <= 5;
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
@@ -570,6 +770,93 @@ export default function DriverProfileScreen() {
                   )}
                 </View>
 
+                {/* ─── SLPA PORT PASS CLEARANCE CARD (DRIVER & VEHICLE PASSES) ─── */}
+                <View style={[styles.licenseCard, { borderColor: '#feb300', marginTop: 12 }]}>
+                  <View style={styles.licenseCardHeader}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <Ionicons name="shield-checkmark" size={15} color="#feb300" />
+                      <Text style={[styles.licenseCardTitle, { color: '#feb300' }]}>SLPA SECURITY PORT PASS PERMITS</Text>
+                    </View>
+                    <View
+                      style={[
+                        styles.licenseStatusBadge,
+                        (driverPortPassRenewalDue || vehiclePortPassRenewalDue)
+                          ? styles.licenseStatusRenewal
+                          : styles.licenseStatusValid,
+                      ]}
+                    >
+                      <Ionicons
+                        name={(driverPortPassRenewalDue || vehiclePortPassRenewalDue) ? 'warning' : 'checkmark-circle'}
+                        size={12}
+                        color={(driverPortPassRenewalDue || vehiclePortPassRenewalDue) ? '#f59e0b' : '#10b981'}
+                      />
+                      <Text
+                        style={[
+                          styles.licenseStatusBadgeText,
+                          { color: (driverPortPassRenewalDue || vehiclePortPassRenewalDue) ? '#f59e0b' : '#10b981' },
+                        ]}
+                      >
+                        {(driverPortPassRenewalDue || vehiclePortPassRenewalDue) ? 'RENEWAL DUE (<5d)' : 'VALID PASS'}
+                      </Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.licenseDatesGrid}>
+                    <View style={styles.licenseDateCol}>
+                      <Text style={styles.licenseDateLabel}>DRIVER PORT PASS EXPIRE</Text>
+                      <Text
+                        style={[
+                          styles.licenseDateVal,
+                          driverPortPassRenewalDue && { color: '#feb300', fontWeight: '900' },
+                        ]}
+                      >
+                        {driverPortPassExpiryDate}
+                      </Text>
+                      <Text style={{ fontSize: 10, color: driverPortPassRenewalDue ? '#feb300' : '#849396', marginTop: 2 }}>
+                        {driverPortPassDaysLeft <= 0 ? 'EXPIRED' : `${driverPortPassDaysLeft} days remaining ${driverPortPassRenewalDue ? '(RENEW NOW)' : ''}`}
+                      </Text>
+                    </View>
+                    <View style={styles.licenseDateDivider} />
+                    <View style={styles.licenseDateCol}>
+                      <Text style={styles.licenseDateLabel}>VEHICLE PORT PASS EXPIRE</Text>
+                      <Text
+                        style={[
+                          styles.licenseDateVal,
+                          vehiclePortPassRenewalDue && { color: '#feb300', fontWeight: '900' },
+                        ]}
+                      >
+                        {vehiclePortPassExpiryDate}
+                      </Text>
+                      <Text style={{ fontSize: 10, color: vehiclePortPassRenewalDue ? '#feb300' : '#849396', marginTop: 2 }}>
+                        {vehiclePortPassDaysLeft <= 0 ? 'EXPIRED' : `${vehiclePortPassDaysLeft} days remaining ${vehiclePortPassRenewalDue ? '(RENEW NOW)' : ''}`}
+                      </Text>
+                    </View>
+                  </View>
+
+                  {(driverPortPassRenewalDue || vehiclePortPassRenewalDue) ? (
+                    <View style={styles.licenseAlertBanner}>
+                      <View style={styles.licenseAlertIconWrap}>
+                        <Ionicons name="alert-circle" size={18} color="#f59e0b" />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.licenseAlertTitle}>
+                          ⚠️ PORT PASS 5-DAY RENEWAL WARNING
+                        </Text>
+                        <Text style={styles.licenseAlertBody}>
+                          Port pass entry clearance expires within 5 days. Sri Lanka Ports Authority security gate clearance requires active renewal before expiration to maintain uninterrupted terminal access.
+                        </Text>
+                      </View>
+                    </View>
+                  ) : (
+                    <View style={styles.licenseValidBanner}>
+                      <Ionicons name="shield-checkmark" size={14} color="#10b981" />
+                      <Text style={styles.licenseValidText}>
+                        Port Pass Entry Valid • Driver and Truck passes cleared for terminal gates
+                      </Text>
+                    </View>
+                  )}
+                </View>
+
                 {/* Maintenance Action Button */}
                 <TouchableOpacity
                   style={[
@@ -638,12 +925,18 @@ export default function DriverProfileScreen() {
             {/* ─── Profile Details Card ─── */}
             <View style={styles.card}>
               <View style={styles.cardHead}>
-                <Ionicons name="card-outline" size={18} color={colors.secondaryContainer} />
-                <Text style={styles.cardTitle}>OFFICIAL DRIVER CREDENTIALS</Text>
-                <View style={[styles.statusBadge, { backgroundColor: isActive ? 'rgba(0,229,255,0.1)' : 'rgba(255,75,75,0.1)' }]}>
-                  <View style={[styles.statusDotSmall, { backgroundColor: isActive ? colors.primaryContainer : colors.error }]} />
-                  <Text style={[styles.statusText, { color: isActive ? colors.primaryContainer : colors.error }]}>{status}</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
+                  <Ionicons name="card-outline" size={18} color={colors.secondaryContainer} />
+                  <Text style={styles.cardTitle}>OFFICIAL DRIVER CREDENTIALS</Text>
                 </View>
+                <TouchableOpacity
+                  style={styles.editProfileBtn}
+                  onPress={handleOpenEditModal}
+                  activeOpacity={0.85}
+                >
+                  <Ionicons name="create-outline" size={14} color="#00e5ff" />
+                  <Text style={styles.editProfileBtnText}>EDIT DETAILS</Text>
+                </TouchableOpacity>
               </View>
 
               {[
@@ -656,6 +949,8 @@ export default function DriverProfileScreen() {
                 { key: 'Address', val: address, icon: 'location-outline' },
                 { key: 'Driving License', val: licenseNumber, icon: 'car-outline', mono: true, highlight: true },
                 { key: 'License Expiry', val: licenseExpiryDate, icon: 'time-outline', mono: true },
+                { key: 'Driver Port Pass Expiry', val: `${driverPortPassExpiryDate} (${driverPortPassDaysLeft <= 0 ? 'EXPIRED' : `${driverPortPassDaysLeft}d left`})`, icon: 'shield-outline', mono: true, warning: driverPortPassRenewalDue },
+                { key: 'Vehicle Port Pass Expiry', val: `${vehiclePortPassExpiryDate} (${vehiclePortPassDaysLeft <= 0 ? 'EXPIRED' : `${vehiclePortPassDaysLeft}d left`})`, icon: 'bus-outline', mono: true, warning: vehiclePortPassRenewalDue },
                 { key: 'Date of Birth', val: dateOfBirth, icon: 'calendar-outline', mono: true },
                 { key: 'Assigned Vehicle', val: vehicleNumber, icon: 'bus-outline', mono: true, vehicleColor: true },
                 { key: 'CHE / Chassis No', val: chassisNumber, icon: 'hardware-chip-outline', mono: true, highlight: true },
@@ -679,6 +974,30 @@ export default function DriverProfileScreen() {
                   </Text>
                 </View>
               ))}
+            </View>
+
+            {/* ─── Security & Cockpit Access Password ─── */}
+            <View style={styles.card}>
+              <View style={styles.cardHead}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
+                  <Ionicons name="key-outline" size={18} color="#00e5ff" />
+                  <Text style={styles.cardTitle}>SECURITY & ACCESS PASSWORD</Text>
+                </View>
+                <TouchableOpacity
+                  style={[styles.editProfileBtn, { borderColor: '#00e5ff' }]}
+                  onPress={handleOpenChangePasswordModal}
+                  activeOpacity={0.85}
+                >
+                  <Ionicons name="lock-closed-outline" size={14} color="#00e5ff" />
+                  <Text style={styles.editProfileBtnText}>CHANGE PASSWORD</Text>
+                </TouchableOpacity>
+              </View>
+
+              <View style={{ paddingVertical: 4 }}>
+                <Text style={{ color: '#849396', fontSize: 13, lineHeight: 18 }}>
+                  Manage your mobile terminal password. When updated, the old password will be rejected on login and only your newly updated password will grant cockpit access.
+                </Text>
+              </View>
             </View>
 
             {/* ─── Sign Out ─── */}
@@ -778,6 +1097,385 @@ export default function DriverProfileScreen() {
               </TouchableOpacity>
 
               <View style={{ height: 16 }} />
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      {/* ─── EDIT DRIVER CREDENTIALS MODAL ─── */}
+      <Modal
+        visible={editModalVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setEditModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { maxHeight: '90%' }]}>
+            {/* Modal Header */}
+            <View style={styles.modalHeader}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <Ionicons name="create-outline" size={20} color="#00e5ff" />
+                <View>
+                  <Text style={styles.modalTitle}>EDIT DRIVER CREDENTIALS</Text>
+                  <Text style={{ fontSize: 11, color: '#849396' }}>Update your official driver and vehicle data</Text>
+                </View>
+              </View>
+              <TouchableOpacity onPress={() => setEditModalVisible(false)} style={styles.modalCloseBtn}>
+                <Ionicons name="close" size={18} color="#dde2f0" />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={{ padding: 16 }} showsVerticalScrollIndicator={false}>
+              {/* Full Name */}
+              <Text style={styles.editFieldLabel}>FULL NAME *</Text>
+              <TextInput
+                style={styles.editTextInput}
+                value={formFullName}
+                onChangeText={setFormFullName}
+                placeholder="Driver Full Name"
+                placeholderTextColor="#849396"
+              />
+
+              {/* Mobile & Email */}
+              <View style={{ flexDirection: (isSmallMobile || width < 420) ? 'column' : 'row', gap: 10 }}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.editFieldLabel}>MOBILE NUMBER *</Text>
+                  <TextInput
+                    style={styles.editTextInput}
+                    value={formMobileNumber}
+                    onChangeText={setFormMobileNumber}
+                    placeholder="+94 77 XXXXXXX"
+                    placeholderTextColor="#849396"
+                  />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.editFieldLabel}>EMAIL ADDRESS</Text>
+                  <TextInput
+                    style={styles.editTextInput}
+                    value={formEmail}
+                    onChangeText={setFormEmail}
+                    placeholder="driver@scklogistics.lk"
+                    placeholderTextColor="#849396"
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                  />
+                </View>
+              </View>
+
+              {/* NIC & Employee ID */}
+              <View style={{ flexDirection: (isSmallMobile || width < 420) ? 'column' : 'row', gap: 10 }}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.editFieldLabel}>NIC NUMBER</Text>
+                  <TextInput
+                    style={styles.editTextInput}
+                    value={formNic}
+                    onChangeText={setFormNic}
+                    placeholder="1985XXXXXXV"
+                    placeholderTextColor="#849396"
+                    autoCapitalize="characters"
+                  />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.editFieldLabel}>EMPLOYEE ID</Text>
+                  <TextInput
+                    style={styles.editTextInput}
+                    value={formEmployeeId}
+                    onChangeText={setFormEmployeeId}
+                    placeholder="SCK-EMP-1001"
+                    placeholderTextColor="#849396"
+                    autoCapitalize="characters"
+                  />
+                </View>
+              </View>
+
+              {/* Residential Address */}
+              <Text style={styles.editFieldLabel}>RESIDENTIAL ADDRESS</Text>
+              <TextInput
+                style={styles.editTextInput}
+                value={formAddress}
+                onChangeText={setFormAddress}
+                placeholder="No. 14, Port Access Road, Colombo"
+                placeholderTextColor="#849396"
+              />
+
+              {/* Driving License & Expiry */}
+              <View style={{ flexDirection: (isSmallMobile || width < 420) ? 'column' : 'row', gap: 10 }}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.editFieldLabel}>HEAVY DRIVING LICENSE</Text>
+                  <TextInput
+                    style={styles.editTextInput}
+                    value={formLicenseNumber}
+                    onChangeText={setFormLicenseNumber}
+                    placeholder="B8765400"
+                    placeholderTextColor="#849396"
+                    autoCapitalize="characters"
+                  />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.editFieldLabel}>LICENSE EXPIRY DATE</Text>
+                  <TextInput
+                    style={styles.editTextInput}
+                    value={formLicenseExpiryDate}
+                    onChangeText={setFormLicenseExpiryDate}
+                    placeholder="YYYY-MM-DD"
+                    placeholderTextColor="#849396"
+                  />
+                </View>
+              </View>
+
+              {/* Driver Port Pass & Vehicle Port Pass Expiry */}
+              <View style={{ flexDirection: (isSmallMobile || width < 420) ? 'column' : 'row', gap: 10 }}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.editFieldLabel}>DRIVER PORT PASS EXPIRY</Text>
+                  <TextInput
+                    style={styles.editTextInput}
+                    value={formDriverPortPassExpiry}
+                    onChangeText={setFormDriverPortPassExpiry}
+                    placeholder="YYYY-MM-DD"
+                    placeholderTextColor="#849396"
+                  />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.editFieldLabel}>VEHICLE PORT PASS EXPIRY</Text>
+                  <TextInput
+                    style={styles.editTextInput}
+                    value={formVehiclePortPassExpiry}
+                    onChangeText={setFormVehiclePortPassExpiry}
+                    placeholder="YYYY-MM-DD"
+                    placeholderTextColor="#849396"
+                  />
+                </View>
+              </View>
+
+              {/* Vehicle Number & CHE Number */}
+              <View style={{ flexDirection: (isSmallMobile || width < 420) ? 'column' : 'row', gap: 10 }}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.editFieldLabel}>ASSIGNED VEHICLE NO</Text>
+                  <TextInput
+                    style={styles.editTextInput}
+                    value={formVehicleNumber}
+                    onChangeText={setFormVehicleNumber}
+                    placeholder="LY-6439"
+                    placeholderTextColor="#849396"
+                    autoCapitalize="characters"
+                  />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.editFieldLabel}>CHE / CHASSIS NO</Text>
+                  <TextInput
+                    style={styles.editTextInput}
+                    value={formChassisNumber}
+                    onChangeText={setFormChassisNumber}
+                    placeholder="SCK 100"
+                    placeholderTextColor="#849396"
+                    autoCapitalize="characters"
+                  />
+                </View>
+              </View>
+
+              {/* Date of Birth */}
+              <Text style={styles.editFieldLabel}>DATE OF BIRTH</Text>
+              <TextInput
+                style={styles.editTextInput}
+                value={formDateOfBirth}
+                onChangeText={setFormDateOfBirth}
+                placeholder="YYYY-MM-DD"
+                placeholderTextColor="#849396"
+              />
+
+              {/* Emergency Contact Name & Phone */}
+              <View style={{ flexDirection: 'row', gap: 10 }}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.editFieldLabel}>EMERGENCY CONTACT NAME</Text>
+                  <TextInput
+                    style={styles.editTextInput}
+                    value={formEmergencyContactName}
+                    onChangeText={setFormEmergencyContactName}
+                    placeholder="e.g. Nimali Perera"
+                    placeholderTextColor="#849396"
+                  />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.editFieldLabel}>EMERGENCY CONTACT PHONE</Text>
+                  <TextInput
+                    style={styles.editTextInput}
+                    value={formEmergencyContactNumber}
+                    onChangeText={setFormEmergencyContactNumber}
+                    placeholder="+94 71 XXXXXXX"
+                    placeholderTextColor="#849396"
+                  />
+                </View>
+              </View>
+
+              {/* Save & Cancel buttons */}
+              <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: 10, marginTop: 16, marginBottom: 24 }}>
+                <TouchableOpacity
+                  style={styles.editCancelBtn}
+                  onPress={() => setEditModalVisible(false)}
+                  disabled={savingDetails}
+                >
+                  <Text style={styles.editCancelBtnText}>CANCEL</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.editSaveBtn}
+                  onPress={handleSaveDriverDetails}
+                  disabled={savingDetails}
+                  activeOpacity={0.88}
+                >
+                  {savingDetails ? (
+                    <ActivityIndicator size="small" color="#00363d" />
+                  ) : (
+                    <>
+                      <Ionicons name="checkmark-done" size={16} color="#00363d" />
+                      <Text style={styles.editSaveBtnText}>SAVE CREDENTIALS</Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+              </View>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      {/* ─── CHANGE PASSWORD MODAL ─── */}
+      <Modal
+        visible={passwordModalVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setPasswordModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { maxHeight: '90%' }]}>
+            {/* Modal Header */}
+            <View style={styles.modalHeader}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <Ionicons name="key" size={20} color="#00e5ff" />
+                <Text style={styles.modalTitle}>CHANGE TERMINAL PASSWORD</Text>
+              </View>
+              <TouchableOpacity onPress={() => setPasswordModalVisible(false)} style={styles.modalCloseBtn}>
+                <Ionicons name="close" size={18} color="#dde2f0" />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={{ padding: 18 }} showsVerticalScrollIndicator={false}>
+              <Text style={styles.modalSubheading}>
+                Update your driver login password. Once saved, your old password will be invalidated immediately.
+              </Text>
+
+              {passwordError && (
+                <View
+                  style={{
+                    backgroundColor: 'rgba(255, 77, 77, 0.15)',
+                    borderWidth: 1,
+                    borderColor: '#ff4d4d',
+                    borderRadius: 8,
+                    padding: 10,
+                    marginBottom: 14,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 8,
+                  }}
+                >
+                  <Ionicons name="alert-circle" size={18} color="#ff4d4d" />
+                  <Text style={{ color: '#ffb3b3', fontSize: 13, flex: 1 }}>{passwordError}</Text>
+                </View>
+              )}
+
+              {/* Current Password */}
+              <Text style={styles.editFieldLabel}>CURRENT PASSWORD *</Text>
+              <View style={{ position: 'relative', marginBottom: 12 }}>
+                <TextInput
+                  style={[styles.editTextInput, { paddingRight: 40 }]}
+                  value={currentPasswordInput}
+                  onChangeText={(t) => {
+                    setCurrentPasswordInput(t);
+                    if (passwordError) setPasswordError(null);
+                  }}
+                  placeholder="Enter current password"
+                  placeholderTextColor="#849396"
+                  secureTextEntry={!showCurrentPassword}
+                  autoCapitalize="none"
+                />
+                <TouchableOpacity
+                  style={{ position: 'absolute', right: 12, top: 12 }}
+                  onPress={() => setShowCurrentPassword(!showCurrentPassword)}
+                >
+                  <Ionicons
+                    name={showCurrentPassword ? 'eye-off-outline' : 'eye-outline'}
+                    size={18}
+                    color="#849396"
+                  />
+                </TouchableOpacity>
+              </View>
+
+              {/* New Password */}
+              <Text style={styles.editFieldLabel}>NEW PASSWORD (MIN 6 CHARACTERS) *</Text>
+              <View style={{ position: 'relative', marginBottom: 12 }}>
+                <TextInput
+                  style={[styles.editTextInput, { paddingRight: 40 }]}
+                  value={newPasswordInput}
+                  onChangeText={(t) => {
+                    setNewPasswordInput(t);
+                    if (passwordError) setPasswordError(null);
+                  }}
+                  placeholder="Enter new password (min. 6 characters)"
+                  placeholderTextColor="#849396"
+                  secureTextEntry={!showNewPassword}
+                  autoCapitalize="none"
+                />
+                <TouchableOpacity
+                  style={{ position: 'absolute', right: 12, top: 12 }}
+                  onPress={() => setShowNewPassword(!showNewPassword)}
+                >
+                  <Ionicons
+                    name={showNewPassword ? 'eye-off-outline' : 'eye-outline'}
+                    size={18}
+                    color="#849396"
+                  />
+                </TouchableOpacity>
+              </View>
+
+              {/* Confirm New Password */}
+              <Text style={styles.editFieldLabel}>CONFIRM NEW PASSWORD *</Text>
+              <TextInput
+                style={[styles.editTextInput, { marginBottom: 18 }]}
+                value={confirmPasswordInput}
+                onChangeText={(t) => {
+                  setConfirmPasswordInput(t);
+                  if (passwordError) setPasswordError(null);
+                }}
+                placeholder="Confirm new password"
+                placeholderTextColor="#849396"
+                secureTextEntry={!showNewPassword}
+                autoCapitalize="none"
+              />
+
+              {/* Modal Buttons */}
+              <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: 10, marginTop: 16, marginBottom: 24 }}>
+                <TouchableOpacity
+                  style={styles.editCancelBtn}
+                  onPress={() => setPasswordModalVisible(false)}
+                >
+                  <Text style={styles.editCancelBtnText}>CANCEL</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.editSaveBtn}
+                  onPress={handleSavePasswordChange}
+                  disabled={changingPassword}
+                  activeOpacity={0.88}
+                >
+                  {changingPassword ? (
+                    <ActivityIndicator size="small" color="#00363d" />
+                  ) : (
+                    <>
+                      <Ionicons name="key" size={16} color="#00363d" />
+                      <Text style={styles.editSaveBtnText}>UPDATE PASSWORD</Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+              </View>
             </ScrollView>
           </View>
         </View>
@@ -1035,11 +1733,14 @@ const styles = StyleSheet.create({
     paddingVertical: 9,
     borderBottomWidth: 1,
     borderBottomColor: colors.outlineVariant,
+    flexWrap: 'wrap',
+    gap: 6,
   },
   infoKeyRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 7,
+    flexShrink: 1,
   },
   infoKey: {
     fontSize: 12,
@@ -1050,7 +1751,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: colors.onSurface,
     fontWeight: '700',
-    maxWidth: '55%',
+    flexShrink: 1,
     textAlign: 'right',
   },
   monoText: {
@@ -1146,7 +1847,7 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   modalContent: {
-    width: '100%',
+    width: '94%',
     maxWidth: 500,
     maxHeight: '90%',
     backgroundColor: '#161c25',
@@ -1400,5 +2101,71 @@ const styles = StyleSheet.create({
     color: '#10b981',
     fontSize: 10,
     fontWeight: '700',
+  },
+  editProfileBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: 'rgba(0, 229, 255, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 229, 255, 0.4)',
+    paddingHorizontal: 9,
+    paddingVertical: 5,
+    borderRadius: radius.md,
+  },
+  editProfileBtnText: {
+    color: '#00e5ff',
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
+  editFieldLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#849396',
+    marginBottom: 4,
+    marginTop: 8,
+    textTransform: 'uppercase',
+  },
+  editTextInput: {
+    backgroundColor: '#080e17',
+    borderWidth: 1,
+    borderColor: '#242a34',
+    borderRadius: radius.md,
+    color: '#dde2f0',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 13,
+    fontWeight: '600',
+    marginBottom: 4,
+    ...(Platform.OS === 'web' && { outlineStyle: 'none', cursor: 'text' } as any),
+  },
+  editCancelBtn: {
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: radius.md,
+    backgroundColor: '#1d2633',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  editCancelBtnText: {
+    color: '#849396',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  editSaveBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: 10,
+    paddingHorizontal: 18,
+    borderRadius: radius.md,
+    backgroundColor: '#00e5ff',
+    justifyContent: 'center',
+  },
+  editSaveBtnText: {
+    color: '#00363d',
+    fontSize: 12,
+    fontWeight: '800',
   },
 });

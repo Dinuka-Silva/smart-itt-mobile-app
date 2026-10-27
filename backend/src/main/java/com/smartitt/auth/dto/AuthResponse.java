@@ -23,5 +23,6 @@ public class AuthResponse {
     private String vehicleNumber;
     private String employeeId;
     private String status;
+    private String supervisorPortPassExpiryDate;
     private DriverProfileResponse driver;
 }

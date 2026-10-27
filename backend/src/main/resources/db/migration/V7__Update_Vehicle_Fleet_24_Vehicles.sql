@@ -1,11 +1,11 @@
 -- =========================================================================
--- V7: Update and expand SCK Fleet to 24 vehicles with Trailer Size (40FT)
+-- V7: Update and expand SCK Fleet to 20 vehicles with Trailer Size (40FT)
 -- =========================================================================
 
 -- 1. Ensure trailer_size column exists in vehicles table
 ALTER TABLE vehicles ADD COLUMN IF NOT EXISTS trailer_size VARCHAR(20) DEFAULT '40FT';
 
--- 2. Upsert the authoritative 24 Fleet Vehicles
+-- 2. Upsert the authoritative 20 Fleet Vehicles
 -- Operator 1: SCK Logistics (15 vehicles: CHE 100 - 114)
 INSERT INTO vehicles (id, vehicle_number, chassis_number, operator, trailer_size, status, created_at, updated_at)
 VALUES
@@ -30,13 +30,7 @@ VALUES
     (gen_random_uuid(), 'LY 6529', 'SCK 117', 'SDR LINK', '40FT', 'ACTIVE', NOW(), NOW()),
     (gen_random_uuid(), 'LY 6530', 'SCK 119', 'SDR LINK', '40FT', 'ACTIVE', NOW(), NOW()),
     (gen_random_uuid(), 'LY 6531', 'SCK 120', 'SDR LINK', '40FT', 'ACTIVE', NOW(), NOW()),
-    (gen_random_uuid(), 'LY 6532', 'SCK 121', 'SDR LINK', '40FT', 'ACTIVE', NOW(), NOW()),
-
--- Operator 3: E3 LOGISTICS (4 vehicles: CHE 122, 123, 124, 125)
-    (gen_random_uuid(), 'LY 5596', 'SCK 122', 'E3 Logistics', '40FT', 'ACTIVE', NOW(), NOW()),
-    (gen_random_uuid(), 'LY 5597', 'SCK 123', 'E3 Logistics', '40FT', 'ACTIVE', NOW(), NOW()),
-    (gen_random_uuid(), 'LY 5598', 'SCK 124', 'E3 Logistics', '40FT', 'ACTIVE', NOW(), NOW()),
-    (gen_random_uuid(), 'LY 5600', 'SCK 125', 'E3 Logistics', '40FT', 'ACTIVE', NOW(), NOW())
+    (gen_random_uuid(), 'LY 6532', 'SCK 121', 'SDR LINK', '40FT', 'ACTIVE', NOW(), NOW())
 
 ON CONFLICT (vehicle_number) DO UPDATE
 SET chassis_number = EXCLUDED.chassis_number,

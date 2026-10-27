@@ -40,7 +40,7 @@ export default function SupervisorTabsLayout() {
         options={{
           title: 'Dashboard',
           tabBarIcon: ({ color, focused, size }) => (
-            <Ionicons name={focused ? 'speedometer' : 'speedometer-outline'} size={size || 24} color={color} />
+            <Ionicons name={focused ? 'speedometer' : 'speedometer-outline'} size={size || 24} color={color as any} />
           ),
         }}
       />
@@ -49,7 +49,7 @@ export default function SupervisorTabsLayout() {
         options={{
           title: 'Trips',
           tabBarIcon: ({ color, focused, size }) => (
-            <Ionicons name={focused ? 'swap-horizontal' : 'swap-horizontal-outline'} size={size || 24} color={color} />
+            <Ionicons name={focused ? 'swap-horizontal' : 'swap-horizontal-outline'} size={size || 24} color={color as any} />
           ),
         }}
       />
@@ -58,7 +58,7 @@ export default function SupervisorTabsLayout() {
         options={{
           title: 'Approvals',
           tabBarIcon: ({ color, focused, size }) => (
-            <Ionicons name={focused ? 'shield-checkmark' : 'shield-checkmark-outline'} size={size || 24} color={color} />
+            <Ionicons name={focused ? 'shield-checkmark' : 'shield-checkmark-outline'} size={size || 24} color={color as any} />
           ),
         }}
       />
@@ -67,7 +67,7 @@ export default function SupervisorTabsLayout() {
         options={{
           title: 'Drivers',
           tabBarIcon: ({ color, focused, size }) => (
-            <Ionicons name={focused ? 'people' : 'people-outline'} size={size || 24} color={color} />
+            <Ionicons name={focused ? 'people' : 'people-outline'} size={size || 24} color={color as any} />
           ),
         }}
       />
@@ -76,7 +76,7 @@ export default function SupervisorTabsLayout() {
         options={{
           title: 'Reports',
           tabBarIcon: ({ color, focused, size }) => (
-            <Ionicons name={focused ? 'document-text' : 'document-text-outline'} size={size || 24} color={color} />
+            <Ionicons name={focused ? 'document-text' : 'document-text-outline'} size={size || 24} color={color as any} />
           ),
         }}
       />

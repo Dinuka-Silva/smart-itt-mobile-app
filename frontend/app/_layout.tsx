@@ -35,6 +35,7 @@ export default function RootLayout() {
             <Stack.Screen name="(auth)" />
             <Stack.Screen name="(driver)" />
             <Stack.Screen name="(supervisor)" />
+            <Stack.Screen name="(admin)" />
           </Stack>
         </ThemeProvider>
       </QueryClientProvider>

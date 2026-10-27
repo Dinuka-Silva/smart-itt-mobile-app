@@ -53,6 +53,99 @@ export default function SupervisorDrivers() {
   const [selectedDriver, setSelectedDriver] = useState<any | null>(null);
   const [updatingStatus, setUpdatingStatus] = useState(false);
 
+  // Edit Driver Details State (Supervisor)
+  const [editDriverModalVisible, setEditDriverModalVisible] = useState(false);
+  const [editingDriver, setEditingDriver] = useState<any | null>(null);
+  const [savingDriverEdit, setSavingDriverEdit] = useState(false);
+  const [editFullName, setEditFullName] = useState('');
+  const [editMobile, setEditMobile] = useState('');
+  const [editEmail, setEditEmail] = useState('');
+  const [editAddress, setEditAddress] = useState('');
+  const [editNic, setEditNic] = useState('');
+  const [editEmpId, setEditEmpId] = useState('');
+  const [editLicense, setEditLicense] = useState('');
+  const [editLicenseExpiry, setEditLicenseExpiry] = useState('');
+  const [editDriverPortPass, setEditDriverPortPass] = useState('');
+  const [editVehiclePortPass, setEditVehiclePortPass] = useState('');
+  const [editVehicleNo, setEditVehicleNo] = useState('');
+  const [editCheNo, setEditCheNo] = useState('');
+  const [editDob, setEditDob] = useState('');
+  const [editEmergencyName, setEditEmergencyName] = useState('');
+  const [editEmergencyPhone, setEditEmergencyPhone] = useState('');
+
+  const handleOpenEditDriverModal = (drv: any) => {
+    setEditingDriver(drv);
+    setEditFullName(drv.fullName || '');
+    setEditMobile(drv.mobileNumber || '');
+    setEditEmail(drv.email || '');
+    setEditAddress(drv.address || '');
+    setEditNic(drv.nic || '');
+    setEditEmpId(drv.employeeId || '');
+    setEditLicense(drv.licenseNumber || '');
+    setEditLicenseExpiry(drv.licenseExpiryDate || '2028-09-15');
+    setEditDriverPortPass(drv.driverPortPassExpiryDate || '2026-11-15');
+    setEditVehiclePortPass(drv.vehiclePortPassExpiryDate || '2026-11-20');
+    setEditVehicleNo(drv.vehicleNumber || 'LY-6439');
+    setEditCheNo(drv.chassisNumber || drv.cheNumber || 'CHE 100');
+    setEditDob(drv.dateOfBirth || '1988-06-14');
+    setEditEmergencyName(drv.emergencyContactName || '');
+    setEditEmergencyPhone(drv.emergencyContactNumber || '');
+    setEditDriverModalVisible(true);
+  };
+
+  const handleSaveDriverEdit = async () => {
+    if (!editFullName.trim()) {
+      if (Platform.OS === 'web') window.alert('Driver full name is required');
+      else Alert.alert('Required', 'Driver full name is required');
+      return;
+    }
+    setSavingDriverEdit(true);
+    const drvId = editingDriver.id || editingDriver.driverCode || 'DRV-00001';
+    const payload = {
+      fullName: editFullName.trim(),
+      mobileNumber: editMobile.trim(),
+      email: editEmail.trim(),
+      address: editAddress.trim(),
+      nic: editNic.trim(),
+      employeeId: editEmpId.trim(),
+      licenseNumber: editLicense.trim(),
+      licenseExpiryDate: editLicenseExpiry.trim(),
+      driverPortPassExpiryDate: editDriverPortPass.trim(),
+      vehiclePortPassExpiryDate: editVehiclePortPass.trim(),
+      vehicleNumber: editVehicleNo.trim().toUpperCase(),
+      chassisNumber: editCheNo.trim().toUpperCase(),
+      cheNumber: editCheNo.trim().toUpperCase(),
+      dateOfBirth: editDob.trim(),
+      emergencyContactName: editEmergencyName.trim(),
+      emergencyContactNumber: editEmergencyPhone.trim(),
+    };
+
+    try {
+      await axios.put(`${API_BASE_URL}/drivers/${drvId}`, payload);
+      setDrivers((prev) =>
+        prev.map((d) => (d.id === drvId || d.driverCode === drvId ? { ...d, ...payload } : d))
+      );
+      if (selectedDriver && (selectedDriver.id === drvId || selectedDriver.driverCode === drvId)) {
+        setSelectedDriver({ ...selectedDriver, ...payload });
+      }
+      setEditDriverModalVisible(false);
+      if (Platform.OS === 'web') window.alert('Driver dossier updated successfully!');
+      else Alert.alert('Success', 'Driver dossier updated successfully!');
+    } catch {
+      setDrivers((prev) =>
+        prev.map((d) => (d.id === drvId || d.driverCode === drvId ? { ...d, ...payload } : d))
+      );
+      if (selectedDriver && (selectedDriver.id === drvId || selectedDriver.driverCode === drvId)) {
+        setSelectedDriver({ ...selectedDriver, ...payload });
+      }
+      setEditDriverModalVisible(false);
+      if (Platform.OS === 'web') window.alert('Driver dossier updated locally!');
+      else Alert.alert('Saved', 'Driver dossier updated locally!');
+    } finally {
+      setSavingDriverEdit(false);
+    }
+  };
+
   const getFallbackDrivers = () => {
     return SCK_FLEET.map((f, idx) => ({
       id: f.id,
@@ -141,7 +234,7 @@ export default function SupervisorDrivers() {
     const vMatch = findFleetVehicle(d.vehicleNumber) || SCK_FLEET.find(
       (f) => f.vehicleNumber === d.vehicleNumber || f.cheNumber === d.chassisNumber || f.assignedDriver?.driverCode === d.driverCode
     );
-    const resolvedVeh = d.vehicleNumber || vMatch?.vehicleNumber || 'LY 5234';
+    const resolvedVeh = d.vehicleNumber || vMatch?.vehicleNumber || 'LY-6439';
     const resolvedChe = resolveCheNumber(resolvedVeh, d.chassisNumber || d.cheNumber || vMatch?.cheNumber);
     const resolvedOp = resolveOperator(resolvedVeh, d.operator || vMatch?.operator);
 
@@ -166,6 +259,8 @@ export default function SupervisorDrivers() {
       status: d.status || 'ACTIVE',
       totalTrips: d.totalTrips || (20 + ((idx * 7) % 35)),
       createdAt: d.createdAt || '2024-02-15T08:30:00',
+      driverPortPassExpiryDate: d.driverPortPassExpiryDate || '2026-11-15',
+      vehiclePortPassExpiryDate: d.vehiclePortPassExpiryDate || '2026-11-20',
       profilePhoto: d.profilePhoto || DRIVER_PHOTO_POOL[idx % DRIVER_PHOTO_POOL.length],
       coverImage: d.coverImage || DRIVER_COVER_POOL[idx % DRIVER_COVER_POOL.length],
     };
@@ -187,7 +282,7 @@ export default function SupervisorDrivers() {
 
   const supervisorName = user?.name || user?.fullName || 'Nimal Silva';
   const supervisorInitials = supervisorName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase();
-  const { topInset, bottomInset, contentMaxWidth, containerPaddingHorizontal } = useResponsive();
+  const { width, topInset, bottomInset, contentMaxWidth, containerPaddingHorizontal, isSmallMobile } = useResponsive();
 
   return (
     <View style={styles.container}>
@@ -280,7 +375,6 @@ export default function SupervisorDrivers() {
                 const isActive = (drv.status || 'ACTIVE') === 'ACTIVE';
                 const operatorName = drv.operator || 'SCK Logistics';
                 const isSdr = operatorName === 'SDR LINK';
-                const isE3 = operatorName === 'E3 Logistics';
 
                 return (
                   <TouchableOpacity
@@ -305,19 +399,13 @@ export default function SupervisorDrivers() {
                               styles.operatorBadge,
                               isSdr
                                 ? { backgroundColor: 'rgba(254, 179, 0, 0.15)', borderColor: '#feb300' }
-                                : isE3
-                                ? { backgroundColor: 'rgba(34, 239, 126, 0.15)', borderColor: '#22ef7e' }
                                 : { backgroundColor: 'rgba(0, 229, 255, 0.15)', borderColor: '#00e5ff' },
                             ]}
                           >
                             <Text
                               style={[
                                 styles.operatorBadgeText,
-                                isSdr
-                                  ? { color: '#feb300' }
-                                  : isE3
-                                  ? { color: '#22ef7e' }
-                                  : { color: '#00e5ff' },
+                                isSdr ? { color: '#feb300' } : { color: '#00e5ff' },
                               ]}
                             >
                               {operatorName}
@@ -359,7 +447,7 @@ export default function SupervisorDrivers() {
                           <Ionicons name="bus" size={10} color="#feb300" />
                           <Text style={styles.specKey}>VEHICLE NO</Text>
                         </View>
-                        <Text style={styles.specValHighlight}>{drv.vehicleNumber || 'LY 5234'}</Text>
+                        <Text style={styles.specValHighlight}>{drv.vehicleNumber || 'LY-6439'}</Text>
                       </View>
 
                       <View style={styles.specBox}>
@@ -388,6 +476,50 @@ export default function SupervisorDrivers() {
                         <Text style={styles.specValMono}>{drv.mobileNumber || '+94 77 123 4567'}</Text>
                       </View>
                     </View>
+
+                    {/* Port Pass Status Row */}
+                    {(() => {
+                      const dPass = drv.driverPortPassExpiryDate || '2026-11-15';
+                      const vPass = drv.vehiclePortPassExpiryDate || '2026-11-20';
+                      const dDays = Math.round((new Date(dPass).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+                      const vDays = Math.round((new Date(vPass).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+                      const isDue = dDays <= 30 || vDays <= 30;
+
+                      return (
+                        <View style={{
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          backgroundColor: isDue ? 'rgba(254, 179, 0, 0.08)' : 'rgba(0, 229, 255, 0.05)',
+                          borderWidth: 1,
+                          borderColor: isDue ? 'rgba(254, 179, 0, 0.3)' : 'rgba(0, 229, 255, 0.15)',
+                          borderRadius: radius.md,
+                          paddingHorizontal: 10,
+                          paddingVertical: 6,
+                          marginBottom: 8,
+                          flexWrap: 'wrap',
+                          gap: 6,
+                        }}>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                            <Ionicons name="card" size={12} color={isDue ? '#feb300' : '#00e5ff'} />
+                            <Text style={{ fontSize: 11, fontWeight: '700', color: '#dde2f0' }}>
+                              Driver Pass: <Text style={{ color: dDays <= 30 ? '#feb300' : '#00e5ff' }}>{dPass}</Text> ({dDays <= 0 ? 'EXPIRED' : `${dDays}d`})
+                            </Text>
+                          </View>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                            <Ionicons name="bus" size={12} color={vDays <= 30 ? '#feb300' : '#22ef7e'} />
+                            <Text style={{ fontSize: 11, fontWeight: '700', color: '#dde2f0' }}>
+                              Truck Pass: <Text style={{ color: vDays <= 30 ? '#feb300' : '#22ef7e' }}>{vPass}</Text> ({vDays <= 0 ? 'EXPIRED' : `${vDays}d`})
+                            </Text>
+                          </View>
+                          {isDue && (
+                            <View style={{ backgroundColor: 'rgba(254, 179, 0, 0.2)', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 }}>
+                              <Text style={{ fontSize: 9, fontWeight: '800', color: '#feb300' }}>⚠️ RENEWAL DUE</Text>
+                            </View>
+                          )}
+                        </View>
+                      );
+                    })()}
 
                     {/* Monthly Mission Target Bar (150 Containers Target) */}
                     <View style={styles.monthlyMissionCard}>
@@ -459,19 +591,29 @@ export default function SupervisorDrivers() {
               <>
                 {/* Modal Header */}
                 <View style={styles.modalHeader}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
                     <Ionicons name="document-text" size={18} color="#00e5ff" />
                     <View>
                       <Text style={styles.modalHeaderTitle}>DRIVER SIGN-UP DOSSIER</Text>
                       <Text style={styles.modalHeaderSubtitle}>Official Port Logistics Registration Record</Text>
                     </View>
                   </View>
-                  <TouchableOpacity
-                    style={styles.modalCloseBtn}
-                    onPress={() => setSelectedDriver(null)}
-                  >
-                    <Ionicons name="close" size={20} color="#dde2f0" />
-                  </TouchableOpacity>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                    <TouchableOpacity
+                      style={styles.headerEditBtn}
+                      onPress={() => handleOpenEditDriverModal(selectedDriver)}
+                      activeOpacity={0.8}
+                    >
+                      <Ionicons name="create-outline" size={13} color="#00e5ff" />
+                      <Text style={styles.headerEditBtnText}>EDIT</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.modalCloseBtn}
+                      onPress={() => setSelectedDriver(null)}
+                    >
+                      <Ionicons name="close" size={20} color="#dde2f0" />
+                    </TouchableOpacity>
+                  </View>
                 </View>
 
                 <ScrollView style={styles.modalScroll} showsVerticalScrollIndicator={false}>
@@ -621,7 +763,43 @@ export default function SupervisorDrivers() {
                     </View>
                   </View>
 
-                  {/* 4. CONTACT & RESIDENTIAL ADDRESS */}
+                  {/* 4. SLPA SECURITY PORT PASS PERMITS (DRIVER & VEHICLE) */}
+                  <View style={[styles.dossierSection, { borderColor: '#feb300' }]}>
+                    <View style={styles.dossierSectionHeader}>
+                      <Ionicons name="shield-checkmark" size={15} color="#feb300" />
+                      <Text style={[styles.dossierSectionTitle, { color: '#feb300' }]}>SLPA SECURITY PORT PASS PERMITS</Text>
+                    </View>
+                    <View style={styles.dossierGrid}>
+                      <View style={styles.dossierItemHalf}>
+                        <Text style={styles.dossierItemLabel}>DRIVER PORT PASS EXPIRE</Text>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2 }}>
+                          <Text style={[styles.dossierItemValMono, { color: '#00e5ff', fontWeight: '800' }]}>
+                            {selectedDriver.driverPortPassExpiryDate || '2026-11-15'}
+                          </Text>
+                          <View style={{ backgroundColor: 'rgba(254, 179, 0, 0.2)', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 }}>
+                            <Text style={{ fontSize: 9, fontWeight: '800', color: '#feb300' }}>
+                              {Math.round((new Date(selectedDriver.driverPortPassExpiryDate || '2026-11-15').getTime() - Date.now()) / (1000 * 60 * 60 * 24))}d left
+                            </Text>
+                          </View>
+                        </View>
+                      </View>
+                      <View style={styles.dossierItemHalf}>
+                        <Text style={styles.dossierItemLabel}>VEHICLE PORT PASS EXPIRE</Text>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2 }}>
+                          <Text style={[styles.dossierItemValMono, { color: '#feb300', fontWeight: '800' }]}>
+                            {selectedDriver.vehiclePortPassExpiryDate || '2026-11-20'}
+                          </Text>
+                          <View style={{ backgroundColor: 'rgba(254, 179, 0, 0.2)', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 }}>
+                            <Text style={{ fontSize: 9, fontWeight: '800', color: '#feb300' }}>
+                              {Math.round((new Date(selectedDriver.vehiclePortPassExpiryDate || '2026-11-20').getTime() - Date.now()) / (1000 * 60 * 60 * 24))}d left
+                            </Text>
+                          </View>
+                        </View>
+                      </View>
+                    </View>
+                  </View>
+
+                  {/* 5. CONTACT & RESIDENTIAL ADDRESS */}
                   <View style={styles.dossierSection}>
                     <View style={styles.dossierSectionHeader}>
                       <Ionicons name="call" size={15} color="#00e5ff" />
@@ -708,6 +886,16 @@ export default function SupervisorDrivers() {
                     </TouchableOpacity>
 
                     <TouchableOpacity
+                      style={[styles.actionBtn, { backgroundColor: 'rgba(0, 229, 255, 0.15)', borderColor: '#00e5ff' }]}
+                      onPress={() => handleOpenEditDriverModal(selectedDriver)}
+                    >
+                      <Ionicons name="create-outline" size={16} color="#00e5ff" />
+                      <Text style={[styles.actionBtnText, { color: '#00e5ff', fontWeight: '800' }]}>
+                        EDIT DRIVER
+                      </Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
                       style={[styles.actionBtn, { backgroundColor: '#00e5ff', borderColor: '#00e5ff' }]}
                       onPress={() => {
                         Alert.alert(
@@ -718,7 +906,7 @@ export default function SupervisorDrivers() {
                     >
                       <Ionicons name="call" size={15} color="#00363d" />
                       <Text style={[styles.actionBtnText, { color: '#00363d', fontWeight: '900' }]}>
-                        CALL DRIVER
+                        CALL
                       </Text>
                     </TouchableOpacity>
                   </View>
@@ -727,6 +915,233 @@ export default function SupervisorDrivers() {
                 </ScrollView>
               </>
             )}
+          </View>
+        </View>
+      </Modal>
+
+      {/* ─── SUPERVISOR EDIT DRIVER DOSSIER MODAL ─── */}
+      <Modal
+        visible={editDriverModalVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setEditDriverModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContainer, { maxHeight: '90%' }]}>
+            <View style={styles.modalHeader}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <Ionicons name="create-outline" size={18} color="#00e5ff" />
+                <View>
+                  <Text style={styles.modalHeaderTitle}>EDIT DRIVER DOSSIER</Text>
+                  <Text style={styles.modalHeaderSubtitle}>Modify driver, vehicle & license credentials</Text>
+                </View>
+              </View>
+              <TouchableOpacity
+                style={styles.modalCloseBtn}
+                onPress={() => setEditDriverModalVisible(false)}
+              >
+                <Ionicons name="close" size={20} color="#dde2f0" />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={{ padding: 16 }} showsVerticalScrollIndicator={false}>
+              <Text style={styles.editFieldLabel}>DRIVER FULL NAME *</Text>
+              <TextInput
+                style={styles.editTextInput}
+                value={editFullName}
+                onChangeText={setEditFullName}
+                placeholder="Full Name"
+                placeholderTextColor="#849396"
+              />
+
+              <View style={{ flexDirection: (isSmallMobile || width < 420) ? 'column' : 'row', gap: 10 }}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.editFieldLabel}>MOBILE NUMBER *</Text>
+                  <TextInput
+                    style={styles.editTextInput}
+                    value={editMobile}
+                    onChangeText={setEditMobile}
+                    placeholder="+94 77 XXXXXXX"
+                    placeholderTextColor="#849396"
+                  />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.editFieldLabel}>EMAIL ADDRESS</Text>
+                  <TextInput
+                    style={styles.editTextInput}
+                    value={editEmail}
+                    onChangeText={setEditEmail}
+                    placeholder="driver@scklogistics.lk"
+                    placeholderTextColor="#849396"
+                    autoCapitalize="none"
+                  />
+                </View>
+              </View>
+
+              <View style={{ flexDirection: (isSmallMobile || width < 420) ? 'column' : 'row', gap: 10 }}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.editFieldLabel}>NIC NUMBER</Text>
+                  <TextInput
+                    style={styles.editTextInput}
+                    value={editNic}
+                    onChangeText={setEditNic}
+                    placeholder="1985XXXXXXV"
+                    placeholderTextColor="#849396"
+                    autoCapitalize="characters"
+                  />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.editFieldLabel}>EMPLOYEE ID</Text>
+                  <TextInput
+                    style={styles.editTextInput}
+                    value={editEmpId}
+                    onChangeText={setEditEmpId}
+                    placeholder="SCK-EMP-1001"
+                    placeholderTextColor="#849396"
+                    autoCapitalize="characters"
+                  />
+                </View>
+              </View>
+
+              <Text style={styles.editFieldLabel}>RESIDENTIAL ADDRESS</Text>
+              <TextInput
+                style={styles.editTextInput}
+                value={editAddress}
+                onChangeText={setEditAddress}
+                placeholder="Residential Address"
+                placeholderTextColor="#849396"
+              />
+
+              <View style={{ flexDirection: (isSmallMobile || width < 420) ? 'column' : 'row', gap: 10 }}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.editFieldLabel}>HEAVY DRIVING LICENSE</Text>
+                  <TextInput
+                    style={styles.editTextInput}
+                    value={editLicense}
+                    onChangeText={setEditLicense}
+                    placeholder="B8765400"
+                    placeholderTextColor="#849396"
+                    autoCapitalize="characters"
+                  />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.editFieldLabel}>LICENSE EXPIRY DATE</Text>
+                  <TextInput
+                    style={styles.editTextInput}
+                    value={editLicenseExpiry}
+                    onChangeText={setEditLicenseExpiry}
+                    placeholder="YYYY-MM-DD"
+                    placeholderTextColor="#849396"
+                  />
+                </View>
+              </View>
+
+              <View style={{ flexDirection: (isSmallMobile || width < 420) ? 'column' : 'row', gap: 10 }}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.editFieldLabel}>DRIVER PORT PASS EXPIRY</Text>
+                  <TextInput
+                    style={styles.editTextInput}
+                    value={editDriverPortPass}
+                    onChangeText={setEditDriverPortPass}
+                    placeholder="YYYY-MM-DD"
+                    placeholderTextColor="#849396"
+                  />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.editFieldLabel}>VEHICLE PORT PASS EXPIRY</Text>
+                  <TextInput
+                    style={styles.editTextInput}
+                    value={editVehiclePortPass}
+                    onChangeText={setEditVehiclePortPass}
+                    placeholder="YYYY-MM-DD"
+                    placeholderTextColor="#849396"
+                  />
+                </View>
+              </View>
+
+              <View style={{ flexDirection: (isSmallMobile || width < 420) ? 'column' : 'row', gap: 10 }}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.editFieldLabel}>ASSIGNED VEHICLE NO</Text>
+                  <TextInput
+                    style={styles.editTextInput}
+                    value={editVehicleNo}
+                    onChangeText={setEditVehicleNo}
+                    placeholder="LY-6439"
+                    placeholderTextColor="#849396"
+                    autoCapitalize="characters"
+                  />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.editFieldLabel}>CHE / CHASSIS NO</Text>
+                  <TextInput
+                    style={styles.editTextInput}
+                    value={editCheNo}
+                    onChangeText={setEditCheNo}
+                    placeholder="SCK 100"
+                    placeholderTextColor="#849396"
+                    autoCapitalize="characters"
+                  />
+                </View>
+              </View>
+
+              <Text style={styles.editFieldLabel}>DATE OF BIRTH</Text>
+              <TextInput
+                style={styles.editTextInput}
+                value={editDob}
+                onChangeText={setEditDob}
+                placeholder="YYYY-MM-DD"
+                placeholderTextColor="#849396"
+              />
+
+              <View style={{ flexDirection: (isSmallMobile || width < 420) ? 'column' : 'row', gap: 10 }}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.editFieldLabel}>EMERGENCY CONTACT NAME</Text>
+                  <TextInput
+                    style={styles.editTextInput}
+                    value={editEmergencyName}
+                    onChangeText={setEditEmergencyName}
+                    placeholder="Contact Name"
+                    placeholderTextColor="#849396"
+                  />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.editFieldLabel}>EMERGENCY CONTACT PHONE</Text>
+                  <TextInput
+                    style={styles.editTextInput}
+                    value={editEmergencyPhone}
+                    onChangeText={setEditEmergencyPhone}
+                    placeholder="+94 71 XXXXXXX"
+                    placeholderTextColor="#849396"
+                  />
+                </View>
+              </View>
+
+              <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: 10, marginTop: 16, marginBottom: 24 }}>
+                <TouchableOpacity
+                  style={styles.editCancelBtn}
+                  onPress={() => setEditDriverModalVisible(false)}
+                  disabled={savingDriverEdit}
+                >
+                  <Text style={styles.editCancelBtnText}>CANCEL</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.editSaveBtn}
+                  onPress={handleSaveDriverEdit}
+                  disabled={savingDriverEdit}
+                  activeOpacity={0.88}
+                >
+                  {savingDriverEdit ? (
+                    <ActivityIndicator size="small" color="#00363d" />
+                  ) : (
+                    <>
+                      <Ionicons name="checkmark-done" size={16} color="#00363d" />
+                      <Text style={styles.editSaveBtnText}>SAVE DOSSIER</Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+              </View>
+            </ScrollView>
           </View>
         </View>
       </Modal>
@@ -1103,7 +1518,7 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   modalContainer: {
-    width: '100%',
+    width: '95%',
     maxWidth: 620,
     maxHeight: '92%',
     backgroundColor: '#161c25',
@@ -1248,6 +1663,8 @@ const styles = StyleSheet.create({
   },
   dossierItemHalf: {
     width: '48%',
+    minWidth: 140,
+    flexGrow: 1,
     gap: 3,
   },
   dossierItemLabel: {
@@ -1359,5 +1776,70 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '800',
     letterSpacing: 0.5,
+  },
+  headerEditBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(0, 229, 255, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 229, 255, 0.4)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  headerEditBtnText: {
+    color: '#00e5ff',
+    fontSize: 11,
+    fontWeight: '800',
+  },
+  editFieldLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#849396',
+    marginBottom: 4,
+    marginTop: 8,
+    textTransform: 'uppercase',
+  },
+  editTextInput: {
+    backgroundColor: '#080e17',
+    borderWidth: 1,
+    borderColor: '#242a34',
+    borderRadius: radius.DEFAULT,
+    color: '#dde2f0',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 13,
+    fontWeight: '600',
+    marginBottom: 4,
+    ...(Platform.OS === 'web' && { outlineStyle: 'none', cursor: 'text' } as any),
+  },
+  editCancelBtn: {
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: radius.DEFAULT,
+    backgroundColor: '#1d2633',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  editCancelBtnText: {
+    color: '#849396',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  editSaveBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: 10,
+    paddingHorizontal: 18,
+    borderRadius: radius.DEFAULT,
+    backgroundColor: '#00e5ff',
+    justifyContent: 'center',
+  },
+  editSaveBtnText: {
+    color: '#00363d',
+    fontSize: 12,
+    fontWeight: '800',
   },
 });

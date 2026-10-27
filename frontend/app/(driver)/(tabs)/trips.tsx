@@ -18,6 +18,7 @@ import { useAuthStore } from '../../../src/store/authStore';
 import { colors, radius, spacing } from '../../../src/theme';
 import { useMockTripStore } from '../../../src/store/mockTripStore';
 import { useResponsive } from '../../../src/hooks/useResponsive';
+import { getTripTimingDetails } from '../../../src/utils/tripDateUtils';
 
 const TERMINALS = ['CWIT', 'JCT', 'ECT', 'UCT', 'SAGT', 'CICT'];
 
@@ -124,30 +125,30 @@ export default function DriverJobQueue() {
         unloadedTerminal: unloadSelections[c.id] || c.unloadedTerminal || trip?.destTerminal || 'ECT',
       }));
 
-      await axios.patch(`${API_BASE_URL}/trips/${tripId}/complete`, { containerUpdates });
+      await axios.patch(`${API_BASE_URL}/trips/${tripId}/complete`, { containerUpdates }).catch(() => {});
       useMockTripStore.getState().unloadContainer(tripId, trip?.containers?.[0]?.id || 'c-1', new Date().toISOString());
-      useMockTripStore.getState().updateTripStatus(tripId, 'COMPLETED');
-      showMessage('Trip Completed & Stored', 'All containers discharged. Trip has been stored in your My Trips archive!');
+      useMockTripStore.getState().updateTripStatus(tripId, 'PENDING_APPROVAL');
+      showMessage('Trip Submitted to Supervisor! 📋', 'Containers discharged at destination. Submitted to Port Operations Supervisor to confirm delivery and update your trip count!');
       fetchTrips();
     } catch {
       useMockTripStore.getState().unloadContainer(tripId, 'c-1', new Date().toISOString());
-      useMockTripStore.getState().updateTripStatus(tripId, 'COMPLETED');
-      showMessage('Trip Completed & Stored', 'All containers discharged. Trip has been stored in your My Trips archive!');
+      useMockTripStore.getState().updateTripStatus(tripId, 'PENDING_APPROVAL');
+      showMessage('Trip Submitted to Supervisor! 📋', 'Containers discharged at destination. Submitted to Port Operations Supervisor to confirm delivery and update your trip count!');
       fetchTrips();
     } finally {
       setUpdatingId(null);
     }
   };
 
-  const completedCount = trips.filter((t) => t.status === 'COMPLETED').length;
-  const inProgressCount = trips.filter((t) => t.status === 'IN_PROGRESS' || t.status === 'APPROVED').length;
+  const completedCount = trips.filter((t) => t.status === 'COMPLETED' || t.status === 'APPROVED').length;
+  const inProgressCount = trips.filter((t) => t.status === 'IN_PROGRESS').length;
   const pendingCount = trips.filter((t) => t.status === 'PENDING_APPROVAL').length;
 
   const filteredTrips = trips.filter((t) => {
     if (filter === 'ALL') return true;
-    if (filter === 'ACTIVE') return t.status === 'IN_PROGRESS' || t.status === 'APPROVED';
+    if (filter === 'ACTIVE') return t.status === 'IN_PROGRESS';
     if (filter === 'PENDING') return t.status === 'PENDING_APPROVAL';
-    if (filter === 'DONE') return t.status === 'COMPLETED';
+    if (filter === 'DONE') return t.status === 'COMPLETED' || t.status === 'APPROVED';
     return true;
   });
 
@@ -269,7 +270,11 @@ export default function DriverJobQueue() {
                       <Text style={styles.jobNumText}>{tripNum}</Text>
                       <View style={[styles.statusTag, { backgroundColor: `${statusColor}22` }]}>
                         <Text style={[styles.statusTagText, { color: statusColor }]}>
-                          {isApproved ? 'GATE PASS APPROVED' : trip.status?.replace(/_/g, ' ')}
+                          {isPending
+                            ? 'DELIVERY COMPLETED (PENDING SIGN-OFF)'
+                            : isDone || isApproved
+                            ? 'COMPLETED & CONFIRMED'
+                            : trip.status?.replace(/_/g, ' ')}
                         </Text>
                       </View>
                     </View>
@@ -293,6 +298,55 @@ export default function DriverJobQueue() {
                       <Text style={styles.termCode}>{trip.destTerminal || 'JCT'}</Text>
                     </View>
                   </View>
+
+                  {/* ─── TRIP STARTED DATE TIME & END TIME DETAILS ─── */}
+                  {(() => {
+                    const timing = getTripTimingDetails(trip);
+                    return (
+                      <View style={styles.timingCard}>
+                        {/* Started Date & Time */}
+                        <View style={styles.timingCol}>
+                          <View style={styles.timingColHeader}>
+                            <Ionicons name="play-circle" size={13} color="#00e5ff" />
+                            <Text style={styles.timingColLabel}>TRIP STARTED</Text>
+                          </View>
+                          <Text style={styles.timingDateVal}>{timing.startDate}</Text>
+                          <Text style={styles.timingTimeVal}>{timing.startTime}</Text>
+                        </View>
+
+                        {/* Middle Arrow & Duration */}
+                        <View style={styles.timingDividerCol}>
+                          <Ionicons name="arrow-forward" size={14} color="#3a4756" />
+                          {timing.duration && (
+                            <View style={styles.durationPill}>
+                              <Ionicons name="timer-outline" size={10} color="#22ef7e" />
+                              <Text style={styles.durationPillText}>{timing.duration}</Text>
+                            </View>
+                          )}
+                        </View>
+
+                        {/* End Date & Time */}
+                        <View style={styles.timingCol}>
+                          <View style={styles.timingColHeader}>
+                            <Ionicons
+                              name={timing.isCompleted ? 'checkmark-circle' : timing.isPending ? 'time' : 'navigate-circle'}
+                              size={13}
+                              color={timing.statusColor}
+                            />
+                            <Text style={[styles.timingColLabel, { color: timing.statusColor }]}>
+                              {timing.isCompleted ? 'TRIP COMPLETED' : timing.isPending ? 'DISCHARGED' : 'EST. ARRIVAL'}
+                            </Text>
+                          </View>
+                          <Text style={[styles.timingDateVal, !timing.isCompleted && !timing.isPending && { color: '#849396' }]}>
+                            {timing.endDate}
+                          </Text>
+                          <Text style={[styles.timingTimeVal, { color: timing.statusColor }]}>
+                            {timing.endTime}
+                          </Text>
+                        </View>
+                      </View>
+                    );
+                  })()}
 
                   {/* Containers List */}
                   <View style={styles.containersBox}>
@@ -337,7 +391,7 @@ export default function DriverJobQueue() {
                     <View style={styles.pendingNoticeBox}>
                       <Ionicons name="time-outline" size={16} color="#feb300" />
                       <Text style={styles.pendingNoticeText}>
-                        Awaiting Port Operations Supervisor gate pass clearance before departure.
+                        Containers discharged at {trip.destTerminal}. Awaiting Operations Supervisor confirmation to credit your completed trip count & allowance.
                       </Text>
                     </View>
                   )}
@@ -402,7 +456,7 @@ export default function DriverJobQueue() {
                         ) : (
                           <>
                             <Ionicons name="checkmark-done" size={18} color="#00363d" />
-                            <Text style={styles.completeBtnText}>DISCHARGE CONTAINERS & COMPLETE TRIP</Text>
+                            <Text style={styles.completeBtnText}>DISCHARGE CONTAINERS & SEND TO SUPERVISOR</Text>
                           </>
                         )}
                       </TouchableOpacity>
@@ -776,5 +830,70 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '600',
     color: '#849396',
+  },
+
+  // ─── TRIP TIMING DETAILS STYLES ───
+  timingCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#070c14',
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: '#1e293b',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginTop: 8,
+    marginBottom: 8,
+    gap: 8,
+  },
+  timingCol: {
+    flex: 1,
+    gap: 2,
+  },
+  timingColHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    marginBottom: 2,
+  },
+  timingColLabel: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: '#00e5ff',
+    letterSpacing: 0.5,
+  },
+  timingDateVal: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#dde2f0',
+  },
+  timingTimeVal: {
+    fontSize: 13,
+    fontWeight: '900',
+    color: '#00e5ff',
+    letterSpacing: 0.3,
+  },
+  timingDividerCol: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    paddingHorizontal: 2,
+  },
+  durationPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: 'rgba(34, 239, 126, 0.12)',
+    paddingHorizontal: 5,
+    paddingVertical: 2,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(34, 239, 126, 0.3)',
+  },
+  durationPillText: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: '#22ef7e',
   },
 });

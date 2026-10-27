@@ -15,6 +15,7 @@ export type OverlayContainer = {
   containerNumber: string;
   size: string;
   destTerminal: string;
+  isReturn?: boolean;
 };
 
 type VerifyProps = {
@@ -57,11 +58,11 @@ function VerifyBody(props: VerifyProps) {
   return (
     <>
       <View style={styles.iconWrap}>
-        <Ionicons name="shield-checkmark" size={36} color={colors.accent} />
+        <Ionicons name="play-circle" size={38} color={colors.accent} />
       </View>
-      <Text style={styles.title}>Verify trip details</Text>
+      <Text style={styles.title}>Confirm Load & Start Trip</Text>
       <Text style={styles.subtitle}>
-        Review this load before sending it to your supervisor. They will confirm the trip next.
+        Review your loaded container(s) before departure. The trip will begin immediately in IN PROGRESS status. After delivery at destination, you will submit the completed trip for supervisor sign-off.
       </Text>
 
       <ScrollView style={styles.details} showsVerticalScrollIndicator={false}>
@@ -74,15 +75,17 @@ function VerifyBody(props: VerifyProps) {
           label="Chassis load"
           value={
             props.containers.length === 1 && props.containers[0].size === '40FT'
-              ? '1 × 40FT (Full Chassis Capacity)'
-              : `${props.containers.length} × 20FT (${props.containers.length}/2 Chassis Slots)`
+              ? '1 × 40FT (Standard 40FT Container)'
+              : props.containers.length === 1
+              ? '1 × 20FT (Single 20FT Container)'
+              : '2 × 20FT (Twin 20FT Containers)'
           }
         />
         {props.containers.map((c, i) => (
           <View key={`${c.containerNumber}-${i}`} style={styles.containerRow}>
-            <Ionicons name="cube-outline" size={16} color={colors.accent} />
-            <Text style={styles.containerText}>
-              {c.containerNumber} · {c.size} · {c.destTerminal}
+            <Ionicons name={c.isReturn ? "return-down-back" : "cube-outline"} size={16} color={c.isReturn ? "#feb300" : colors.accent} />
+            <Text style={[styles.containerText, c.isReturn && { color: '#feb300' }]}>
+              {c.containerNumber} · {c.size} · {c.destTerminal} {c.isReturn ? ' (🔄 RETURN CONTAINER)' : ''}
             </Text>
           </View>
         ))}
@@ -99,9 +102,9 @@ function VerifyBody(props: VerifyProps) {
           disabled={props.submitting}
         >
           {props.submitting ? (
-            <ActivityIndicator color="#fff" />
+            <ActivityIndicator color="#00363d" />
           ) : (
-            <Text style={styles.primaryText}>Send to supervisor</Text>
+            <Text style={styles.primaryText}>Start Trip & Begin Transport</Text>
           )}
         </TouchableOpacity>
       </View>
@@ -113,22 +116,21 @@ function SentBody(props: SentProps) {
   return (
     <>
       <View style={[styles.iconWrap, styles.iconSuccess]}>
-        <Ionicons name="paper-plane" size={34} color={colors.success} />
+        <Ionicons name="navigate-circle" size={38} color={colors.accent} />
       </View>
-      <Text style={styles.title}>Sent for verification</Text>
+      <Text style={styles.title}>Trip Started & In Progress! 🚀</Text>
       <Text style={styles.subtitle}>
-        Trip {props.tripNumber} with {props.containerCount} container(s) on {props.vesselName} is now
-        pending supervisor confirmation.
+        Trip {props.tripNumber} with {props.containerCount} container(s) on {props.vesselName} is now active. Proceed safely to destination terminal.
       </Text>
-      <View style={styles.pendingChip}>
-        <View style={styles.pendingDot} />
-        <Text style={styles.pendingChipText}>PENDING APPROVAL</Text>
+      <View style={[styles.pendingChip, { backgroundColor: 'rgba(0, 229, 255, 0.15)', borderColor: '#00e5ff' }]}>
+        <View style={[styles.pendingDot, { backgroundColor: '#00e5ff' }]} />
+        <Text style={[styles.pendingChipText, { color: '#00e5ff' }]}>IN PROGRESS · LIVE TRANSIT</Text>
       </View>
       <Text style={styles.hint}>
-        You will get a notification when the supervisor confirms or rejects this trip.
+        When you arrive and discharge at the destination, tap "Complete & Send to Supervisor" to update your completed trip count and earnings!
       </Text>
       <TouchableOpacity style={styles.primaryBtn} onPress={props.onDone}>
-        <Text style={styles.primaryText}>View pending trips</Text>
+        <Text style={styles.primaryText}>Go to Active Mission</Text>
       </TouchableOpacity>
     </>
   );

@@ -52,6 +52,14 @@ public class DriverProfileResponse {
     private Boolean vehicleLicenseRenewalDue;
     private String vehicleLicenseStatus;
 
+    // Driver Port Pass (SLPA Port Entry Pass)
+    private String portPassNumber;
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    private LocalDate portPassExpiryDate; // Driver Port Pass Renewal Date
+    private Long portPassDaysLeft;
+    private Boolean portPassRenewalDue;
+    private String portPassStatus; // VALID, RENEWAL_DUE, EXPIRED
+
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

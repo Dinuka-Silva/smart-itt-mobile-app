@@ -2,9 +2,12 @@ export interface FleetVehicle {
   id: string;
   cheNumber: string;       // SCK No (Chassis / CHE)
   vehicleNumber: string;   // LY No (Prime Mover / Tractor License)
-  operator: 'SCK Logistics' | 'SDR LINK' | 'E3 Logistics';
+  operator: 'SCK Logistics' | 'SDR LINK';
   trailerSize: '40FT' | string; // 40FT standard ITT container chassis
   status: 'ACTIVE' | 'MAINTENANCE' | 'IN_TRANSIT';
+  portPassNumber?: string;
+  portPassExpiryDate?: string;
+  portPassStatus?: 'VALID' | 'RENEWAL_DUE' | 'EXPIRED';
   assignedDriver?: {
     driverCode: string;
     driverName: string;
@@ -17,7 +20,7 @@ export const SCK_FLEET: FleetVehicle[] = [
   {
     id: 'fl-100',
     cheNumber: 'SCK 100',
-    vehicleNumber: 'LY 5234',
+    vehicleNumber: 'LY-6439',
     operator: 'SCK Logistics',
     trailerSize: '40FT',
     status: 'ACTIVE',
@@ -26,7 +29,7 @@ export const SCK_FLEET: FleetVehicle[] = [
   {
     id: 'fl-101',
     cheNumber: 'SCK 101',
-    vehicleNumber: 'LY 5235',
+    vehicleNumber: 'LY-6434',
     operator: 'SCK Logistics',
     trailerSize: '40FT',
     status: 'ACTIVE',
@@ -35,7 +38,7 @@ export const SCK_FLEET: FleetVehicle[] = [
   {
     id: 'fl-102',
     cheNumber: 'SCK 102',
-    vehicleNumber: 'LY 5236',
+    vehicleNumber: 'LY-6435',
     operator: 'SCK Logistics',
     trailerSize: '40FT',
     status: 'ACTIVE',
@@ -44,7 +47,7 @@ export const SCK_FLEET: FleetVehicle[] = [
   {
     id: 'fl-103',
     cheNumber: 'SCK 103',
-    vehicleNumber: 'LY 5237',
+    vehicleNumber: 'LY-6431',
     operator: 'SCK Logistics',
     trailerSize: '40FT',
     status: 'ACTIVE',
@@ -53,7 +56,7 @@ export const SCK_FLEET: FleetVehicle[] = [
   {
     id: 'fl-104',
     cheNumber: 'SCK 104',
-    vehicleNumber: 'LY 5238',
+    vehicleNumber: 'LY-6427',
     operator: 'SCK Logistics',
     trailerSize: '40FT',
     status: 'ACTIVE',
@@ -62,7 +65,7 @@ export const SCK_FLEET: FleetVehicle[] = [
   {
     id: 'fl-105',
     cheNumber: 'SCK 105',
-    vehicleNumber: 'LY 5665',
+    vehicleNumber: 'LY-5665',
     operator: 'SCK Logistics',
     trailerSize: '40FT',
     status: 'ACTIVE',
@@ -71,7 +74,7 @@ export const SCK_FLEET: FleetVehicle[] = [
   {
     id: 'fl-106',
     cheNumber: 'SCK 106',
-    vehicleNumber: 'LY 5708',
+    vehicleNumber: 'LY-5708',
     operator: 'SCK Logistics',
     trailerSize: '40FT',
     status: 'ACTIVE',
@@ -80,7 +83,7 @@ export const SCK_FLEET: FleetVehicle[] = [
   {
     id: 'fl-107',
     cheNumber: 'SCK 107',
-    vehicleNumber: 'LY 5711',
+    vehicleNumber: 'LY-5711',
     operator: 'SCK Logistics',
     trailerSize: '40FT',
     status: 'ACTIVE',
@@ -89,7 +92,7 @@ export const SCK_FLEET: FleetVehicle[] = [
   {
     id: 'fl-108',
     cheNumber: 'SCK 108',
-    vehicleNumber: 'LY 5717',
+    vehicleNumber: 'LY-5717',
     operator: 'SCK Logistics',
     trailerSize: '40FT',
     status: 'ACTIVE',
@@ -98,7 +101,7 @@ export const SCK_FLEET: FleetVehicle[] = [
   {
     id: 'fl-109',
     cheNumber: 'SCK 109',
-    vehicleNumber: 'LY 5721',
+    vehicleNumber: 'LY-5721',
     operator: 'SCK Logistics',
     trailerSize: '40FT',
     status: 'ACTIVE',
@@ -107,7 +110,7 @@ export const SCK_FLEET: FleetVehicle[] = [
   {
     id: 'fl-110',
     cheNumber: 'SCK 110',
-    vehicleNumber: 'LY 6426',
+    vehicleNumber: 'LY-6426',
     operator: 'SCK Logistics',
     trailerSize: '40FT',
     status: 'ACTIVE',
@@ -116,7 +119,7 @@ export const SCK_FLEET: FleetVehicle[] = [
   {
     id: 'fl-111',
     cheNumber: 'SCK 111',
-    vehicleNumber: 'LY 6428',
+    vehicleNumber: 'LY-6428',
     operator: 'SCK Logistics',
     trailerSize: '40FT',
     status: 'ACTIVE',
@@ -125,7 +128,7 @@ export const SCK_FLEET: FleetVehicle[] = [
   {
     id: 'fl-112',
     cheNumber: 'SCK 112',
-    vehicleNumber: 'LY 5217',
+    vehicleNumber: 'LY-6438',
     operator: 'SCK Logistics',
     trailerSize: '40FT',
     status: 'ACTIVE',
@@ -134,7 +137,7 @@ export const SCK_FLEET: FleetVehicle[] = [
   {
     id: 'fl-113',
     cheNumber: 'SCK 113',
-    vehicleNumber: 'LY 6429',
+    vehicleNumber: 'LY-6429',
     operator: 'SCK Logistics',
     trailerSize: '40FT',
     status: 'ACTIVE',
@@ -143,7 +146,7 @@ export const SCK_FLEET: FleetVehicle[] = [
   {
     id: 'fl-114',
     cheNumber: 'SCK 114',
-    vehicleNumber: 'LY 6433',
+    vehicleNumber: 'LY-6433',
     operator: 'SCK Logistics',
     trailerSize: '40FT',
     status: 'ACTIVE',
@@ -154,7 +157,7 @@ export const SCK_FLEET: FleetVehicle[] = [
   {
     id: 'fl-115',
     cheNumber: 'SCK 115',
-    vehicleNumber: 'LY 6528',
+    vehicleNumber: 'LY-6528',
     operator: 'SDR LINK',
     trailerSize: '40FT',
     status: 'ACTIVE',
@@ -163,7 +166,7 @@ export const SCK_FLEET: FleetVehicle[] = [
   {
     id: 'fl-117',
     cheNumber: 'SCK 117',
-    vehicleNumber: 'LY 6529',
+    vehicleNumber: 'LY-6529',
     operator: 'SDR LINK',
     trailerSize: '40FT',
     status: 'ACTIVE',
@@ -172,7 +175,7 @@ export const SCK_FLEET: FleetVehicle[] = [
   {
     id: 'fl-119',
     cheNumber: 'SCK 119',
-    vehicleNumber: 'LY 6530',
+    vehicleNumber: 'LY-6530',
     operator: 'SDR LINK',
     trailerSize: '40FT',
     status: 'ACTIVE',
@@ -181,7 +184,7 @@ export const SCK_FLEET: FleetVehicle[] = [
   {
     id: 'fl-120',
     cheNumber: 'SCK 120',
-    vehicleNumber: 'LY 6531',
+    vehicleNumber: 'LY-6531',
     operator: 'SDR LINK',
     trailerSize: '40FT',
     status: 'ACTIVE',
@@ -190,49 +193,49 @@ export const SCK_FLEET: FleetVehicle[] = [
   {
     id: 'fl-121',
     cheNumber: 'SCK 121',
-    vehicleNumber: 'LY 6532',
+    vehicleNumber: 'LY-6532',
     operator: 'SDR LINK',
     trailerSize: '40FT',
     status: 'ACTIVE',
     assignedDriver: { driverCode: 'DRV-00020', driverName: 'Sanath Jayasuriya', mobile: '+94 77 777 8899' },
   },
 
-  // ─── 3. E3 LOGISTICS (4 Vehicles: CHE 122, 123, 124, 125) ───
-  {
-    id: 'fl-122',
-    cheNumber: 'SCK 122',
-    vehicleNumber: 'LY 5596',
-    operator: 'E3 Logistics',
-    trailerSize: '40FT',
-    status: 'ACTIVE',
-    assignedDriver: { driverCode: 'DRV-00021', driverName: 'Lasith Malinga', mobile: '+94 70 888 9900' },
-  },
-  {
-    id: 'fl-123',
-    cheNumber: 'SCK 123',
-    vehicleNumber: 'LY 5597',
-    operator: 'E3 Logistics',
-    trailerSize: '40FT',
-    status: 'ACTIVE',
-    assignedDriver: { driverCode: 'DRV-00022', driverName: 'Kumar Sangakkara', mobile: '+94 71 222 3344' },
-  },
-  {
-    id: 'fl-124',
-    cheNumber: 'SCK 124',
-    vehicleNumber: 'LY 5598',
-    operator: 'E3 Logistics',
-    trailerSize: '40FT',
-    status: 'ACTIVE',
-    assignedDriver: { driverCode: 'DRV-00023', driverName: 'Tilakaratne Dilshan', mobile: '+94 76 888 2211' },
-  },
+  // ─── 3. SCK LOGISTICS ADDITIONAL (CHE 125, 126, 127) ───
   {
     id: 'fl-125',
     cheNumber: 'SCK 125',
-    vehicleNumber: 'LY 5600',
-    operator: 'E3 Logistics',
+    vehicleNumber: 'LY-5650',
+    operator: 'SCK Logistics',
     trailerSize: '40FT',
     status: 'ACTIVE',
-    assignedDriver: { driverCode: 'DRV-00024', driverName: 'Muttiah Muralitharan', mobile: '+94 70 999 4433' },
+    portPassNumber: 'SLPA-VPP-125',
+    portPassExpiryDate: '2026-11-10',
+    portPassStatus: 'RENEWAL_DUE',
+    assignedDriver: { driverCode: 'DRV-00023', driverName: 'Kusal Mendis', mobile: '+94 77 987 6565' },
+  },
+  {
+    id: 'fl-126',
+    cheNumber: 'SCK 126',
+    vehicleNumber: 'LY-5654',
+    operator: 'SCK Logistics',
+    trailerSize: '40FT',
+    status: 'ACTIVE',
+    portPassNumber: 'SLPA-VPP-126',
+    portPassExpiryDate: '2027-05-15',
+    portPassStatus: 'VALID',
+    assignedDriver: { driverCode: 'DRV-00016', driverName: 'Upul Tharanga', mobile: '+94 77 444 3322' },
+  },
+  {
+    id: 'fl-127',
+    cheNumber: 'SCK 127',
+    vehicleNumber: 'LY-2147',
+    operator: 'SCK Logistics',
+    trailerSize: '40FT',
+    status: 'ACTIVE',
+    portPassNumber: 'SLPA-VPP-127',
+    portPassExpiryDate: '2027-06-20',
+    portPassStatus: 'VALID',
+    assignedDriver: { driverCode: 'DRV-00017', driverName: 'Marvan Atapattu', mobile: '+94 71 888 4455' },
   },
 ];
 

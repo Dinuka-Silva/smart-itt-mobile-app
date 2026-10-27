@@ -14,12 +14,14 @@ import {
   Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { Calendar } from 'react-native-calendars';
 import { useAuthStore } from '../../../src/store/authStore';
 import { tripService } from '../../../src/services/tripService';
 import { useMockTripStore } from '../../../src/store/mockTripStore';
 import { colors, radius, spacing } from '../../../src/theme';
 import { resolveCheNumber, resolveOperator } from '../../../src/config/fleet';
 import { useResponsive } from '../../../src/hooks/useResponsive';
+import { getTripTimingDetails } from '../../../src/utils/tripDateUtils';
 
 const DRIVER_PHOTO_POOL = [
   'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80',
@@ -36,10 +38,11 @@ const DRIVER_PHOTO_POOL = [
 
 const TERMINALS = ['ALL', 'CICT', 'CWIT', 'ECT', 'JCT', 'UCT', 'SAGT'] as const;
 const PERIOD_OPTIONS = [
-  { id: 'DAILY', label: 'DAILY (TODAY)' },
-  { id: 'WEEKLY', label: 'WEEKLY' },
-  { id: 'MONTHLY', label: 'MONTHLY' },
-  { id: 'YEARLY', label: 'YEARLY' },
+  { id: 'DAILY', label: 'TODAY' },
+  { id: 'YESTERDAY', label: 'YESTERDAY' },
+  { id: 'WEEKLY', label: 'WEEK (7D)' },
+  { id: 'MONTHLY', label: 'MONTH (30D)' },
+  { id: 'RANGE', label: 'CUSTOM RANGE 📅' },
   { id: 'ALL', label: 'ALL TIME' },
 ] as const;
 
@@ -72,6 +75,67 @@ export default function SupervisorMissionDispatcher() {
   const [selectedStatus, setSelectedStatus] = useState<string>('ALL');
   const [selectedDriverFilter, setSelectedDriverFilter] = useState<string>('ALL');
   const [selectedPeriodFilter, setSelectedPeriodFilter] = useState<string>('DAILY');
+  const [dateRangeStart, setDateRangeStart] = useState<string | null>(null);
+  const [dateRangeEnd, setDateRangeEnd] = useState<string | null>(null);
+  const [dateRangeModalVisible, setDateRangeModalVisible] = useState(false);
+
+  // Helper date formatters
+  const formatFriendlyDate = (iso: string | null) => {
+    if (!iso) return '';
+    try {
+      const d = new Date(iso + 'T00:00:00');
+      return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    } catch {
+      return iso;
+    }
+  };
+
+  const activePeriodLabel = useMemo(() => {
+    if (selectedPeriodFilter === 'DAILY') return 'TODAY';
+    if (selectedPeriodFilter === 'YESTERDAY') return 'YESTERDAY';
+    if (selectedPeriodFilter === 'WEEKLY') return 'WEEK (7D)';
+    if (selectedPeriodFilter === 'MONTHLY') return 'MONTH (30D)';
+    if (selectedPeriodFilter === 'YEARLY') return 'YEAR';
+    if (selectedPeriodFilter === 'RANGE') {
+      if (dateRangeStart && dateRangeEnd) {
+        return `${formatFriendlyDate(dateRangeStart)} ➔ ${formatFriendlyDate(dateRangeEnd)}`;
+      }
+      if (dateRangeStart) return `From ${formatFriendlyDate(dateRangeStart)}`;
+      return 'CUSTOM RANGE';
+    }
+    return 'ALL TIME';
+  }, [selectedPeriodFilter, dateRangeStart, dateRangeEnd]);
+
+  // Marked dates computation for calendar (highlighting range)
+  const calendarMarkedDates = useMemo(() => {
+    const marks: Record<string, any> = {};
+    if (dateRangeStart && dateRangeEnd) {
+      const cur = new Date(dateRangeStart + 'T00:00:00');
+      const end = new Date(dateRangeEnd + 'T00:00:00');
+      while (cur <= end) {
+        const iso = cur.toISOString().split('T')[0];
+        const isStart = iso === dateRangeStart;
+        const isEnd = iso === dateRangeEnd;
+        marks[iso] = {
+          selected: true,
+          startingDay: isStart,
+          endingDay: isEnd,
+          color: isStart || isEnd ? '#00e5ff' : 'rgba(0, 229, 255, 0.22)',
+          textColor: isStart || isEnd ? '#00363d' : '#00e5ff',
+        };
+        cur.setDate(cur.getDate() + 1);
+      }
+    } else if (dateRangeStart) {
+      marks[dateRangeStart] = {
+        selected: true,
+        startingDay: true,
+        endingDay: true,
+        color: '#feb300',
+        textColor: '#00363d',
+      };
+    }
+    return marks;
+  }, [dateRangeStart, dateRangeEnd]);
 
   // Rejection modal
   const [rejectModalVisible, setRejectModalVisible] = useState(false);
@@ -108,51 +172,66 @@ export default function SupervisorMissionDispatcher() {
     loadTrips();
   };
 
-  // Metrics calculated from loaded trips
-  const countTotal = trips.length;
-  const countInProgress = trips.filter((t) => t.status === 'IN_PROGRESS').length;
-  const countPending = trips.filter((t) => t.status === 'PENDING_APPROVAL').length;
-  const countCompleted = trips.filter((t) => t.status === 'COMPLETED' || t.status === 'APPROVED').length;
-
-  // Filtered trips
-  const filteredTrips = useMemo(() => {
+  // Trips filtered by Date Filter & Driver Filter (POWERS THE TRIP SUMMARY METRICS!)
+  const dateFilteredTrips = useMemo(() => {
     return trips.filter((t) => {
       // 0. Driver Filter
       if (selectedDriverFilter !== 'ALL') {
         if (t.driverId !== selectedDriverFilter) return false;
       }
 
-      // 0.1 Date Period Filter
+      // 0.1 Date Period / Range Filter
       if (selectedPeriodFilter !== 'ALL') {
-        const dateStr = t.createdAt || t.startTime || t.operationDate;
-        if (dateStr) {
-          const tripDate = new Date(dateStr);
-          const now = new Date();
-          if (!isNaN(tripDate.getTime())) {
-            if (selectedPeriodFilter === 'DAILY') {
-              const isToday =
-                tripDate.getDate() === now.getDate() &&
-                tripDate.getMonth() === now.getMonth() &&
-                tripDate.getFullYear() === now.getFullYear();
-              if (!isToday) return false;
-            } else if (selectedPeriodFilter === 'WEEKLY') {
-              const diffDays = Math.ceil(Math.abs(now.getTime() - tripDate.getTime()) / (1000 * 60 * 60 * 24));
-              if (diffDays > 7) return false;
-            } else if (selectedPeriodFilter === 'MONTHLY') {
-              const diffDays = Math.ceil(Math.abs(now.getTime() - tripDate.getTime()) / (1000 * 60 * 60 * 24));
-              if (diffDays > 30) return false;
-            } else if (selectedPeriodFilter === 'YEARLY') {
-              if (tripDate.getFullYear() !== now.getFullYear()) return false;
-            }
-          }
+        const rawDate = t.operationDate || t.startTime || t.createdAt;
+        if (!rawDate) return false;
+        const tripDateStr = rawDate.slice(0, 10);
+        const now = new Date();
+        const todayStr = now.toISOString().slice(0, 10);
+
+        if (selectedPeriodFilter === 'DAILY') {
+          if (tripDateStr !== todayStr) return false;
+        } else if (selectedPeriodFilter === 'YESTERDAY') {
+          const y = new Date();
+          y.setDate(y.getDate() - 1);
+          if (tripDateStr !== y.toISOString().slice(0, 10)) return false;
+        } else if (selectedPeriodFilter === 'WEEKLY') {
+          const tDate = new Date(rawDate);
+          const diffDays = (now.getTime() - tDate.getTime()) / (1000 * 60 * 60 * 24);
+          if (diffDays < 0 || diffDays > 7) return false;
+        } else if (selectedPeriodFilter === 'MONTHLY') {
+          const tDate = new Date(rawDate);
+          const diffDays = (now.getTime() - tDate.getTime()) / (1000 * 60 * 60 * 24);
+          if (diffDays < 0 || diffDays > 30) return false;
+        } else if (selectedPeriodFilter === 'YEARLY') {
+          const tDate = new Date(rawDate);
+          if (tDate.getFullYear() !== now.getFullYear()) return false;
+        } else if (selectedPeriodFilter === 'RANGE') {
+          if (dateRangeStart && tripDateStr < dateRangeStart) return false;
+          if (dateRangeEnd && tripDateStr > dateRangeEnd) return false;
         }
       }
 
-      // 1. Terminal Filter
+      return true;
+    });
+  }, [trips, selectedDriverFilter, selectedPeriodFilter, dateRangeStart, dateRangeEnd]);
+
+  // Trip Summary Metrics calculated from dateFilteredTrips
+  const countTotal = dateFilteredTrips.length;
+  const countInProgress = dateFilteredTrips.filter((t) => t.status === 'IN_PROGRESS').length;
+  const countPending = dateFilteredTrips.filter((t) => t.status === 'PENDING_APPROVAL').length;
+  const countCompleted = dateFilteredTrips.filter((t) => t.status === 'COMPLETED' || t.status === 'APPROVED').length;
+  const totalContainersDispatched = dateFilteredTrips.reduce((acc, t) => acc + (t.containers?.length || 1), 0);
+
+  // Filtered trips for list view (includes Terminal, Status, Search)
+  const filteredTrips = useMemo(() => {
+    return dateFilteredTrips.filter((t) => {
+      // 1. Discharge Terminal Filter
       if (selectedTerminal !== 'ALL') {
-        const matchesOrigin = t.sourceTerminal === selectedTerminal;
-        const matchesDest = t.destTerminal === selectedTerminal;
-        if (!matchesOrigin && !matchesDest) return false;
+        const matchesDest = (t.destTerminal || '').toUpperCase() === selectedTerminal.toUpperCase();
+        const matchesContainerDest = (t.containers || []).some(
+          (c: any) => (c.destTerminal || '').toUpperCase() === selectedTerminal.toUpperCase()
+        );
+        if (!matchesDest && !matchesContainerDest) return false;
       }
 
       // 2. Status Filter
@@ -183,7 +262,7 @@ export default function SupervisorMissionDispatcher() {
 
       return true;
     });
-  }, [trips, selectedTerminal, selectedStatus, selectedDriverFilter, selectedPeriodFilter, searchQuery]);
+  }, [dateFilteredTrips, selectedTerminal, selectedStatus, searchQuery]);
 
   // Date-wise grouped trips
   const tripsByDate = useMemo(() => {
@@ -219,7 +298,7 @@ export default function SupervisorMissionDispatcher() {
             day: 'numeric',
             year: 'numeric',
           });
-        } catch {}
+        } catch { }
 
         groups[dateKey] = {
           dateKey,
@@ -236,6 +315,11 @@ export default function SupervisorMissionDispatcher() {
 
       groups[dateKey].trips.push({ ...t, driverPhoto });
       groups[dateKey].totalContainers += (t.containers?.length || 1);
+    });
+
+    // Terminal-wise Sorting by Discharge Terminal within each date group
+    Object.values(groups).forEach((g) => {
+      g.trips.sort((a, b) => (a.destTerminal || '').localeCompare(b.destTerminal || ''));
     });
 
     return Object.values(groups).sort((a, b) => b.dateKey.localeCompare(a.dateKey));
@@ -343,6 +427,22 @@ export default function SupervisorMissionDispatcher() {
         </View>
 
         {/* ─── B. LIVE METRICS SUMMARY ROW ─── */}
+        <View style={styles.summaryHeaderRow}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <Ionicons name="bar-chart" size={15} color="#00e5ff" />
+            <Text style={styles.summaryHeaderTitle}>TRIP SUMMARY METRICS</Text>
+          </View>
+          <TouchableOpacity
+            style={styles.summaryDateBadge}
+            onPress={() => setDateRangeModalVisible(true)}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="calendar-outline" size={12} color="#00e5ff" />
+            <Text style={styles.summaryDateBadgeText} numberOfLines={1}>{activePeriodLabel}</Text>
+            <Ionicons name="chevron-down" size={12} color="#00e5ff" />
+          </TouchableOpacity>
+        </View>
+
         <View style={styles.metricsGrid}>
           <View style={styles.metricCard}>
             <View style={styles.metricCardHeader}>
@@ -350,7 +450,7 @@ export default function SupervisorMissionDispatcher() {
               <Ionicons name="swap-horizontal" size={14} color="#00e5ff" />
             </View>
             <Text style={[styles.metricValue, { color: '#00e5ff' }]}>{countTotal}</Text>
-            <Text style={styles.metricSub}>Port ITT Records</Text>
+            <Text style={styles.metricSub}>{totalContainersDispatched} Containers Dispatched</Text>
           </View>
 
           <View style={styles.metricCard}>
@@ -409,9 +509,24 @@ export default function SupervisorMissionDispatcher() {
             )}
           </View>
 
-          {/* Date Period Filter */}
+          {/* Date Period & Range Filter */}
           <View>
-            <Text style={styles.filterGroupLabel}>DATE PERIOD FILTER (SELECTION)</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+              <Text style={styles.filterGroupLabel}>DATE PERIOD & RANGE FILTER</Text>
+              {selectedPeriodFilter === 'RANGE' && dateRangeStart && (
+                <TouchableOpacity
+                  onPress={() => {
+                    setSelectedPeriodFilter('DAILY');
+                    setDateRangeStart(null);
+                    setDateRangeEnd(null);
+                  }}
+                  style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}
+                >
+                  <Ionicons name="close-circle" size={13} color="#ff5252" />
+                  <Text style={{ fontSize: 9, color: '#ff5252', fontWeight: '800' }}>RESET</Text>
+                </TouchableOpacity>
+              )}
+            </View>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterChipsScroll}>
               {PERIOD_OPTIONS.map((p) => (
                 <TouchableOpacity
@@ -420,7 +535,16 @@ export default function SupervisorMissionDispatcher() {
                     styles.filterChip,
                     selectedPeriodFilter === p.id && styles.filterChipActiveCyan,
                   ]}
-                  onPress={() => setSelectedPeriodFilter(p.id)}
+                  onPress={() => {
+                    if (p.id === 'RANGE') {
+                      setSelectedPeriodFilter('RANGE');
+                      setDateRangeModalVisible(true);
+                    } else {
+                      setSelectedPeriodFilter(p.id);
+                      setDateRangeStart(null);
+                      setDateRangeEnd(null);
+                    }
+                  }}
                 >
                   <Text
                     style={[
@@ -433,6 +557,29 @@ export default function SupervisorMissionDispatcher() {
                 </TouchableOpacity>
               ))}
             </ScrollView>
+
+            {/* Active Custom Range Banner */}
+            {selectedPeriodFilter === 'RANGE' && (
+              <TouchableOpacity
+                style={styles.activeRangeBanner}
+                onPress={() => setDateRangeModalVisible(true)}
+                activeOpacity={0.85}
+              >
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 }}>
+                  <Ionicons name="calendar" size={14} color="#00e5ff" />
+                  <Text style={styles.activeRangeBannerText}>
+                    {dateRangeStart && dateRangeEnd
+                      ? `Range: ${formatFriendlyDate(dateRangeStart)}  ➔  ${formatFriendlyDate(dateRangeEnd)}`
+                      : dateRangeStart
+                        ? `From: ${formatFriendlyDate(dateRangeStart)} (Tap to pick end date)`
+                        : 'Tap to choose custom date range on calendar'}
+                  </Text>
+                </View>
+                <View style={styles.changeRangeBtn}>
+                  <Text style={styles.changeRangeBtnText}>CHANGE</Text>
+                </View>
+              </TouchableOpacity>
+            )}
           </View>
 
           {/* Driver Selection Filter */}
@@ -461,9 +608,9 @@ export default function SupervisorMissionDispatcher() {
             </ScrollView>
           </View>
 
-          {/* Terminal Filters */}
+          {/* Discharge Terminal Filters */}
           <View>
-            <Text style={styles.filterGroupLabel}>TERMINAL CLEARANCE FILTER</Text>
+            <Text style={styles.filterGroupLabel}>DISCHARGE TERMINAL FILTER (DESTINATION)</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterChipsScroll}>
               {TERMINALS.map((t) => (
                 <TouchableOpacity
@@ -609,24 +756,61 @@ export default function SupervisorMissionDispatcher() {
                                 {t.destTerminal || 'JCT'}
                               </Text>
                             </View>
-
-                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                              <Ionicons name="time-outline" size={12} color="#feb300" />
-                              <Text style={styles.monTime}>
-                                {t.operationTime ||
-                                  (t.startTime
-                                    ? new Date(t.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                                    : t.createdAt
-                                    ? new Date(t.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                                    : '08:30 AM')}
-                              </Text>
+                            <View style={styles.monRouteTag}>
+                              <Text style={styles.monRouteTagText}>ITT CORRIDOR</Text>
                             </View>
                           </View>
+
+                          {/* ─── TRIP STARTED DATE TIME & END TIME DETAILS ─── */}
+                          {(() => {
+                            const timing = getTripTimingDetails(t);
+                            return (
+                              <View style={styles.monTimingPanel}>
+                                <View style={styles.monTimingCol}>
+                                  <View style={styles.monTimingHeader}>
+                                    <Ionicons name="play-circle" size={12} color="#00e5ff" />
+                                    <Text style={styles.monTimingLabel}>STARTED DATE & TIME</Text>
+                                  </View>
+                                  <Text style={styles.monTimingDate}>{timing.startDate}</Text>
+                                  <Text style={styles.monTimingTime}>{timing.startTime}</Text>
+                                </View>
+
+                                <View style={styles.monTimingDivider}>
+                                  <Ionicons name="arrow-forward" size={13} color="#3a4756" />
+                                  {timing.duration && (
+                                    <View style={styles.monDurationPill}>
+                                      <Ionicons name="timer-outline" size={10} color="#22ef7e" />
+                                      <Text style={styles.monDurationText}>{timing.duration}</Text>
+                                    </View>
+                                  )}
+                                </View>
+
+                                <View style={styles.monTimingCol}>
+                                  <View style={styles.monTimingHeader}>
+                                    <Ionicons
+                                      name={timing.isCompleted ? 'checkmark-circle' : timing.isPending ? 'time' : 'navigate-circle'}
+                                      size={12}
+                                      color={timing.statusColor}
+                                    />
+                                    <Text style={[styles.monTimingLabel, { color: timing.statusColor }]}>
+                                      {timing.isCompleted ? 'COMPLETED DATE & TIME' : timing.isPending ? 'DISCHARGED' : 'CURRENT STATUS'}
+                                    </Text>
+                                  </View>
+                                  <Text style={[styles.monTimingDate, !timing.isCompleted && !timing.isPending && { color: '#849396' }]}>
+                                    {timing.endDate}
+                                  </Text>
+                                  <Text style={[styles.monTimingTime, { color: timing.statusColor }]}>
+                                    {timing.endTime}
+                                  </Text>
+                                </View>
+                              </View>
+                            );
+                          })()}
 
                           {/* Specs Row */}
                           <View style={styles.monSpecsRow}>
                             <Text style={styles.monSpecItem}>
-                              Truck: <Text style={styles.monSpecBoldHighlight}>{t.vehicleNumber || 'LY 5234'}</Text>
+                              Truck: <Text style={styles.monSpecBoldHighlight}>{t.vehicleNumber || 'LY-6439'}</Text>
                             </Text>
                             <Text style={styles.monSpecItem}>
                               CHE: <Text style={styles.monSpecBoldCyan}>{resolveCheNumber(t.vehicleNumber, t.chassisNumber || t.chaiNumber)}</Text>
@@ -807,7 +991,7 @@ const styles = StyleSheet.create({
   dateText: {
     color: '#849396',
     fontSize: 9,
-        fontWeight: '700',
+    fontWeight: '700',
   },
   onlinePill: {
     flexDirection: 'row',
@@ -830,7 +1014,7 @@ const styles = StyleSheet.create({
     fontSize: 9,
     fontWeight: '800',
     color: '#00e5ff',
-        letterSpacing: 0.6,
+    letterSpacing: 0.6,
   },
 
   // ─── 4 SUMMARY METRIC CARDS ───
@@ -862,7 +1046,7 @@ const styles = StyleSheet.create({
   metricValue: {
     fontSize: 22,
     fontWeight: '900',
-        marginTop: 2,
+    marginTop: 2,
   },
   metricSub: {
     color: '#849396',
@@ -908,7 +1092,7 @@ const styles = StyleSheet.create({
     flex: 1,
     color: '#dde2f0',
     fontSize: 11,
-        ...(Platform.OS === 'web' ? { outlineStyle: 'none' } : {}),
+    ...(Platform.OS === 'web' ? { outlineStyle: 'none' } : {}),
   } as any,
   filterGroupLabel: {
     fontSize: 9,
@@ -940,7 +1124,7 @@ const styles = StyleSheet.create({
     color: '#849396',
     fontSize: 9,
     fontWeight: '800',
-      },
+  },
   filterChipTextActive: {
     color: '#feb300',
   },
@@ -1068,7 +1252,7 @@ const styles = StyleSheet.create({
   },
   monTripId: {
     color: '#00e5ff',
-        fontSize: 12,
+    fontSize: 12,
     fontWeight: '900',
   },
   monStatusBadge: {
@@ -1095,10 +1279,86 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '800',
   },
+  monRouteTag: {
+    backgroundColor: 'rgba(0, 229, 255, 0.1)',
+    borderRadius: 4,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 229, 255, 0.25)',
+  },
+  monRouteTagText: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: '#00e5ff',
+    letterSpacing: 0.5,
+  },
+  monTimingPanel: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#070c14',
+    borderRadius: radius.DEFAULT,
+    borderWidth: 1,
+    borderColor: '#1e293b',
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    gap: 8,
+    marginVertical: 4,
+  },
+  monTimingCol: {
+    flex: 1,
+    gap: 1,
+  },
+  monTimingHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginBottom: 2,
+  },
+  monTimingLabel: {
+    fontSize: 8.5,
+    fontWeight: '800',
+    color: '#00e5ff',
+    letterSpacing: 0.4,
+  },
+  monTimingDate: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#dde2f0',
+  },
+  monTimingTime: {
+    fontSize: 12,
+    fontWeight: '900',
+    color: '#00e5ff',
+    letterSpacing: 0.2,
+  },
+  monTimingDivider: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 3,
+    paddingHorizontal: 2,
+  },
+  monDurationPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: 'rgba(34, 239, 126, 0.12)',
+    paddingHorizontal: 5,
+    paddingVertical: 2,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(34, 239, 126, 0.3)',
+  },
+  monDurationText: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: '#22ef7e',
+  },
   monTime: {
     color: '#849396',
     fontSize: 9,
-      },
+  },
   monSpecsRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -1123,7 +1383,7 @@ const styles = StyleSheet.create({
   monContainersText: {
     color: '#00e5ff',
     fontSize: 9,
-      },
+  },
   emptyPendingCard: {
     backgroundColor: '#080e17',
     borderRadius: radius.DEFAULT,
@@ -1241,5 +1501,62 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '900',
     letterSpacing: 0.6,
+  },
+  summaryHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  summaryHeaderTitle: {
+    color: '#00e5ff',
+    fontSize: 12,
+    fontWeight: '900',
+    letterSpacing: 0.8,
+  },
+  summaryDateBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: 'rgba(0, 229, 255, 0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 229, 255, 0.25)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  summaryDateBadgeText: {
+    color: '#00e5ff',
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  activeRangeBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: 'rgba(0, 229, 255, 0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 229, 255, 0.3)',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    marginTop: 8,
+  },
+  activeRangeBannerText: {
+    color: '#dde2f0',
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  changeRangeBtn: {
+    backgroundColor: '#00e5ff',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+  },
+  changeRangeBtnText: {
+    color: '#002022',
+    fontSize: 10,
+    fontWeight: '900',
+    letterSpacing: 0.5,
   },
 });

@@ -34,15 +34,18 @@
 @REM Validate Java is available
 @SETLOCAL EnableExtensions
 @SET "JAVA_HOME_GUESS="
-@FOR /F "tokens=* USEBACKQ" %%F IN (`where java 2^>NUL`) DO @SET "JAVA_EXEC=%%F"
+@IF EXIST "C:\Program Files\Java\jdk-21\bin\java.exe" (
+    @SET "JAVA_EXEC=C:\Program Files\Java\jdk-21\bin\java.exe"
+) ELSE (
+    @FOR /F "tokens=* USEBACKQ" %%F IN (`where java 2^>NUL`) DO @SET "JAVA_EXEC=%%F"
+)
 
 @REM Find the project root
+@IF "%DIRNAME:~-1%"=="\" SET DIRNAME=%DIRNAME:~0,-1%
 @SET MAVEN_PROJECTBASEDIR=%DIRNAME%
-
-@REM Set MAVEN_OPTS if not already set
+@SET WRAPPER_JAR="%MAVEN_PROJECTBASEDIR%\.mvn\wrapper\maven-wrapper.jar"
 @IF NOT DEFINED MAVEN_OPTS SET MAVEN_OPTS=
 
-@SET WRAPPER_JAR="%MAVEN_PROJECTBASEDIR%.mvn\wrapper\maven-wrapper.jar"
 @SET WRAPPER_LAUNCHER=org.apache.maven.wrapper.MavenWrapperMain
 
 @IF NOT EXIST %WRAPPER_JAR% (
@@ -50,10 +53,7 @@
     @EXIT /B 1
 )
 
-@"%JAVA_EXEC%" %MAVEN_OPTS% ^
-  -classpath %WRAPPER_JAR% ^
-  "-Dmaven.multiModuleProjectDirectory=%MAVEN_PROJECTBASEDIR%" ^
-  %WRAPPER_LAUNCHER% %MAVEN_CONFIG% %*
+"%JAVA_EXEC%" %MAVEN_OPTS% -classpath %WRAPPER_JAR% "-Dmaven.multiModuleProjectDirectory=%MAVEN_PROJECTBASEDIR%" %WRAPPER_LAUNCHER% %*
 
 @IF "%ERRORLEVEL%"=="0" @GOTO end
 @SET ERROR_CODE=%ERRORLEVEL%

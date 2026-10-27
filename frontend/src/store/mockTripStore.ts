@@ -11,6 +11,8 @@ export interface MockContainer {
   unloadedAt?: string;
   unloadedTerminal?: string;
   damageStatus?: 'NONE' | 'DAMAGED' | string;
+  isReturn?: boolean;
+  cargoType?: string;
 }
 
 export interface MockTrip {
@@ -27,10 +29,12 @@ export interface MockTrip {
   voyageNumber?: string;
   operationDate?: string;
   operationTime?: string;
+  dispatchTime?: string;
+  isReturn?: boolean;
   sourceTerminal?: string;
   destTerminal: string;
   notes?: string;
-  status: 'PENDING_APPROVAL' | 'IN_PROGRESS' | 'COMPLETED' | 'REJECTED' | 'APPROVED';
+  status: 'PENDING_APPROVAL' | 'IN_PROGRESS' | 'ARRIVED' | 'COMPLETED' | 'REJECTED' | 'APPROVED';
   containers: MockContainer[];
   startTime: string;
   endTime?: string;
@@ -52,13 +56,25 @@ interface MockTripState {
 const now = new Date();
 const todayISO = now.toISOString();
 
+const todayTrip1Start = new Date(now.getTime() - 45 * 60 * 1000).toISOString();
+const todayTrip2Start = new Date(now.getTime() - 95 * 60 * 1000).toISOString();
+const todayTrip2Discharged = new Date(now.getTime() - 35 * 60 * 1000).toISOString();
+const todayTrip4Start = new Date(now.getTime() - 150 * 60 * 1000).toISOString();
+const todayTrip4End = new Date(now.getTime() - 105 * 60 * 1000).toISOString();
+
 const yesterday = new Date(now);
 yesterday.setDate(yesterday.getDate() - 1);
-const yesterdayISO = yesterday.toISOString();
+const yesterdayStart1 = new Date(new Date(yesterday).setHours(10, 15, 0, 0)).toISOString();
+const yesterdayEnd1 = new Date(new Date(yesterday).setHours(11, 0, 0, 0)).toISOString();
+const yesterdayStart2 = new Date(new Date(yesterday).setHours(14, 30, 0, 0)).toISOString();
+const yesterdayEnd2 = new Date(new Date(yesterday).setHours(15, 12, 0, 0)).toISOString();
+const yesterdayISO = yesterdayStart1;
 
 const threeDaysAgo = new Date(now);
 threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
-const threeDaysAgoISO = threeDaysAgo.toISOString();
+const threeDaysAgoStart = new Date(new Date(threeDaysAgo).setHours(9, 20, 0, 0)).toISOString();
+const threeDaysAgoEnd = new Date(new Date(threeDaysAgo).setHours(10, 5, 0, 0)).toISOString();
+const threeDaysAgoISO = threeDaysAgoStart;
 
 const tenDaysAgo = new Date(now);
 tenDaysAgo.setDate(tenDaysAgo.getDate() - 10);
@@ -72,18 +88,20 @@ const initialTrips: MockTrip[] = [
     driverId: 'demo-driver',
     driverCode: 'DRV-00001',
     driverName: 'Kamal Perera',
-    vehicleNumber: 'LY 5234',
-    chassisNumber: 'SCK 100',
+    vehicleNumber: 'LY-6439',
+    chassisNumber: 'CHE 100',
     operator: 'SCK Logistics',
     vesselName: 'MV Colombo Express',
     sourceTerminal: 'CICT',
     destTerminal: 'JCT',
     status: 'IN_PROGRESS',
-    startTime: todayISO,
-    createdAt: todayISO,
+    startTime: todayTrip1Start,
+    createdAt: todayTrip1Start,
+    operationTime: '08:15',
+    dispatchTime: '08:35',
     containers: [
-      { id: 'c-101', containerNumber: 'MSKU-88219-0', size: '20FT', isoType: '20GP', status: 'IN_TRANSIT', destTerminal: 'JCT', damageStatus: 'NONE' },
-      { id: 'c-102', containerNumber: 'TGHU-33012-9', size: '20FT', isoType: '20GP', status: 'IN_TRANSIT', destTerminal: 'JCT', damageStatus: 'DAMAGED' },
+      { id: 'c-101', containerNumber: 'MSKU8821902', size: '20FT', isoType: '20GP', status: 'IN_TRANSIT', destTerminal: 'JCT', damageStatus: 'NONE', isReturn: false, cargoType: 'STANDARD' },
+      { id: 'c-102', containerNumber: 'TGHU3301290', size: '20FT', isoType: '20GP', status: 'IN_TRANSIT', destTerminal: 'JCT', damageStatus: 'DAMAGED', isReturn: true, cargoType: 'RETURN' },
     ],
   },
   {
@@ -92,18 +110,21 @@ const initialTrips: MockTrip[] = [
     driverId: 'demo-driver',
     driverCode: 'DRV-00001',
     driverName: 'Kamal Perera',
-    vehicleNumber: 'LY 5234',
-    chassisNumber: 'SCK 100',
+    vehicleNumber: 'LY-6439',
+    chassisNumber: 'CHE 100',
     operator: 'SCK Logistics',
     vesselName: 'MV Maersk Seletar',
     sourceTerminal: 'ECT',
     destTerminal: 'UCT',
     status: 'PENDING_APPROVAL',
-    startTime: todayISO,
-    createdAt: todayISO,
-    dischargedAt: todayISO,
+    startTime: todayTrip2Start,
+    createdAt: todayTrip2Start,
+    operationTime: '09:00',
+    dispatchTime: '09:20',
+    isReturn: true,
+    dischargedAt: todayTrip2Discharged,
     containers: [
-      { id: 'c-103', containerNumber: 'CMAU-90123-4', size: '40FT', isoType: '40HC', status: 'DISCHARGED', unloadedAt: todayISO, destTerminal: 'UCT', damageStatus: 'NONE' },
+      { id: 'c-103', containerNumber: 'CMAU9012347', size: '40FT', isoType: '40HC', status: 'DISCHARGED', unloadedAt: todayTrip2Discharged, destTerminal: 'UCT', damageStatus: 'NONE', isReturn: true, cargoType: 'RETURN' },
     ],
   },
   {
@@ -119,10 +140,11 @@ const initialTrips: MockTrip[] = [
     sourceTerminal: 'SAGT',
     destTerminal: 'CICT',
     status: 'PENDING_APPROVAL',
-    startTime: todayISO,
-    createdAt: todayISO,
+    startTime: todayTrip2Start,
+    createdAt: todayTrip2Start,
+    dischargedAt: todayTrip2Discharged,
     containers: [
-      { id: 'c-104', containerNumber: 'MSCU-44910-2', size: '40FT', isoType: '40HC', status: 'IN_TRANSIT', destTerminal: 'CICT', damageStatus: 'DAMAGED' },
+      { id: 'c-104', containerNumber: 'MSCU4491022', size: '40FT', isoType: '40HC', status: 'IN_TRANSIT', destTerminal: 'CICT', damageStatus: 'DAMAGED' },
     ],
   },
   {
@@ -138,12 +160,12 @@ const initialTrips: MockTrip[] = [
     sourceTerminal: 'CWIT',
     destTerminal: 'ECT',
     status: 'COMPLETED',
-    startTime: todayISO,
-    endTime: todayISO,
-    createdAt: todayISO,
-    dischargedAt: todayISO,
+    startTime: todayTrip4Start,
+    endTime: todayTrip4End,
+    createdAt: todayTrip4Start,
+    dischargedAt: todayTrip4End,
     containers: [
-      { id: 'c-105', containerNumber: 'EGLV-77123-0', size: '20FT', isoType: '20GP', status: 'DISCHARGED', unloadedAt: todayISO, destTerminal: 'ECT', damageStatus: 'NONE' },
+      { id: 'c-105', containerNumber: 'EGLV7712300', size: '20FT', isoType: '20GP', status: 'DISCHARGED', unloadedAt: todayTrip4End, destTerminal: 'ECT', damageStatus: 'NONE' },
     ],
   },
   // Yesterday's trips
@@ -153,19 +175,19 @@ const initialTrips: MockTrip[] = [
     driverId: 'demo-driver',
     driverCode: 'DRV-00001',
     driverName: 'Kamal Perera',
-    vehicleNumber: 'LY 5234',
-    chassisNumber: 'SCK 100',
+    vehicleNumber: 'LY-6439',
+    chassisNumber: 'CHE 100',
     operator: 'SCK Logistics',
     vesselName: 'COSCO Shipping',
     sourceTerminal: 'JCT',
     destTerminal: 'CICT',
     status: 'COMPLETED',
-    startTime: yesterdayISO,
-    endTime: yesterdayISO,
-    createdAt: yesterdayISO,
-    dischargedAt: yesterdayISO,
+    startTime: yesterdayStart1,
+    endTime: yesterdayEnd1,
+    createdAt: yesterdayStart1,
+    dischargedAt: yesterdayEnd1,
     containers: [
-      { id: 'c-106', containerNumber: 'COSU-12389-9', size: '40FT', status: 'DISCHARGED', unloadedAt: yesterdayISO, destTerminal: 'CICT', damageStatus: 'NONE' },
+      { id: 'c-106', containerNumber: 'COSU1238993', size: '40FT', status: 'DISCHARGED', unloadedAt: yesterdayEnd1, destTerminal: 'CICT', damageStatus: 'NONE' },
     ],
   },
   {
@@ -174,20 +196,20 @@ const initialTrips: MockTrip[] = [
     driverId: 'drv-011',
     driverCode: 'DRV-00011',
     driverName: 'Roshan Mahanama',
-    vehicleNumber: 'LY 6528',
-    chassisNumber: 'SCK 115',
+    vehicleNumber: 'LY-6528',
+    chassisNumber: 'CHE 115',
     operator: 'SDR LINK',
     vesselName: 'ONE Continuity',
     sourceTerminal: 'UCT',
     destTerminal: 'SAGT',
     status: 'COMPLETED',
-    startTime: yesterdayISO,
-    endTime: yesterdayISO,
-    createdAt: yesterdayISO,
-    dischargedAt: yesterdayISO,
+    startTime: yesterdayStart2,
+    endTime: yesterdayEnd2,
+    createdAt: yesterdayStart2,
+    dischargedAt: yesterdayEnd2,
     containers: [
-      { id: 'c-107a', containerNumber: 'ONEU-55412-1', size: '20FT', status: 'DISCHARGED', unloadedAt: yesterdayISO, destTerminal: 'SAGT', damageStatus: 'NONE' },
-      { id: 'c-107b', containerNumber: 'ONEU-55413-7', size: '20FT', status: 'DISCHARGED', unloadedAt: yesterdayISO, destTerminal: 'SAGT', damageStatus: 'NONE' },
+      { id: 'c-107a', containerNumber: 'ONEU5541215', size: '20FT', status: 'DISCHARGED', unloadedAt: yesterdayISO, destTerminal: 'SAGT', damageStatus: 'NONE' },
+      { id: 'c-107b', containerNumber: 'ONEU5541370', size: '20FT', status: 'DISCHARGED', unloadedAt: yesterdayISO, destTerminal: 'SAGT', damageStatus: 'NONE' },
     ],
   },
   // Weekly / Monthly Trips
@@ -197,9 +219,9 @@ const initialTrips: MockTrip[] = [
     driverId: 'drv-017',
     driverCode: 'DRV-00017',
     driverName: 'Kumar Sangakkara',
-    vehicleNumber: 'LY 6530',
-    chassisNumber: 'SCK 119',
-    chaiNumber: 'SCK 119',
+    vehicleNumber: 'LY-6530',
+    chassisNumber: 'CHE 119',
+    chaiNumber: 'CHE 119',
     operator: 'SDR LINK',
     vesselName: 'Hapag-Lloyd Express',
     sourceTerminal: 'CICT',
@@ -210,8 +232,8 @@ const initialTrips: MockTrip[] = [
     createdAt: threeDaysAgoISO,
     dischargedAt: threeDaysAgoISO,
     containers: [
-      { id: 'c-108a', containerNumber: 'HLXU-99012-3', size: '20FT', status: 'DISCHARGED', unloadedAt: threeDaysAgoISO, destTerminal: 'ECT', damageStatus: 'NONE' },
-      { id: 'c-108b', containerNumber: 'HLXU-99013-9', size: '20FT', status: 'DISCHARGED', unloadedAt: threeDaysAgoISO, destTerminal: 'ECT', damageStatus: 'DAMAGED' },
+      { id: 'c-108a', containerNumber: 'HLXU9901233', size: '20FT', status: 'DISCHARGED', unloadedAt: threeDaysAgoISO, destTerminal: 'ECT', damageStatus: 'NONE' },
+      { id: 'c-108b', containerNumber: 'HLXU9901399', size: '20FT', status: 'DISCHARGED', unloadedAt: threeDaysAgoISO, destTerminal: 'ECT', damageStatus: 'DAMAGED' },
     ],
   },
   {
@@ -220,8 +242,8 @@ const initialTrips: MockTrip[] = [
     driverId: 'demo-driver',
     driverCode: 'DRV-00001',
     driverName: 'Kamal Perera',
-    vehicleNumber: 'LY 5234',
-    chassisNumber: 'SCK 100',
+    vehicleNumber: 'LY-6439',
+    chassisNumber: 'CHE 100',
     operator: 'SCK Logistics',
     vesselName: 'Yang Ming Target',
     sourceTerminal: 'ECT',
@@ -229,11 +251,10 @@ const initialTrips: MockTrip[] = [
     status: 'COMPLETED',
     startTime: tenDaysAgoISO,
     endTime: tenDaysAgoISO,
-
     createdAt: tenDaysAgoISO,
     dischargedAt: tenDaysAgoISO,
     containers: [
-      { id: 'c-109', containerNumber: 'YMLU-77612-5', size: '40FT', status: 'DISCHARGED', unloadedAt: tenDaysAgoISO, destTerminal: 'CWIT', damageStatus: 'NONE' },
+      { id: 'c-109', containerNumber: 'YMLU7761258', size: '40FT', status: 'DISCHARGED', unloadedAt: tenDaysAgoISO, destTerminal: 'CWIT', damageStatus: 'NONE' },
     ],
   },
 ];
@@ -260,7 +281,9 @@ export const useMockTripStore = create<MockTripState>((set, get) => ({
           ? {
               ...t,
               status,
-              ...(status === 'COMPLETED' || status === 'APPROVED' ? { endTime: new Date().toISOString() } : {}),
+              ...(status === 'COMPLETED' || status === 'APPROVED'
+                ? { endTime: t.endTime || new Date().toISOString(), dischargedAt: t.dischargedAt || new Date().toISOString() }
+                : {}),
             }
           : t
       ),

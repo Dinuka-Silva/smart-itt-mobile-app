@@ -30,8 +30,12 @@ const ISO_CHAR_VALUES: Record<string, number> = {
   U: 32, V: 34, W: 35, X: 36, Y: 37, Z: 38,
 };
 
+export function hasSymbols(raw: string): boolean {
+  return /[^A-Za-z0-9]/.test((raw || '').trim());
+}
+
 export function normalizeContainerNumber(raw: string): string {
-  return (raw || '').replace(/[\s-]/g, '').toUpperCase().trim();
+  return (raw || '').replace(/[^A-Za-z0-9]/g, '').toUpperCase().trim();
 }
 
 export function isValidIsoFormat(clean: string): boolean {
@@ -58,8 +62,8 @@ export function computeCheckDigit(clean: string): number {
 }
 
 export function validateIsoClientSide(raw: string): ValidateContainerResult {
-  const clean = normalizeContainerNumber(raw);
-  if (!clean) {
+  const trimmed = (raw || '').trim();
+  if (!trimmed) {
     return {
       valid: false,
       isoFormatValid: false,
@@ -68,21 +72,37 @@ export function validateIsoClientSide(raw: string): ValidateContainerResult {
       actualCheckDigit: -1,
       duplicate: false,
       message: 'Container number cannot be empty',
-      normalizedNumber: clean,
+      normalizedNumber: '',
     };
   }
 
-  // STEP 1: Verify 4 uppercase letters followed by 7 numeric digits (Total: 11 characters)
+  // STEP 1: Check for symbols — if symbols entered, show clear error message requiring number
+  if (hasSymbols(trimmed)) {
+    return {
+      valid: false,
+      isoFormatValid: false,
+      checkDigitValid: false,
+      expectedCheckDigit: -1,
+      actualCheckDigit: -1,
+      duplicate: false,
+      message: 'Symbols are not allowed. Please enter 7 numbers without symbols (e.g. MSCU7721892).',
+      normalizedNumber: normalizeContainerNumber(trimmed),
+    };
+  }
+
+  const clean = trimmed.toUpperCase();
+
+  // STEP 2: Verify 4 uppercase English letters followed by 7 numeric digits (Total: 11 characters)
   const formatValid = isValidIsoFormat(clean);
   if (!formatValid) {
-    let detail = 'Must be 4 uppercase letters followed by 7 numbers (e.g. MSCU7721892).';
+    let detail = 'Must be 4 uppercase English letters followed by 7 numbers (e.g. MSCU7721892).';
     if (clean.length < 11) {
       const letters = clean.slice(0, 4);
       const isPrefixLetters = /^[A-Z]*$/.test(letters);
       if (!isPrefixLetters) {
-        detail = 'Prefix must be 4 uppercase letters (e.g. MSCU).';
+        detail = 'Prefix must be 4 uppercase English letters (e.g. MSCU).';
       } else if (clean.length < 4) {
-        detail = `Enter 4 letters first (${clean.length}/4 letters).`;
+        detail = `Enter 4 English letters first (${clean.length}/4 letters).`;
       } else {
         const digitsCount = clean.length - 4;
         detail = `Enter 7 numbers (${digitsCount}/7 digits entered).`;
@@ -93,9 +113,9 @@ export function validateIsoClientSide(raw: string): ValidateContainerResult {
       const prefix = clean.slice(0, 4);
       const suffix = clean.slice(4);
       if (!/^[A-Z]{4}$/.test(prefix)) {
-        detail = `Prefix "${prefix}" must contain exactly 4 uppercase letters (A-Z).`;
+        detail = `Prefix "${prefix}" must contain exactly 4 uppercase English letters (A-Z).`;
       } else if (!/^\d{7}$/.test(suffix)) {
-        detail = `Suffix "${suffix}" must contain exactly 7 numeric digits (0-9).`;
+        detail = `Suffix "${suffix}" must contain exactly 7 numeric digits (0-9 without symbols).`;
       }
     }
 
@@ -111,7 +131,7 @@ export function validateIsoClientSide(raw: string): ValidateContainerResult {
     };
   }
 
-  // STEP 2: Verify ISO 6346 Standard Check Digit (Modulus-11)
+  // STEP 3: Verify if it is correct according to ISO 6346 Standard Check Digit (Modulus-11)
   const expected = computeCheckDigit(clean);
   const actual = parseInt(clean.charAt(10), 10);
   const checkDigitValid = expected === actual;
@@ -124,7 +144,7 @@ export function validateIsoClientSide(raw: string): ValidateContainerResult {
       expectedCheckDigit: expected,
       actualCheckDigit: actual,
       duplicate: false,
-      message: `ISO 6346 Check Digit Mismatch: calculated is ${expected}, but container ends with ${actual}.`,
+      message: `Format Valid (4 English Letters + 7 Numbers). ISO Standard Check Digit Mismatch: Calculated is ${expected}, but container ends with ${actual}.`,
       normalizedNumber: clean,
     };
   }
@@ -136,16 +156,19 @@ export function validateIsoClientSide(raw: string): ValidateContainerResult {
     expectedCheckDigit: expected,
     actualCheckDigit: actual,
     duplicate: false,
-    message: `✓ ISO 6346 Standard Verified: ${clean} (Check digit ${actual} matches algorithm).`,
+    message: `✓ ISO 6346 Standard Verified: ${clean} (4 English letters + 7 numbers, check digit ${actual} matches algorithm).`,
     normalizedNumber: clean,
   };
 }
 
 export const containerService = {
   async validateContainer(containerNumber: string, tripId?: string): Promise<ValidateContainerResult> {
+    if (hasSymbols(containerNumber)) {
+      return validateIsoClientSide(containerNumber);
+    }
     try {
       const res = await apiClient.get<ValidateContainerResult>('/containers/validate', {
-        params: { containerNumber, tripId },
+        params: { containerNumber: normalizeContainerNumber(containerNumber), tripId },
       });
       return res.data;
     } catch {

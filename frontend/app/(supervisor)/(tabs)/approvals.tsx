@@ -21,6 +21,7 @@ import { useMockTripStore } from '../../../src/store/mockTripStore';
 import { radius, spacing } from '../../../src/theme';
 import { resolveCheNumber, resolveOperator } from '../../../src/config/fleet';
 import { useResponsive } from '../../../src/hooks/useResponsive';
+import { getTripTimingDetails } from '../../../src/utils/tripDateUtils';
 
 export default function SupervisorApprovals() {
   const { topInset, bottomInset, contentMaxWidth, containerPaddingHorizontal } = useResponsive();
@@ -67,13 +68,13 @@ export default function SupervisorApprovals() {
   const handleApprove = async (tripId: string) => {
     setProcessingId(tripId);
     try {
-      await tripService.approveTrip(tripId, user?.supervisorId || user?.id || 'sup-001', 'Approved by Operations Supervisor');
-      useMockTripStore.getState().updateTripStatus(tripId, 'APPROVED');
-      Alert.alert('Gate Pass Approved', `Trip ${tripId} has been approved.`);
+      await tripService.approveTrip(tripId, user?.supervisorId || user?.id || 'sup-001', 'Delivery confirmed & approved by Operations Supervisor');
+      useMockTripStore.getState().updateTripStatus(tripId, 'COMPLETED');
+      Alert.alert('Trip Confirmed & Completed! ✅', `Trip ${tripId} delivery has been approved. Driver completed trip count (+1) and main system metrics have been updated.`);
       fetchPending();
     } catch {
-      useMockTripStore.getState().updateTripStatus(tripId, 'APPROVED');
-      Alert.alert('Gate Pass Approved (Local)', `Trip ${tripId} has been approved.`);
+      useMockTripStore.getState().updateTripStatus(tripId, 'COMPLETED');
+      Alert.alert('Trip Confirmed & Completed! ✅', `Trip ${tripId} delivery has been approved. Driver completed trip count (+1) and main system metrics have been updated.`);
       fetchPending();
     } finally {
       setProcessingId(null);
@@ -179,7 +180,7 @@ export default function SupervisorApprovals() {
           ) : (
             trips.map((trip) => {
               const driverName = trip.driverName || trip.driver?.user?.name || trip.driver?.name || 'Kamal Perera';
-              const vehicle = trip.vehicleNumber || 'LY 5234';
+              const vehicle = trip.vehicleNumber || 'LY-6439';
               const vessel = trip.vesselName || 'MV Colombo Star';
               const from = trip.sourceTerminal || 'CICT';
               const to = trip.destTerminal || 'JCT';
@@ -199,7 +200,7 @@ export default function SupervisorApprovals() {
                     </View>
 
                     <View style={styles.awaitingBadge}>
-                      <Text style={styles.awaitingBadgeText}>AWAITING REVIEW</Text>
+                      <Text style={styles.awaitingBadgeText}>DELIVERED · PENDING SIGN-OFF</Text>
                     </View>
                   </View>
 
@@ -232,6 +233,52 @@ export default function SupervisorApprovals() {
                     </Text>
                   </View>
 
+                  {/* ─── TRIP STARTED DATE TIME & END TIME DETAILS ─── */}
+                  {(() => {
+                    const timing = getTripTimingDetails(trip);
+                    return (
+                      <View style={styles.timingCard}>
+                        <View style={styles.timingCol}>
+                          <View style={styles.timingHeader}>
+                            <Ionicons name="play-circle" size={12} color="#00e5ff" />
+                            <Text style={styles.timingLabel}>STARTED DATE & TIME</Text>
+                          </View>
+                          <Text style={styles.timingDate}>{timing.startDate}</Text>
+                          <Text style={styles.timingTime}>{timing.startTime}</Text>
+                        </View>
+
+                        <View style={styles.timingDivider}>
+                          <Ionicons name="arrow-forward" size={13} color="#3a4756" />
+                          {timing.duration && (
+                            <View style={styles.durationPill}>
+                              <Ionicons name="timer-outline" size={10} color="#22ef7e" />
+                              <Text style={styles.durationText}>{timing.duration}</Text>
+                            </View>
+                          )}
+                        </View>
+
+                        <View style={styles.timingCol}>
+                          <View style={styles.timingHeader}>
+                            <Ionicons
+                              name={timing.isCompleted ? 'checkmark-circle' : timing.isPending ? 'time' : 'navigate-circle'}
+                              size={12}
+                              color={timing.statusColor}
+                            />
+                            <Text style={[styles.timingLabel, { color: timing.statusColor }]}>
+                              {timing.isCompleted ? 'COMPLETED DATE & TIME' : timing.isPending ? 'DISCHARGED (AWAITING SIGN-OFF)' : 'CURRENT STATUS'}
+                            </Text>
+                          </View>
+                          <Text style={[styles.timingDate, !timing.isCompleted && !timing.isPending && { color: '#849396' }]}>
+                            {timing.endDate}
+                          </Text>
+                          <Text style={[styles.timingTime, { color: timing.statusColor }]}>
+                            {timing.endTime}
+                          </Text>
+                        </View>
+                      </View>
+                    );
+                  })()}
+
                   {/* Containers list */}
                   <View style={styles.containersList}>
                     {containers.map((c: any, i: number) => (
@@ -255,8 +302,8 @@ export default function SupervisorApprovals() {
                         <ActivityIndicator color="#00363d" size="small" />
                       ) : (
                         <>
-                          <Ionicons name="shield-checkmark" size={16} color="#00363d" />
-                          <Text style={styles.approveBtnText}>APPROVE GATE PASS</Text>
+                          <Ionicons name="checkmark-done-circle" size={17} color="#00363d" />
+                          <Text style={styles.approveBtnText}>CONFIRM & APPROVE TRIP</Text>
                         </>
                       )}
                     </TouchableOpacity>
@@ -523,6 +570,69 @@ const styles = StyleSheet.create({
   specBold: {
     color: '#dde2f0',
     fontWeight: '700',
+  },
+
+  timingCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#080e17',
+    borderRadius: radius.sm,
+    borderWidth: 1,
+    borderColor: '#1e293b',
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    gap: 8,
+    marginVertical: 4,
+  },
+  timingCol: {
+    flex: 1,
+    gap: 1,
+  },
+  timingHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginBottom: 2,
+  },
+  timingLabel: {
+    fontSize: 8.5,
+    fontWeight: '800',
+    color: '#00e5ff',
+    letterSpacing: 0.4,
+  },
+  timingDate: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#dde2f0',
+  },
+  timingTime: {
+    fontSize: 12,
+    fontWeight: '900',
+    color: '#00e5ff',
+    letterSpacing: 0.2,
+  },
+  timingDivider: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 3,
+    paddingHorizontal: 2,
+  },
+  durationPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: 'rgba(34, 239, 126, 0.12)',
+    paddingHorizontal: 5,
+    paddingVertical: 2,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(34, 239, 126, 0.3)',
+  },
+  durationText: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: '#22ef7e',
   },
 
   containersList: {

@@ -37,19 +37,16 @@ When a driver registers and enters a vehicle number, the system automatically de
 <div align="center">
   <table>
     <tr>
-      <th width="33%">SCK Logistics (SCK 100)</th>
-      <th width="33%">SDR LINK (SCK 115)</th>
-      <th width="33%">E3 Logistics (SCK 123)</th>
+      <th width="50%">SCK Logistics (SCK 100)</th>
+      <th width="50%">SDR LINK (SCK 115)</th>
     </tr>
     <tr>
       <td><img src="docs/screenshots/vehicle_che_sck100.png" alt="SCK 100 Vehicle Match" width="100%"/></td>
       <td><img src="docs/screenshots/vehicle_che_sck115.png" alt="SCK 115 Vehicle Match" width="100%"/></td>
-      <td><img src="docs/screenshots/vehicle_che_sck123.png" alt="SCK 123 Vehicle Match" width="100%"/></td>
     </tr>
     <tr>
       <td align="center"><b>Vehicle:</b> <code>LY 5234</code><br/><b>CHE:</b> <code>SCK 100</code></td>
       <td align="center"><b>Vehicle:</b> <code>LY 6528</code><br/><b>CHE:</b> <code>SCK 115</code></td>
-      <td align="center"><b>Vehicle:</b> <code>LY 5597</code><br/><b>CHE:</b> <code>SCK 123</code></td>
     </tr>
   </table>
 </div>
@@ -165,7 +162,7 @@ Supervisors can instantly export terminal dispatch records, driver performance, 
 ## ⚡ Feature Matrix
 
 ### 🚛 Driver Portal & Mobile App
-- **Real-Time CHE No (SCK No) Lookup**: Auto-matches license plates against fleet database records (`SCK Logistics`, `SDR LINK`, `E3 Logistics`).
+- **Real-Time CHE No (SCK No) Lookup**: Auto-matches license plates against fleet database records (`SCK Logistics`, `SDR LINK`).
 - **Interactive Fleet Chip Bar**: 1-tap vehicle picker pre-populating prime mover details and equipment codes.
 - **Dual 20ft & 40ft Container Logging**: Supports single 40ft containers or dual 20ft multi-box freight on a single chassis.
 - **Trip Status Workflow**: `PENDING_APPROVAL` ➔ `CONFIRMED` ➔ `IN_TRANSIT` ➔ `COMPLETED`.
@@ -196,8 +193,6 @@ Supervisors can instantly export terminal dispatch records, driver performance, 
 | `LY 5235` | **SCK 101** | SCK Logistics | 2 x 20ft / 1 x 40ft | Heavy Port Skeletal |
 | `LY 6528` | **SCK 115** | SDR LINK | 2 x 20ft / 1 x 40ft | Heavy Port Skeletal |
 | `LY 6529` | **SCK 117** | SDR LINK | 2 x 20ft / 1 x 40ft | Heavy Port Skeletal |
-| `LY 5597` | **SCK 123** | E3 Logistics | 2 x 20ft / 1 x 40ft | Heavy Port Skeletal |
-| `LY 5598` | **SCK 124** | E3 Logistics | 2 x 20ft / 1 x 40ft | Heavy Port Skeletal |
 
 ---
 

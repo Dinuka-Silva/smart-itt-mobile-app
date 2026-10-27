@@ -14,9 +14,9 @@ This report summarizes **What Has Been Done (Completed Features)** and **What Re
 ## ✅ Part 1: What We Have Done (Completed)
 
 ### 1. 🚛 Vehicle Telematics & Instant CHE (SCK No) Recognition
-- **Real-Time Fleet Auto-Detection**: When a driver enters or modifies a Vehicle Number (e.g. `LY 5234`, `LY 6528`, `LY 5597`), the system matches the record in real time and automatically displays:
-  - **CHE No (SCK No)** (e.g. `SCK 100`, `SCK 115`, `SCK 123`) in neon cyan telematics card.
-  - **Fleet Operator** (e.g. `SCK Logistics`, `SDR LINK`, `E3 Logistics`) in emerald badge.
+- **Real-Time Fleet Auto-Detection**: When a driver enters or modifies a Vehicle Number (e.g. `LY 5234`, `LY 6528`), the system matches the record in real time and automatically displays:
+  - **CHE No (SCK No)** (e.g. `SCK 100`, `SCK 115`) in neon cyan telematics card.
+  - **Fleet Operator** (e.g. `SCK Logistics`, `SDR LINK`) in emerald badge.
   - **Verification Status**: Validated with port fleet telemetry tag.
 - **Interactive Fleet Chip Selector**: Scrollable 1-tap chip row permitting instantaneous prefill of fleet vehicles.
 - **Backend Persistence**: Integrated `VehicleRepository` inside `AuthService.java` to auto-link the chassis and CHE numbers to driver profiles during registration.
@@ -106,7 +106,7 @@ gantt
 | Feature Area | Current Status | Notes |
 | :--- | :---: | :--- |
 | **Driver Registration & Vehicle Input** | ✅ COMPLETED | Full CHE No & Operator auto-detection. |
-| **Fleet Seeding & Mapping** | ✅ COMPLETED | SCK, SDR, and E3 logistics fleets seeded in DB. |
+| **Fleet Seeding & Mapping** | ✅ COMPLETED | SCK and SDR LINK logistics fleets seeded in DB. |
 | **Trip Creation (Single 40ft / Dual 20ft)** | ✅ COMPLETED | Functional in frontend & backend. |
 | **Supervisor Mission Dispatch** | ✅ COMPLETED | Review, confirm, and assign trips. |
 | **Driver "My Trips" History** | ✅ COMPLETED | Locally & cloud-persisted trip history. |

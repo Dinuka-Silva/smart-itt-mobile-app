@@ -50,20 +50,42 @@ export default function DriverRegisterScreen() {
   const login = useAuthStore((s) => s.login);
   const { topInset, bottomInset, contentMaxWidth, containerPaddingHorizontal } = useResponsive();
 
-  // Role state
+  // Role state & automatic recognition from EMP ID:
+  // Starts with "DRV" (with number, e.g. DRV-00001, DRV001) -> DRIVER
+  // Starts with "SUP" (with number, e.g. SUP-00001, SUP001) -> SUPERVISOR
   const params = useLocalSearchParams<{ role?: string }>();
+  const [employeeId, setEmployeeId] = useState(
+    params.role?.toLowerCase() === 'supervisor' ? 'SUP-00001' : 'DRV-00001'
+  );
   const [regRole, setRegRole] = useState<'DRIVER' | 'SUPERVISOR'>(
     params.role?.toLowerCase() === 'supervisor' ? 'SUPERVISOR' : 'DRIVER'
   );
 
+  const cleanEmpId = employeeId.trim().toUpperCase();
+  const isDriverEmpId = /^DRV([-\s]?\d+)?/i.test(cleanEmpId) || cleanEmpId.includes('DRIVER');
+  const isSupervisorEmpId = /^SUP([-\s]?\d+)?/i.test(cleanEmpId) || cleanEmpId.includes('SUPERVISOR');
+  const currentRole: 'DRIVER' | 'SUPERVISOR' = isSupervisorEmpId ? 'SUPERVISOR' : isDriverEmpId ? 'DRIVER' : regRole;
+
+  const handleEmployeeIdChange = (text: string) => {
+    setEmployeeId(text);
+    const upper = text.trim().toUpperCase();
+    if (/^SUP([-\s]?\d+)?/i.test(upper) || upper.includes('SUPERVISOR')) {
+      setRegRole('SUPERVISOR');
+    } else if (/^DRV([-\s]?\d+)?/i.test(upper) || upper.includes('DRIVER')) {
+      setRegRole('DRIVER');
+    }
+  };
+
   // Form states
   const [fullName, setFullName] = useState('');
   const [nic, setNic] = useState('');
-  const [employeeId, setEmployeeId] = useState('');
   const [mobileNumber, setMobileNumber] = useState('');
   const [address, setAddress] = useState('');
   const [licenseNumber, setLicenseNumber] = useState('');
   const [licenseExpiryDate, setLicenseExpiryDate] = useState('');
+  const [driverPortPassExpiryDate, setDriverPortPassExpiryDate] = useState('');
+  const [vehiclePortPassExpiryDate, setVehiclePortPassExpiryDate] = useState('');
+  const [supervisorPortPassExpiryDate, setSupervisorPortPassExpiryDate] = useState('2026-11-18');
   const [dateOfBirth, setDateOfBirth] = useState('');
   const [emergencyContactName, setEmergencyContactName] = useState('');
   const [emergencyContactNumber, setEmergencyContactNumber] = useState('');
@@ -94,7 +116,7 @@ export default function DriverRegisterScreen() {
 
   const handleQuickAutoFill = () => {
     const randomSuffix = String(Math.floor(1000 + Math.random() * 9000));
-    if (regRole === 'SUPERVISOR') {
+    if (currentRole === 'SUPERVISOR') {
       setFullName('Nimal Samantha Silva');
       setNic(`1990${randomSuffix}012V`);
       setEmployeeId(`SUP-${randomSuffix}`);
@@ -102,6 +124,7 @@ export default function DriverRegisterScreen() {
       setAddress('No. 12, Galle Face Road, Colombo 03');
       setDateOfBirth('1990-05-20');
       setEmail(`supervisor${randomSuffix}@smartitt.lk`);
+      setSupervisorPortPassExpiryDate('2026-11-18');
       setEmergencyContactName('Amara Silva (Spouse)');
       setEmergencyContactNumber('0719876543');
       setPassword('Password@123');
@@ -110,15 +133,17 @@ export default function DriverRegisterScreen() {
     } else {
       setFullName('Kasun Chamara Perera');
       setNic(`1992${randomSuffix}042V`);
-      setEmployeeId(`EMP-${randomSuffix}`);
+      setEmployeeId(`DRV-${randomSuffix}`);
       setMobileNumber(`077${randomSuffix}21`);
       setAddress('No. 45/B, Port Access Road, Colombo 13');
       setLicenseNumber(`B-${randomSuffix}88`);
       setLicenseExpiryDate('2030-12-31');
+      setDriverPortPassExpiryDate('2026-11-15');
+      setVehiclePortPassExpiryDate('2026-11-20');
       setDateOfBirth('1992-06-15');
       setEmergencyContactName('Nayana Perera');
       setEmergencyContactNumber('0719876543');
-      setVehicleNumber('LY 5234'); // Instantly links to CHE: SCK 100 (SCK Logistics)!
+      setVehicleNumber('LY-6439'); // Instantly links to CHE: CHE 100 (SCK Logistics)!
       setEmail(`driver${randomSuffix}@smartitt.lk`);
       setPassword('Password@123');
       setConfirmPassword('Password@123');
@@ -157,7 +182,7 @@ export default function DriverRegisterScreen() {
     const randSuffix = String(Math.floor(1000 + Math.random() * 9000));
 
     // ─── SUPERVISOR REGISTRATION FLOW ───
-    if (regRole === 'SUPERVISOR') {
+    if (currentRole === 'SUPERVISOR') {
       const resolvedFullName = fullName.trim() || 'Nimal Samantha Silva';
       const resolvedNic = nic.trim() || `1990${randSuffix}012V`;
       const resolvedEmployeeId = employeeId.trim() || `SUP-${randSuffix}`;
@@ -168,6 +193,7 @@ export default function DriverRegisterScreen() {
       const resolvedEmergencyPhone = emergencyContactNumber.trim() || '0112456789';
       const resolvedPassword = password.trim() || 'Password@123';
       const resolvedConfirm = confirmPassword.trim() || resolvedPassword;
+      const resolvedPassExpiry = supervisorPortPassExpiryDate.trim() || '2026-11-18';
 
       const payload: SupervisorRegisterRequest = {
         fullName: resolvedFullName,
@@ -197,6 +223,7 @@ export default function DriverRegisterScreen() {
           mobileNumber: resolvedMobile,
           email: resolvedEmail,
           address: resolvedAddress,
+          supervisorPortPassExpiryDate: resolvedPassExpiry,
           emergencyContactName: resolvedEmergencyName,
           emergencyContactNumber: resolvedEmergencyPhone,
         });
@@ -217,6 +244,7 @@ export default function DriverRegisterScreen() {
           mobileNumber: resolvedMobile,
           email: resolvedEmail,
           address: resolvedAddress,
+          supervisorPortPassExpiryDate: resolvedPassExpiry,
           emergencyContactName: resolvedEmergencyName,
           emergencyContactNumber: resolvedEmergencyPhone,
         });
@@ -236,7 +264,7 @@ export default function DriverRegisterScreen() {
     const resolvedLicense = (licenseNumber.trim() || `B-${randSuffix}88`).toUpperCase();
     const resolvedEmergencyName = emergencyContactName.trim() || 'Port Dispatch Control';
     const resolvedEmergencyPhone = emergencyContactNumber.trim() || '0112456789';
-    const resolvedVehicleNumber = (vehicleNumber.trim() || 'LY 5234').toUpperCase();
+    const resolvedVehicleNumber = (vehicleNumber.trim() || 'LY-6439').toUpperCase();
     const fleetMatch = findFleetVehicle(resolvedVehicleNumber);
     const resolvedCheNumber = fleetMatch?.cheNumber || resolveCheNumber(resolvedVehicleNumber);
     const resolvedOperator = fleetMatch?.operator || resolveOperator(resolvedVehicleNumber);
@@ -253,6 +281,8 @@ export default function DriverRegisterScreen() {
       address: resolvedAddress,
       drivingLicenceNumber: resolvedLicense,
       licenseExpiryDate: licenseExpiryDate.trim() || '2030-12-31',
+      driverPortPassExpiryDate: driverPortPassExpiryDate.trim() || '2026-11-15',
+      vehiclePortPassExpiryDate: vehiclePortPassExpiryDate.trim() || '2026-11-20',
       dateOfBirth: dateOfBirth.trim() || '1992-06-15',
       emergencyContactName: resolvedEmergencyName,
       emergencyContactNumber: resolvedEmergencyPhone,
@@ -287,6 +317,8 @@ export default function DriverRegisterScreen() {
         address: resolvedAddress,
         licenseNumber: resolvedLicense,
         licenseExpiryDate: licenseExpiryDate.trim() || '2030-12-31',
+        driverPortPassExpiryDate: driverPortPassExpiryDate.trim() || '2026-11-15',
+        vehiclePortPassExpiryDate: vehiclePortPassExpiryDate.trim() || '2026-11-20',
         emergencyContactName: resolvedEmergencyName,
         emergencyContactNumber: resolvedEmergencyPhone,
       });
@@ -310,12 +342,14 @@ export default function DriverRegisterScreen() {
         operator: resolvedOperator,
         trailerSize: resolvedTrailerSize,
         fullName: resolvedFullName,
+        driverPortPassExpiryDate: driverPortPassExpiryDate.trim() || '2026-11-15',
+        vehiclePortPassExpiryDate: vehiclePortPassExpiryDate.trim() || '2026-11-20',
+        licenseExpiryDate: licenseExpiryDate.trim() || '2030-12-31',
         nic: resolvedNic,
         employeeId: resolvedEmployeeId,
         mobileNumber: resolvedMobile,
         address: resolvedAddress,
         licenseNumber: resolvedLicense,
-        licenseExpiryDate: licenseExpiryDate.trim() || '2030-12-31',
         emergencyContactName: resolvedEmergencyName,
         emergencyContactNumber: resolvedEmergencyPhone,
       });
@@ -383,96 +417,29 @@ export default function DriverRegisterScreen() {
 
         {/* Hero Section */}
         <View style={styles.hero}>
-          <View style={styles.logoBadge}>
-            <Ionicons name={regRole === 'SUPERVISOR' ? 'eye' : 'car-sport'} size={28} color={regRole === 'SUPERVISOR' ? '#feb300' : '#00e5ff'} />
+          <View style={[styles.logoBadge, currentRole === 'SUPERVISOR' && { borderColor: '#feb300' }]}>
+            <Ionicons
+              name={currentRole === 'SUPERVISOR' ? 'shield-checkmark' : 'car-sport'}
+              size={28}
+              color={currentRole === 'SUPERVISOR' ? '#feb300' : '#00e5ff'}
+            />
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={styles.brandTitle}>SCK LOGISTICS PORT SYSTEM</Text>
+            <Text style={[styles.brandTitle, currentRole === 'SUPERVISOR' && { color: '#feb300' }]}>SCK LOGISTICS PORT SYSTEM</Text>
             <Text style={styles.brandSubtitle}>
-              {regRole === 'SUPERVISOR'
+              {currentRole === 'SUPERVISOR'
                 ? 'OFFICIAL PORT SUPERVISOR REGISTRATION'
                 : 'NEW OPERATOR REGISTRATION PORTAL'}
             </Text>
           </View>
         </View>
 
-        {/* Role Switcher Tabs */}
-        <View style={styles.roleTabsRow}>
-          <TouchableOpacity
-            style={[styles.roleTab, regRole === 'DRIVER' && styles.roleTabActiveCyan]}
-            onPress={() => setRegRole('DRIVER')}
-          >
-            <Ionicons
-              name="car-sport"
-              size={15}
-              color={regRole === 'DRIVER' ? '#00363d' : '#849396'}
-            />
-            <Text
-              style={[
-                styles.roleTabText,
-                regRole === 'DRIVER' && styles.roleTabTextActiveDark,
-              ]}
-            >
-              SCK DRIVER
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[
-              styles.roleTab,
-              regRole === 'SUPERVISOR' && styles.roleTabActiveAmber,
-            ]}
-            onPress={() => setRegRole('SUPERVISOR')}
-          >
-            <Ionicons
-              name="eye"
-              size={15}
-              color={regRole === 'SUPERVISOR' ? '#432c00' : '#849396'}
-            />
-            <Text
-              style={[
-                styles.roleTabText,
-                regRole === 'SUPERVISOR' && styles.roleTabTextActiveDark,
-              ]}
-            >
-              PORT SUPERVISOR
-            </Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Informational Guidance Notice */}
-        <View
-          style={[
-            styles.noticeBox,
-            regRole === 'SUPERVISOR' && {
-              borderColor: '#feb300',
-              backgroundColor: 'rgba(254, 179, 0, 0.08)',
-            },
-          ]}
-        >
-          <Ionicons
-            name="information-circle"
-            size={18}
-            color={regRole === 'SUPERVISOR' ? '#feb300' : '#00e5ff'}
-          />
-          <Text style={styles.noticeText}>
-            {regRole === 'SUPERVISOR' ? (
-              <>
-                Register as an official <Text style={[styles.noticeBold, { color: '#feb300' }]}>Port Operations Supervisor</Text>. You will be provisioned access to oversee ITT transfer corridors, terminal gate clearances, and driver telematics across SLPA terminals (CICT, SAGT, JCT, ECT, CWIT, UCT).
-              </>
-            ) : (
-              <>
-                Upon completing registration, a unique <Text style={styles.noticeBold}>Operator Identification Number (e.g. DRV-00001)</Text> will be generated for you. You will use this exact identification number to log in to the driver cockpit.
-              </>
-            )}
-          </Text>
-        </View>
 
         {/* Quick Demo Autofill Bar */}
         <TouchableOpacity
           style={[
             styles.autofillBtn,
-            regRole === 'SUPERVISOR' && {
+            currentRole === 'SUPERVISOR' && {
               borderColor: '#feb300',
               backgroundColor: 'rgba(254, 179, 0, 0.12)',
             },
@@ -483,15 +450,15 @@ export default function DriverRegisterScreen() {
           <Ionicons
             name="flash"
             size={16}
-            color={regRole === 'SUPERVISOR' ? '#feb300' : '#00e5ff'}
+            color={currentRole === 'SUPERVISOR' ? '#feb300' : '#00e5ff'}
           />
           <Text
             style={[
               styles.autofillBtnText,
-              regRole === 'SUPERVISOR' && { color: '#feb300' },
+              currentRole === 'SUPERVISOR' && { color: '#feb300' },
             ]}
           >
-            QUICK AUTO-FILL DEMO {regRole === 'SUPERVISOR' ? 'SUPERVISOR' : 'OPERATOR'} DETAILS
+            QUICK AUTO-FILL DEMO {currentRole === 'SUPERVISOR' ? 'SUPERVISOR' : 'OPERATOR'} DETAILS
           </Text>
         </TouchableOpacity>
 
@@ -502,21 +469,67 @@ export default function DriverRegisterScreen() {
           </View>
         )}
 
-        {/* ─── SECTION 1: Personal Information ─── */}
+        {/* ─── SECTION 1: EMP ID (First Field) & Personal Information ─── */}
         <View style={styles.card}>
           <View style={styles.cardHeader}>
             <Ionicons
               name="person-circle"
               size={18}
-              color={regRole === 'SUPERVISOR' ? '#feb300' : '#00e5ff'}
+              color={currentRole === 'SUPERVISOR' ? '#feb300' : '#00e5ff'}
             />
             <Text
               style={[
                 styles.cardHeaderText,
-                regRole === 'SUPERVISOR' && { color: '#feb300' },
+                currentRole === 'SUPERVISOR' && { color: '#feb300' },
               ]}
             >
-              1. {regRole === 'SUPERVISOR' ? 'SUPERVISOR' : 'OPERATOR'} PERSONAL INFORMATION
+              1. {currentRole === 'SUPERVISOR' ? 'SUPERVISOR' : 'OPERATOR'} IDENTIFICATION & PERSONAL INFORMATION
+            </Text>
+          </View>
+
+          {/* FIRST FIELD: EMP ID (Controls Driver vs Supervisor dynamic details) */}
+          <View style={styles.fieldGroup}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+              <Text style={styles.fieldLabel}>PORT EMPLOYEE ID (EMP ID) *</Text>
+              <View style={[
+                styles.empTypeBadge,
+                currentRole === 'SUPERVISOR' ? styles.empTypeBadgeAmber : styles.empTypeBadgeCyan,
+              ]}>
+                <Ionicons
+                  name={currentRole === 'SUPERVISOR' ? 'shield-checkmark' : 'car-sport'}
+                  size={10}
+                  color={currentRole === 'SUPERVISOR' ? '#feb300' : '#00e5ff'}
+                />
+                <Text style={[
+                  styles.empTypeBadgeText,
+                  { color: currentRole === 'SUPERVISOR' ? '#feb300' : '#00e5ff' },
+                ]}>
+                  {currentRole === 'SUPERVISOR' ? 'SUP IDENTIFIER' : 'DRV IDENTIFIER'}
+                </Text>
+              </View>
+            </View>
+            <View style={[
+              styles.inputWrap,
+              currentRole === 'SUPERVISOR' && { borderColor: 'rgba(254, 179, 0, 0.5)' },
+              currentRole === 'DRIVER' && { borderColor: 'rgba(0, 229, 255, 0.5)' },
+            ]}>
+              <Ionicons
+                name={currentRole === 'SUPERVISOR' ? 'shield-outline' : 'car-sport-outline'}
+                size={16}
+                color={currentRole === 'SUPERVISOR' ? '#feb300' : '#00e5ff'}
+                style={styles.inputIcon}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder={currentRole === 'SUPERVISOR' ? 'e.g. SUP-00001 or SUP001' : 'e.g. DRV-00001 or DRV001'}
+                placeholderTextColor="#849396"
+                value={employeeId}
+                onChangeText={handleEmployeeIdChange}
+                autoCapitalize="characters"
+              />
+            </View>
+            <Text style={{ fontSize: 9, color: '#849396', marginTop: 3 }}>
+              Type <Text style={{ color: '#00e5ff', fontWeight: '800' }}>DRV</Text> with number for Driver details, or <Text style={{ color: '#feb300', fontWeight: '800' }}>SUP</Text> with number for Supervisor details.
             </Text>
           </View>
 
@@ -579,43 +592,16 @@ export default function DriverRegisterScreen() {
           </View>
         </View>
 
-        {/* ─── SECTION 2: Employment / Appointment & Operational Details ─── */}
-        {regRole === 'SUPERVISOR' ? (
+        {/* ─── SECTION 2: Dynamic Role Details (Driver vs Supervisor) ─── */}
+        {currentRole === 'SUPERVISOR' ? (
           <View style={[styles.card, { borderColor: '#feb300' }]}>
             <View style={styles.cardHeader}>
               <Ionicons name="briefcase" size={18} color="#feb300" />
               <Text style={[styles.cardHeaderText, { color: '#feb300' }]}>
-                2. PORT SUPERVISOR APPOINTMENT & EMPLOYMENT DETAILS
+                2. PORT SUPERVISOR APPOINTMENT & CLEARANCE DETAILS
               </Text>
             </View>
 
-            {/* Supervisory Operational Scope Banner */}
-            <View style={[styles.terminalDetailBanner, { borderColor: '#feb300', marginBottom: 16 }]}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                <Ionicons name="shield-checkmark" size={16} color="#feb300" />
-                <Text style={[styles.terminalDetailName, { color: '#feb300' }]}>
-                  PORT-WIDE SUPERVISORY APPOINTMENT
-                </Text>
-              </View>
-              <Text style={styles.terminalDetailDesc}>
-                Supervisors are authorized across the full SLPA inter-terminal mesh (CICT, SAGT, JCT, ECT, CWIT, UCT) with gate pass approval, container corridor telematics, and CHE fleet dispatch clearance.
-              </Text>
-            </View>
-
-            <View style={styles.fieldGroup}>
-              <Text style={styles.fieldLabel}>SUPERVISOR EMPLOYEE ID *</Text>
-              <View style={styles.inputWrap}>
-                <Ionicons name="business" size={16} color="#849396" style={styles.inputIcon} />
-                <TextInput
-                  style={styles.input}
-                  placeholder="e.g. SUP-001 or SUP-9901"
-                  placeholderTextColor="#849396"
-                  value={employeeId}
-                  onChangeText={setEmployeeId}
-                  autoCapitalize="characters"
-                />
-              </View>
-            </View>
 
             <View style={styles.fieldGroup}>
               <Text style={styles.fieldLabel}>OFFICIAL MOBILE PHONE NUMBER *</Text>
@@ -647,29 +633,34 @@ export default function DriverRegisterScreen() {
                 />
               </View>
             </View>
+
+            <View style={styles.fieldGroup}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                <Text style={styles.fieldLabel}>SUPERVISOR PORT PASS EXPIRY DATE (YYYY-MM-DD) *</Text>
+                <View style={[styles.cheLivePill, { backgroundColor: 'rgba(254, 179, 0, 0.12)', borderColor: '#feb300' }]}>
+                  <Ionicons name="shield-checkmark" size={10} color="#feb300" />
+                  <Text style={[styles.cheLivePillText, { color: '#feb300' }]}>SLPA GATE PERMIT</Text>
+                </View>
+              </View>
+              <View style={styles.inputWrap}>
+                <Ionicons name="card-outline" size={16} color="#feb300" style={styles.inputIcon} />
+                <TextInput
+                  style={styles.input}
+                  placeholder="e.g. 2026-11-18"
+                  placeholderTextColor="#849396"
+                  value={supervisorPortPassExpiryDate}
+                  onChangeText={setSupervisorPortPassExpiryDate}
+                />
+              </View>
+            </View>
           </View>
         ) : (
           <View style={styles.card}>
             <View style={styles.cardHeader}>
               <Ionicons name="car-sport" size={18} color="#feb300" />
               <Text style={[styles.cardHeaderText, { color: '#feb300' }]}>
-                2. LICENSE & VEHICLE DETAILS
+                2. DRIVER CREDENTIALS, LICENSE & VEHICLE DETAILS
               </Text>
-            </View>
-
-            <View style={styles.fieldGroup}>
-              <Text style={styles.fieldLabel}>PORT EMPLOYEE ID *</Text>
-              <View style={styles.inputWrap}>
-                <Ionicons name="business" size={16} color="#849396" style={styles.inputIcon} />
-                <TextInput
-                  style={styles.input}
-                  placeholder="e.g. EMP-092"
-                  placeholderTextColor="#849396"
-                  value={employeeId}
-                  onChangeText={setEmployeeId}
-                  autoCapitalize="characters"
-                />
-              </View>
             </View>
 
             <View style={styles.fieldGroup}>
@@ -716,6 +707,27 @@ export default function DriverRegisterScreen() {
               </View>
             </View>
 
+            {/* DRIVER PORT PASS EXPIRY DATE */}
+            <View style={styles.fieldGroup}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                <Text style={styles.fieldLabel}>DRIVER PORT PASS EXPIRY DATE (YYYY-MM-DD) *</Text>
+                <View style={[styles.cheLivePill, { backgroundColor: 'rgba(0, 229, 255, 0.12)', borderColor: '#00e5ff' }]}>
+                  <Ionicons name="card" size={10} color="#00e5ff" />
+                  <Text style={[styles.cheLivePillText, { color: '#00e5ff' }]}>SLPA GATE PASS</Text>
+                </View>
+              </View>
+              <View style={styles.inputWrap}>
+                <Ionicons name="card-outline" size={16} color="#00e5ff" style={styles.inputIcon} />
+                <TextInput
+                  style={styles.input}
+                  placeholder="e.g. 2026-11-15"
+                  placeholderTextColor="#849396"
+                  value={driverPortPassExpiryDate}
+                  onChangeText={setDriverPortPassExpiryDate}
+                />
+              </View>
+            </View>
+
             <View style={styles.fieldGroup}>
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
                 <Text style={styles.fieldLabel}>ASSIGNED TRUCK / VEHICLE NUMBER *</Text>
@@ -731,7 +743,7 @@ export default function DriverRegisterScreen() {
                 <Ionicons name="bus" size={16} color={detectedFleet ? '#00e5ff' : '#feb300'} style={styles.inputIcon} />
                 <TextInput
                   style={styles.input}
-                  placeholder="e.g. LY 5234, LY 6528, LY 5596..."
+                  placeholder="e.g. LY-6439, LY-6528, LY-6434..."
                   placeholderTextColor="#849396"
                   value={vehicleNumber}
                   onChangeText={setVehicleNumber}
@@ -795,10 +807,31 @@ export default function DriverRegisterScreen() {
                 </View>
               ) : null}
 
+              {/* VEHICLE PORT PASS EXPIRY DATE */}
+              <View style={{ marginTop: 10 }}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                  <Text style={styles.fieldLabel}>VEHICLE PORT PASS EXPIRY DATE (YYYY-MM-DD) *</Text>
+                  <View style={[styles.cheLivePill, { backgroundColor: 'rgba(254, 179, 0, 0.12)', borderColor: '#feb300' }]}>
+                    <Ionicons name="shield-checkmark" size={10} color="#feb300" />
+                    <Text style={[styles.cheLivePillText, { color: '#feb300' }]}>TRUCK PERMIT</Text>
+                  </View>
+                </View>
+                <View style={styles.inputWrap}>
+                  <Ionicons name="shield-outline" size={16} color="#feb300" style={styles.inputIcon} />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="e.g. 2026-11-20"
+                    placeholderTextColor="#849396"
+                    value={vehiclePortPassExpiryDate}
+                    onChangeText={setVehiclePortPassExpiryDate}
+                  />
+                </View>
+              </View>
+
               {/* Quick Fleet Vehicle Selection Chips */}
               <View style={{ marginTop: 10 }}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                  <Text style={styles.fleetPickerLabel}>TAP TO CHOOSE SCK FLEET TRUCK (24 REGISTERED):</Text>
+                  <Text style={styles.fleetPickerLabel}>TAP TO CHOOSE SCK FLEET TRUCK ({SCK_FLEET_VEHICLES.length} REGISTERED):</Text>
                   <Text style={styles.fleetTotalBadge}>40FT STANDARD</Text>
                 </View>
                 <ScrollView
@@ -981,7 +1014,7 @@ export default function DriverRegisterScreen() {
         <TouchableOpacity
           style={[
             styles.submitBtn,
-            regRole === 'SUPERVISOR' && { backgroundColor: '#feb300' },
+            currentRole === 'SUPERVISOR' && { backgroundColor: '#feb300' },
             loading && { opacity: 0.6 },
           ]}
           onPress={handleRegister}
@@ -989,23 +1022,23 @@ export default function DriverRegisterScreen() {
           activeOpacity={0.88}
         >
           {loading ? (
-            <ActivityIndicator color="#00363d" />
+            <ActivityIndicator color={currentRole === 'SUPERVISOR' ? '#432c00' : '#00363d'} />
           ) : (
             <>
               <Ionicons
-                name={regRole === 'SUPERVISOR' ? 'briefcase' : 'car-sport'}
+                name={currentRole === 'SUPERVISOR' ? 'shield-checkmark' : 'car-sport'}
                 size={20}
-                color={regRole === 'SUPERVISOR' ? '#432c00' : '#00363d'}
+                color={currentRole === 'SUPERVISOR' ? '#432c00' : '#00363d'}
               />
               <Text
                 style={[
                   styles.submitBtnText,
-                  regRole === 'SUPERVISOR' && { color: '#432c00' },
+                  currentRole === 'SUPERVISOR' && { color: '#432c00' },
                 ]}
               >
-                {regRole === 'SUPERVISOR'
-                  ? 'SUBMIT REGISTRATION & ACTIVATE SUPERVISOR PASS'
-                  : 'SUBMIT REGISTRATION & GENERATE OPERATOR ID'}
+                {currentRole === 'SUPERVISOR'
+                  ? 'SUBMIT REGISTRATION & LAUNCH SUPERVISOR COCKPIT'
+                  : 'SUBMIT REGISTRATION & LAUNCH DRIVER COCKPIT'}
               </Text>
             </>
           )}
@@ -1013,7 +1046,7 @@ export default function DriverRegisterScreen() {
 
         <TouchableOpacity style={styles.backLink} onPress={() => router.push('/(auth)/login')}>
           <Text style={styles.backLinkText}>
-            Already have an {regRole === 'SUPERVISOR' ? 'Authorized Supervisor Profile' : 'Operator Identification Code'}?{' '}
+            Already have an {currentRole === 'SUPERVISOR' ? 'Authorized Supervisor Profile' : 'Operator Identification Code'}?{' '}
             <Text style={styles.backLinkBold}>Sign In</Text>
           </Text>
         </TouchableOpacity>
@@ -1220,6 +1253,18 @@ export default function DriverRegisterScreen() {
                             <Text style={styles.detailItemLabel}>LICENSE EXPIRY</Text>
                             <Text style={styles.detailItemValueMono}>{registeredUser?.licenseExpiryDate || licenseExpiryDate || '2030-12-31'}</Text>
                           </View>
+                          <View style={styles.detailItem}>
+                            <Text style={[styles.detailItemLabel, { color: '#00e5ff' }]}>DRIVER PORT PASS EXPIRY</Text>
+                            <Text style={[styles.detailItemValueMono, { color: '#00e5ff', fontWeight: '800' }]}>
+                              {registeredUser?.driverPortPassExpiryDate || driverPortPassExpiryDate || '2026-11-15'}
+                            </Text>
+                          </View>
+                          <View style={styles.detailItem}>
+                            <Text style={[styles.detailItemLabel, { color: '#feb300' }]}>VEHICLE PORT PASS EXPIRY</Text>
+                            <Text style={[styles.detailItemValueMono, { color: '#feb300', fontWeight: '800' }]}>
+                              {registeredUser?.vehiclePortPassExpiryDate || vehiclePortPassExpiryDate || '2026-11-20'}
+                            </Text>
+                          </View>
                         </>
                       )}
                       <View style={[styles.detailItem, { width: '100%' }]}>
@@ -1276,12 +1321,12 @@ export default function DriverRegisterScreen() {
                       <View style={styles.vehicleBox}>
                         <View style={styles.vehicleRow}>
                           <Text style={styles.vehicleProp}>ASSIGNED VEHICLE NUMBER:</Text>
-                          <Text style={styles.vehicleVal}>{registeredUser?.vehicleNumber || vehicleNumber || 'LY 5234'}</Text>
+                          <Text style={styles.vehicleVal}>{registeredUser?.vehicleNumber || vehicleNumber || 'LY-6439'}</Text>
                         </View>
                         <View style={styles.vehicleRow}>
                           <Text style={styles.vehicleProp}>CHE NUMBER (SCK NO):</Text>
                           <Text style={[styles.vehicleVal, { color: '#00e5ff', fontWeight: '900' }]}>
-                            {registeredUser?.cheNumber || detectedFleet?.cheNumber || 'SCK 100'}
+                            {registeredUser?.cheNumber || detectedFleet?.cheNumber || 'CHE 100'}
                           </Text>
                         </View>
                         <View style={styles.vehicleRow}>
@@ -2145,39 +2190,77 @@ const styles = StyleSheet.create({
   fleetChipSizeBadgeTextActive: {
     color: '#080e17',
   },
-  roleTabsRow: {
-    flexDirection: 'row',
-    gap: 8,
-    marginBottom: 12,
-  },
-  roleTab: {
-    flex: 1,
-    height: 44,
-    borderRadius: radius.DEFAULT,
-    backgroundColor: '#161c25',
-    borderWidth: 1,
-    borderColor: '#242a34',
+  empTypeBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
+    gap: 4,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    borderWidth: 1,
   },
-  roleTabActiveCyan: {
-    backgroundColor: '#00e5ff',
+  empTypeBadgeCyan: {
+    backgroundColor: 'rgba(0, 229, 255, 0.12)',
     borderColor: '#00e5ff',
   },
-  roleTabActiveAmber: {
-    backgroundColor: '#feb300',
+  empTypeBadgeAmber: {
+    backgroundColor: 'rgba(254, 179, 0, 0.12)',
     borderColor: '#feb300',
   },
-  roleTabText: {
+  empTypeBadgeText: {
+    fontSize: 9,
+    fontWeight: '900',
+    letterSpacing: 0.5,
+  },
+  roleDetectionBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: radius.DEFAULT,
+    borderWidth: 1,
+    padding: 12,
+    marginBottom: 14,
+    gap: 12,
+  },
+  roleDetectionBannerAmber: {
+    borderColor: 'rgba(254, 179, 0, 0.45)',
+    backgroundColor: 'rgba(254, 179, 0, 0.08)',
+  },
+  roleDetectionBannerCyan: {
+    borderColor: 'rgba(0, 229, 255, 0.45)',
+    backgroundColor: 'rgba(0, 229, 255, 0.08)',
+  },
+  roleBadgeCircle: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  prefixPill: {
+    paddingHorizontal: 6,
+    paddingVertical: 1.5,
+    borderRadius: 3,
+  },
+  prefixPillText: {
+    fontSize: 9,
+    fontWeight: '900',
+    letterSpacing: 0.5,
+  },
+  recognizedTitle: {
     fontSize: 10,
     fontWeight: '900',
-    color: '#849396',
-    letterSpacing: 0.6,
+    letterSpacing: 0.8,
   },
-  roleTabTextActiveDark: {
-    color: '#00363d',
+  recognizedCode: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#dde2f0',
+    marginTop: 2,
+  },
+  recognizedHint: {
+    fontSize: 10,
+    color: '#849396',
+    marginTop: 3,
   },
   terminalGrid: {
     flexDirection: 'row',

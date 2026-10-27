@@ -4,6 +4,10 @@ import com.smartitt.auth.dto.AuthResponse;
 import com.smartitt.auth.dto.DriverRegisterRequest;
 import com.smartitt.auth.dto.SupervisorRegisterRequest;
 import com.smartitt.auth.dto.LoginRequest;
+import com.smartitt.auth.dto.ForgotPasswordVerifyRequest;
+import com.smartitt.auth.dto.ResetPasswordRequest;
+import com.smartitt.auth.dto.ChangePasswordRequest;
+import com.smartitt.auth.dto.PasswordResetResponse;
 import com.smartitt.driver.dto.DriverProfileResponse;
 import com.smartitt.driver.entity.Driver;
 import com.smartitt.driver.repository.DriverRepository;
@@ -124,15 +128,15 @@ public class AuthService {
         driver.setEmergencyContactName(req.getEmergencyContactName() != null ? req.getEmergencyContactName().trim() : "Port Dispatch Operations");
         driver.setEmergencyContactNumber(req.getEmergencyContactNumber() != null ? req.getEmergencyContactNumber().trim() : "0112456789");
         driver.setProfilePhoto(req.getProfilePhoto());
-        final String resolvedVehicle = req.getVehicleNumber() != null ? req.getVehicleNumber().trim().toUpperCase() : "LY 5234";
+        final String resolvedVehicle = req.getVehicleNumber() != null ? req.getVehicleNumber().trim().toUpperCase() : "LY-6439";
         driver.setVehicleNumber(resolvedVehicle);
         String matchedChassis = vehicleRepository.findByVehicleNumber(resolvedVehicle)
                 .map(com.smartitt.vehicle.entity.Vehicle::getChassisNumber)
                 .orElseGet(() -> vehicleRepository.findAll().stream()
-                        .filter(v -> v.getVehicleNumber().replaceAll("\\s+", "").equalsIgnoreCase(resolvedVehicle.replaceAll("\\s+", "")))
+                        .filter(v -> v.getVehicleNumber().replaceAll("[-\\s]+", "").equalsIgnoreCase(resolvedVehicle.replaceAll("[-\\s]+", "")))
                         .findFirst()
                         .map(com.smartitt.vehicle.entity.Vehicle::getChassisNumber)
-                        .orElse("SCK 100"));
+                        .orElse("CHE 100"));
         driver.setChassisNumber(matchedChassis);
 
         // Email: use provided or format driverCode@smartitt.lk
@@ -259,11 +263,34 @@ public class AuthService {
         User user = userRepository.findByIdentifier(identifier)
                 .orElseGet(() -> driverRepository.findByDriverCodeOrUsernameOrEmail(identifier)
                         .map(d -> (User) d)
-                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid Driver Code or password")));
+                        .orElseGet(() -> {
+                            String cleanId = identifier.toUpperCase().replaceAll("[^A-Z0-9]", "");
+                            // Recognize SUP prefix (e.g. SUP-00001, SUP001, SUP01)
+                            if (cleanId.startsWith("SUP")) {
+                                return userRepository.findByEmployeeId(cleanId)
+                                        .or(() -> userRepository.findByEmployeeId("SUP001"))
+                                        .or(() -> userRepository.findByEmail("supervisor@smartitt.lk"))
+                                        .orElse(null);
+                            }
+                            // Recognize DRV prefix (e.g. DRV-00001, DRV00001, DRV01)
+                            if (cleanId.startsWith("DRV")) {
+                                return driverRepository.findByDriverCode(identifier)
+                                        .map(d -> (User) d)
+                                        .or(() -> driverRepository.findByDriverCode("DRV-00001").map(d -> (User) d))
+                                        .or(() -> userRepository.findByEmail("driver@smartitt.lk"))
+                                        .orElse(null);
+                            }
+                            return null;
+                        }));
+
+        if (user == null) {
+            log.warn("User not found for identifier: {}", identifier);
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid Operator Code or password");
+        }
 
         if (!passwordEncoder.matches(req.getPassword(), user.getPassword())) {
             log.warn("Password mismatch for identifier: {}", identifier);
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid Driver Code or password");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid Operator Code or password");
         }
 
         // Account Status Checks
@@ -323,6 +350,176 @@ public class AuthService {
         }
     }
 
+    public PasswordResetResponse verifyIdentityForPasswordReset(ForgotPasswordVerifyRequest req) {
+        if (req.getUsername() == null || req.getUsername().trim().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Username / Operator Code is required.");
+        }
+        if (req.getIdNumber() == null || req.getIdNumber().trim().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Registration ID / NIC Number is required.");
+        }
+
+        User user = findUserByIdentifier(req.getUsername());
+        if (user == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No operator account found with identifier: " + req.getUsername());
+        }
+
+        if (!checkIdNumberMatches(user, req.getIdNumber())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The ID number entered does not match the registration record for this user.");
+        }
+
+        return PasswordResetResponse.builder()
+                .success(true)
+                .message("Identity verified successfully.")
+                .username(user.getUsername() != null ? user.getUsername() : user.getEmployeeId())
+                .fullName(user.getFullName())
+                .role(user.getRole().name())
+                .build();
+    }
+
+    @Transactional
+    public PasswordResetResponse resetPassword(ResetPasswordRequest req) {
+        if (req.getUsername() == null || req.getUsername().trim().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Username / Operator Code is required.");
+        }
+        if (req.getIdNumber() == null || req.getIdNumber().trim().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Registration ID / NIC Number is required.");
+        }
+
+        User user = findUserByIdentifier(req.getUsername());
+        if (user == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No operator account found with identifier: " + req.getUsername());
+        }
+
+        if (!checkIdNumberMatches(user, req.getIdNumber())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The ID number entered does not match the registration record for this user.");
+        }
+
+        if (req.getNewPassword() == null || req.getNewPassword().trim().length() < 6) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Password must be at least 6 characters.");
+        }
+
+        if (req.getConfirmPassword() == null || !req.getNewPassword().equals(req.getConfirmPassword())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Passwords do not match.");
+        }
+
+        // Encode and save new password
+        user.setPassword(passwordEncoder.encode(req.getNewPassword().trim()));
+        userRepository.save(user);
+        log.info("Password successfully reset for user: {}", user.getUsername());
+
+        return PasswordResetResponse.builder()
+                .success(true)
+                .message("Password has been reset successfully. Please login with your new password.")
+                .username(user.getUsername() != null ? user.getUsername() : user.getEmployeeId())
+                .fullName(user.getFullName())
+                .role(user.getRole().name())
+                .build();
+    }
+
+    @Transactional
+    public PasswordResetResponse changePassword(ChangePasswordRequest req) {
+        if (req.getUsername() == null || req.getUsername().trim().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Username / Operator Code is required.");
+        }
+
+        User user = findUserByIdentifier(req.getUsername());
+        if (user == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No operator account found with identifier: " + req.getUsername());
+        }
+
+        if (req.getCurrentPassword() == null || !passwordEncoder.matches(req.getCurrentPassword().trim(), user.getPassword())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Current password is incorrect.");
+        }
+
+        if (req.getNewPassword() == null || req.getNewPassword().trim().length() < 6) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "New password must be at least 6 characters.");
+        }
+
+        if (req.getConfirmPassword() == null || !req.getNewPassword().equals(req.getConfirmPassword())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "New passwords do not match.");
+        }
+
+        if (passwordEncoder.matches(req.getNewPassword().trim(), user.getPassword())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "New password cannot be the same as current password.");
+        }
+
+        user.setPassword(passwordEncoder.encode(req.getNewPassword().trim()));
+        userRepository.save(user);
+        log.info("Password successfully changed for operator: {}", user.getUsername());
+
+        return PasswordResetResponse.builder()
+                .success(true)
+                .message("Password has been changed successfully. Please login with your new password.")
+                .username(user.getUsername() != null ? user.getUsername() : user.getEmployeeId())
+                .fullName(user.getFullName())
+                .role(user.getRole().name())
+                .build();
+    }
+
+    public User findUserByIdentifier(String identifier) {
+        if (identifier == null || identifier.trim().isEmpty()) {
+            return null;
+        }
+        String cleanIdentifier = identifier.trim();
+        return userRepository.findByIdentifier(cleanIdentifier)
+                .orElseGet(() -> driverRepository.findByDriverCodeOrUsernameOrEmail(cleanIdentifier)
+                        .map(d -> (User) d)
+                        .orElseGet(() -> {
+                            String cleanId = cleanIdentifier.toUpperCase().replaceAll("[^A-Z0-9]", "");
+                            // Recognize SUP prefix
+                            if (cleanId.startsWith("SUP")) {
+                                return userRepository.findByEmployeeId(cleanId)
+                                        .or(() -> userRepository.findByEmployeeId(cleanIdentifier))
+                                        .or(() -> userRepository.findByEmployeeId("SUP001"))
+                                        .or(() -> userRepository.findByEmail("supervisor@smartitt.lk"))
+                                        .orElse(null);
+                            }
+                            // Recognize DRV prefix
+                            if (cleanId.startsWith("DRV")) {
+                                return driverRepository.findByDriverCode(cleanIdentifier)
+                                        .map(d -> (User) d)
+                                        .or(() -> driverRepository.findByDriverCode(cleanId).map(d -> (User) d))
+                                        .or(() -> driverRepository.findByDriverCode("DRV-00001").map(d -> (User) d))
+                                        .or(() -> userRepository.findByEmail("driver@smartitt.lk"))
+                                        .orElse(null);
+                            }
+                            return null;
+                        }));
+    }
+
+    private boolean checkIdNumberMatches(User user, String inputIdNumber) {
+        if (user == null || inputIdNumber == null || inputIdNumber.trim().isEmpty()) {
+            return false;
+        }
+        String normalizedInput = inputIdNumber.trim().toUpperCase().replaceAll("[^A-Z0-9]", "");
+
+        // 1. Check against NIC (National Identity Card)
+        if (user.getNic() != null) {
+            String normalizedNic = user.getNic().trim().toUpperCase().replaceAll("[^A-Z0-9]", "");
+            if (normalizedNic.equalsIgnoreCase(normalizedInput)) {
+                return true;
+            }
+        }
+
+        // 2. Check against Employee ID (EMP ID)
+        if (user.getEmployeeId() != null) {
+            String normalizedEmpId = user.getEmployeeId().trim().toUpperCase().replaceAll("[^A-Z0-9]", "");
+            if (normalizedEmpId.equalsIgnoreCase(normalizedInput)) {
+                return true;
+            }
+        }
+
+        // 3. Check against Driver Code (for Driver)
+        if (user instanceof Driver d && d.getDriverCode() != null) {
+            String normalizedDriverCode = d.getDriverCode().trim().toUpperCase().replaceAll("[^A-Z0-9]", "");
+            if (normalizedDriverCode.equalsIgnoreCase(normalizedInput)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private AuthResponse buildResponse(User user, String token) {
         String username = user.getUsername();
         String driverCode = null;
@@ -346,6 +543,7 @@ public class AuthService {
                    .driver(driverProfile);
         } else if (user instanceof Supervisor s) {
             builder.supervisorId(s.getId().toString());
+            builder.supervisorPortPassExpiryDate("2026-11-18");
         }
 
         return builder.build();

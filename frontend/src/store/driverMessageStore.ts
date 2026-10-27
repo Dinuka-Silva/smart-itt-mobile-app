@@ -150,7 +150,7 @@ const INITIAL_MESSAGES: DriverMessage[] = [
     sender: 'CICT Yard Master Bandara',
     senderRole: 'Yard Control Sector G',
     title: 'Priority Turn-Around Slot Granted',
-    message: 'Vehicle SCK 100 / LY 5234 allocated priority queue position at CICT Yard G Bay 14. Turn-around window expires at 15:30 hrs.',
+    message: 'Vehicle CHE 100 / LY-6439 allocated priority queue position at CICT Yard G Bay 14. Turn-around window expires at 15:30 hrs.',
     time: '4 hours ago',
     timestamp: Date.now() - 240 * 60 * 1000,
     read: true,
@@ -220,7 +220,7 @@ export const useDriverMessageStore = create<DriverMessageState>((set, get) => ({
     }));
   },
 
-  sendRadioDispatch: (category, text, driverName = 'Kamal Perera', vehicleNo = 'SCK 100 / LY 5234') => {
+  sendRadioDispatch: (category, text, driverName = 'Kamal Perera', vehicleNo = 'CHE 100 / LY-6439') => {
     const newMsg: DriverMessage = {
       id: `msg-sent-${Date.now()}`,
       category,

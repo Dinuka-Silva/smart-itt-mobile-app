@@ -33,7 +33,7 @@ public class Vehicle {
 
     @Column(name = "operator", length = 100)
     @Builder.Default
-    private String operator = "SCK Logistics"; // "SCK Logistics", "SDR LINK", "E3 Logistics"
+    private String operator = "SCK Logistics"; // "SCK Logistics", "SDR LINK"
 
     @Column(name = "trailer_size", length = 20)
     @Builder.Default
@@ -52,6 +52,15 @@ public class Vehicle {
     @Column(name = "license_expiry_date")
     private java.time.LocalDate licenseExpiryDate;
 
+    @Column(name = "port_pass_number", length = 50)
+    private String portPassNumber;
+
+    @Column(name = "port_pass_issued_date")
+    private java.time.LocalDate portPassIssuedDate;
+
+    @Column(name = "port_pass_expiry_date")
+    private java.time.LocalDate portPassExpiryDate; // Vehicle Port Pass Renewal Date
+
     public Long getDaysUntilExpiry() {
         if (licenseExpiryDate == null) return null;
         return java.time.temporal.ChronoUnit.DAYS.between(java.time.LocalDate.now(), licenseExpiryDate);
@@ -64,6 +73,24 @@ public class Vehicle {
 
     public String getLicenseStatus() {
         Long days = getDaysUntilExpiry();
+        if (days == null) return "UNKNOWN";
+        if (days < 0) return "EXPIRED";
+        if (days <= 30) return "RENEWAL_DUE";
+        return "VALID";
+    }
+
+    public Long getPortPassDaysUntilExpiry() {
+        if (portPassExpiryDate == null) return null;
+        return java.time.temporal.ChronoUnit.DAYS.between(java.time.LocalDate.now(), portPassExpiryDate);
+    }
+
+    public boolean isPortPassRenewalDue() {
+        Long days = getPortPassDaysUntilExpiry();
+        return days != null && days <= 30; // within 1 month
+    }
+
+    public String getPortPassStatus() {
+        Long days = getPortPassDaysUntilExpiry();
         if (days == null) return "UNKNOWN";
         if (days < 0) return "EXPIRED";
         if (days <= 30) return "RENEWAL_DUE";
