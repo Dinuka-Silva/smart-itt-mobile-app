@@ -75,7 +75,6 @@ public class DataInitializer implements CommandLineRunner {
             driverRepository.findAll().stream()
                 .filter(d -> "LY-5650".equals(d.getVehicleNumber()))
                 .forEach(d -> {
-                    d.setVehicle(null);
                     d.setVehicleNumber(null);
                     d.setChassisNumber(null);
                     driverRepository.save(d);

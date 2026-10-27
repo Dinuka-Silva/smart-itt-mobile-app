@@ -27,7 +27,7 @@ public class Trip {
     @Column(nullable = false, unique = true)
     private String tripNumber;
 
-    @Column(nullable = false)
+    @Column(name = "driver_id")
     private UUID driverId;
 
     private String vehicleNumber;

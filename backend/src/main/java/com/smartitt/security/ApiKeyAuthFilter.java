@@ -57,6 +57,18 @@ public class ApiKeyAuthFilter extends OncePerRequestFilter {
             }
         } else if (StringUtils.hasText(providedKey) && expectedApiKey.equals(providedKey)) {
             request.setAttribute("apiKeyAuthenticated", Boolean.TRUE);
+            if (org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication() == null) {
+                var auth = new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
+                    "apiKeySystemUser",
+                    null,
+                    java.util.List.of(
+                        new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_ADMIN"),
+                        new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_SUPERVISOR"),
+                        new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_DRIVER")
+                    )
+                );
+                org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(auth);
+            }
         }
 
         filterChain.doFilter(request, response);

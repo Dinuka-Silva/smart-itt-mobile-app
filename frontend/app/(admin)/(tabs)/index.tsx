@@ -16,6 +16,7 @@ import { adminService, AdminDashboardStats } from '../../../src/services/adminSe
 import { adminFleetStore, AdminVehicle, AdminDriver } from '../../../src/store/adminFleetStore';
 import { useResponsive } from '../../../src/hooks/useResponsive';
 import { AdminSignOutModal } from '../../../src/components/AdminSignOutModal';
+import { useMockTripStore } from '../../../src/store/mockTripStore';
 
 type DashboardSection = 'OVERVIEW' | 'TRIPS' | 'FLEET' | 'SUPERVISORS';
 
@@ -23,6 +24,7 @@ export default function AdminDashboardScreen() {
   const router = useRouter();
   const { topInset, bottomInset, containerPaddingHorizontal } = useResponsive();
   const { user } = useAuthStore();
+  const mockTrips = useMockTripStore((s) => s.mockTrips);
 
   const [activeSection, setActiveSection] = useState<DashboardSection>('OVERVIEW');
   const [loading, setLoading] = useState(true);
@@ -57,6 +59,25 @@ export default function AdminDashboardScreen() {
       const maintVehicles = vList.filter((v) => v.status === 'MAINTENANCE').length;
       const activeDrivers = dList.filter((d) => d.status === 'ACTIVE').length;
 
+      // Real-time trip metrics from mockTripStore
+      const currentTrips = useMockTripStore.getState().mockTrips;
+      const inProg = currentTrips.filter((t) => t.status === 'IN_PROGRESS' || t.status === 'ARRIVED').length;
+      const pend = currentTrips.filter((t) => t.status === 'PENDING_APPROVAL').length;
+      const comp = currentTrips.filter((t) => t.status === 'COMPLETED' || t.status === 'APPROVED').length;
+      const rej = currentTrips.filter((t) => t.status === 'REJECTED').length;
+      let totCont = 0;
+      let c20 = 0;
+      let c40 = 0;
+      const termMap: Record<string, number> = { CICT: 0, CWIT: 0, ECT: 0, JCT: 0, UCT: 0, SAGT: 0 };
+      currentTrips.forEach((t) => {
+        if (t.sourceTerminal && termMap[t.sourceTerminal] !== undefined) termMap[t.sourceTerminal]++;
+        (t.containers || []).forEach((c) => {
+          totCont++;
+          if (c.size === '20FT') c20++;
+          else c40++;
+        });
+      });
+
       // 2. Fetch remote stats or provide complete baseline
       try {
         const data = await adminService.getDashboardStats();
@@ -69,11 +90,23 @@ export default function AdminDashboardScreen() {
           maintenanceVehicles: maintVehicles,
           totalDrivers: dList.length,
           activeDrivers,
+          todayTrips: Math.max(data.todayTrips || 0, currentTrips.length),
+          tripsInProgress: Math.max(data.tripsInProgress || 0, inProg),
+          tripsPendingApproval: Math.max(data.tripsPendingApproval || 0, pend),
+          tripsCompleted: Math.max(data.tripsCompleted || 0, comp),
+          tripsApproved: Math.max(data.tripsApproved || 0, comp),
+          tripsRejected: Math.max(data.tripsRejected || 0, rej),
         });
         if (data.recentTrips && data.recentTrips.length > 0) {
-          setTrips(data.recentTrips);
+          const byId = new Map<string, any>();
+          data.recentTrips.forEach((t: any) => byId.set(t.id || t.tripNumber, t));
+          currentTrips.forEach((t) => {
+            const k = t.id || t.tripNumber;
+            if (!byId.has(k)) byId.set(k, t);
+          });
+          setTrips(Array.from(byId.values()).slice(0, 10));
         } else {
-          setTrips(getInitialMockTrips());
+          setTrips(currentTrips.slice(0, 10));
         }
       } catch {
         setStats({
@@ -89,27 +122,27 @@ export default function AdminDashboardScreen() {
           assignedVehicles: dList.length,
           sckVehicles: sckCount,
           sdrVehicles: sdrCount,
-          todayTrips: 18,
-          tripsInProgress: 4,
-          tripsPendingApproval: 3,
-          tripsCompleted: 11,
-          tripsApproved: 11,
-          tripsRejected: 0,
-          totalTripsAllTime: 142,
-          totalContainers: 284,
-          twentyFtContainers: 112,
-          fortyFtContainers: 172,
-          terminalWiseTrips: { CICT: 42, CWIT: 18, ECT: 26, JCT: 24, UCT: 12, SAGT: 20 },
-          recentTrips: getInitialMockTrips(),
+          todayTrips: currentTrips.length,
+          tripsInProgress: inProg,
+          tripsPendingApproval: pend,
+          tripsCompleted: comp,
+          tripsApproved: comp,
+          tripsRejected: rej,
+          totalTripsAllTime: 140 + currentTrips.length,
+          totalContainers: 280 + totCont,
+          twentyFtContainers: 110 + c20,
+          fortyFtContainers: 170 + c40,
+          terminalWiseTrips: termMap,
+          recentTrips: currentTrips.slice(0, 10),
           recentAuditLogs: [],
         });
-        setTrips(getInitialMockTrips());
+        setTrips(currentTrips.slice(0, 10));
       }
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [mockTrips]);
 
   function getInitialMockTrips() {
     return [

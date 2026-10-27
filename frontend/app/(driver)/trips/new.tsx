@@ -13,6 +13,7 @@ import {
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
+import apiClient from '../../../src/services/api';
 import { useAuthStore } from '../../../src/store/authStore';
 import { driverService } from '../../../src/services/driverService';
 import API_BASE_URL from '../../../src/config/api';
@@ -1001,13 +1002,13 @@ export default function NewTripScreen() {
         })),
       };
 
-      const res = await axios.post(`${API_BASE_URL}/trips`, payload);
+      const res = await apiClient.post('/trips', payload);
       const createdTrip = res.data;
 
-      // Immediately sync with client mockTripStore so both Driver and Supervisor tabs reflect this trip in real time
+      // Immediately sync with client mockTripStore so Driver, Supervisor and Admin tabs reflect this trip in real time
       useMockTripStore.getState().addTrip({
-        id: createdTrip.id,
-        tripNumber: createdTrip.tripNumber || createdTrip.id,
+        id: createdTrip.id || `TRP-${Date.now()}`,
+        tripNumber: createdTrip.tripNumber || createdTrip.id || `ITT-${Date.now()}`,
         driverId: user?.driverId || user?.id || 'demo-driver',
         driverCode: user?.driverCode || user?.driverId || 'DRV-00001',
         driverName: driverName || user?.name || user?.fullName || 'Kamal Perera',
@@ -1032,7 +1033,7 @@ export default function NewTripScreen() {
       setShowVerify(false);
       setSentTripNumber(createdTrip.tripNumber || createdTrip.id);
     } catch (err: any) {
-      console.warn('Backend unavailable — simulating successful trip creation for demo mode.');
+      console.warn('Backend warning — falling back to client-synchronized trip creation:', err);
       
       const fallbackVeh = driverTruck || user?.vehicleNumber || 'LY-6439';
       const fallbackChe = resolveCheNumber(fallbackVeh, driverChe || user?.chassisNumber || user?.cheNumber);
@@ -1043,7 +1044,8 @@ export default function NewTripScreen() {
         id: newTripId,
         tripNumber: newTripId,
         driverId: user?.driverId || user?.id || 'demo-driver',
-        driverName: driverName || user?.name || 'Demo Driver',
+        driverCode: user?.driverCode || user?.driverId || 'DRV-00001',
+        driverName: driverName || user?.name || user?.fullName || 'Kamal Perera',
         vehicleNumber: fallbackVeh,
         chassisNumber: fallbackChe,
         chaiNumber: fallbackChe,
@@ -1059,6 +1061,7 @@ export default function NewTripScreen() {
         status: 'IN_PROGRESS',
         containers: allTripContainers.map((c) => ({ ...c, status: 'IN_TRANSIT' })),
         startTime: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
       });
 
       setShowVerify(false);

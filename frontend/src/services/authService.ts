@@ -102,6 +102,13 @@ export interface AuthResponse {
 function normalizeAuthResponse(data: any): AuthResponse {
   const driverData = data.driver || {};
   const driverCode = data.driverCode || driverData.driverCode || (data.user?.driverCode);
+  const rawRole = (data.role || data.user?.role || '').toString().toUpperCase();
+  const role: 'ADMIN' | 'SUPERVISOR' | 'DRIVER' =
+    rawRole === 'ADMIN'
+      ? 'ADMIN'
+      : rawRole === 'SUPERVISOR'
+      ? 'SUPERVISOR'
+      : 'DRIVER';
 
   return {
     token: data.token || (data.user?.token),
@@ -110,8 +117,17 @@ function normalizeAuthResponse(data: any): AuthResponse {
     user: {
       id: data.id || driverData.id || data.user?.id || 'user-1',
       username: data.username || driverCode || data.user?.username || data.email || '',
-      role: (data.role?.toUpperCase() === 'SUPERVISOR' || data.user?.role === 'SUPERVISOR') ? 'SUPERVISOR' : 'DRIVER',
-      name: data.name || data.fullName || driverData.fullName || data.user?.name || 'Driver',
+      role,
+      name:
+        data.name ||
+        data.fullName ||
+        driverData.fullName ||
+        data.user?.name ||
+        (role === 'ADMIN'
+          ? 'System Administrator'
+          : role === 'SUPERVISOR'
+          ? 'Supervisor'
+          : 'Driver'),
       driverId: data.driverId || driverData.id || data.id,
       driverCode: driverCode,
       supervisorId: data.supervisorId || data.user?.supervisorId,

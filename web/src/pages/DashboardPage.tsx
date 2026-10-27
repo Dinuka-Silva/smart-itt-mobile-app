@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { adminWebService, AdminStats } from '../services/adminWebService';
 import { adminFleetWebStore, WebVehicle, WebDriver } from '../store/adminFleetWebStore';
+import { adminTripWebStore, WebTrip } from '../store/adminTripWebStore';
 
 type DashboardTab = 'OVERVIEW' | 'TRIPS' | 'FLEET' | 'SUPERVISORS';
 
@@ -51,6 +52,10 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
 
   useEffect(() => {
     loadDashboard();
+    const unsub = adminTripWebStore.subscribe(() => {
+      loadDashboard();
+    });
+    return unsub;
   }, []);
 
   const loadDashboard = async () => {
@@ -66,53 +71,36 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
       const maintVehicles = vList.filter((v) => v.status === 'MAINTENANCE').length;
       const activeDrivers = dList.filter((d) => d.status === 'ACTIVE').length;
 
-      try {
-        const data = await adminWebService.getStats();
-        setStats({
-          ...data,
-          totalVehicles: vList.length,
-          sckVehicles: sckCount,
-          sdrVehicles: sdrCount,
-          activeVehicles,
-          maintenanceVehicles: maintVehicles,
-          totalDrivers: dList.length,
-          activeDrivers,
-        });
-        if (data.recentTrips && data.recentTrips.length > 0) {
-          setTrips(data.recentTrips);
-        } else {
-          setTrips(getInitialMockTrips());
-        }
-      } catch {
-        setStats({
-          totalDrivers: dList.length,
-          activeDrivers,
-          suspendedDrivers: 0,
-          deactivatedDrivers: 0,
-          totalSupervisors: 6,
-          activeSupervisors: 6,
-          totalVehicles: vList.length,
-          activeVehicles,
-          maintenanceVehicles: maintVehicles,
-          assignedVehicles: dList.length,
-          sckVehicles: sckCount,
-          sdrVehicles: sdrCount,
-          todayTrips: 18,
-          tripsInProgress: 4,
-          tripsPendingApproval: 3,
-          tripsCompleted: 11,
-          tripsApproved: 11,
-          tripsRejected: 0,
-          totalTripsAllTime: 142,
-          totalContainers: 284,
-          twentyFtContainers: 112,
-          fortyFtContainers: 172,
-          terminalWiseTrips: { CICT: 42, CWIT: 18, ECT: 26, JCT: 24, UCT: 12, SAGT: 20 },
-          recentTrips: getInitialMockTrips(),
-          recentAuditLogs: [],
-        });
-        setTrips(getInitialMockTrips());
-      }
+      const tripStats = adminTripWebStore.getDashboardStats();
+      setTrips(tripStats.recentTrips);
+
+      setStats({
+        totalDrivers: dList.length,
+        activeDrivers,
+        suspendedDrivers: dList.filter((d) => d.status === 'SUSPENDED').length,
+        deactivatedDrivers: dList.filter((d) => d.status === 'DEACTIVATED').length,
+        totalSupervisors: 6,
+        activeSupervisors: 6,
+        totalVehicles: vList.length,
+        activeVehicles,
+        maintenanceVehicles: maintVehicles,
+        assignedVehicles: dList.length,
+        sckVehicles: sckCount,
+        sdrVehicles: sdrCount,
+        todayTrips: tripStats.todayTrips,
+        tripsInProgress: tripStats.tripsInProgress,
+        tripsPendingApproval: tripStats.tripsPendingApproval,
+        tripsCompleted: tripStats.tripsCompleted,
+        tripsApproved: tripStats.tripsApproved,
+        tripsRejected: tripStats.tripsRejected,
+        totalTripsAllTime: tripStats.totalTripsAllTime,
+        totalContainers: tripStats.totalContainers,
+        twentyFtContainers: tripStats.twentyFtContainers,
+        fortyFtContainers: tripStats.fortyFtContainers,
+        terminalWiseTrips: tripStats.terminalWiseTrips,
+        recentTrips: tripStats.recentTrips,
+        recentAuditLogs: [],
+      });
     } finally {
       setLoading(false);
     }
@@ -179,16 +167,18 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
     ];
   }
 
+  const formatContainerList = (containers: any, fallbackSize?: string) => {
+    if (!containers || !Array.isArray(containers) || containers.length === 0) return '1 unit';
+    return containers.map((c: any) => typeof c === 'string' ? c : `${c.containerNumber} (${c.size || fallbackSize || '40FT'})`).join(', ');
+  };
+
   const handleTripAction = async (tripId: string, status: 'APPROVED' | 'REJECTED') => {
     try {
-      await adminWebService.actionTrip(tripId, status, `Admin ${status} from Dashboard`);
-    } catch {
-      // offline support
-    } finally {
-      setTrips((prev) =>
-        prev.map((t) => (t.id === tripId ? { ...t, status } : t))
-      );
+      await adminTripWebStore.updateTripStatus(tripId, status, `Admin ${status} from Dashboard`);
       alert(`Trip marked as ${status} successfully!`);
+      await loadDashboard();
+    } catch {
+      alert('Failed to update trip status.');
     }
   };
 
@@ -421,7 +411,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                     <td style={{ color: '#00e5ff', fontWeight: 600 }}>{trip.vehicleNumber} ({trip.chassisNumber})</td>
                     <td style={{ color: '#ffffff', fontWeight: 600 }}>{trip.driverName || 'Authorized Driver'}</td>
                     <td style={{ fontFamily: 'var(--font-mono)' }}>
-                      {Array.isArray(trip.containers) ? trip.containers.join(', ') : '1 unit'}
+                      {formatContainerList(trip.containers, trip.containerSize)}
                     </td>
                     <td>
                       <span
@@ -521,7 +511,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                     <div>
                       <span style={styles.gridInfoLabel}>Containers & ISO Standard:</span>
                       <strong style={{ color: '#ffffff', display: 'block', marginTop: '2px', fontFamily: 'var(--font-mono)' }}>
-                        {Array.isArray(trip.containers) ? trip.containers.join(', ') : '1 unit'} ({trip.containerSize || '40FT'})
+                        {formatContainerList(trip.containers, trip.containerSize)}
                       </strong>
                     </div>
                   </div>

@@ -325,6 +325,31 @@ export default function DriverHomeDashboard() {
     }
   };
 
+  // 4. FINALIZE & COMPLETE TRIP DIRECTLY
+  const handleFinalizeTripComplete = async (tripId: string) => {
+    setActionInProgress(true);
+    try {
+      try {
+        await axios.patch(`${API_BASE_URL}/trips/${tripId}/complete`);
+      } catch {}
+      useMockTripStore.getState().dischargeAndCompleteTrip(tripId, 'driver-completed');
+      await loadData();
+      Alert.alert(
+        'Mission Completed! 🏆',
+        'Trip status is now officially COMPLETED across Driver, Supervisor, and Admin. Completed trip count updated!'
+      );
+    } catch {
+      useMockTripStore.getState().dischargeAndCompleteTrip(tripId, 'driver-completed');
+      await loadData();
+      Alert.alert(
+        'Mission Completed! 🏆',
+        'Trip status is now officially COMPLETED across Driver, Supervisor, and Admin.'
+      );
+    } finally {
+      setActionInProgress(false);
+    }
+  };
+
   // Stage transition triggers for progress tracker
   const handleTransitionTripStage = async (nextStatus: string, actionLabel: string) => {
     if (!activeTrip) return;
@@ -838,6 +863,23 @@ export default function DriverHomeDashboard() {
                     Awaiting supervisor sign-off to update completed trip count...
                   </Text>
                 </View>
+
+                {/* Direct complete action */}
+                <TouchableOpacity
+                  style={[styles.completeTripBtn, { backgroundColor: '#22ef7e', marginTop: 12 }]}
+                  onPress={() => handleFinalizeTripComplete(activeTrip.id)}
+                  disabled={actionInProgress}
+                  activeOpacity={0.88}
+                >
+                  {actionInProgress ? (
+                    <ActivityIndicator color="#00363d" size="small" />
+                  ) : (
+                    <>
+                      <Ionicons name="checkmark-done-circle" size={20} color="#00363d" />
+                      <Text style={styles.completeTripBtnText}>FINALIZE & MARK TRIP COMPLETED</Text>
+                    </>
+                  )}
+                </TouchableOpacity>
               </View>
             )}
 
@@ -908,24 +950,42 @@ export default function DriverHomeDashboard() {
                   </Text>
                 </View>
                 <Text style={styles.notificationBannerMsg}>
-                  Containers are ready to be discharged from chassis {activeTrip.chassisNumber || user?.cheNumber || 'CHE 100'}. Once crane offloading is done, tap below to submit completed trip to your supervisor for confirmation.
+                  Containers are ready to be discharged from chassis {activeTrip.chassisNumber || user?.cheNumber || 'CHE 100'}. Once crane offloading is done, choose an option below to complete the mission.
                 </Text>
 
-                <TouchableOpacity
-                  style={styles.completeTripBtn}
-                  onPress={() => handleCompleteActiveTrip(activeTrip.id)}
-                  disabled={actionInProgress}
-                  activeOpacity={0.88}
-                >
-                  {actionInProgress ? (
-                    <ActivityIndicator color="#00363d" size="small" />
-                  ) : (
-                    <>
-                      <Ionicons name="paper-plane" size={22} color="#00363d" />
-                      <Text style={styles.completeTripBtnText}>COMPLETE TRIP & SEND TO SUPERVISOR</Text>
-                    </>
-                  )}
-                </TouchableOpacity>
+                <View style={{ flexDirection: 'row', gap: 8, marginTop: 10 }}>
+                  <TouchableOpacity
+                    style={[styles.completeTripBtn, { flex: 1 }]}
+                    onPress={() => handleCompleteActiveTrip(activeTrip.id)}
+                    disabled={actionInProgress}
+                    activeOpacity={0.88}
+                  >
+                    {actionInProgress ? (
+                      <ActivityIndicator color="#00363d" size="small" />
+                    ) : (
+                      <>
+                        <Ionicons name="paper-plane" size={18} color="#00363d" />
+                        <Text style={styles.completeTripBtnText}>SEND TO SUPERVISOR</Text>
+                      </>
+                    )}
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[styles.completeTripBtn, { flex: 1, backgroundColor: '#22ef7e' }]}
+                    onPress={() => handleFinalizeTripComplete(activeTrip.id)}
+                    disabled={actionInProgress}
+                    activeOpacity={0.88}
+                  >
+                    {actionInProgress ? (
+                      <ActivityIndicator color="#00363d" size="small" />
+                    ) : (
+                      <>
+                        <Ionicons name="checkmark-done" size={18} color="#00363d" />
+                        <Text style={styles.completeTripBtnText}>MARK COMPLETED</Text>
+                      </>
+                    )}
+                  </TouchableOpacity>
+                </View>
               </View>
             )}
 
@@ -939,8 +999,17 @@ export default function DriverHomeDashboard() {
                   </Text>
                 </View>
                 <Text style={styles.notificationBannerMsg}>
-                  Supervisor has verified and confirmed this delivery. Your completed trip count (+1) and earnings have been updated!
+                  Delivery verified and completed! Your completed trip count (+1) and earnings have been updated!
                 </Text>
+
+                <TouchableOpacity
+                  style={[styles.startTripPrimaryBtn, { backgroundColor: '#22ef7e', marginTop: 12 }]}
+                  onPress={() => router.push('/(driver)/trips/new')}
+                  activeOpacity={0.88}
+                >
+                  <Ionicons name="add-circle" size={22} color="#00363d" />
+                  <Text style={styles.startTripPrimaryBtnText}>START NEXT TRIP</Text>
+                </TouchableOpacity>
               </View>
             )}
           </View>

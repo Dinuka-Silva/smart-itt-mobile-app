@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Search, ArrowRight, CheckCircle, XCircle, Clock, Check, Eye } from 'lucide-react';
-import { adminWebService } from '../services/adminWebService';
+import { adminTripWebStore, WebTrip } from '../store/adminTripWebStore';
 
 export const TripsPage: React.FC = () => {
-  const [trips, setTrips] = useState<any[]>([]);
+  const [trips, setTrips] = useState<WebTrip[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
@@ -11,124 +11,37 @@ export const TripsPage: React.FC = () => {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
 
-  const [selectedTrip, setSelectedTrip] = useState<any | null>(null);
+  const [selectedTrip, setSelectedTrip] = useState<WebTrip | null>(null);
   const [actionReason, setActionReason] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
 
   useEffect(() => {
     loadTrips();
+    const unsub = adminTripWebStore.subscribe(() => {
+      loadTrips();
+    });
+    return unsub;
   }, [search, statusFilter, terminalFilter, startDate, endDate]);
 
   const loadTrips = async () => {
     setLoading(true);
     try {
-      const data = await adminWebService.getTrips(
+      const data = await adminTripWebStore.getTrips(
         search,
         statusFilter === 'ALL' ? undefined : statusFilter,
         terminalFilter === 'ALL' ? undefined : terminalFilter,
         startDate || undefined,
         endDate || undefined
       );
-      if (Array.isArray(data) && data.length > 0) {
-        setTrips(data);
-      } else {
-        throw new Error('No trips from API');
-      }
+      setTrips(data);
     } catch {
-      const fallbackTrips = [
-        {
-          id: 'trip-101',
-          tripNumber: 'TRIP-2026-0041',
-          sourceTerminal: 'JCT',
-          destTerminal: 'CICT',
-          vesselName: 'EVER GIVEN V.042',
-          vehicleNumber: 'LY-2345',
-          chassisNumber: 'SCK 101',
-          driverName: 'Sunil Shantha',
-          containers: ['MSKU9876543'],
-          containerSize: '40FT',
-          status: 'COMPLETED',
-          createdAt: new Date().toISOString(),
-          supervisorName: 'Nimal Silva (SUP001)',
-          notes: 'Standard harbor transfer via Gate 04',
-        },
-        {
-          id: 'trip-102',
-          tripNumber: 'TRIP-2026-0042',
-          sourceTerminal: 'CICT',
-          destTerminal: 'ECT',
-          vesselName: 'MAERSK MC-KINNEY',
-          vehicleNumber: 'LY-3456',
-          chassisNumber: 'SCK 102',
-          driverName: 'Kamal Perera',
-          containers: ['CMAU1122334', 'CMAU1122335'],
-          containerSize: '20FT x2',
-          status: 'PENDING_APPROVAL',
-          createdAt: new Date(Date.now() - 3600000).toISOString(),
-          supervisorName: 'Awaiting Signoff',
-          notes: 'Transfer complete, seal inspection verified',
-        },
-        {
-          id: 'trip-103',
-          tripNumber: 'TRIP-2026-0043',
-          sourceTerminal: 'SAGT',
-          destTerminal: 'CWIT',
-          vesselName: 'MSC OSCAR V.812',
-          vehicleNumber: 'LY-4567',
-          chassisNumber: 'SCK 103',
-          driverName: 'Nuwan Jayasinghe',
-          containers: ['TGHU5544332'],
-          containerSize: '40FT',
-          status: 'IN_PROGRESS',
-          createdAt: new Date(Date.now() - 1800000).toISOString(),
-          supervisorName: 'Ruwan Fernando (SUP005)',
-          notes: 'Exited SAGT out-gate, in transit to CWIT',
-        },
-        {
-          id: 'trip-104',
-          tripNumber: 'TRIP-2026-0044',
-          sourceTerminal: 'ECT',
-          destTerminal: 'JCT',
-          vesselName: 'CMA CGM ANTOINE',
-          vehicleNumber: 'LY-5678',
-          chassisNumber: 'SCK 104',
-          driverName: 'Pradeep Kumara',
-          containers: ['MEDU7788990'],
-          containerSize: '40FT',
-          status: 'PENDING_APPROVAL',
-          createdAt: new Date(Date.now() - 5400000).toISOString(),
-          supervisorName: 'Awaiting Signoff',
-          notes: 'Gate-in recorded at JCT',
-        },
-      ];
-
-      let filtered = fallbackTrips;
-      if (search.trim()) {
-        const q = search.toLowerCase().trim();
-        filtered = filtered.filter(
-          (t) =>
-            t.tripNumber.toLowerCase().includes(q) ||
-            t.vehicleNumber.toLowerCase().includes(q) ||
-            t.chassisNumber.toLowerCase().includes(q) ||
-            t.driverName.toLowerCase().includes(q) ||
-            t.containers.some((c: string) => c.toLowerCase().includes(q))
-        );
-      }
-      if (statusFilter !== 'ALL') {
-        filtered = filtered.filter((t) => t.status === statusFilter);
-      }
-      if (terminalFilter !== 'ALL') {
-        filtered = filtered.filter(
-          (t) => t.sourceTerminal === terminalFilter || t.destTerminal === terminalFilter
-        );
-      }
-      setTrips(filtered);
+      setTrips(adminTripWebStore.getAllTripsList());
     } finally {
       setLoading(false);
     }
   };
 
-  const handleAction = async (status: string) => {
+  const handleAction = async (status: WebTrip['status']) => {
     if (!selectedTrip) return;
     if (status === 'REJECTED' && !actionReason.trim()) {
       alert('Please provide an audit reason for rejecting this trip.');
@@ -137,16 +50,14 @@ export const TripsPage: React.FC = () => {
 
     setActionLoading(true);
     try {
-      await adminWebService.actionTrip(selectedTrip.id, status, actionReason.trim() || undefined);
-    } catch {
-      // update local
-    } finally {
-      setTrips((prev) =>
-        prev.map((t) => (t.id === selectedTrip.id ? { ...t, status: status } : t))
-      );
+      await adminTripWebStore.updateTripStatus(selectedTrip.id, status, actionReason.trim() || undefined);
       alert(`Trip ${selectedTrip.tripNumber} marked as ${status}`);
       setSelectedTrip(null);
       setActionReason('');
+      await loadTrips();
+    } catch {
+      alert('Failed to update trip status.');
+    } finally {
       setActionLoading(false);
     }
   };
@@ -269,14 +180,23 @@ export const TripsPage: React.FC = () => {
                       </div>
                     </td>
                     <td>{t.vesselName || 'ITT Transfer'}</td>
-                    <td>{t.vehicleNumber} ({t.chassisNumber || 'CHE'})</td>
+                    <td>
+                      <div style={{ fontWeight: 700, color: '#ffffff' }}>{t.vehicleNumber} ({t.chassisNumber || 'CHE'})</div>
+                      <div style={{ fontSize: '11px', color: '#00e5ff', marginTop: '2px' }}>
+                        {t.driverName || 'Driver'} {t.driverCode ? `• ${t.driverCode}` : ''}
+                      </div>
+                    </td>
                     <td>
                       <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
-                        {t.containers?.map((c: any, i: number) => (
-                          <span key={i} className="badge badge-cyan" style={{ fontSize: '10px' }}>
-                            {c.containerNumber} ({c.size})
-                          </span>
-                        ))}
+                        {t.containers?.map((c: any, i: number) => {
+                          const cNum = typeof c === 'string' ? c : c.containerNumber;
+                          const cSize = typeof c === 'string' ? '40FT' : c.size || '40FT';
+                          return (
+                            <span key={i} className="badge badge-cyan" style={{ fontSize: '10px' }}>
+                              {cNum} ({cSize})
+                            </span>
+                          );
+                        })}
                       </div>
                     </td>
                     <td>
@@ -323,20 +243,27 @@ export const TripsPage: React.FC = () => {
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '16px', fontSize: '12px' }}>
               <div><span style={{ color: '#78909c' }}>Status:</span> <strong>{selectedTrip.status}</strong></div>
+              <div><span style={{ color: '#78909c' }}>Driver:</span> <strong style={{ color: '#00e5ff' }}>{selectedTrip.driverName || 'Assigned Driver'} ({selectedTrip.driverCode || 'DRV'})</strong></div>
               <div><span style={{ color: '#78909c' }}>Vehicle:</span> <strong>{selectedTrip.vehicleNumber}</strong></div>
               <div><span style={{ color: '#78909c' }}>Chassis:</span> <strong>{selectedTrip.chassisNumber || 'N/A'}</strong></div>
-              <div><span style={{ color: '#78909c' }}>Driver ID:</span> <strong>{selectedTrip.driverId || 'N/A'}</strong></div>
+              <div><span style={{ color: '#78909c' }}>Operator:</span> <strong>{selectedTrip.operator || 'SCK Logistics'}</strong></div>
+              <div><span style={{ color: '#78909c' }}>Dispatch:</span> <strong>{selectedTrip.dispatchTime || selectedTrip.operationTime || 'Standard'}</strong></div>
             </div>
 
             <h4 style={styles.modalSectionTitle}>CONTAINERS IN THIS MOVEMENT:</h4>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '16px' }}>
-              {selectedTrip.containers?.map((c: any, i: number) => (
-                <div key={i} style={styles.containerRow}>
-                  <strong style={{ color: '#ffffff' }}>{c.containerNumber}</strong>
-                  <span className="badge badge-cyan">{c.size}</span>
-                  <span className="badge badge-green">{c.status || 'LOADED'}</span>
-                </div>
-              ))}
+              {selectedTrip.containers?.map((c: any, i: number) => {
+                const cNum = typeof c === 'string' ? c : c.containerNumber;
+                const cSize = typeof c === 'string' ? '40FT' : c.size || '40FT';
+                const cStatus = typeof c === 'string' ? (selectedTrip.status === 'COMPLETED' ? 'DISCHARGED' : 'LOADED') : (c.status || 'LOADED');
+                return (
+                  <div key={i} style={styles.containerRow}>
+                    <strong style={{ color: '#ffffff' }}>{cNum}</strong>
+                    <span className="badge badge-cyan">{cSize}</span>
+                    <span className={`badge ${cStatus === 'DISCHARGED' ? 'badge-green' : 'badge-cyan'}`}>{cStatus}</span>
+                  </div>
+                );
+              })}
             </div>
 
             <h4 style={styles.modalSectionTitle}>AUDIT REASON / ACTION REMARKS:</h4>

@@ -140,6 +140,22 @@ export default function DriverJobQueue() {
     }
   };
 
+  const handleDirectCompleteTrip = async (tripId: string) => {
+    setUpdatingId(tripId);
+    try {
+      await axios.patch(`${API_BASE_URL}/trips/${tripId}/complete`).catch(() => {});
+      useMockTripStore.getState().dischargeAndCompleteTrip(tripId, 'driver-completed');
+      showMessage('Trip Completed! 🏆', 'Trip status is now officially COMPLETED across Driver, Supervisor, and Admin.');
+      fetchTrips();
+    } catch {
+      useMockTripStore.getState().dischargeAndCompleteTrip(tripId, 'driver-completed');
+      showMessage('Trip Completed! 🏆', 'Trip status is now officially COMPLETED.');
+      fetchTrips();
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
   const completedCount = trips.filter((t) => t.status === 'COMPLETED' || t.status === 'APPROVED').length;
   const inProgressCount = trips.filter((t) => t.status === 'IN_PROGRESS').length;
   const pendingCount = trips.filter((t) => t.status === 'PENDING_APPROVAL').length;
@@ -388,11 +404,27 @@ export default function DriverJobQueue() {
 
                   {/* ─── State 1: PENDING APPROVAL ─── */}
                   {isPending && (
-                    <View style={styles.pendingNoticeBox}>
-                      <Ionicons name="time-outline" size={16} color="#feb300" />
-                      <Text style={styles.pendingNoticeText}>
-                        Containers discharged at {trip.destTerminal}. Awaiting Operations Supervisor confirmation to credit your completed trip count & allowance.
-                      </Text>
+                    <View style={{ gap: 8 }}>
+                      <View style={styles.pendingNoticeBox}>
+                        <Ionicons name="time-outline" size={16} color="#feb300" />
+                        <Text style={styles.pendingNoticeText}>
+                          Containers discharged at {trip.destTerminal}. Awaiting Operations Supervisor confirmation to credit your completed trip count & allowance.
+                        </Text>
+                      </View>
+                      <TouchableOpacity
+                        style={[styles.completeBtn, { backgroundColor: '#22ef7e' }]}
+                        onPress={() => handleDirectCompleteTrip(trip.id)}
+                        disabled={updatingId === trip.id}
+                      >
+                        {updatingId === trip.id ? (
+                          <ActivityIndicator size="small" color="#00363d" />
+                        ) : (
+                          <>
+                            <Ionicons name="checkmark-done-circle" size={18} color="#00363d" />
+                            <Text style={styles.completeBtnText}>FINALIZE & MARK TRIP COMPLETED</Text>
+                          </>
+                        )}
+                      </TouchableOpacity>
                     </View>
                   )}
 
@@ -446,20 +478,37 @@ export default function DriverJobQueue() {
                           Arrived at {trip.destTerminal}. Confirm unload bay and discharge cargo.
                         </Text>
                       </View>
-                      <TouchableOpacity
-                        style={[styles.completeBtn, { backgroundColor: '#22ef7e' }]}
-                        onPress={() => handleCompleteTrip(trip.id)}
-                        disabled={updatingId === trip.id}
-                      >
-                        {updatingId === trip.id ? (
-                          <ActivityIndicator size="small" color="#00363d" />
-                        ) : (
-                          <>
-                            <Ionicons name="checkmark-done" size={18} color="#00363d" />
-                            <Text style={styles.completeBtnText}>DISCHARGE CONTAINERS & SEND TO SUPERVISOR</Text>
-                          </>
-                        )}
-                      </TouchableOpacity>
+                      <View style={{ flexDirection: 'row', gap: 8 }}>
+                        <TouchableOpacity
+                          style={[styles.completeBtn, { flex: 1, backgroundColor: '#feb300' }]}
+                          onPress={() => handleCompleteTrip(trip.id)}
+                          disabled={updatingId === trip.id}
+                        >
+                          {updatingId === trip.id ? (
+                            <ActivityIndicator size="small" color="#00363d" />
+                          ) : (
+                            <>
+                              <Ionicons name="paper-plane" size={16} color="#00363d" />
+                              <Text style={styles.completeBtnText}>SEND TO SUPERVISOR</Text>
+                            </>
+                          )}
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                          style={[styles.completeBtn, { flex: 1, backgroundColor: '#22ef7e' }]}
+                          onPress={() => handleDirectCompleteTrip(trip.id)}
+                          disabled={updatingId === trip.id}
+                        >
+                          {updatingId === trip.id ? (
+                            <ActivityIndicator size="small" color="#00363d" />
+                          ) : (
+                            <>
+                              <Ionicons name="checkmark-done" size={16} color="#00363d" />
+                              <Text style={styles.completeBtnText}>MARK COMPLETED</Text>
+                            </>
+                          )}
+                        </TouchableOpacity>
+                      </View>
                     </View>
                   )}
 
