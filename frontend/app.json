@@ -6,20 +6,9 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
-    "splash": {
-      "image": "./assets/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#070c14"
-    },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.smartitt.app",
-      "splash": {
-        "image": "./assets/splash-icon.png",
-        "resizeMode": "contain",
-        "backgroundColor": "#070c14"
-      }
+      "bundleIdentifier": "com.smartitt.app"
     },
     "android": {
       "adaptiveIcon": {
@@ -29,12 +18,7 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "package": "com.smartitt.app",
-      "predictiveBackGestureEnabled": false,
-      "splash": {
-        "image": "./assets/splash-icon.png",
-        "resizeMode": "contain",
-        "backgroundColor": "#070c14"
-      }
+      "predictiveBackGestureEnabled": false
     },
     "web": {
       "favicon": "./assets/favicon.png",
@@ -44,7 +28,16 @@
       "expo-router",
       "expo-status-bar",
       "expo-sqlite",
-      "expo-secure-store"
+      "expo-secure-store",
+      "expo-font",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#070c14"
+        }
+      ]
     ],
     "extra": {
       "router": {
