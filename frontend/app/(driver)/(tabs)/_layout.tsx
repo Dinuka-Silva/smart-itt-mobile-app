@@ -1,35 +1,36 @@
+import React from 'react';
+import { View, StyleSheet, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { useTheme } from '@/hooks/use-theme';
-import { colors } from '@/theme';
-
 export default function DriverTabsLayout() {
-  const theme = useTheme();
   const insets = useSafeAreaInsets();
-  const bottomInset = Math.max(insets.bottom, 10);
+  const bottomInset = Math.max(insets.bottom, 12);
 
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: colors.primaryContainer,
-        tabBarInactiveTintColor: colors.outline,
+        tabBarActiveTintColor: '#00e5ff',
+        tabBarInactiveTintColor: '#64748b',
         tabBarStyle: {
-          backgroundColor: '#080e17',
+          backgroundColor: '#070c14',
           borderTopWidth: 1,
-          borderTopColor: '#242a34',
-          elevation: 8,
-          height: 60 + bottomInset,
+          borderTopColor: 'rgba(255, 255, 255, 0.08)',
+          elevation: 12,
+          shadowColor: '#000000',
+          shadowOffset: { width: 0, height: -4 },
+          shadowOpacity: 0.3,
+          shadowRadius: 12,
+          height: 64 + bottomInset,
           paddingBottom: bottomInset,
           paddingTop: 8,
         },
         tabBarLabelStyle: {
-          fontSize: 11,
-          fontWeight: '800',
-          letterSpacing: 0.8,
-          textTransform: 'uppercase',
+          fontSize: 10,
+          fontWeight: '700',
+          letterSpacing: 0.5,
           marginTop: 2,
         },
       }}
@@ -37,9 +38,11 @@ export default function DriverTabsLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
+          title: 'Cockpit',
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? 'home' : 'home-outline'} size={24} color={color as any} />
+            <View style={[styles.iconWrap, focused && styles.iconWrapActive]}>
+              <Ionicons name={focused ? 'speedometer' : 'speedometer-outline'} size={22} color={color as any} />
+            </View>
           ),
         }}
       />
@@ -48,7 +51,9 @@ export default function DriverTabsLayout() {
         options={{
           title: 'My Trips',
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? 'trail-sign' : 'trail-sign-outline'} size={24} color={color as any} />
+            <View style={[styles.iconWrap, focused && styles.iconWrapActive]}>
+              <Ionicons name={focused ? 'swap-horizontal' : 'swap-horizontal-outline'} size={22} color={color as any} />
+            </View>
           ),
         }}
       />
@@ -57,7 +62,9 @@ export default function DriverTabsLayout() {
         options={{
           title: 'Containers',
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? 'cube' : 'cube-outline'} size={24} color={color as any} />
+            <View style={[styles.iconWrap, focused && styles.iconWrapActive]}>
+              <Ionicons name={focused ? 'cube' : 'cube-outline'} size={22} color={color as any} />
+            </View>
           ),
         }}
       />
@@ -66,10 +73,23 @@ export default function DriverTabsLayout() {
         options={{
           title: 'Profile',
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? 'person' : 'person-outline'} size={24} color={color as any} />
+            <View style={[styles.iconWrap, focused && styles.iconWrapActive]}>
+              <Ionicons name={focused ? 'person' : 'person-outline'} size={22} color={color as any} />
+            </View>
           ),
         }}
       />
     </Tabs>
   );
 }
+
+const styles = StyleSheet.create({
+  iconWrap: {
+    paddingHorizontal: 12,
+    paddingVertical: 3,
+    borderRadius: 12,
+  },
+  iconWrapActive: {
+    backgroundColor: 'rgba(0, 229, 255, 0.12)',
+  },
+});

@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 import { storage } from './storage';
 import API_BASE_URL, { API_KEY } from '../config/api';
 
@@ -8,8 +8,16 @@ const apiClient = axios.create({
     'Content-Type': 'application/json',
     'X-API-KEY': API_KEY,
   },
-  timeout: 10000,
+  timeout: 15000,
 });
+
+// Listener for 401 unauthorized session expiry
+type UnauthorizedHandler = () => void;
+let unauthorizedHandler: UnauthorizedHandler | null = null;
+
+export function registerUnauthorizedHandler(handler: UnauthorizedHandler) {
+  unauthorizedHandler = handler;
+}
 
 // Request interceptor to add auth token
 apiClient.interceptors.request.use(
@@ -19,8 +27,8 @@ apiClient.interceptors.request.use(
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
-    } catch (error) {
-      console.error('Error reading token from storage:', error);
+    } catch {
+      // Avoid verbose logging of internal token reads
     }
     return config;
   },
@@ -29,23 +37,29 @@ apiClient.interceptors.request.use(
   }
 );
 
-// Response interceptor for error handling
+// Response interceptor for error handling and session termination
 apiClient.interceptors.response.use(
   (response) => response,
-  (error) => {
+  (error: AxiosError) => {
     if (error.response) {
-      // Handle 401 without popping LogBox error modal
-      if (error.response.status === 401) {
-        console.warn('API Auth (401):', error.response.data?.message || 'Unauthorized');
-      } else {
-        console.error('API Error:', error.response.status, error.response.data);
+      const status = error.response.status;
+
+      // Session expiration or revoked credentials
+      if (status === 401) {
+        console.warn('[Security] Session expired or unauthorized (401). Triggering session cleanup.');
+        if (unauthorizedHandler) {
+          unauthorizedHandler();
+        }
+      } else if (status === 403) {
+        console.warn('[Security] Access forbidden (403): Insufficient role privileges.');
+      } else if (status >= 500) {
+        console.warn(`[API] Server responded with error status ${status}`);
       }
     } else if (error.request) {
-      // Request made but no response (offline / connection timeout)
-      console.warn('Network Notice:', error.message);
+      // Request made but offline / timeout
+      console.warn('[Network] Host unreachable or request timed out.');
     } else {
-      // Error in request setup
-      console.error('Request Error:', error.message);
+      console.warn('[Network] Request configuration error.');
     }
     return Promise.reject(error);
   }

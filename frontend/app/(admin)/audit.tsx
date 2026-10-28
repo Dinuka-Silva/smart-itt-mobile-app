@@ -11,6 +11,7 @@ import {
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { adminService } from '../../src/services/adminService';
+import { securityAuditService } from '../../src/services/securityAuditService';
 import { useResponsive } from '../../src/hooks/useResponsive';
 
 export default function AdminAuditScreen() {
@@ -24,13 +25,43 @@ export default function AdminAuditScreen() {
 
   const fetchAuditLogs = useCallback(async () => {
     try {
-      const data = await adminService.getAuditLogs(
-        0,
-        50,
-        entityFilter === 'ALL' ? undefined : entityFilter
-      );
-      setLogs(data?.content || data || []);
-    } catch (err: any) {
+      const mobileLogs = await securityAuditService.getRecentEvents();
+      const mappedMobile = mobileLogs.map((m) => ({
+        id: m.id,
+        action: m.type,
+        entityType: 'MOBILE_SECURITY',
+        description: m.description,
+        performedBy: m.username,
+        createdAt: m.timestamp,
+        severity: m.severity,
+      }));
+
+      let serverLogs: any[] = [];
+      if (entityFilter !== 'MOBILE_SECURITY') {
+        try {
+          const data = await adminService.getAuditLogs(
+            0,
+            50,
+            entityFilter === 'ALL' ? undefined : entityFilter
+          );
+          serverLogs = data?.content || data || [];
+        } catch {
+          serverLogs = [];
+        }
+      }
+
+      if (entityFilter === 'MOBILE_SECURITY') {
+        setLogs(mappedMobile);
+      } else if (entityFilter === 'ALL') {
+        setLogs(
+          [...mappedMobile, ...serverLogs].sort(
+            (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          )
+        );
+      } else {
+        setLogs(serverLogs);
+      }
+    } catch {
       setLogs([]);
     } finally {
       setLoading(false);
@@ -70,7 +101,7 @@ export default function AdminAuditScreen() {
       {/* Filter Pills */}
       <View style={styles.filterBar}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          {['ALL', 'DRIVER', 'VEHICLE', 'SUPERVISOR', 'TRIP'].map((f) => (
+          {['ALL', 'MOBILE_SECURITY', 'DRIVER', 'VEHICLE', 'SUPERVISOR', 'TRIP'].map((f) => (
             <TouchableOpacity
               key={f}
               style={[styles.filterPill, entityFilter === f && styles.filterPillActive]}
@@ -83,7 +114,7 @@ export default function AdminAuditScreen() {
                   entityFilter === f && styles.filterPillTextActive,
                 ]}
               >
-                {f}
+                {f.replace('_', ' ')}
               </Text>
             </TouchableOpacity>
           ))}

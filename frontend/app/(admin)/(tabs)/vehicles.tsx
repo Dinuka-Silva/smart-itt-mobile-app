@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -16,6 +16,7 @@ import { adminService } from '../../../src/services/adminService';
 import { adminFleetStore } from '../../../src/store/adminFleetStore';
 import { useResponsive } from '../../../src/hooks/useResponsive';
 import { AdminSignOutModal } from '../../../src/components/AdminSignOutModal';
+import { StatusPill } from '../../../src/components/StatusPill';
 
 export default function AdminVehiclesScreen() {
   const { topInset, bottomInset, containerPaddingHorizontal } = useResponsive();
@@ -27,6 +28,13 @@ export default function AdminVehiclesScreen() {
   const [search, setSearch] = useState('');
   const [operatorFilter, setOperatorFilter] = useState<'ALL' | 'SCK Logistics' | 'SDR LINK'>('ALL');
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'ACTIVE' | 'MAINTENANCE'>('ALL');
+
+  const totalFleetCount = vehicles.length;
+  const activeCount = useMemo(() => vehicles.filter((v) => v.status === 'ACTIVE').length, [vehicles]);
+  const maintCount = useMemo(() => vehicles.filter((v) => v.status === 'MAINTENANCE').length, [vehicles]);
+  const assignedCount = useMemo(() => vehicles.filter((v) => !!v.driverName).length, [vehicles]);
+  const sckCount = useMemo(() => vehicles.filter((v) => v.operator !== 'SDR LINK').length, [vehicles]);
+  const sdrCount = useMemo(() => vehicles.filter((v) => v.operator === 'SDR LINK').length, [vehicles]);
 
   // Add Vehicle Modal State
   const [createModalVisible, setCreateModalVisible] = useState(false);
@@ -205,24 +213,25 @@ export default function AdminVehiclesScreen() {
     <View style={styles.root}>
       {/* Top Header */}
       <View style={[styles.header, { paddingTop: Math.max(topInset, 16) }]}>
-        <View>
-          <Text style={styles.headerTitle}>Fleet & Vehicle Management</Text>
-          <Text style={styles.headerSubtitle}>{vehicles.length} prime mover units registered</Text>
+        <View style={{ flex: 1 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <View style={styles.headerDot} />
+            <Text style={styles.headerTitle}>Fleet & Prime Movers</Text>
+          </View>
+          <Text style={styles.headerSubtitle}>
+            {totalFleetCount} Registered Units • {activeCount} Operational
+          </Text>
         </View>
 
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
           <TouchableOpacity
             style={styles.addVehicleBtn}
             onPress={() => setCreateModalVisible(true)}
             activeOpacity={0.8}
           >
-            <Ionicons name="add" size={16} color="#070f1e" />
-            <Text style={styles.addVehicleBtnText}>ADD VEHICLE</Text>
+            <Ionicons name="add" size={16} color="#070c14" />
+            <Text style={styles.addVehicleBtnText}>ADD UNIT</Text>
           </TouchableOpacity>
-          <View style={styles.fleetBadge}>
-            <Ionicons name="bus" size={13} color="#00e5ff" style={{ marginRight: 3 }} />
-            <Text style={styles.fleetBadgeText}>{vehicles.length} FLEET</Text>
-          </View>
           <TouchableOpacity
             style={styles.headerLogoutBtn}
             onPress={() => setSignOutModalVisible(true)}
@@ -233,7 +242,42 @@ export default function AdminVehiclesScreen() {
         </View>
       </View>
 
-      {/* Filter Bar */}
+      {/* Fleet Analytics HUD Strip */}
+      <View style={styles.hudContainer}>
+        <View style={[styles.hudCard, styles.hudCardTotal]}>
+          <View style={styles.hudIconRow}>
+            <Ionicons name="car-sport" size={13} color="#00e5ff" />
+            <Text style={styles.hudLabel}>TOTAL FLEET</Text>
+          </View>
+          <Text style={[styles.hudValue, { color: '#00e5ff' }]}>{totalFleetCount}</Text>
+        </View>
+
+        <View style={[styles.hudCard, styles.hudCardActive]}>
+          <View style={styles.hudIconRow}>
+            <Ionicons name="checkmark-circle" size={13} color="#00e676" />
+            <Text style={styles.hudLabel}>ACTIVE</Text>
+          </View>
+          <Text style={[styles.hudValue, { color: '#00e676' }]}>{activeCount}</Text>
+        </View>
+
+        <View style={[styles.hudCard, styles.hudCardMaint]}>
+          <View style={styles.hudIconRow}>
+            <Ionicons name="construct" size={13} color="#ffab00" />
+            <Text style={styles.hudLabel}>MAINT</Text>
+          </View>
+          <Text style={[styles.hudValue, { color: '#ffab00' }]}>{maintCount}</Text>
+        </View>
+
+        <View style={[styles.hudCard, styles.hudCardAssigned]}>
+          <View style={styles.hudIconRow}>
+            <Ionicons name="person" size={13} color="#29b6f6" />
+            <Text style={styles.hudLabel}>ASSIGNED</Text>
+          </View>
+          <Text style={[styles.hudValue, { color: '#29b6f6' }]}>{assignedCount}</Text>
+        </View>
+      </View>
+
+      {/* Filter Bar with Dual Segmented Controls */}
       <View style={styles.filterBar}>
         <View style={styles.searchWrap}>
           <Ionicons name="search" size={16} color="#78909c" style={{ marginRight: 8 }} />
@@ -253,15 +297,39 @@ export default function AdminVehiclesScreen() {
 
         {/* Operator Filter Tabs */}
         <View style={styles.tabsRow}>
-          {(['ALL', 'SCK Logistics', 'SDR LINK'] as const).map((op) => (
+          {([
+            { key: 'ALL', label: `ALL (${totalFleetCount})` },
+            { key: 'SCK Logistics', label: `SCK (${sckCount})` },
+            { key: 'SDR LINK', label: `SDR (${sdrCount})` },
+          ] as const).map((tab) => (
             <TouchableOpacity
-              key={op}
-              style={[styles.opTab, operatorFilter === op && styles.opTabActive]}
-              onPress={() => setOperatorFilter(op)}
+              key={tab.key}
+              style={[styles.opTab, operatorFilter === tab.key && styles.opTabActive]}
+              onPress={() => setOperatorFilter(tab.key)}
               activeOpacity={0.7}
             >
-              <Text style={[styles.opTabText, operatorFilter === op && styles.opTabTextActive]}>
-                {op}
+              <Text style={[styles.opTabText, operatorFilter === tab.key && styles.opTabTextActive]}>
+                {tab.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        {/* Status Filter Tabs */}
+        <View style={[styles.tabsRow, { marginTop: 8 }]}>
+          {([
+            { key: 'ALL', label: 'ALL STATUS' },
+            { key: 'ACTIVE', label: `ACTIVE (${activeCount})` },
+            { key: 'MAINTENANCE', label: `IN MAINT (${maintCount})` },
+          ] as const).map((tab) => (
+            <TouchableOpacity
+              key={tab.key}
+              style={[styles.statusFilterTab, statusFilter === tab.key && styles.statusFilterTabActive]}
+              onPress={() => setStatusFilter(tab.key)}
+              activeOpacity={0.7}
+            >
+              <Text style={[styles.statusFilterTabText, statusFilter === tab.key && styles.statusFilterTabTextActive]}>
+                {tab.label}
               </Text>
             </TouchableOpacity>
           ))}
@@ -290,7 +358,7 @@ export default function AdminVehiclesScreen() {
         >
           {vehicles.length === 0 ? (
             <View style={styles.emptyCard}>
-              <Ionicons name="car-sport-outline" size={32} color="#607d8b" />
+              <Ionicons name="car-sport-outline" size={36} color="#607d8b" />
               <Text style={styles.emptyCardText}>No vehicles match the selected criteria.</Text>
             </View>
           ) : (
@@ -306,7 +374,10 @@ export default function AdminVehiclesScreen() {
               >
                 <View style={styles.cardTopRow}>
                   <View style={styles.vehicleNumberWrap}>
-                    <Text style={styles.vehicleNumberText}>{v.vehicleNumber}</Text>
+                    <View style={styles.plateBadge}>
+                      <Ionicons name="car-outline" size={14} color="#00e5ff" style={{ marginRight: 6 }} />
+                      <Text style={styles.vehicleNumberText}>{v.vehicleNumber}</Text>
+                    </View>
                     <View style={styles.cheBadge}>
                       <Text style={styles.cheBadgeText}>{v.chassisNumber || v.cheNumber || 'CHE'}</Text>
                     </View>
@@ -322,14 +393,7 @@ export default function AdminVehiclesScreen() {
                       <Text style={styles.opPillText}>{v.operator || 'SCK Logistics'}</Text>
                     </View>
 
-                    <View
-                      style={[
-                        styles.statusBadge,
-                        v.status === 'ACTIVE' ? styles.statusActive : styles.statusMaint,
-                      ]}
-                    >
-                      <Text style={styles.statusBadgeText}>{v.status || 'ACTIVE'}</Text>
-                    </View>
+                    <StatusPill status={v.status || 'ACTIVE'} size="sm" />
                   </View>
                 </View>
 
@@ -355,12 +419,19 @@ export default function AdminVehiclesScreen() {
 
                 <View style={styles.divider} />
 
-                {/* Driver Assignment & Actions */}
+                {/* Driver Assignment & Tactile Actions */}
                 <View style={styles.cardBottomRow}>
                   <View style={styles.driverInfoCol}>
-                    <Text style={styles.driverLabel}>ASSIGNED DRIVER</Text>
-                    <Text style={styles.driverNameVal}>
-                      {v.driverName ? `${v.driverName} (${v.driverCode})` : 'Unassigned'}
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                      <Ionicons
+                        name="person-circle-outline"
+                        size={15}
+                        color={v.driverName ? '#90caf9' : '#ffab00'}
+                      />
+                      <Text style={styles.driverLabel}>ASSIGNED OPERATOR</Text>
+                    </View>
+                    <Text style={[styles.driverNameVal, !v.driverName && { color: '#ffab00', fontStyle: 'italic' }]}>
+                      {v.driverName ? `${v.driverName} (${v.driverCode})` : 'Unassigned (Tap Assign)'}
                     </Text>
                   </View>
 
@@ -370,7 +441,7 @@ export default function AdminVehiclesScreen() {
                       onPress={() => openEditVehicle(v)}
                       activeOpacity={0.8}
                     >
-                      <Ionicons name="create-outline" size={11} color="#00e5ff" style={{ marginRight: 2 }} />
+                      <Ionicons name="create-outline" size={13} color="#00e5ff" style={{ marginRight: 3 }} />
                       <Text style={styles.editBtnText}>EDIT</Text>
                     </TouchableOpacity>
 
@@ -382,6 +453,7 @@ export default function AdminVehiclesScreen() {
                       }}
                       activeOpacity={0.8}
                     >
+                      <Ionicons name="person-add-outline" size={13} color="#00e5ff" style={{ marginRight: 3 }} />
                       <Text style={styles.assignBtnText}>ASSIGN</Text>
                     </TouchableOpacity>
 
@@ -395,8 +467,14 @@ export default function AdminVehiclesScreen() {
                       }}
                       activeOpacity={0.8}
                     >
+                      <Ionicons
+                        name={v.status === 'ACTIVE' ? 'construct-outline' : 'checkmark-circle-outline'}
+                        size={13}
+                        color="#ffffff"
+                        style={{ marginRight: 3 }}
+                      />
                       <Text style={styles.toggleStatusBtnText}>
-                        {v.status === 'ACTIVE' ? 'SET MAINT' : 'ACTIVATE'}
+                        {v.status === 'ACTIVE' ? 'MAINT' : 'ACTIVATE'}
                       </Text>
                     </TouchableOpacity>
                   </View>
@@ -1093,9 +1171,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingBottom: 14,
-    backgroundColor: '#0a1628',
+    backgroundColor: '#0a1019',
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  headerDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#00e5ff',
   },
   headerTitle: {
     fontSize: 18,
@@ -1124,16 +1208,63 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     letterSpacing: 0.5,
   },
+  hudContainer: {
+    flexDirection: 'row',
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    backgroundColor: '#070c14',
+    gap: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.06)',
+  },
+  hudCard: {
+    flex: 1,
+    backgroundColor: '#0c1524',
+    borderRadius: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  hudCardTotal: {
+    borderColor: 'rgba(0, 229, 255, 0.3)',
+  },
+  hudCardActive: {
+    borderColor: 'rgba(0, 230, 118, 0.3)',
+  },
+  hudCardMaint: {
+    borderColor: 'rgba(255, 171, 0, 0.3)',
+  },
+  hudCardAssigned: {
+    borderColor: 'rgba(41, 182, 246, 0.3)',
+  },
+  hudIconRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginBottom: 4,
+  },
+  hudLabel: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: '#78909c',
+    letterSpacing: 0.4,
+  },
+  hudValue: {
+    fontSize: 18,
+    fontWeight: '900',
+    letterSpacing: -0.5,
+  },
   filterBar: {
     padding: 14,
-    backgroundColor: '#0c1b30',
+    backgroundColor: '#0a1019',
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(255, 255, 255, 0.06)',
   },
   searchWrap: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#070f1e',
+    backgroundColor: '#070c14',
     borderRadius: 8,
     paddingHorizontal: 10,
     height: 40,
@@ -1151,9 +1282,9 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   opTab: {
-    paddingVertical: 5,
+    paddingVertical: 6,
     paddingHorizontal: 12,
-    borderRadius: 6,
+    borderRadius: 8,
     backgroundColor: 'rgba(255, 255, 255, 0.05)',
   },
   opTabActive: {
@@ -1166,6 +1297,26 @@ const styles = StyleSheet.create({
   },
   opTabTextActive: {
     color: '#001529',
+  },
+  statusFilterTab: {
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    borderRadius: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.04)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.06)',
+  },
+  statusFilterTabActive: {
+    backgroundColor: 'rgba(0, 229, 255, 0.15)',
+    borderColor: '#00e5ff',
+  },
+  statusFilterTabText: {
+    color: '#78909c',
+    fontSize: 10,
+    fontWeight: '700',
+  },
+  statusFilterTabTextActive: {
+    color: '#00e5ff',
   },
   centerLoading: {
     flex: 1,
@@ -1181,8 +1332,8 @@ const styles = StyleSheet.create({
     paddingTop: 12,
   },
   emptyCard: {
-    backgroundColor: '#0c1b30',
-    borderRadius: 12,
+    backgroundColor: '#0c1524',
+    borderRadius: 14,
     padding: 32,
     alignItems: 'center',
     borderWidth: 1,
@@ -1195,8 +1346,8 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   vehicleCard: {
-    backgroundColor: '#0c1b30',
-    borderRadius: 12,
+    backgroundColor: '#0c1524',
+    borderRadius: 14,
     padding: 14,
     marginBottom: 10,
     borderWidth: 1,
@@ -1211,8 +1362,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
+  plateBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#070c14',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 229, 255, 0.35)',
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
   vehicleNumberText: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '800',
     color: '#ffffff',
     letterSpacing: 0.5,
@@ -1316,11 +1477,11 @@ const styles = StyleSheet.create({
   },
   editBtn: {
     backgroundColor: 'rgba(0, 229, 255, 0.1)',
-    borderRadius: 6,
-    paddingHorizontal: 8,
+    borderRadius: 8,
+    paddingHorizontal: 9,
     paddingVertical: 6,
     borderWidth: 1,
-    borderColor: 'rgba(0, 229, 255, 0.4)',
+    borderColor: 'rgba(0, 229, 255, 0.35)',
     flexDirection: 'row',
     alignItems: 'center',
   },
@@ -1330,32 +1491,36 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   assignBtn: {
-    backgroundColor: 'rgba(0, 229, 255, 0.15)',
-    borderRadius: 6,
-    paddingHorizontal: 10,
+    backgroundColor: 'rgba(41, 182, 246, 0.12)',
+    borderRadius: 8,
+    paddingHorizontal: 9,
     paddingVertical: 6,
     borderWidth: 1,
-    borderColor: 'rgba(0, 229, 255, 0.3)',
+    borderColor: 'rgba(41, 182, 246, 0.35)',
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   assignBtnText: {
-    color: '#00e5ff',
+    color: '#29b6f6',
     fontSize: 10,
     fontWeight: '800',
   },
   toggleStatusBtn: {
-    borderRadius: 6,
-    paddingHorizontal: 10,
+    borderRadius: 8,
+    paddingHorizontal: 9,
     paddingVertical: 6,
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   toggleStatusBtnMaint: {
-    backgroundColor: 'rgba(255, 82, 82, 0.15)',
+    backgroundColor: 'rgba(255, 171, 0, 0.15)',
     borderWidth: 1,
-    borderColor: 'rgba(255, 82, 82, 0.3)',
+    borderColor: 'rgba(255, 171, 0, 0.35)',
   },
   toggleStatusBtnActive: {
-    backgroundColor: 'rgba(76, 175, 80, 0.15)',
+    backgroundColor: 'rgba(0, 230, 118, 0.15)',
     borderWidth: 1,
-    borderColor: 'rgba(76, 175, 80, 0.3)',
+    borderColor: 'rgba(0, 230, 118, 0.35)',
   },
   toggleStatusBtnText: {
     color: '#ffffff',
@@ -1364,13 +1529,13 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.75)',
+    backgroundColor: 'rgba(3, 7, 18, 0.85)',
     justifyContent: 'center',
     padding: 20,
   },
   modalBox: {
-    backgroundColor: '#0c1b30',
-    borderRadius: 16,
+    backgroundColor: '#0c1524',
+    borderRadius: 20,
     padding: 20,
     borderWidth: 1,
     borderColor: 'rgba(0, 229, 255, 0.25)',

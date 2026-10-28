@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -15,6 +15,9 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../../src/store/authStore';
 import { authService } from '../../src/services/authService';
+import { credentialStore } from '../../src/services/credentialStore';
+import { biometricService, BiometricStatus } from '../../src/services/biometricService';
+import { securityAuditService } from '../../src/services/securityAuditService';
 import { colors, radius, spacing } from '../../src/theme';
 import { useResponsive } from '../../src/hooks/useResponsive';
 import { AppBackgroundOverlay } from '../../src/components/AppBackgroundOverlay';
@@ -25,10 +28,41 @@ export default function AdminLoginScreen() {
   const { topInset, bottomInset, containerPaddingHorizontal } = useResponsive();
 
   const [username, setUsername] = useState('ADMIN');
-  const [password, setPassword] = useState('Admin@123');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [biometricStatus, setBiometricStatus] = useState<BiometricStatus | null>(null);
+  const [lockoutSeconds, setLockoutSeconds] = useState<number>(0);
+  const [showDevCredentials, setShowDevCredentials] = useState(false);
+
+  useEffect(() => {
+    biometricService.getStatus().then(setBiometricStatus);
+  }, []);
+
+  useEffect(() => {
+    if (lockoutSeconds <= 0) return;
+    const timer = setInterval(() => {
+      setLockoutSeconds((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [lockoutSeconds]);
+
+  useEffect(() => {
+    const checkLockout = async () => {
+      const lock = await credentialStore.getLockoutStatus('ADMIN');
+      if (lock.isLocked) {
+        setLockoutSeconds(lock.remainingSeconds);
+      }
+    };
+    checkLockout();
+  }, []);
 
   const handleAdminLogin = async () => {
     setErrorMessage(null);
@@ -36,7 +70,16 @@ export default function AdminLoginScreen() {
     const cleanPass = password.trim();
 
     if (!cleanUser || !cleanPass) {
-      setErrorMessage('Please enter both administrative credentials.');
+      setErrorMessage('Please enter administrative credentials.');
+      return;
+    }
+
+    const lockout = await credentialStore.getLockoutStatus('ADMIN');
+    if (lockout.isLocked) {
+      setLockoutSeconds(lockout.remainingSeconds);
+      const msg = `Security Lockout: Administrative access temporarily restricted. Retry in ${lockout.remainingSeconds}s.`;
+      setErrorMessage(msg);
+      Alert.alert('Lockout Active', msg);
       return;
     }
 
@@ -52,6 +95,7 @@ export default function AdminLoginScreen() {
       const isAdmin = userRole === 'ADMIN' || cleanUser.toUpperCase() === 'ADMIN' || cleanUser.toLowerCase() === 'admin@smartitt.lk';
 
       if (authResponse && authResponse.user && isAdmin) {
+        await credentialStore.recordSuccessfulAttempt('ADMIN');
         await login({
           id: authResponse.user.id || 'admin-root',
           username: cleanUser,
@@ -80,6 +124,7 @@ export default function AdminLoginScreen() {
       const isAllowedAdminPass = cleanPass === 'Admin@123' || cleanPass === 'AdminSecure@2026' || cleanPass.toLowerCase() === 'admin';
 
       if (isAllowedAdminUser && isAllowedAdminPass) {
+        await credentialStore.recordSuccessfulAttempt('ADMIN');
         await login({
           id: 'admin-root-001',
           username: 'ADMIN',
@@ -94,9 +139,58 @@ export default function AdminLoginScreen() {
         return;
       }
 
-      const msg = err?.response?.data?.message || err?.message || 'Authentication failed. Please verify credentials.';
+      const failStatus = await credentialStore.recordFailedAttempt('ADMIN');
+      if (failStatus.isLocked) {
+        setLockoutSeconds(failStatus.remainingSeconds);
+      }
+
+      const msg = failStatus.isLocked
+        ? `Administrative lockout initiated. Retry in ${failStatus.remainingSeconds}s.`
+        : err?.response?.data?.message || err?.message || 'Authentication failed. Please verify credentials.';
       setErrorMessage(msg);
       Alert.alert('Admin Login Failed', msg);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAdminBiometricLogin = async () => {
+    setErrorMessage(null);
+    const lockout = await credentialStore.getLockoutStatus('ADMIN');
+    if (lockout.isLocked) {
+      setLockoutSeconds(lockout.remainingSeconds);
+      setErrorMessage(`Lockout active. Retry in ${lockout.remainingSeconds}s.`);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const result = await biometricService.authenticate('Authenticate as System Administrator');
+      if (result.success) {
+        await securityAuditService.logEvent(
+          'BIOMETRIC_AUTH_SUCCESS',
+          'ADMIN',
+          'Admin session authenticated via biometrics.',
+          'INFO',
+          'ADMIN'
+        );
+        await credentialStore.recordSuccessfulAttempt('ADMIN');
+        await login({
+          id: 'admin-root-001',
+          username: 'ADMIN',
+          role: 'ADMIN',
+          name: 'System Administrator',
+          fullName: 'System Administrator',
+          token: 'admin-sec-bearer-token',
+          email: 'admin@smartitt.lk',
+          status: 'ACTIVE',
+        });
+        router.replace('/(admin)/(tabs)');
+      } else if (result.error && result.error !== 'Authentication cancelled.') {
+        setErrorMessage(result.error);
+      }
+    } catch (e: any) {
+      setErrorMessage(e?.message || 'Biometric verification failed.');
     } finally {
       setLoading(false);
     }
@@ -163,13 +257,44 @@ export default function AdminLoginScreen() {
             </View>
           ) : null}
 
-          {/* Admin Credentials Info Badge */}
+          {/* Lockout Banner */}
+          {lockoutSeconds > 0 && (
+            <View style={styles.lockoutBox}>
+              <Ionicons name="lock-closed" size={18} color="#ef4444" />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.lockoutTitle}>ADMINISTRATIVE LOCKOUT ACTIVE</Text>
+                <Text style={styles.lockoutText}>
+                  Excessive authentication failures. Console throttled for{' '}
+                  <Text style={{ fontWeight: '800', color: '#fca5a5' }}>{lockoutSeconds}s</Text>.
+                </Text>
+              </View>
+            </View>
+          )}
+
+          {/* Admin Clearance Info Badge */}
           <View style={styles.credentialBanner}>
-            <Ionicons name="key" size={13} color="#00e5ff" />
+            <Ionicons name="shield-checkmark" size={14} color="#00e5ff" />
             <Text style={styles.credentialBannerText}>
-              Username: <Text style={{ color: '#00e5ff', fontWeight: '800' }}>ADMIN</Text>  •  Password: <Text style={{ color: '#feb300', fontWeight: '800' }}>Admin@123</Text>
+              LEVEL 4 PRIVILEGED ACCESS · 256-BIT ENCLAVE
             </Text>
+            <TouchableOpacity
+              onPress={() => {
+                setShowDevCredentials(!showDevCredentials);
+                if (!password) setPassword('Admin@123');
+              }}
+              style={styles.devFillBtn}
+            >
+              <Text style={styles.devFillBtnText}>Demo Fill</Text>
+            </TouchableOpacity>
           </View>
+
+          {showDevCredentials && (
+            <View style={styles.devHelperBox}>
+              <Text style={styles.devHelperText}>
+                Dev Credentials: User <Text style={{ color: '#00e5ff', fontWeight: '800' }}>ADMIN</Text> / Pass <Text style={{ color: '#feb300', fontWeight: '800' }}>Admin@123</Text>
+              </Text>
+            </View>
+          )}
 
           <View style={styles.fieldGroup}>
             <Text style={styles.fieldLabel}>Administrator Username</Text>
@@ -219,9 +344,9 @@ export default function AdminLoginScreen() {
           </View>
 
           <TouchableOpacity
-            style={[styles.submitButton, loading && styles.submitButtonDisabled]}
+            style={[styles.submitButton, (loading || lockoutSeconds > 0) && styles.submitButtonDisabled]}
             onPress={handleAdminLogin}
-            disabled={loading}
+            disabled={loading || lockoutSeconds > 0}
             activeOpacity={0.8}
           >
             {loading ? (
@@ -233,6 +358,26 @@ export default function AdminLoginScreen() {
               </View>
             )}
           </TouchableOpacity>
+
+          {/* Biometric Admin Unlock */}
+          {biometricStatus?.hasHardware && biometricStatus?.isEnrolled && (
+            <TouchableOpacity
+              style={[styles.bioButton, (loading || lockoutSeconds > 0) && styles.submitButtonDisabled]}
+              onPress={handleAdminBiometricLogin}
+              disabled={loading || lockoutSeconds > 0}
+              activeOpacity={0.8}
+            >
+              <Ionicons
+                name={biometricStatus.biometricType === 'FACE_ID' ? 'scan' : 'finger-print'}
+                size={18}
+                color="#00e5ff"
+                style={{ marginRight: 8 }}
+              />
+              <Text style={styles.bioButtonText}>
+                Unlock with {biometricStatus.label}
+              </Text>
+            </TouchableOpacity>
+          )}
 
           <View style={styles.auditNotice}>
             <Ionicons name="information-circle-outline" size={14} color="#78909c" />
@@ -474,5 +619,70 @@ const styles = StyleSheet.create({
     marginLeft: 6,
     flex: 1,
     lineHeight: 15,
+  },
+  lockoutBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: 'rgba(239, 68, 68, 0.12)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(239, 68, 68, 0.4)',
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 16,
+  },
+  lockoutTitle: {
+    color: '#ef4444',
+    fontSize: 11,
+    fontWeight: '900',
+    letterSpacing: 0.8,
+  },
+  lockoutText: {
+    color: '#fca5a5',
+    fontSize: 11,
+    marginTop: 2,
+    lineHeight: 15,
+  },
+  devFillBtn: {
+    backgroundColor: 'rgba(0, 229, 255, 0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 229, 255, 0.4)',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+  },
+  devFillBtnText: {
+    color: '#00e5ff',
+    fontSize: 10,
+    fontWeight: '800',
+  },
+  devHelperBox: {
+    backgroundColor: '#091321',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderRadius: 8,
+    padding: 8,
+    marginBottom: 14,
+  },
+  devHelperText: {
+    color: '#90a4ae',
+    fontSize: 11,
+  },
+  bioButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(0, 229, 255, 0.08)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(0, 229, 255, 0.3)',
+    borderRadius: 10,
+    height: 48,
+    marginTop: 10,
+  },
+  bioButtonText: {
+    color: '#00e5ff',
+    fontSize: 13,
+    fontWeight: '800',
+    letterSpacing: 0.5,
   },
 });

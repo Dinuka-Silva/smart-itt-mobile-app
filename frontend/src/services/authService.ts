@@ -1,5 +1,6 @@
 import apiClient from './api';
 import { credentialStore } from './credentialStore';
+import { securityValidator } from '../utils/securityValidator';
 
 export interface LoginRequest {
   username: string; // Driver Code (e.g. DRV-00125) or Email
@@ -231,28 +232,41 @@ export const authService = {
   },
 
   async resetPassword(request: ResetPasswordRequest): Promise<PasswordResetResponse> {
+    const cleanUser = (request.username || '').trim();
+    const cleanNew = (request.newPassword || '').trim();
+    const cleanConfirm = (request.confirmPassword || '').trim();
+
+    if (cleanNew !== cleanConfirm) {
+      throw new Error('Passwords do not match. Please re-enter.');
+    }
+
+    const strength = securityValidator.evaluatePasswordStrength(cleanNew);
+    if (!strength.isValid) {
+      throw new Error(
+        strength.feedback[0] ||
+          'Password does not meet enterprise security requirements (min 8 characters, with uppercase, lowercase, number, and special symbol).'
+      );
+    }
+
+    const wasUsedBefore = await credentialStore.isOldPassword(cleanUser, cleanNew);
+    if (wasUsedBefore) {
+      throw new Error('For high security, you cannot re-use a previously used password. Please enter a new password.');
+    }
+
     try {
       const response = await apiClient.post('/auth/reset-password', request);
-      // Persist password update locally
-      await credentialStore.recordPasswordChange(request.username, request.newPassword);
+      // Persist password update locally as salted hash
+      await credentialStore.recordPasswordChange(cleanUser, cleanNew);
       return response.data;
     } catch (err: any) {
-      if (request.newPassword !== request.confirmPassword) {
-        throw new Error('Passwords do not match. Please re-enter.');
-      }
-      if (request.newPassword.length < 6) {
-        throw new Error('Password must be at least 6 characters long.');
-      }
+      // Persist password update in local credential store as salted hash
+      await credentialStore.recordPasswordChange(cleanUser, cleanNew);
 
-      // Persist password update in local credential store
-      await credentialStore.recordPasswordChange(request.username, request.newPassword);
-
-      // Return simulated success if fallback
       return {
         success: true,
         message: 'Password has been reset successfully. Please sign in with your new credentials.',
-        username: request.username,
-        role: request.username.toUpperCase().startsWith('SUP') ? 'SUPERVISOR' : 'DRIVER',
+        username: cleanUser,
+        role: cleanUser.toUpperCase().startsWith('SUP') ? 'SUPERVISOR' : 'DRIVER',
       };
     }
   },
@@ -269,14 +283,24 @@ export const authService = {
     if (!cleanNew) {
       throw new Error('Please enter a new password.');
     }
-    if (cleanNew.length < 6) {
-      throw new Error('New password must be at least 6 characters long.');
-    }
     if (cleanNew !== cleanConfirm) {
       throw new Error('New passwords do not match. Please re-enter.');
     }
     if (cleanCurrent === cleanNew) {
       throw new Error('New password cannot be the same as your current password.');
+    }
+
+    const strength = securityValidator.evaluatePasswordStrength(cleanNew);
+    if (!strength.isValid) {
+      throw new Error(
+        strength.feedback[0] ||
+          'Password does not meet enterprise security standards (minimum 8 characters, uppercase, lowercase, number, and special symbol).'
+      );
+    }
+
+    const wasUsedBefore = await credentialStore.isOldPassword(cleanUser, cleanNew);
+    if (wasUsedBefore) {
+      throw new Error('For high security, you cannot re-use a previous password. Please choose a new unique password.');
     }
 
     try {
@@ -296,35 +320,26 @@ export const authService = {
         throw new Error(err.response.data.message);
       }
 
-      // Offline / fallback verification
+      // Offline verification of current password
       const isOld = await credentialStore.isOldPassword(cleanUser, cleanCurrent);
-      const activeUpdatedPass = await credentialStore.getUpdatedPassword(cleanUser);
-
-      // If user had an updated password, current password must match it
-      if (activeUpdatedPass && cleanCurrent !== activeUpdatedPass) {
-        throw new Error('Current password is incorrect. Please enter your existing password.');
+      if (isOld) {
+        throw new Error('Current password is an old archived password. Please enter your active password.');
       }
 
-      // If no updated password yet, verify against default passwords
-      if (!activeUpdatedPass) {
-        const isSup = cleanUser.toUpperCase().startsWith('SUP');
-        const validDefaults = isSup
-          ? ['supervisor', 'password', 'Password@123', '123456']
-          : ['driver', 'password', 'Password@123', '123456'];
-
-        if (!validDefaults.includes(cleanCurrent)) {
-          throw new Error('Current password is incorrect. Please enter your existing password.');
-        }
+      const role = cleanUser.toUpperCase().startsWith('SUP') ? 'SUPERVISOR' : 'DRIVER';
+      const verifyResult = await credentialStore.verifyOffline(cleanUser, cleanCurrent, role as any);
+      if (!verifyResult.valid) {
+        throw new Error('Current password is incorrect. Please verify and try again.');
       }
 
-      // Record password change in credential store
+      // Record password change in credential store as salted SHA-256 hash
       await credentialStore.recordPasswordChange(cleanUser, cleanNew, cleanCurrent);
 
       return {
         success: true,
         message: 'Security password changed successfully. Please login with your new credentials in future.',
         username: cleanUser,
-        role: cleanUser.toUpperCase().startsWith('SUP') ? 'SUPERVISOR' : 'DRIVER',
+        role: role,
       };
     }
   },

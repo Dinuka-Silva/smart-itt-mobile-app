@@ -8,7 +8,10 @@
     "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.smartitt.app"
+      "bundleIdentifier": "com.smartitt.app",
+      "infoPlist": {
+        "NSFaceIDUsageDescription": "Allow SMART ITT to use Face ID for biometric authentication and secure access."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -18,7 +21,11 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "package": "com.smartitt.app",
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "USE_BIOMETRIC",
+        "USE_FINGERPRINT"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png",
@@ -30,6 +37,12 @@
       "expo-sqlite",
       "expo-secure-store",
       "expo-font",
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Allow SMART ITT to use Face ID for biometric authentication and secure access."
+        }
+      ],
       [
         "expo-splash-screen",
         {

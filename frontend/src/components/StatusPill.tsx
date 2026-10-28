@@ -1,35 +1,46 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
-
 import { ThemedText } from './themed-text';
 import { ThemedView } from './themed-view';
+import { statusColor, statusLabel } from '../theme';
 
-import { Spacing } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
-import { statusLabel } from '../theme';
+type Props = {
+  status: string;
+  size?: 'sm' | 'md';
+};
 
-type Props = { status: string };
-
-export function StatusPill({ status }: Props) {
-  const theme = useTheme();
-  const color =
-    status === 'COMPLETED' || status === 'APPROVED'
-      ? theme.success
-      : status === 'IN_PROGRESS'
-        ? theme.accent
-        : status === 'REJECTED'
-          ? theme.danger
-          : status === 'PENDING_APPROVAL' || status === 'NOT_STARTED'
-            ? theme.warning
-            : theme.textSecondary;
+export function StatusPill({ status, size = 'md' }: Props) {
+  const color = statusColor(status);
+  const isSm = size === 'sm';
 
   return (
-    <ThemedView type="backgroundElement" style={[styles.pill, { borderColor: color }]}>
-      <View style={[styles.dot, { backgroundColor: color }]} />
-      <ThemedText type="code" style={[styles.text, { color }]}>
+    <View
+      style={[
+        styles.pill,
+        {
+          backgroundColor: `${color}18`,
+          borderColor: `${color}40`,
+          paddingHorizontal: isSm ? 8 : 10,
+          paddingVertical: isSm ? 3 : 5,
+        },
+      ]}
+    >
+      <View style={[styles.dotWrapper, { backgroundColor: `${color}30` }]}>
+        <View style={[styles.dot, { backgroundColor: color }]} />
+      </View>
+      <ThemedText
+        type="code"
+        style={[
+          styles.text,
+          {
+            color,
+            fontSize: isSm ? 9 : 10,
+          },
+        ]}
+      >
         {statusLabel(status)}
       </ThemedText>
-    </ThemedView>
+    </View>
   );
 }
 
@@ -37,11 +48,17 @@ const styles = StyleSheet.create({
   pill: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
     borderRadius: 999,
     borderWidth: 1,
     gap: 6,
+    alignSelf: 'flex-start',
+  },
+  dotWrapper: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   dot: {
     width: 6,
@@ -49,9 +66,8 @@ const styles = StyleSheet.create({
     borderRadius: 3,
   },
   text: {
-    fontSize: 10,
-    fontWeight: '700',
+    fontWeight: '800',
     textTransform: 'uppercase',
-    letterSpacing: 0.4,
+    letterSpacing: 0.6,
   },
 });

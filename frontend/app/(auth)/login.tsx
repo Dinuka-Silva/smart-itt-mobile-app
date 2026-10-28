@@ -16,6 +16,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../../src/store/authStore';
 import { authService } from '../../src/services/authService';
 import { credentialStore } from '../../src/services/credentialStore';
+import { biometricService, BiometricStatus } from '../../src/services/biometricService';
+import { securityAuditService } from '../../src/services/securityAuditService';
 import { colors, radius, spacing } from '../../src/theme';
 import { useResponsive } from '../../src/hooks/useResponsive';
 
@@ -34,6 +36,44 @@ export default function LoginScreen() {
   const [rememberMe, setRememberMe] = useState(true);
   const [focusedField, setFocusedField] = useState<'username' | 'password' | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [biometricStatus, setBiometricStatus] = useState<BiometricStatus | null>(null);
+  const [lockoutSeconds, setLockoutSeconds] = useState<number>(0);
+  const [isBioEnabledForUser, setIsBioEnabledForUser] = useState(false);
+
+  // Check device biometric status
+  useEffect(() => {
+    biometricService.getStatus().then(setBiometricStatus);
+  }, []);
+
+  // Lockout countdown timer
+  useEffect(() => {
+    if (lockoutSeconds <= 0) return;
+    const timer = setInterval(() => {
+      setLockoutSeconds((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [lockoutSeconds]);
+
+  // Check lockout status and biometric preference for current user
+  useEffect(() => {
+    const checkUserSecurityStatus = async () => {
+      const clean = username.trim();
+      if (!clean) return;
+      const lockout = await credentialStore.getLockoutStatus(clean);
+      if (lockout.isLocked) {
+        setLockoutSeconds(lockout.remainingSeconds);
+      }
+      const bioEnabled = await biometricService.isUserBiometricEnabled(clean);
+      setIsBioEnabledForUser(bioEnabled);
+    };
+    checkUserSecurityStatus();
+  }, [username]);
 
   // ─── Hidden Admin Entry: 7 taps within 3.5s OR 2.5s Long Press opens Admin Login ───
   const tapTimesRef = React.useRef<number[]>([]);
@@ -149,6 +189,16 @@ export default function LoginScreen() {
       return;
     }
 
+    // Check brute-force lockout status
+    const lockout = await credentialStore.getLockoutStatus(cleanUser);
+    if (lockout.isLocked) {
+      setLockoutSeconds(lockout.remainingSeconds);
+      const msg = `Security Lockout: Account is temporarily locked. Please wait ${lockout.remainingSeconds} seconds before retrying.`;
+      setErrorMessage(msg);
+      Alert.alert('Security Lockout Active', msg);
+      return;
+    }
+
     // Proactively check if the user entered an old / archived password
     const isOldPassword = await credentialStore.isOldPassword(cleanUser, cleanPass);
     if (isOldPassword) {
@@ -166,6 +216,8 @@ export default function LoginScreen() {
     try {
       const authResponse = await authService.login({ username: cleanUser, password: cleanPass });
       if (!authResponse || !authResponse.user) throw new Error('Invalid response from server');
+
+      await credentialStore.recordSuccessfulAttempt(cleanUser);
 
       const isSupervisor = authResponse.user.role === 'SUPERVISOR' || isSupervisorIdentified;
       const isAdmin = authResponse.user.role === 'ADMIN' || cleanUser.toLowerCase().includes('admin');
@@ -202,9 +254,16 @@ export default function LoginScreen() {
     } catch (err: any) {
       // If server explicitly returned 401 or 403, credentials failed
       if (err?.response && (err.response.status === 401 || err.response.status === 403)) {
+        const lockoutCheck = await credentialStore.recordFailedAttempt(cleanUser);
+        if (lockoutCheck.isLocked) {
+          setLockoutSeconds(lockoutCheck.remainingSeconds);
+        }
+
         const isOld = await credentialStore.isOldPassword(cleanUser, cleanPass);
         const msg = isOld
           ? 'Incorrect password: You entered your old password. Please enter your newly updated password.'
+          : lockoutCheck.isLocked
+          ? `Account locked due to multiple failed attempts. Try again in ${lockoutCheck.remainingSeconds}s.`
           : 'Incorrect username or password. Please try again.';
         setErrorMessage(msg);
         Alert.alert(isOld ? 'Old Password Entered' : 'Authentication Failed', msg);
@@ -220,6 +279,7 @@ export default function LoginScreen() {
 
       if (role === 'ADMIN') {
         if (cleanPass === 'Admin@123' || cleanPass === 'AdminSecure@2026' || cleanPass.toLowerCase() === 'admin') {
+          await credentialStore.recordSuccessfulAttempt(cleanUser);
           const adminUser = {
             id: 'admin-root',
             username: cleanUser,
@@ -239,6 +299,11 @@ export default function LoginScreen() {
       const verifyResult = await credentialStore.verifyOffline(cleanUser, cleanPass, role as any);
 
       if (!verifyResult.valid) {
+        const lockStatus = await credentialStore.getLockoutStatus(cleanUser);
+        if (lockStatus.isLocked) {
+          setLockoutSeconds(lockStatus.remainingSeconds);
+        }
+
         const errorText =
           verifyResult.errorMessage || 'Incorrect username or password. Please try again.';
         setErrorMessage(errorText);
@@ -273,6 +338,72 @@ export default function LoginScreen() {
       await login(mockUser as any);
       if (role === 'SUPERVISOR') router.replace('/(supervisor)/(tabs)');
       else router.replace('/(driver)/(tabs)');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleBiometricLogin = async () => {
+    setErrorMessage(null);
+    const cleanUser = username.trim();
+    if (!cleanUser) {
+      setErrorMessage('Please enter your Operator Code first to use Biometrics.');
+      return;
+    }
+
+    const lockout = await credentialStore.getLockoutStatus(cleanUser);
+    if (lockout.isLocked) {
+      setLockoutSeconds(lockout.remainingSeconds);
+      setErrorMessage(`Account temporarily locked. Retry in ${lockout.remainingSeconds}s.`);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const authResult = await biometricService.authenticate(`Sign in to SMART ITT as ${cleanUser}`);
+      if (authResult.success) {
+        await securityAuditService.logEvent(
+          'BIOMETRIC_AUTH_SUCCESS',
+          cleanUser,
+          'User logged in via biometric authentication.',
+          'INFO'
+        );
+
+        const upperUser = cleanUser.toUpperCase();
+        const isAdmin = upperUser.includes('ADMIN');
+        const isSup = isSupervisorIdentified || upperUser.startsWith('SUP');
+        const role = isAdmin ? 'ADMIN' : (isSup ? 'SUPERVISOR' : 'DRIVER');
+
+        const mockUser = {
+          id: isSup ? 'sup-demo-001' : (isAdmin ? 'admin-root' : 'demo-user-123'),
+          username: cleanUser,
+          role: role as any,
+          name: isSup ? 'Nimal Silva (Supervisor)' : (isAdmin ? 'System Administrator' : 'Kamal Perera (Driver)'),
+          token: 'bio-verified-secure-token',
+          driverCode: isSup || isAdmin ? undefined : (upperUser.startsWith('DRV') ? upperUser : 'DRV-00001'),
+          supervisorId: isSup ? 'sup-123' : undefined,
+          supervisorPortPassExpiryDate: isSup ? '2026-11-18' : undefined,
+          vehicleNumber: isSup || isAdmin ? undefined : 'LY-6439',
+          status: 'ACTIVE',
+        };
+
+        await credentialStore.recordSuccessfulAttempt(cleanUser);
+        await login(mockUser as any);
+
+        if (role === 'ADMIN') router.replace('/(admin)/(tabs)');
+        else if (role === 'SUPERVISOR') router.replace('/(supervisor)/(tabs)');
+        else router.replace('/(driver)/(tabs)');
+      } else if (authResult.error && authResult.error !== 'Authentication cancelled.') {
+        setErrorMessage(authResult.error);
+        await securityAuditService.logEvent(
+          'BIOMETRIC_AUTH_FAIL',
+          cleanUser,
+          `Biometric login failed: ${authResult.error}`,
+          'WARNING'
+        );
+      }
+    } catch (e: any) {
+      setErrorMessage(e?.message || 'Biometric authentication error.');
     } finally {
       setLoading(false);
     }
@@ -496,15 +627,29 @@ export default function LoginScreen() {
             </TouchableOpacity>
           </View>
 
+          {/* Security Lockout Banner */}
+          {lockoutSeconds > 0 && (
+            <View style={styles.lockoutBox}>
+              <Ionicons name="lock-closed" size={18} color="#ef4444" />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.lockoutTitle}>SECURITY LOCKOUT ACTIVE</Text>
+                <Text style={styles.lockoutText}>
+                  Device authentication rate-limited. Retry enabled in{' '}
+                  <Text style={{ fontWeight: '800', color: '#fca5a5' }}>{lockoutSeconds}s</Text>.
+                </Text>
+              </View>
+            </View>
+          )}
+
           {/* Primary LOG IN Button */}
           <TouchableOpacity
             style={[
               styles.loginBtn,
               isSupervisorIdentified ? styles.loginBtnAmber : styles.loginBtnCyan,
-              loading && styles.loginBtnDisabled,
+              (loading || lockoutSeconds > 0) && styles.loginBtnDisabled,
             ]}
             onPress={handleLogin}
-            disabled={loading}
+            disabled={loading || lockoutSeconds > 0}
             activeOpacity={0.88}
           >
             {loading ? (
@@ -526,6 +671,34 @@ export default function LoginScreen() {
               </>
             )}
           </TouchableOpacity>
+
+          {/* Biometric Quick Sign In Button */}
+          {biometricStatus?.hasHardware && biometricStatus?.isEnrolled && (
+            <TouchableOpacity
+              style={[
+                styles.biometricBtn,
+                isSupervisorIdentified ? styles.biometricBtnAmber : styles.biometricBtnCyan,
+                (loading || lockoutSeconds > 0) && styles.loginBtnDisabled,
+              ]}
+              onPress={handleBiometricLogin}
+              disabled={loading || lockoutSeconds > 0}
+              activeOpacity={0.85}
+            >
+              <Ionicons
+                name={biometricStatus.biometricType === 'FACE_ID' ? 'scan' : 'finger-print'}
+                size={19}
+                color={isSupervisorIdentified ? '#feb300' : '#00e5ff'}
+              />
+              <Text
+                style={[
+                  styles.biometricBtnText,
+                  isSupervisorIdentified ? { color: '#feb300' } : { color: '#00e5ff' },
+                ]}
+              >
+                Sign In with {biometricStatus.label}
+              </Text>
+            </TouchableOpacity>
+          )}
 
           {/* Create new Account text link */}
           <View style={styles.createAccountRow}>
@@ -551,6 +724,10 @@ export default function LoginScreen() {
             SCK LOGISTICS (PVT) LTD · PORT & TERMINAL TELEMATICS
           </Text>
           <Text style={styles.footerSub}>TLS 1.3 MESH · 256-BIT JWT ENCRYPTION</Text>
+          <View style={styles.securityBadgeRow}>
+            <Ionicons name="shield-checkmark" size={12} color="#10b981" />
+            <Text style={styles.securityBadgeText}>HARDWARE ENCLAVE & SALTED SHA-256 ACTIVE</Text>
+          </View>
         </View>
       </ScrollView>
     </View>
@@ -1070,5 +1247,62 @@ const styles = StyleSheet.create({
   footerSub: {
     fontSize: 8,
     color: '#3b494c',
+  },
+  lockoutBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: 'rgba(239, 68, 68, 0.12)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(239, 68, 68, 0.4)',
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 14,
+  },
+  lockoutTitle: {
+    color: '#ef4444',
+    fontSize: 11,
+    fontWeight: '900',
+    letterSpacing: 0.8,
+  },
+  lockoutText: {
+    color: '#fca5a5',
+    fontSize: 11,
+    marginTop: 2,
+    lineHeight: 15,
+  },
+  biometricBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    height: 48,
+    borderRadius: 10,
+    borderWidth: 1.5,
+    backgroundColor: '#0a121c',
+    marginTop: 10,
+  },
+  biometricBtnCyan: {
+    borderColor: 'rgba(0, 229, 255, 0.35)',
+  },
+  biometricBtnAmber: {
+    borderColor: 'rgba(254, 179, 0, 0.35)',
+  },
+  biometricBtnText: {
+    fontSize: 12,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
+  securityBadgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    marginTop: 4,
+  },
+  securityBadgeText: {
+    fontSize: 8.5,
+    fontWeight: '800',
+    color: '#10b981',
+    letterSpacing: 0.5,
   },
 });

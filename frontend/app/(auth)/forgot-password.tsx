@@ -14,6 +14,8 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { authService } from '../../src/services/authService';
+import { PasswordStrengthIndicator } from '../../src/components/PasswordStrengthIndicator';
+import { securityValidator } from '../../src/utils/securityValidator';
 
 export default function ForgotPasswordScreen() {
   const router = useRouter();
@@ -78,10 +80,16 @@ export default function ForgotPasswordScreen() {
       setErrorMessage('Please enter a new password.');
       return;
     }
-    if (newPassword.length < 6) {
-      setErrorMessage('Password must be at least 6 characters long.');
+
+    const strength = securityValidator.evaluatePasswordStrength(newPassword);
+    if (!strength.isValid) {
+      setErrorMessage(
+        strength.feedback[0] ||
+          'Password does not meet enterprise security requirements (min 8 chars, uppercase, lowercase, number, symbol).'
+      );
       return;
     }
+
     if (newPassword !== confirmPassword) {
       setErrorMessage('New passwords do not match. Please re-enter.');
       return;
@@ -313,12 +321,12 @@ export default function ForgotPasswordScreen() {
 
                 {/* New Password */}
                 <View style={styles.fieldGroup}>
-                  <Text style={styles.fieldLabel}>NEW PASSWORD *</Text>
+                  <Text style={styles.fieldLabel}>NEW PASSWORD (MIN 8 CHARS) *</Text>
                   <View style={styles.inputWrap}>
                     <Ionicons name="key-outline" size={16} color="#00e5ff" style={styles.inputIcon} />
                     <TextInput
                       style={[styles.input, { flex: 1 }]}
-                      placeholder="Minimum 6 characters"
+                      placeholder="Min 8 characters (A-Z, a-z, 0-9, symbol)"
                       placeholderTextColor="#62757f"
                       secureTextEntry={!showPassword}
                       value={newPassword}
@@ -335,6 +343,7 @@ export default function ForgotPasswordScreen() {
                       />
                     </TouchableOpacity>
                   </View>
+                  <PasswordStrengthIndicator password={newPassword} />
                 </View>
 
                 {/* Confirm Password */}

@@ -1,36 +1,36 @@
+import React from 'react';
+import { View, StyleSheet, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { useTheme } from '@/hooks/use-theme';
-
-import { colors } from '@/theme';
-
 export default function SupervisorTabsLayout() {
-  const theme = useTheme();
   const insets = useSafeAreaInsets();
-  const bottomInset = Math.max(insets.bottom, 10);
+  const bottomInset = Math.max(insets.bottom, 12);
 
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: colors.primaryContainer,
-        tabBarInactiveTintColor: colors.outline,
+        tabBarActiveTintColor: '#feb300',
+        tabBarInactiveTintColor: '#64748b',
         tabBarStyle: {
-          backgroundColor: '#080e17',
+          backgroundColor: '#070c14',
           borderTopWidth: 1,
-          borderTopColor: '#242a34',
-          elevation: 8,
-          height: 60 + bottomInset,
+          borderTopColor: 'rgba(255, 255, 255, 0.08)',
+          elevation: 12,
+          shadowColor: '#000000',
+          shadowOffset: { width: 0, height: -4 },
+          shadowOpacity: 0.3,
+          shadowRadius: 12,
+          height: 64 + bottomInset,
           paddingBottom: bottomInset,
           paddingTop: 8,
         },
         tabBarLabelStyle: {
-          fontSize: 11,
-          fontWeight: '800',
-          letterSpacing: 0.8,
-          textTransform: 'uppercase',
+          fontSize: 10,
+          fontWeight: '700',
+          letterSpacing: 0.5,
           marginTop: 2,
         },
       }}
@@ -38,18 +38,22 @@ export default function SupervisorTabsLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Dashboard',
-          tabBarIcon: ({ color, focused, size }) => (
-            <Ionicons name={focused ? 'speedometer' : 'speedometer-outline'} size={size || 24} color={color as any} />
+          title: 'Command',
+          tabBarIcon: ({ color, focused }) => (
+            <View style={[styles.iconWrap, focused && styles.iconWrapActive]}>
+              <Ionicons name={focused ? 'speedometer' : 'speedometer-outline'} size={22} color={color as any} />
+            </View>
           ),
         }}
       />
       <Tabs.Screen
         name="trips"
         options={{
-          title: 'Trips',
-          tabBarIcon: ({ color, focused, size }) => (
-            <Ionicons name={focused ? 'swap-horizontal' : 'swap-horizontal-outline'} size={size || 24} color={color as any} />
+          title: 'Live Trips',
+          tabBarIcon: ({ color, focused }) => (
+            <View style={[styles.iconWrap, focused && styles.iconWrapActive]}>
+              <Ionicons name={focused ? 'swap-horizontal' : 'swap-horizontal-outline'} size={22} color={color as any} />
+            </View>
           ),
         }}
       />
@@ -57,8 +61,10 @@ export default function SupervisorTabsLayout() {
         name="approvals"
         options={{
           title: 'Approvals',
-          tabBarIcon: ({ color, focused, size }) => (
-            <Ionicons name={focused ? 'shield-checkmark' : 'shield-checkmark-outline'} size={size || 24} color={color as any} />
+          tabBarIcon: ({ color, focused }) => (
+            <View style={[styles.iconWrap, focused && styles.iconWrapActive]}>
+              <Ionicons name={focused ? 'shield-checkmark' : 'shield-checkmark-outline'} size={22} color={color as any} />
+            </View>
           ),
         }}
       />
@@ -66,8 +72,10 @@ export default function SupervisorTabsLayout() {
         name="drivers"
         options={{
           title: 'Drivers',
-          tabBarIcon: ({ color, focused, size }) => (
-            <Ionicons name={focused ? 'people' : 'people-outline'} size={size || 24} color={color as any} />
+          tabBarIcon: ({ color, focused }) => (
+            <View style={[styles.iconWrap, focused && styles.iconWrapActive]}>
+              <Ionicons name={focused ? 'people' : 'people-outline'} size={22} color={color as any} />
+            </View>
           ),
         }}
       />
@@ -75,11 +83,24 @@ export default function SupervisorTabsLayout() {
         name="reports"
         options={{
           title: 'Reports',
-          tabBarIcon: ({ color, focused, size }) => (
-            <Ionicons name={focused ? 'document-text' : 'document-text-outline'} size={size || 24} color={color as any} />
+          tabBarIcon: ({ color, focused }) => (
+            <View style={[styles.iconWrap, focused && styles.iconWrapActive]}>
+              <Ionicons name={focused ? 'document-text' : 'document-text-outline'} size={22} color={color as any} />
+            </View>
           ),
         }}
       />
     </Tabs>
   );
 }
+
+const styles = StyleSheet.create({
+  iconWrap: {
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 12,
+  },
+  iconWrapActive: {
+    backgroundColor: 'rgba(254, 179, 0, 0.12)',
+  },
+});

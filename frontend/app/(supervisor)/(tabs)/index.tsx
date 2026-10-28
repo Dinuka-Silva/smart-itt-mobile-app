@@ -1295,7 +1295,7 @@ export default function SupervisorHomeDashboard() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0e141d',
+    backgroundColor: '#070c14',
   },
   scroll: {
     flexGrow: 1,
@@ -1304,11 +1304,11 @@ const styles = StyleSheet.create({
 
   // ─── HEADER ───
   header: {
-    backgroundColor: '#161c25',
-    borderRadius: radius.DEFAULT,
+    backgroundColor: '#0c1524',
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#242a34',
-    padding: 12,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+    padding: 14,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -1323,22 +1323,22 @@ const styles = StyleSheet.create({
     minWidth: 160,
   },
   avatarCircle: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: '#feb300',
     alignItems: 'center',
     justifyContent: 'center',
   },
   avatarText: {
-    color: '#00363d',
+    color: '#070c14',
     fontWeight: '900',
-    fontSize: 15,
+    fontSize: 16,
   },
   supervisorNameText: {
-    color: '#dde2f0',
+    color: '#ffffff',
     fontWeight: '800',
-    fontSize: 14,
+    fontSize: 15,
   },
   roleDateRow: {
     flexDirection: 'row',
@@ -1430,8 +1430,8 @@ const styles = StyleSheet.create({
   },
 
   supervisorPermitCard: {
-    backgroundColor: '#161c25',
-    borderRadius: radius.DEFAULT,
+    backgroundColor: '#0c1524',
+    borderRadius: 16,
     borderWidth: 1,
     borderColor: 'rgba(254, 179, 0, 0.35)',
     padding: 14,
@@ -1536,11 +1536,11 @@ const styles = StyleSheet.create({
   },
   metricCard: {
     width: '31%',
-    backgroundColor: '#161c25',
-    borderRadius: radius.DEFAULT,
+    backgroundColor: '#0c1524',
+    borderRadius: 14,
     borderWidth: 1,
-    borderColor: '#242a34',
-    padding: 10,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+    padding: 12,
     gap: 4,
   },
   metricCardHeader: {
@@ -1549,7 +1549,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   metricLabel: {
-    color: '#849396',
+    color: '#78909c',
     fontSize: 10,
     fontWeight: '800',
     letterSpacing: 0.5,
@@ -1558,19 +1558,20 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: '900',
     marginTop: 2,
+    letterSpacing: -0.5,
   },
   metricSub: {
-    color: '#849396',
+    color: '#78909c',
     fontSize: 10,
     fontWeight: '600',
   },
 
   // ─── SECTION WRAPS ───
   sectionWrap: {
-    backgroundColor: '#161c25',
-    borderRadius: radius.DEFAULT,
+    backgroundColor: '#0c1524',
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#242a34',
+    borderColor: 'rgba(255, 255, 255, 0.08)',
     padding: 14,
     gap: 12,
   },
@@ -1580,10 +1581,10 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingBottom: 6,
     borderBottomWidth: 1,
-    borderBottomColor: '#242a34',
+    borderBottomColor: 'rgba(255, 255, 255, 0.08)',
   },
   sectionTitle: {
-    color: '#dde2f0',
+    color: '#ffffff',
     fontSize: 11,
     fontWeight: '800',
     letterSpacing: 0.6,
@@ -1591,8 +1592,10 @@ const styles = StyleSheet.create({
 
   // ─── PENDING APPROVALS ───
   emptyPendingCard: {
-    backgroundColor: '#080e17',
-    borderRadius: radius.DEFAULT,
+    backgroundColor: '#070e1a',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.06)',
     padding: 16,
     alignItems: 'center',
     gap: 6,
@@ -1603,15 +1606,15 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   emptyPendingSub: {
-    color: '#849396',
+    color: '#78909c',
     fontSize: 9,
     textAlign: 'center',
   },
   pendingCard: {
-    backgroundColor: '#080e17',
-    borderRadius: radius.DEFAULT,
+    backgroundColor: '#070e1a',
+    borderRadius: 14,
     borderWidth: 1.5,
-    borderColor: '#feb300',
+    borderColor: 'rgba(254, 179, 0, 0.4)',
     padding: 12,
     gap: 10,
   },

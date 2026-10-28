@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -41,6 +41,11 @@ export default function AdminDriversScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'ACTIVE' | 'SUSPENDED' | 'DEACTIVATED'>('ALL');
+
+  const totalDriversCount = drivers.length;
+  const activeDriversCount = useMemo(() => drivers.filter((d) => (d.status || 'ACTIVE') === 'ACTIVE').length, [drivers]);
+  const suspendedDriversCount = useMemo(() => drivers.filter((d) => d.status === 'SUSPENDED').length, [drivers]);
+  const assignedVehiclesCount = useMemo(() => drivers.filter((d) => d.vehicleNumber && d.vehicleNumber !== 'UNASSIGNED').length, [drivers]);
 
   // Create Driver Modal
   const [createModalVisible, setCreateModalVisible] = useState(false);
@@ -294,9 +299,14 @@ export default function AdminDriversScreen() {
     <View style={styles.root}>
       {/* Top Header */}
       <View style={[styles.header, { paddingTop: Math.max(topInset, 16) }]}>
-        <View>
-          <Text style={styles.headerTitle}>Driver Fleet Management</Text>
-          <Text style={styles.headerSubtitle}>{drivers.length} drivers on system</Text>
+        <View style={{ flex: 1 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <View style={styles.headerDot} />
+            <Text style={styles.headerTitle}>Driver Fleet Operations</Text>
+          </View>
+          <Text style={styles.headerSubtitle}>
+            {totalDriversCount} Personnel Enrolled • {activeDriversCount} Certified Active
+          </Text>
         </View>
 
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
@@ -305,8 +315,8 @@ export default function AdminDriversScreen() {
             onPress={() => setCreateModalVisible(true)}
             activeOpacity={0.8}
           >
-            <Ionicons name="person-add" size={15} color="#001529" style={{ marginRight: 4 }} />
-            <Text style={styles.createBtnText}>NEW</Text>
+            <Ionicons name="person-add" size={14} color="#070c14" style={{ marginRight: 4 }} />
+            <Text style={styles.createBtnText}>NEW DRIVER</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.headerLogoutBtn}
@@ -315,6 +325,41 @@ export default function AdminDriversScreen() {
           >
             <Ionicons name="log-out-outline" size={18} color="#ff8a80" />
           </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* Driver Analytics HUD Strip */}
+      <View style={styles.hudContainer}>
+        <View style={[styles.hudCard, styles.hudCardTotal]}>
+          <View style={styles.hudIconRow}>
+            <Ionicons name="people" size={13} color="#00e5ff" />
+            <Text style={styles.hudLabel}>TOTAL DRIVERS</Text>
+          </View>
+          <Text style={[styles.hudValue, { color: '#00e5ff' }]}>{totalDriversCount}</Text>
+        </View>
+
+        <View style={[styles.hudCard, styles.hudCardActive]}>
+          <View style={styles.hudIconRow}>
+            <Ionicons name="checkmark-circle" size={13} color="#00e676" />
+            <Text style={styles.hudLabel}>ON DUTY</Text>
+          </View>
+          <Text style={[styles.hudValue, { color: '#00e676' }]}>{activeDriversCount}</Text>
+        </View>
+
+        <View style={[styles.hudCard, styles.hudCardSuspended]}>
+          <View style={styles.hudIconRow}>
+            <Ionicons name="pause-circle" size={13} color="#ffab00" />
+            <Text style={styles.hudLabel}>SUSPENDED</Text>
+          </View>
+          <Text style={[styles.hudValue, { color: '#ffab00' }]}>{suspendedDriversCount}</Text>
+        </View>
+
+        <View style={[styles.hudCard, styles.hudCardAssigned]}>
+          <View style={styles.hudIconRow}>
+            <Ionicons name="bus" size={13} color="#29b6f6" />
+            <Text style={styles.hudLabel}>ASSIGNED</Text>
+          </View>
+          <Text style={[styles.hudValue, { color: '#29b6f6' }]}>{assignedVehiclesCount}</Text>
         </View>
       </View>
 
@@ -336,28 +381,33 @@ export default function AdminDriversScreen() {
           ) : null}
         </View>
 
-        <View style={styles.filterPillsRow}>
-          {(['ALL', 'ACTIVE', 'SUSPENDED', 'DEACTIVATED'] as const).map((st) => (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterPillsRow}>
+          {[
+            { key: 'ALL', label: `ALL (${totalDriversCount})` },
+            { key: 'ACTIVE', label: `ACTIVE (${activeDriversCount})` },
+            { key: 'SUSPENDED', label: `SUSPENDED (${suspendedDriversCount})` },
+            { key: 'DEACTIVATED', label: 'DEACTIVATED' },
+          ].map((st) => (
             <TouchableOpacity
-              key={st}
+              key={st.key}
               style={[
                 styles.filterPill,
-                statusFilter === st && styles.filterPillActive,
+                statusFilter === st.key && styles.filterPillActive,
               ]}
-              onPress={() => setStatusFilter(st)}
+              onPress={() => setStatusFilter(st.key as any)}
               activeOpacity={0.7}
             >
               <Text
                 style={[
                   styles.filterPillText,
-                  statusFilter === st && styles.filterPillTextActive,
+                  statusFilter === st.key && styles.filterPillTextActive,
                 ]}
               >
-                {st}
+                {st.label}
               </Text>
             </TouchableOpacity>
           ))}
-        </View>
+        </ScrollView>
       </View>
 
       {/* Driver Cards List */}
@@ -1374,9 +1424,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingBottom: 14,
-    backgroundColor: '#0a1628',
+    backgroundColor: '#0a1019',
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  headerDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#00e5ff',
   },
   headerTitle: {
     fontSize: 18,
@@ -1398,7 +1454,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   createBtnText: {
-    color: '#001529',
+    color: '#070c14',
     fontSize: 11,
     fontWeight: '800',
     letterSpacing: 0.5,
@@ -1409,6 +1465,53 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 82, 82, 0.12)',
     borderWidth: 1,
     borderColor: 'rgba(255, 82, 82, 0.25)',
+  },
+  hudContainer: {
+    flexDirection: 'row',
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    backgroundColor: '#070c14',
+    gap: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.06)',
+  },
+  hudCard: {
+    flex: 1,
+    backgroundColor: '#0c1524',
+    borderRadius: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  hudCardTotal: {
+    borderColor: 'rgba(0, 229, 255, 0.3)',
+  },
+  hudCardActive: {
+    borderColor: 'rgba(0, 230, 118, 0.3)',
+  },
+  hudCardSuspended: {
+    borderColor: 'rgba(255, 171, 0, 0.3)',
+  },
+  hudCardAssigned: {
+    borderColor: 'rgba(41, 182, 246, 0.3)',
+  },
+  hudIconRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginBottom: 4,
+  },
+  hudLabel: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: '#78909c',
+    letterSpacing: 0.4,
+  },
+  hudValue: {
+    fontSize: 18,
+    fontWeight: '900',
+    letterSpacing: -0.5,
   },
   portPassRow: {
     flexDirection: 'row',
@@ -1449,14 +1552,14 @@ const styles = StyleSheet.create({
   },
   filterBar: {
     padding: 14,
-    backgroundColor: '#0c1b30',
+    backgroundColor: '#0a1019',
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(255, 255, 255, 0.06)',
   },
   searchWrap: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#070f1e',
+    backgroundColor: '#070c14',
     borderRadius: 8,
     paddingHorizontal: 10,
     height: 40,
@@ -1474,9 +1577,9 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   filterPill: {
-    paddingVertical: 4,
-    paddingHorizontal: 10,
-    borderRadius: 6,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 8,
     backgroundColor: 'rgba(255, 255, 255, 0.05)',
   },
   filterPillActive: {
@@ -1518,8 +1621,8 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   driverCard: {
-    backgroundColor: '#0c1b30',
-    borderRadius: 12,
+    backgroundColor: '#0c1524',
+    borderRadius: 14,
     padding: 14,
     marginBottom: 10,
     borderWidth: 1,
@@ -1606,11 +1709,11 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   modalBox: {
-    backgroundColor: '#0c1b30',
-    borderRadius: 16,
+    backgroundColor: '#0c1524',
+    borderRadius: 20,
     padding: 20,
     borderWidth: 1,
-    borderColor: 'rgba(0, 229, 255, 0.2)',
+    borderColor: 'rgba(0, 229, 255, 0.25)',
   },
   modalHeader: {
     flexDirection: 'row',

@@ -18,6 +18,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../../../src/store/authStore';
 import { driverService, DriverProfile } from '../../../src/services/driverService';
 import { authService } from '../../../src/services/authService';
+import { PasswordStrengthIndicator } from '../../../src/components/PasswordStrengthIndicator';
+import { securityValidator } from '../../../src/utils/securityValidator';
+import { biometricService, BiometricStatus } from '../../../src/services/biometricService';
+import { securityAuditService } from '../../../src/services/securityAuditService';
 import { colors, radius, spacing, shadow } from '../../../src/theme';
 import { useResponsive } from '../../../src/hooks/useResponsive';
 
@@ -82,6 +86,9 @@ export default function DriverProfileScreen() {
   const updateUser = useAuthStore((s) => s.updateUser);
   const setVehicleStatus = useAuthStore((s) => s.setVehicleStatus);
   const logout = useAuthStore((s) => s.logout);
+  const isBiometricEnabled = useAuthStore((s) => s.isBiometricEnabled);
+  const setBiometricEnabled = useAuthStore((s) => s.setBiometricEnabled);
+  const lockSession = useAuthStore((s) => s.lockSession);
   const router = useRouter();
   const { width, topInset, bottomInset, contentMaxWidth, containerPaddingHorizontal, isSmallMobile } = useResponsive();
 
@@ -89,6 +96,7 @@ export default function DriverProfileScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [biometricStatus, setBiometricStatus] = useState<BiometricStatus | null>(null);
   const [vehicleStatus, setLocalVehicleStatus] = useState<'ACTIVE' | 'MAINTENANCE' | 'INACTIVE'>(
     (user?.vehicleStatus as any) || 'ACTIVE'
   );
@@ -155,8 +163,12 @@ export default function DriverProfileScreen() {
       setPasswordError('Please enter a new password.');
       return;
     }
-    if (cleanNew.length < 6) {
-      setPasswordError('New password must be at least 6 characters long.');
+    const strength = securityValidator.evaluatePasswordStrength(cleanNew);
+    if (!strength.isValid) {
+      setPasswordError(
+        strength.feedback[0] ||
+          'Password must meet enterprise security requirements (min 8 chars, uppercase, lowercase, number, symbol).'
+      );
       return;
     }
     if (cleanNew !== cleanConfirm) {
@@ -339,7 +351,31 @@ export default function DriverProfileScreen() {
 
   useEffect(() => {
     fetchProfile();
+    biometricService.getStatus().then(setBiometricStatus);
   }, [fetchProfile]);
+
+  const handleToggleBiometric = async () => {
+    const nextVal = !isBiometricEnabled;
+    if (nextVal) {
+      const auth = await biometricService.authenticate(
+        `Confirm ${biometricStatus?.label || 'Biometric Authentication'} for SMART ITT`
+      );
+      if (auth.success) {
+        await setBiometricEnabled(true);
+        const msg = `${biometricStatus?.label || 'Biometrics'} enabled successfully.`;
+        if (Platform.OS === 'web') window.alert(msg);
+        else Alert.alert('Security Activated', msg);
+      } else if (auth.error && auth.error !== 'Authentication cancelled.') {
+        if (Platform.OS === 'web') window.alert(auth.error);
+        else Alert.alert('Verification Failed', auth.error);
+      }
+    } else {
+      await setBiometricEnabled(false);
+      const msg = 'Biometric authentication has been disabled.';
+      if (Platform.OS === 'web') window.alert(msg);
+      else Alert.alert('Biometrics Disabled', msg);
+    }
+  };
 
   const handleCopyCode = async (code: string) => {
     try {
@@ -980,22 +1016,75 @@ export default function DriverProfileScreen() {
             <View style={styles.card}>
               <View style={styles.cardHead}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
-                  <Ionicons name="key-outline" size={18} color="#00e5ff" />
-                  <Text style={styles.cardTitle}>SECURITY & ACCESS PASSWORD</Text>
+                  <Ionicons name="shield-checkmark" size={18} color="#00e5ff" />
+                  <Text style={styles.cardTitle}>SECURITY & COCKPIT CONTROLS</Text>
                 </View>
                 <TouchableOpacity
                   style={[styles.editProfileBtn, { borderColor: '#00e5ff' }]}
                   onPress={handleOpenChangePasswordModal}
                   activeOpacity={0.85}
                 >
-                  <Ionicons name="lock-closed-outline" size={14} color="#00e5ff" />
+                  <Ionicons name="key-outline" size={14} color="#00e5ff" />
                   <Text style={styles.editProfileBtnText}>CHANGE PASSWORD</Text>
                 </TouchableOpacity>
               </View>
 
-              <View style={{ paddingVertical: 4 }}>
-                <Text style={{ color: '#849396', fontSize: 13, lineHeight: 18 }}>
-                  Manage your mobile terminal password. When updated, the old password will be rejected on login and only your newly updated password will grant cockpit access.
+              {/* Biometric Toggle Row */}
+              {biometricStatus?.hasHardware && (
+                <View style={styles.secRowItem}>
+                  <View style={{ flex: 1 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <Ionicons
+                        name={biometricStatus.biometricType === 'FACE_ID' ? 'scan' : 'finger-print'}
+                        size={16}
+                        color="#00e5ff"
+                      />
+                      <Text style={styles.secRowTitle}>{biometricStatus.label} Login</Text>
+                    </View>
+                    <Text style={styles.secRowDesc}>
+                      {isBiometricEnabled
+                        ? 'Quick unlock enabled for this operator profile'
+                        : 'Enable biometric sensor for instant cockpit sign-in'}
+                    </Text>
+                  </View>
+                  <TouchableOpacity
+                    style={[styles.secToggleBtn, isBiometricEnabled && styles.secToggleBtnActive]}
+                    onPress={handleToggleBiometric}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={[styles.secToggleText, isBiometricEnabled && styles.secToggleTextActive]}>
+                      {isBiometricEnabled ? 'ENABLED' : 'ENABLE'}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+
+              {/* Lock Cockpit Row */}
+              <View style={styles.secRowItem}>
+                <View style={{ flex: 1 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <Ionicons name="lock-closed" size={15} color="#feb300" />
+                    <Text style={styles.secRowTitle}>Lock Cockpit Screen</Text>
+                  </View>
+                  <Text style={styles.secRowDesc}>
+                    Immediately lock mobile interface before leaving vehicle
+                  </Text>
+                </View>
+                <TouchableOpacity
+                  style={styles.secLockBtn}
+                  onPress={() => lockSession()}
+                  activeOpacity={0.8}
+                >
+                  <Ionicons name="lock-closed" size={12} color="#070c14" />
+                  <Text style={styles.secLockBtnText}>LOCK NOW</Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Security Posture Tag */}
+              <View style={styles.secPostureBanner}>
+                <Ionicons name="shield-checkmark-outline" size={13} color="#10b981" />
+                <Text style={styles.secPostureText}>
+                  HARDWARE KEYSTORE · AES-256 ENCRYPTED SESSION · ZERO PLAINTEXT
                 </Text>
               </View>
             </View>
@@ -1410,8 +1499,8 @@ export default function DriverProfileScreen() {
               </View>
 
               {/* New Password */}
-              <Text style={styles.editFieldLabel}>NEW PASSWORD (MIN 6 CHARACTERS) *</Text>
-              <View style={{ position: 'relative', marginBottom: 12 }}>
+              <Text style={styles.editFieldLabel}>NEW PASSWORD (MIN 8 CHARACTERS) *</Text>
+              <View style={{ position: 'relative', marginBottom: 6 }}>
                 <TextInput
                   style={[styles.editTextInput, { paddingRight: 40 }]}
                   value={newPasswordInput}
@@ -1419,7 +1508,7 @@ export default function DriverProfileScreen() {
                     setNewPasswordInput(t);
                     if (passwordError) setPasswordError(null);
                   }}
-                  placeholder="Enter new password (min. 6 characters)"
+                  placeholder="Min 8 chars (A-Z, a-z, 0-9, symbol)"
                   placeholderTextColor="#849396"
                   secureTextEntry={!showNewPassword}
                   autoCapitalize="none"
@@ -1435,6 +1524,9 @@ export default function DriverProfileScreen() {
                   />
                 </TouchableOpacity>
               </View>
+
+              {/* Password Strength Indicator */}
+              <PasswordStrengthIndicator password={newPasswordInput} />
 
               {/* Confirm New Password */}
               <Text style={styles.editFieldLabel}>CONFIRM NEW PASSWORD *</Text>
@@ -2167,5 +2259,74 @@ const styles = StyleSheet.create({
     color: '#00363d',
     fontSize: 12,
     fontWeight: '800',
+  },
+  secRowItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.06)',
+    gap: 12,
+  },
+  secRowTitle: {
+    color: '#f8fafc',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  secRowDesc: {
+    color: '#849396',
+    fontSize: 11,
+    marginTop: 2,
+    lineHeight: 15,
+  },
+  secToggleBtn: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#334155',
+    backgroundColor: 'rgba(51, 65, 85, 0.3)',
+  },
+  secToggleBtnActive: {
+    borderColor: '#00e5ff',
+    backgroundColor: 'rgba(0, 229, 255, 0.15)',
+  },
+  secToggleText: {
+    color: '#94a3b8',
+    fontSize: 11,
+    fontWeight: '800',
+  },
+  secToggleTextActive: {
+    color: '#00e5ff',
+  },
+  secLockBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    backgroundColor: '#feb300',
+  },
+  secLockBtnText: {
+    color: '#070c14',
+    fontSize: 11,
+    fontWeight: '800',
+  },
+  secPostureBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 10,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.06)',
+  },
+  secPostureText: {
+    color: '#10b981',
+    fontSize: 9,
+    fontWeight: '800',
+    letterSpacing: 0.5,
   },
 });

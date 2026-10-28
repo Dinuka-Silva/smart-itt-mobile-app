@@ -19,6 +19,7 @@ import {
   SupervisorRegisterRequest,
 } from '../../src/services/authService';
 import { useAuthStore } from '../../src/store/authStore';
+import { credentialStore } from '../../src/services/credentialStore';
 import { colors, radius, spacing } from '../../src/theme';
 
 import {
@@ -107,7 +108,7 @@ export default function DriverRegisterScreen() {
   const [formError, setFormError] = useState<string | null>(null);
 
   // Password rules
-  const hasMinLength = password.length >= 6;
+  const hasMinLength = password.length >= 8;
   const hasUpperCase = /[A-Z]/.test(password);
   const hasLowerCase = /[a-z]/.test(password);
   const hasNumber = /[0-9]/.test(password);
@@ -168,8 +169,8 @@ export default function DriverRegisterScreen() {
     setFormError(null);
 
     // If password is typed, check length & match
-    if (password && password.length < 6) {
-      setFormError('Security requirement: Password must be at least 6 characters.');
+    if (password && password.length < 8) {
+      setFormError('Security requirement: Password must be at least 8 characters with high complexity.');
       return;
     }
     if (password && confirmPassword && password !== confirmPassword) {
@@ -212,6 +213,7 @@ export default function DriverRegisterScreen() {
       try {
         const response = await authService.registerSupervisor(payload);
         const supervisorCode = response.user.employeeId || response.user.username || resolvedEmail;
+        await credentialStore.recordPasswordChange(supervisorCode, resolvedPassword);
         setGeneratedDriverCode(supervisorCode);
         setRegisteredUser({
           ...response.user,
@@ -301,6 +303,7 @@ export default function DriverRegisterScreen() {
         'DRV-00001';
 
       setGeneratedDriverCode(code);
+      await credentialStore.recordPasswordChange(code, resolvedPassword);
       setRegisteredUser({
         ...response.user,
         driverCode: code,
