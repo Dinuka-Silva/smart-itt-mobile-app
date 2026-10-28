@@ -45,6 +45,69 @@ export default function AdminVehiclesScreen() {
   const [detailsModalVisible, setDetailsModalVisible] = useState(false);
   const [signOutModalVisible, setSignOutModalVisible] = useState(false);
 
+  // Edit Vehicle Modal State
+  const [editModalVisible, setEditModalVisible] = useState(false);
+  const [editingVehicleId, setEditingVehicleId] = useState('');
+  const [editVehicleNumber, setEditVehicleNumber] = useState('');
+  const [editChassisNumber, setEditChassisNumber] = useState('');
+  const [editOperator, setEditOperator] = useState<'SCK Logistics' | 'SDR LINK'>('SCK Logistics');
+  const [editTrailerSize, setEditTrailerSize] = useState<'40FT' | '20FT' | '45FT'>('40FT');
+  const [editStatus, setEditStatus] = useState<'ACTIVE' | 'MAINTENANCE'>('ACTIVE');
+  const [editPortPassNumber, setEditPortPassNumber] = useState('');
+  const [editPortPassExpiryDate, setEditPortPassExpiryDate] = useState('');
+  const [editLicenseIssuedDate, setEditLicenseIssuedDate] = useState('');
+  const [editLicenseExpiryDate, setEditLicenseExpiryDate] = useState('');
+  const [savingEditVehicle, setSavingEditVehicle] = useState(false);
+
+  const openEditVehicle = (vehicle: any) => {
+    setEditingVehicleId(vehicle.id || vehicle.vehicleNumber);
+    setEditVehicleNumber(vehicle.vehicleNumber || '');
+    setEditChassisNumber(vehicle.chassisNumber || vehicle.cheNumber || '');
+    setEditOperator(vehicle.operator === 'SDR LINK' ? 'SDR LINK' : 'SCK Logistics');
+    setEditTrailerSize(vehicle.trailerSize || '40FT');
+    setEditStatus(vehicle.status === 'MAINTENANCE' ? 'MAINTENANCE' : 'ACTIVE');
+    setEditPortPassNumber(vehicle.portPassNumber || '');
+    setEditPortPassExpiryDate(vehicle.portPassExpiryDate || '2027-10-31');
+    setEditLicenseIssuedDate(vehicle.licenseIssuedDate || '2025-11-15');
+    setEditLicenseExpiryDate(vehicle.licenseExpiryDate || '2026-11-15');
+    setEditModalVisible(true);
+  };
+
+  const handleSaveVehicleEdit = async () => {
+    if (!editVehicleNumber.trim() || !editChassisNumber.trim()) {
+      Alert.alert('Required Fields', 'Vehicle Number and Chassis Number are required.');
+      return;
+    }
+
+    setSavingEditVehicle(true);
+    try {
+      const updated = await adminFleetStore.updateVehicleDetails(editingVehicleId, {
+        vehicleNumber: editVehicleNumber.trim().toUpperCase(),
+        chassisNumber: editChassisNumber.trim().toUpperCase(),
+        cheNumber: editChassisNumber.trim().toUpperCase(),
+        operator: editOperator,
+        trailerSize: editTrailerSize,
+        status: editStatus,
+        portPassNumber: editPortPassNumber.trim() || undefined,
+        portPassExpiryDate: editPortPassExpiryDate.trim() || undefined,
+        licenseIssuedDate: editLicenseIssuedDate.trim() || undefined,
+        licenseExpiryDate: editLicenseExpiryDate.trim() || undefined,
+      });
+
+      if (updated && selectedVehicle && (selectedVehicle.id === editingVehicleId || selectedVehicle.vehicleNumber === editingVehicleId)) {
+        setSelectedVehicle(updated);
+      }
+
+      Alert.alert('Vehicle Updated', `Vehicle ${editVehicleNumber.trim().toUpperCase()} details updated successfully!`);
+      setEditModalVisible(false);
+      fetchVehicles();
+    } catch (err: any) {
+      Alert.alert('Error', err?.message || 'Failed to update vehicle details');
+    } finally {
+      setSavingEditVehicle(false);
+    }
+  };
+
   const fetchVehicles = useCallback(async () => {
     try {
       const vList = await adminFleetStore.getVehicles(
@@ -303,6 +366,15 @@ export default function AdminVehiclesScreen() {
 
                   <View style={styles.actionBtnsCol}>
                     <TouchableOpacity
+                      style={styles.editBtn}
+                      onPress={() => openEditVehicle(v)}
+                      activeOpacity={0.8}
+                    >
+                      <Ionicons name="create-outline" size={11} color="#00e5ff" style={{ marginRight: 2 }} />
+                      <Text style={styles.editBtnText}>EDIT</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
                       style={styles.assignBtn}
                       onPress={() => {
                         setSelectedVehicle(v);
@@ -472,32 +544,55 @@ export default function AdminVehiclesScreen() {
 
               {/* 4. Actions */}
               <Text style={{ color: '#00e5ff', fontSize: 11, fontWeight: '900', letterSpacing: 1, marginBottom: 8 }}>
-                OPERATIONAL ACTIONS
+                OPERATIONAL ACTIONS & EDITING
               </Text>
-              <View style={{ flexDirection: 'row', gap: 10, marginTop: 4 }}>
+              <View style={{ gap: 8, marginTop: 4 }}>
                 <TouchableOpacity
-                  style={{ flex: 1, backgroundColor: '#00e5ff', paddingVertical: 12, borderRadius: 8, alignItems: 'center' }}
+                  style={{
+                    backgroundColor: 'rgba(0, 229, 255, 0.15)',
+                    borderWidth: 1,
+                    borderColor: '#00e5ff',
+                    paddingVertical: 12,
+                    borderRadius: 8,
+                    alignItems: 'center',
+                    flexDirection: 'row',
+                    justifyContent: 'center',
+                    gap: 6,
+                  }}
                   onPress={() => {
-                    setDetailsModalVisible(false);
-                    setAssignModalVisible(true);
+                    openEditVehicle(selectedVehicle);
                   }}
                   activeOpacity={0.8}
                 >
-                  <Text style={{ color: '#001529', fontWeight: '800', fontSize: 13 }}>REASSIGN DRIVER</Text>
+                  <Ionicons name="create-outline" size={16} color="#00e5ff" />
+                  <Text style={{ color: '#00e5ff', fontWeight: '800', fontSize: 13 }}>EDIT VEHICLE DETAILS</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity
-                  style={{ flex: 1, backgroundColor: selectedVehicle?.status === 'ACTIVE' ? '#feb300' : '#4caf50', paddingVertical: 12, borderRadius: 8, alignItems: 'center' }}
-                  onPress={() => {
-                    handleToggleStatus(selectedVehicle, selectedVehicle?.status === 'ACTIVE' ? 'MAINTENANCE' : 'ACTIVE');
-                    setDetailsModalVisible(false);
-                  }}
-                  activeOpacity={0.8}
-                >
-                  <Text style={{ color: '#000000', fontWeight: '800', fontSize: 13 }}>
-                    {selectedVehicle?.status === 'ACTIVE' ? 'SET MAINTENANCE' : 'ACTIVATE TRUCK'}
-                  </Text>
-                </TouchableOpacity>
+                <View style={{ flexDirection: 'row', gap: 10 }}>
+                  <TouchableOpacity
+                    style={{ flex: 1, backgroundColor: '#00e5ff', paddingVertical: 12, borderRadius: 8, alignItems: 'center' }}
+                    onPress={() => {
+                      setDetailsModalVisible(false);
+                      setAssignModalVisible(true);
+                    }}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={{ color: '#001529', fontWeight: '800', fontSize: 13 }}>REASSIGN DRIVER</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={{ flex: 1, backgroundColor: selectedVehicle?.status === 'ACTIVE' ? '#feb300' : '#4caf50', paddingVertical: 12, borderRadius: 8, alignItems: 'center' }}
+                    onPress={() => {
+                      handleToggleStatus(selectedVehicle, selectedVehicle?.status === 'ACTIVE' ? 'MAINTENANCE' : 'ACTIVE');
+                      setDetailsModalVisible(false);
+                    }}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={{ color: '#000000', fontWeight: '800', fontSize: 13 }}>
+                      {selectedVehicle?.status === 'ACTIVE' ? 'SET MAINTENANCE' : 'ACTIVATE TRUCK'}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
               </View>
             </ScrollView>
           </View>
@@ -743,6 +838,222 @@ export default function AdminVehiclesScreen() {
                 <TouchableOpacity
                   style={styles.cancelBtn}
                   onPress={() => setCreateModalVisible(false)}
+                >
+                  <Text style={styles.cancelBtnText}>CANCEL</Text>
+                </TouchableOpacity>
+              </View>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Edit Vehicle Details Modal */}
+      <Modal
+        visible={editModalVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setEditModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalBox, { maxHeight: '88%' }]}>
+            <View style={styles.modalHeader}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <View style={styles.modalHeaderIconWrap}>
+                  <Ionicons name="create" size={20} color="#00e5ff" />
+                </View>
+                <View>
+                  <Text style={styles.modalTitle}>Edit Vehicle Details</Text>
+                  <Text style={styles.modalSub}>Update Prime Mover & Compliance Records</Text>
+                </View>
+              </View>
+              <TouchableOpacity onPress={() => setEditModalVisible(false)}>
+                <Ionicons name="close" size={22} color="#ffffff" />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 20 }}>
+              {/* Vehicle Number (LY Plate) */}
+              <Text style={styles.formLabel}>VEHICLE PLATE NUMBER (LY NO) *</Text>
+              <TextInput
+                style={styles.formInput}
+                placeholder="e.g. LY-6439"
+                placeholderTextColor="#546e7a"
+                value={editVehicleNumber}
+                onChangeText={setEditVehicleNumber}
+                autoCapitalize="characters"
+              />
+
+              {/* Chassis / CHE Number */}
+              <Text style={styles.formLabel}>CHASSIS / CHE NUMBER (SCK NO) *</Text>
+              <TextInput
+                style={styles.formInput}
+                placeholder="e.g. SCK 100 or SDR 115"
+                placeholderTextColor="#546e7a"
+                value={editChassisNumber}
+                onChangeText={setEditChassisNumber}
+                autoCapitalize="characters"
+              />
+
+              {/* Operator */}
+              <Text style={styles.formLabel}>FLEET OPERATOR</Text>
+              <View style={styles.formSegmentWrap}>
+                <TouchableOpacity
+                  style={[
+                    styles.formSegmentBtn,
+                    editOperator === 'SCK Logistics' && styles.formSegmentBtnActive,
+                  ]}
+                  onPress={() => setEditOperator('SCK Logistics')}
+                >
+                  <Text
+                    style={[
+                      styles.formSegmentText,
+                      editOperator === 'SCK Logistics' && styles.formSegmentTextActive,
+                    ]}
+                  >
+                    SCK Logistics
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.formSegmentBtn,
+                    editOperator === 'SDR LINK' && styles.formSegmentBtnActive,
+                  ]}
+                  onPress={() => setEditOperator('SDR LINK')}
+                >
+                  <Text
+                    style={[
+                      styles.formSegmentText,
+                      editOperator === 'SDR LINK' && styles.formSegmentTextActive,
+                    ]}
+                  >
+                    SDR LINK
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Trailer Chassis Size */}
+              <Text style={styles.formLabel}>TRAILER CHASSIS SIZE</Text>
+              <View style={styles.formSegmentWrap}>
+                {(['40FT', '20FT', '45FT'] as const).map((sz) => (
+                  <TouchableOpacity
+                    key={sz}
+                    style={[
+                      styles.formSegmentBtn,
+                      editTrailerSize === sz && styles.formSegmentBtnActive,
+                    ]}
+                    onPress={() => setEditTrailerSize(sz)}
+                  >
+                    <Text
+                      style={[
+                        styles.formSegmentText,
+                        editTrailerSize === sz && styles.formSegmentTextActive,
+                      ]}
+                    >
+                      {sz}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              {/* Operating Status */}
+              <Text style={styles.formLabel}>OPERATING STATUS</Text>
+              <View style={styles.formSegmentWrap}>
+                <TouchableOpacity
+                  style={[
+                    styles.formSegmentBtn,
+                    editStatus === 'ACTIVE' && styles.formSegmentBtnActive,
+                  ]}
+                  onPress={() => setEditStatus('ACTIVE')}
+                >
+                  <Text
+                    style={[
+                      styles.formSegmentText,
+                      editStatus === 'ACTIVE' && styles.formSegmentTextActive,
+                    ]}
+                  >
+                    ACTIVE (Available)
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.formSegmentBtn,
+                    editStatus === 'MAINTENANCE' && styles.formSegmentBtnActive,
+                  ]}
+                  onPress={() => setEditStatus('MAINTENANCE')}
+                >
+                  <Text
+                    style={[
+                      styles.formSegmentText,
+                      editStatus === 'MAINTENANCE' && styles.formSegmentTextActive,
+                    ]}
+                  >
+                    MAINTENANCE
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Port Pass Number */}
+              <Text style={styles.formLabel}>SLPA VEHICLE PORT PASS NO</Text>
+              <TextInput
+                style={styles.formInput}
+                placeholder="e.g. SLPA-VPP-100"
+                placeholderTextColor="#546e7a"
+                value={editPortPassNumber}
+                onChangeText={setEditPortPassNumber}
+                autoCapitalize="characters"
+              />
+
+              {/* Port Pass Expiry Date */}
+              <Text style={styles.formLabel}>PORT PASS EXPIRY / RENEWAL DATE</Text>
+              <TextInput
+                style={styles.formInput}
+                placeholder="YYYY-MM-DD (e.g. 2027-10-31)"
+                placeholderTextColor="#546e7a"
+                value={editPortPassExpiryDate}
+                onChangeText={setEditPortPassExpiryDate}
+              />
+
+              {/* Revenue License Issued Date */}
+              <Text style={styles.formLabel}>REVENUE LICENSE ISSUED DATE</Text>
+              <TextInput
+                style={styles.formInput}
+                placeholder="YYYY-MM-DD (e.g. 2025-11-15)"
+                placeholderTextColor="#546e7a"
+                value={editLicenseIssuedDate}
+                onChangeText={setEditLicenseIssuedDate}
+              />
+
+              {/* Revenue License Expiry Date */}
+              <Text style={styles.formLabel}>REVENUE LICENSE EXPIRY DATE</Text>
+              <TextInput
+                style={styles.formInput}
+                placeholder="YYYY-MM-DD (e.g. 2026-11-15)"
+                placeholderTextColor="#546e7a"
+                value={editLicenseExpiryDate}
+                onChangeText={setEditLicenseExpiryDate}
+              />
+
+              {/* Action Buttons */}
+              <View style={{ marginTop: 20, gap: 10 }}>
+                <TouchableOpacity
+                  style={[styles.submitBtn, savingEditVehicle && { opacity: 0.6 }]}
+                  onPress={handleSaveVehicleEdit}
+                  disabled={savingEditVehicle}
+                  activeOpacity={0.8}
+                >
+                  {savingEditVehicle ? (
+                    <ActivityIndicator size="small" color="#070f1e" />
+                  ) : (
+                    <>
+                      <Ionicons name="save-outline" size={18} color="#070f1e" />
+                      <Text style={styles.submitBtnText}>SAVE VEHICLE CHANGES</Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.cancelBtn}
+                  onPress={() => setEditModalVisible(false)}
                 >
                   <Text style={styles.cancelBtnText}>CANCEL</Text>
                 </TouchableOpacity>
@@ -1002,6 +1313,21 @@ const styles = StyleSheet.create({
   actionBtnsCol: {
     flexDirection: 'row',
     gap: 8,
+  },
+  editBtn: {
+    backgroundColor: 'rgba(0, 229, 255, 0.1)',
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 229, 255, 0.4)',
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  editBtnText: {
+    color: '#00e5ff',
+    fontSize: 10,
+    fontWeight: '800',
   },
   assignBtn: {
     backgroundColor: 'rgba(0, 229, 255, 0.15)',

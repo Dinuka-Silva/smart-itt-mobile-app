@@ -53,7 +53,7 @@ export default function DriverContainers() {
             tripNumber: trip.tripNumber,
             vesselName: trip.vesselName,
             sourceTerminal: trip.sourceTerminal,
-            destTerminal: trip.destTerminal,
+            destTerminal: c.destTerminal || trip.destTerminal,
             tripStatus: trip.status,
             tripDate: trip.operationDate || trip.createdAt || trip.startTime || new Date().toISOString(),
           });
@@ -76,7 +76,7 @@ export default function DriverContainers() {
             tripNumber: trip.tripNumber,
             vesselName: trip.vesselName,
             sourceTerminal: trip.sourceTerminal,
-            destTerminal: trip.destTerminal,
+            destTerminal: c.destTerminal || trip.destTerminal,
             tripStatus: trip.status,
             tripDate: trip.operationDate || trip.createdAt || trip.startTime || new Date().toISOString(),
           });

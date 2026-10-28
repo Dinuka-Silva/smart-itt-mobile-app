@@ -467,6 +467,142 @@ class AdminFleetStore {
     }
     return 'ACTIVE';
   }
+
+  async updateVehicleDetails(
+    vehicleId: string,
+    updates: Partial<AdminVehicle>
+  ): Promise<AdminVehicle | null> {
+    const idx = this.vehicles.findIndex(v => v.id === vehicleId || v.vehicleNumber === vehicleId);
+    if (idx === -1) return null;
+
+    const oldVehicle = this.vehicles[idx];
+    const newVehicleNumber = updates.vehicleNumber ? updates.vehicleNumber.trim().toUpperCase() : oldVehicle.vehicleNumber;
+    const newChassisNumber = updates.chassisNumber ? updates.chassisNumber.trim().toUpperCase() : oldVehicle.chassisNumber;
+
+    const updatedVehicle: AdminVehicle = {
+      ...oldVehicle,
+      ...updates,
+      vehicleNumber: newVehicleNumber,
+      chassisNumber: newChassisNumber,
+      cheNumber: newChassisNumber,
+    };
+
+    // Recalculate days until expiry if licenseExpiryDate changed
+    if (updates.licenseExpiryDate) {
+      const exp = new Date(updates.licenseExpiryDate);
+      if (!isNaN(exp.getTime())) {
+        const diff = Math.ceil((exp.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+        updatedVehicle.daysUntilExpiry = diff;
+        updatedVehicle.licenseStatus = diff <= 30 ? 'RENEWAL_DUE' : 'VALID';
+      }
+    }
+
+    // Recalculate port pass days if portPassExpiryDate changed
+    if (updates.portPassExpiryDate) {
+      const pexp = new Date(updates.portPassExpiryDate);
+      if (!isNaN(pexp.getTime())) {
+        const pdiff = Math.ceil((pexp.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+        updatedVehicle.portPassDaysUntilExpiry = pdiff;
+        updatedVehicle.portPassStatus = pdiff <= 30 ? 'RENEWAL_DUE' : 'VALID';
+      }
+    }
+
+    this.vehicles[idx] = updatedVehicle;
+
+    // Synchronize assigned driver's vehicle info if plate or chassis changed
+    if (oldVehicle.vehicleNumber !== newVehicleNumber || oldVehicle.chassisNumber !== newChassisNumber) {
+      const dIdx = this.drivers.findIndex(d => d.vehicleNumber === oldVehicle.vehicleNumber || d.fullName === oldVehicle.driverName);
+      if (dIdx !== -1) {
+        this.drivers[dIdx] = {
+          ...this.drivers[dIdx],
+          vehicleNumber: newVehicleNumber,
+          chassisNumber: newChassisNumber,
+          cheNumber: newChassisNumber,
+        };
+      }
+    }
+
+    try {
+      await adminService.updateVehicle(vehicleId, updates);
+    } catch (e) {
+      console.log('[AdminFleetStore] Backend offline, updated vehicle locally');
+    }
+
+    return updatedVehicle;
+  }
+
+  async updateDriverDetails(
+    driverId: string,
+    updates: Partial<AdminDriver>
+  ): Promise<AdminDriver | null> {
+    const idx = this.drivers.findIndex(d => d.id === driverId || d.driverCode === driverId);
+    if (idx === -1) return null;
+
+    const oldDriver = this.drivers[idx];
+    const updatedDriver: AdminDriver = {
+      ...oldDriver,
+      ...updates,
+      fullName: updates.fullName ? updates.fullName.trim() : oldDriver.fullName,
+      employeeId: updates.employeeId ? updates.employeeId.trim().toUpperCase() : oldDriver.employeeId,
+      mobileNumber: updates.mobileNumber ? updates.mobileNumber.trim() : oldDriver.mobileNumber,
+      nic: updates.nic ? updates.nic.trim() : oldDriver.nic,
+    };
+
+    // If assigned vehicle changed, sync vehicle's driver info
+    if (updates.vehicleNumber !== undefined && updates.vehicleNumber !== oldDriver.vehicleNumber) {
+      const newVPlate = updates.vehicleNumber ? updates.vehicleNumber.trim().toUpperCase() : '';
+
+      // Remove driver from previous vehicle
+      if (oldDriver.vehicleNumber) {
+        const prevVIdx = this.vehicles.findIndex(v => v.vehicleNumber.toUpperCase() === oldDriver.vehicleNumber?.toUpperCase());
+        if (prevVIdx !== -1) {
+          this.vehicles[prevVIdx] = {
+            ...this.vehicles[prevVIdx],
+            driverName: null,
+            driverCode: null,
+            driverMobile: null,
+          };
+        }
+      }
+
+      // Assign driver to new vehicle
+      if (newVPlate && newVPlate !== 'UNASSIGNED') {
+        const newVIdx = this.vehicles.findIndex(v => v.vehicleNumber.toUpperCase() === newVPlate);
+        if (newVIdx !== -1) {
+          this.vehicles[newVIdx] = {
+            ...this.vehicles[newVIdx],
+            driverName: updatedDriver.fullName,
+            driverCode: updatedDriver.driverCode,
+            driverMobile: updatedDriver.mobileNumber,
+          };
+          updatedDriver.chassisNumber = this.vehicles[newVIdx].chassisNumber;
+          updatedDriver.cheNumber = this.vehicles[newVIdx].chassisNumber;
+        }
+      }
+    } else if (updates.fullName || updates.mobileNumber) {
+      // If driver name or phone changed, update vehicle's driver details
+      if (updatedDriver.vehicleNumber) {
+        const vIdx = this.vehicles.findIndex(v => v.vehicleNumber.toUpperCase() === updatedDriver.vehicleNumber?.toUpperCase());
+        if (vIdx !== -1) {
+          this.vehicles[vIdx] = {
+            ...this.vehicles[vIdx],
+            driverName: updatedDriver.fullName,
+            driverMobile: updatedDriver.mobileNumber,
+          };
+        }
+      }
+    }
+
+    this.drivers[idx] = updatedDriver;
+
+    try {
+      await adminService.updateDriver(driverId, updates);
+    } catch (e) {
+      console.log('[AdminFleetStore] Backend offline, updated driver locally');
+    }
+
+    return updatedDriver;
+  }
 }
 
 export const adminFleetStore = new AdminFleetStore();

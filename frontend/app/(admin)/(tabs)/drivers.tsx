@@ -47,6 +47,83 @@ export default function AdminDriversScreen() {
   const [actionModalVisible, setActionModalVisible] = useState(false);
   const [signOutModalVisible, setSignOutModalVisible] = useState(false);
 
+  // Edit Driver Modal State
+  const [editModalVisible, setEditModalVisible] = useState(false);
+  const [editingDriverId, setEditingDriverId] = useState('');
+  const [editFullName, setEditFullName] = useState('');
+  const [editEmployeeId, setEditEmployeeId] = useState('');
+  const [editMobileNumber, setEditMobileNumber] = useState('');
+  const [editNic, setEditNic] = useState('');
+  const [editDrivingLicenceNumber, setEditDrivingLicenceNumber] = useState('');
+  const [editLicenseExpiryDate, setEditLicenseExpiryDate] = useState('');
+  const [editPortPassNumber, setEditPortPassNumber] = useState('');
+  const [editPortPassExpiryDate, setEditPortPassExpiryDate] = useState('');
+  const [editAddress, setEditAddress] = useState('');
+  const [editEmail, setEditEmail] = useState('');
+  const [editEmergencyContactName, setEditEmergencyContactName] = useState('');
+  const [editEmergencyContactNumber, setEditEmergencyContactNumber] = useState('');
+  const [editVehicleNumber, setEditVehicleNumber] = useState('');
+  const [editStatus, setEditStatus] = useState<'ACTIVE' | 'SUSPENDED' | 'DEACTIVATED'>('ACTIVE');
+  const [savingEditDriver, setSavingEditDriver] = useState(false);
+
+  const openEditDriver = (driver: any) => {
+    setEditingDriverId(driver.id || driver.driverCode);
+    setEditFullName(driver.fullName || '');
+    setEditEmployeeId(driver.employeeId || '');
+    setEditMobileNumber(driver.mobileNumber || '');
+    setEditNic(driver.nic || '');
+    setEditDrivingLicenceNumber(driver.licenseNumber || driver.drivingLicenceNumber || '');
+    setEditLicenseExpiryDate(driver.licenseExpiryDate || '2028-12-31');
+    setEditPortPassNumber(driver.portPassNumber || '');
+    setEditPortPassExpiryDate(driver.portPassExpiryDate || '2027-06-30');
+    setEditAddress(driver.address || '');
+    setEditEmail(driver.email || '');
+    setEditEmergencyContactName(driver.emergencyContactName || '');
+    setEditEmergencyContactNumber(driver.emergencyContactNumber || '');
+    setEditVehicleNumber(driver.vehicleNumber || 'UNASSIGNED');
+    setEditStatus(driver.status || 'ACTIVE');
+    setEditModalVisible(true);
+  };
+
+  const handleSaveDriverEdit = async () => {
+    if (!editFullName.trim() || !editEmployeeId.trim() || !editMobileNumber.trim() || !editNic.trim()) {
+      Alert.alert('Required Fields', 'Full Name, Employee ID, Mobile Number, and NIC are required.');
+      return;
+    }
+
+    setSavingEditDriver(true);
+    try {
+      const updated = await adminFleetStore.updateDriverDetails(editingDriverId, {
+        fullName: editFullName.trim(),
+        employeeId: editEmployeeId.trim().toUpperCase(),
+        mobileNumber: editMobileNumber.trim(),
+        nic: editNic.trim(),
+        licenseNumber: editDrivingLicenceNumber.trim().toUpperCase(),
+        licenseExpiryDate: editLicenseExpiryDate.trim() || undefined,
+        portPassNumber: editPortPassNumber.trim() || undefined,
+        portPassExpiryDate: editPortPassExpiryDate.trim() || undefined,
+        address: editAddress.trim() || undefined,
+        email: editEmail.trim() || undefined,
+        emergencyContactName: editEmergencyContactName.trim() || undefined,
+        emergencyContactNumber: editEmergencyContactNumber.trim() || undefined,
+        vehicleNumber: editVehicleNumber.trim() || 'UNASSIGNED',
+        status: editStatus,
+      });
+
+      if (updated && selectedDriver && (selectedDriver.id === editingDriverId || selectedDriver.driverCode === editingDriverId)) {
+        setSelectedDriver(updated);
+      }
+
+      Alert.alert('Driver Updated', `Driver ${editFullName.trim()} (${editEmployeeId.trim().toUpperCase()}) details updated successfully!`);
+      setEditModalVisible(false);
+      fetchDrivers();
+    } catch (err: any) {
+      Alert.alert('Error', err?.message || 'Failed to update driver details');
+    } finally {
+      setSavingEditDriver(false);
+    }
+  };
+
   const fetchDrivers = useCallback(async () => {
     try {
       const data = await adminFleetStore.getDrivers(search, statusFilter === 'ALL' ? undefined : statusFilter);
@@ -257,17 +334,28 @@ export default function AdminDriversScreen() {
                     <Text style={styles.driverNameText}>{d.fullName}</Text>
                   </View>
 
-                  <View
-                    style={[
-                      styles.statusBadge,
-                      d.status === 'ACTIVE'
-                        ? styles.statusActive
-                        : d.status === 'SUSPENDED'
-                        ? styles.statusSuspended
-                        : styles.statusDeactivated,
-                    ]}
-                  >
-                    <Text style={styles.statusBadgeText}>{d.status || 'ACTIVE'}</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <TouchableOpacity
+                      style={styles.cardEditBtn}
+                      onPress={() => openEditDriver(d)}
+                      activeOpacity={0.8}
+                    >
+                      <Ionicons name="create-outline" size={11} color="#00e5ff" style={{ marginRight: 2 }} />
+                      <Text style={styles.cardEditBtnText}>EDIT</Text>
+                    </TouchableOpacity>
+
+                    <View
+                      style={[
+                        styles.statusBadge,
+                        d.status === 'ACTIVE'
+                          ? styles.statusActive
+                          : d.status === 'SUSPENDED'
+                          ? styles.statusSuspended
+                          : styles.statusDeactivated,
+                      ]}
+                    >
+                      <Text style={styles.statusBadgeText}>{d.status || 'ACTIVE'}</Text>
+                    </View>
                   </View>
                 </View>
 
@@ -470,6 +558,30 @@ export default function AdminDriversScreen() {
                   <Text style={styles.detailRowValue}>JCT Gate 1 / CICT Gate 2 / SAGT Gate</Text>
                 </View>
               </View>
+
+              {/* Edit Driver Details Action */}
+              <TouchableOpacity
+                style={{
+                  backgroundColor: 'rgba(0, 229, 255, 0.15)',
+                  borderWidth: 1,
+                  borderColor: '#00e5ff',
+                  paddingVertical: 12,
+                  borderRadius: 8,
+                  alignItems: 'center',
+                  flexDirection: 'row',
+                  justifyContent: 'center',
+                  gap: 8,
+                  marginBottom: 16,
+                  marginTop: 6,
+                }}
+                onPress={() => openEditDriver(selectedDriver)}
+                activeOpacity={0.8}
+              >
+                <Ionicons name="create-outline" size={18} color="#00e5ff" />
+                <Text style={{ color: '#00e5ff', fontWeight: '800', fontSize: 13 }}>
+                  EDIT DRIVER DETAILS & FLEET ASSIGNMENT
+                </Text>
+              </TouchableOpacity>
 
               {/* 5. Admin Management Controls */}
               <Text style={styles.modalSectionLabel}>CHANGE ACCOUNT STATUS</Text>
@@ -776,6 +888,222 @@ export default function AdminDriversScreen() {
         </View>
       </Modal>
 
+      {/* Edit Driver Details Modal */}
+      <Modal
+        visible={editModalVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setEditModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <ScrollView contentContainerStyle={styles.createScrollWrap}>
+            <View style={styles.createModalBox}>
+              <View style={styles.modalHeader}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(0, 229, 255, 0.15)', alignItems: 'center', justifyContent: 'center' }}>
+                    <Ionicons name="create" size={18} color="#00e5ff" />
+                  </View>
+                  <View>
+                    <Text style={styles.modalTitle}>Edit Driver Profile</Text>
+                    <Text style={{ fontSize: 11, color: '#90caf9' }}>Update Employment & License Records</Text>
+                  </View>
+                </View>
+                <TouchableOpacity onPress={() => setEditModalVisible(false)}>
+                  <Ionicons name="close" size={22} color="#ffffff" />
+                </TouchableOpacity>
+              </View>
+
+              <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 16 }}>
+                {/* Full Name */}
+                <Text style={styles.createInputLabel}>FULL NAME *</Text>
+                <TextInput
+                  style={styles.createInput}
+                  placeholder="e.g. Kamal Perera"
+                  placeholderTextColor="#546e7a"
+                  value={editFullName}
+                  onChangeText={setEditFullName}
+                />
+
+                {/* Employee ID */}
+                <Text style={styles.createInputLabel}>EMPLOYEE ID *</Text>
+                <TextInput
+                  style={styles.createInput}
+                  placeholder="e.g. DRV001"
+                  placeholderTextColor="#546e7a"
+                  value={editEmployeeId}
+                  onChangeText={setEditEmployeeId}
+                  autoCapitalize="characters"
+                />
+
+                {/* NIC Number */}
+                <Text style={styles.createInputLabel}>NATIONAL IDENTITY NUMBER (NIC) *</Text>
+                <TextInput
+                  style={styles.createInput}
+                  placeholder="e.g. 198512345678"
+                  placeholderTextColor="#546e7a"
+                  value={editNic}
+                  onChangeText={setEditNic}
+                />
+
+                {/* Mobile Phone */}
+                <Text style={styles.createInputLabel}>MOBILE CONTACT NUMBER *</Text>
+                <TextInput
+                  style={styles.createInput}
+                  placeholder="e.g. 0779876543"
+                  placeholderTextColor="#546e7a"
+                  value={editMobileNumber}
+                  onChangeText={setEditMobileNumber}
+                  keyboardType="phone-pad"
+                />
+
+                {/* Email Address */}
+                <Text style={styles.createInputLabel}>EMAIL ADDRESS</Text>
+                <TextInput
+                  style={styles.createInput}
+                  placeholder="e.g. driver@smartitt.lk"
+                  placeholderTextColor="#546e7a"
+                  value={editEmail}
+                  onChangeText={setEditEmail}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                />
+
+                {/* Home Address */}
+                <Text style={styles.createInputLabel}>HOME ADDRESS</Text>
+                <TextInput
+                  style={styles.createInput}
+                  placeholder="e.g. No. 45, Harbour View Road, Colombo 15"
+                  placeholderTextColor="#546e7a"
+                  value={editAddress}
+                  onChangeText={setEditAddress}
+                />
+
+                {/* Heavy Driving License */}
+                <Text style={styles.createInputLabel}>DRIVING LICENSE NUMBER *</Text>
+                <TextInput
+                  style={styles.createInput}
+                  placeholder="e.g. LIC-001234"
+                  placeholderTextColor="#546e7a"
+                  value={editDrivingLicenceNumber}
+                  onChangeText={setEditDrivingLicenceNumber}
+                  autoCapitalize="characters"
+                />
+
+                {/* License Expiry Date */}
+                <Text style={styles.createInputLabel}>LICENSE EXPIRY DATE</Text>
+                <TextInput
+                  style={styles.createInput}
+                  placeholder="YYYY-MM-DD (e.g. 2028-12-31)"
+                  placeholderTextColor="#546e7a"
+                  value={editLicenseExpiryDate}
+                  onChangeText={setEditLicenseExpiryDate}
+                />
+
+                {/* Port Pass Number */}
+                <Text style={styles.createInputLabel}>SLPA PORT ENTRY PASS NUMBER</Text>
+                <TextInput
+                  style={styles.createInput}
+                  placeholder="e.g. SLPA-DPP-001"
+                  placeholderTextColor="#546e7a"
+                  value={editPortPassNumber}
+                  onChangeText={setEditPortPassNumber}
+                  autoCapitalize="characters"
+                />
+
+                {/* Port Pass Expiry Date */}
+                <Text style={styles.createInputLabel}>PORT PASS EXPIRY / RENEWAL DATE</Text>
+                <TextInput
+                  style={styles.createInput}
+                  placeholder="YYYY-MM-DD (e.g. 2027-06-30)"
+                  placeholderTextColor="#546e7a"
+                  value={editPortPassExpiryDate}
+                  onChangeText={setEditPortPassExpiryDate}
+                />
+
+                {/* Assigned Vehicle */}
+                <Text style={styles.createInputLabel}>ASSIGNED TRUCK (VEHICLE PLATE)</Text>
+                <TextInput
+                  style={styles.createInput}
+                  placeholder="e.g. LY-6439 or UNASSIGNED"
+                  placeholderTextColor="#546e7a"
+                  value={editVehicleNumber}
+                  onChangeText={setEditVehicleNumber}
+                  autoCapitalize="characters"
+                />
+
+                {/* Emergency Contact Name */}
+                <Text style={styles.createInputLabel}>EMERGENCY CONTACT PERSON</Text>
+                <TextInput
+                  style={styles.createInput}
+                  placeholder="e.g. Sunil Perera (Brother)"
+                  placeholderTextColor="#546e7a"
+                  value={editEmergencyContactName}
+                  onChangeText={setEditEmergencyContactName}
+                />
+
+                {/* Emergency Contact Phone */}
+                <Text style={styles.createInputLabel}>EMERGENCY CONTACT PHONE</Text>
+                <TextInput
+                  style={styles.createInput}
+                  placeholder="e.g. 0771122334"
+                  placeholderTextColor="#546e7a"
+                  value={editEmergencyContactNumber}
+                  onChangeText={setEditEmergencyContactNumber}
+                  keyboardType="phone-pad"
+                />
+
+                {/* Operating Status */}
+                <Text style={styles.createInputLabel}>ACCOUNT OPERATING STATUS</Text>
+                <View style={{ flexDirection: 'row', gap: 6, marginBottom: 12 }}>
+                  {(['ACTIVE', 'SUSPENDED', 'DEACTIVATED'] as const).map((st) => (
+                    <TouchableOpacity
+                      key={st}
+                      style={[
+                        { flex: 1, paddingVertical: 8, borderRadius: 6, alignItems: 'center', borderWidth: 1 },
+                        editStatus === st
+                          ? { backgroundColor: st === 'ACTIVE' ? '#4caf50' : st === 'SUSPENDED' ? '#feb300' : '#ff5252', borderColor: 'transparent' }
+                          : { backgroundColor: '#070f1e', borderColor: 'rgba(255, 255, 255, 0.1)' },
+                      ]}
+                      onPress={() => setEditStatus(st)}
+                    >
+                      <Text style={{ fontSize: 11, fontWeight: '800', color: editStatus === st && st === 'SUSPENDED' ? '#000000' : '#ffffff' }}>
+                        {st}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+
+                {/* Action Buttons */}
+                <View style={{ marginTop: 14, gap: 8 }}>
+                  <TouchableOpacity
+                    style={[styles.createSubmitBtn, savingEditDriver && { opacity: 0.6 }]}
+                    onPress={handleSaveDriverEdit}
+                    disabled={savingEditDriver}
+                    activeOpacity={0.8}
+                  >
+                    {savingEditDriver ? (
+                      <ActivityIndicator size="small" color="#001529" />
+                    ) : (
+                      <>
+                        <Ionicons name="save-outline" size={16} color="#001529" style={{ marginRight: 6 }} />
+                        <Text style={styles.createSubmitBtnText}>SAVE DRIVER CHANGES</Text>
+                      </>
+                    )}
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.createCancelBtn}
+                    onPress={() => setEditModalVisible(false)}
+                  >
+                    <Text style={styles.createCancelBtnText}>CANCEL</Text>
+                  </TouchableOpacity>
+                </View>
+              </ScrollView>
+            </View>
+          </ScrollView>
+        </View>
+      </Modal>
+
       {/* Admin Sign Out Confirmation Modal */}
       <AdminSignOutModal
         visible={signOutModalVisible}
@@ -966,6 +1294,21 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#ffffff',
     marginTop: 2,
+  },
+  cardEditBtn: {
+    backgroundColor: 'rgba(0, 229, 255, 0.1)',
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 229, 255, 0.4)',
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  cardEditBtnText: {
+    color: '#00e5ff',
+    fontSize: 10,
+    fontWeight: '800',
   },
   statusBadge: {
     paddingHorizontal: 8,
@@ -1217,5 +1560,51 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: '#78909c',
     marginTop: 3,
+  },
+  createInputLabel: {
+    color: '#90caf9',
+    fontSize: 11,
+    fontWeight: '700',
+    marginBottom: 4,
+    marginTop: 4,
+  },
+  createInput: {
+    backgroundColor: '#070f1e',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+    color: '#ffffff',
+    paddingHorizontal: 12,
+    height: 42,
+    fontSize: 13,
+    marginBottom: 10,
+  },
+  createSubmitBtn: {
+    backgroundColor: '#00e5ff',
+    borderRadius: 8,
+    height: 44,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  createSubmitBtnText: {
+    color: '#001529',
+    fontSize: 13,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
+  createCancelBtn: {
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderRadius: 8,
+    height: 42,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  createCancelBtnText: {
+    color: '#90caf9',
+    fontSize: 12,
+    fontWeight: '700',
   },
 });

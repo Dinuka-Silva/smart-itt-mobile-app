@@ -367,8 +367,40 @@ export default function DriverJobQueue() {
 
                   {/* Containers List */}
                   <View style={styles.containersBox}>
+                    {/* Multi/Dual Terminal Discharge Indicator */}
+                    {(() => {
+                      const termStr = getTripDischargeTerminal(trip);
+                      const isDual = termStr.includes('&');
+                      return (
+                        <View
+                          style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            gap: 6,
+                            backgroundColor: isDual ? 'rgba(0, 229, 255, 0.1)' : 'rgba(34, 239, 126, 0.08)',
+                            borderWidth: 1,
+                            borderColor: isDual ? 'rgba(0, 229, 255, 0.3)' : 'rgba(34, 239, 126, 0.25)',
+                            borderRadius: 6,
+                            paddingHorizontal: 8,
+                            paddingVertical: 4,
+                            marginBottom: 8,
+                          }}
+                        >
+                          <Ionicons
+                            name={isDual ? 'swap-horizontal' : 'checkmark-circle'}
+                            size={12}
+                            color={isDual ? '#00e5ff' : '#22ef7e'}
+                          />
+                          <Text style={{ fontSize: 10, fontWeight: '700', color: isDual ? '#00e5ff' : '#22ef7e', flex: 1 }}>
+                            {isDual ? `DUAL DISCHARGE TERMINALS: ${termStr}` : `DISCHARGE TERMINAL: ${termStr}`}
+                          </Text>
+                        </View>
+                      );
+                    })()}
+
                     {(trip.containers || []).map((c: any, cIdx: number) => {
                       const sel = unloadSelections[c.id] || c.unloadedTerminal || c.destTerminal || trip.destTerminal;
+                      const cDest = c.destTerminal || getTripDischargeTerminal(trip);
                       return (
                         <View key={c.id || cIdx} style={styles.containerItem}>
                           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -376,9 +408,14 @@ export default function DriverJobQueue() {
                               <Ionicons name="cube" size={14} color={colors.primaryContainer} />
                               <Text style={styles.containerNumText}>{c.containerNumber || 'MSKU-88219-0'}</Text>
                             </View>
-                            <Text style={styles.isoType}>
-                              {c.size || c.isoType || '20FT'} ➔ {c.destTerminal || getTripDischargeTerminal(trip)}
-                            </Text>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                              <Text style={styles.isoType}>{c.size || c.isoType || '20FT'}</Text>
+                              <View style={{ backgroundColor: 'rgba(0, 229, 255, 0.15)', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, borderWidth: 1, borderColor: 'rgba(0, 229, 255, 0.3)' }}>
+                                <Text style={{ color: '#00e5ff', fontSize: 10, fontWeight: '800' }}>
+                                  ➔ {cDest}
+                                </Text>
+                              </View>
+                            </View>
                           </View>
 
                           {/* Unload Terminal Selector if in progress and arrived */}
@@ -468,7 +505,7 @@ export default function DriverJobQueue() {
                       }}
                     >
                       <Ionicons name="location" size={18} color="#00363d" />
-                      <Text style={styles.completeBtnText}>ARRIVED AT DESTINATION TERMINAL ({trip.destTerminal})</Text>
+                      <Text style={styles.completeBtnText}>ARRIVED AT DESTINATION TERMINAL ({getTripDischargeTerminal(trip)})</Text>
                     </TouchableOpacity>
                   )}
 
@@ -478,7 +515,7 @@ export default function DriverJobQueue() {
                       <View style={styles.arrivedNoticeBox}>
                         <Ionicons name="pin" size={16} color="#22ef7e" />
                         <Text style={styles.arrivedNoticeText}>
-                          Arrived at {trip.destTerminal}. Confirm unload bay and discharge cargo.
+                          Arrived at {getTripDischargeTerminal(trip)}. Confirm unload bay and discharge cargo.
                         </Text>
                       </View>
                       <View style={{ flexDirection: 'row', gap: 8 }}>
@@ -523,7 +560,7 @@ export default function DriverJobQueue() {
                         <Text style={styles.completedNoticeText}>STORED IN MY TRIPS ARCHIVE</Text>
                       </View>
                       <Text style={styles.completedNoticeSub}>
-                        Containers successfully discharged at {trip.destTerminal}. Trip record archived.
+                        Containers successfully discharged at {getTripDischargeTerminal(trip)}. Trip record archived.
                       </Text>
                     </View>
                   )}

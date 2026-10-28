@@ -826,22 +826,65 @@ export default function DriverHomeDashboard() {
                 </Text>
               </View>
 
-              {(activeTrip.containers || []).map((c: any, idx: number) => (
-                <View key={c.id || idx} style={styles.containerItemRow}>
-                  <View style={styles.containerBadge}>
-                    <Text style={styles.containerBadgeText}>{idx + 1}</Text>
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.containerItemNumber}>{c.containerNumber || 'MSKU-88219-0'}</Text>
-                    <Text style={styles.containerItemSub}>
-                      {c.size || '20FT'} · {c.damageStatus === 'DAMAGED' ? '⚠️ DAMAGED' : '✓ SOUND'} · Dest: {c.destTerminal || getTripDischargeTerminal(activeTrip)}
+              {/* Dual vs Single Discharge Terminal Routing Strip */}
+              {(() => {
+                const termStr = getTripDischargeTerminal(activeTrip);
+                const isDual = termStr.includes('&');
+                return (
+                  <View
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: 6,
+                      backgroundColor: isDual ? 'rgba(0, 229, 255, 0.1)' : 'rgba(34, 239, 126, 0.1)',
+                      borderWidth: 1,
+                      borderColor: isDual ? 'rgba(0, 229, 255, 0.35)' : 'rgba(34, 239, 126, 0.35)',
+                      borderRadius: 6,
+                      paddingHorizontal: 8,
+                      paddingVertical: 5,
+                      marginBottom: 8,
+                    }}
+                  >
+                    <Ionicons
+                      name={isDual ? "swap-horizontal" : "checkmark-circle"}
+                      size={13}
+                      color={isDual ? "#00e5ff" : "#22ef7e"}
+                    />
+                    <Text style={{ fontSize: 11, fontWeight: '700', color: isDual ? '#00e5ff' : '#22ef7e', flex: 1 }}>
+                      {isDual
+                        ? `DUAL DISCHARGE TERMINALS: ${termStr}`
+                        : `DISCHARGE TERMINAL: ${termStr}`}
                     </Text>
                   </View>
-                  <View style={styles.containerStatusTag}>
-                    <Text style={styles.containerStatusTagText}>{c.status || activeTrip.status}</Text>
+                );
+              })()}
+
+              {(activeTrip.containers || []).map((c: any, idx: number) => {
+                const cDest = c.destTerminal || getTripDischargeTerminal(activeTrip);
+                return (
+                  <View key={c.id || idx} style={styles.containerItemRow}>
+                    <View style={styles.containerBadge}>
+                      <Text style={styles.containerBadgeText}>{idx + 1}</Text>
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.containerItemNumber}>{c.containerNumber || 'MSKU-88219-0'}</Text>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2, flexWrap: 'wrap' }}>
+                        <Text style={styles.containerItemSub}>
+                          {c.size || '20FT'} · {c.damageStatus === 'DAMAGED' ? '⚠️ DAMAGED' : '✓ SOUND'}
+                        </Text>
+                        <View style={{ backgroundColor: 'rgba(0, 229, 255, 0.15)', paddingHorizontal: 6, paddingVertical: 1, borderRadius: 4, borderWidth: 1, borderColor: 'rgba(0, 229, 255, 0.3)' }}>
+                          <Text style={{ color: '#00e5ff', fontSize: 10, fontWeight: '800' }}>
+                            Discharge: {cDest}
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
+                    <View style={styles.containerStatusTag}>
+                      <Text style={styles.containerStatusTagText}>{c.status || activeTrip.status}</Text>
+                    </View>
                   </View>
-                </View>
-              ))}
+                );
+              })}
             </View>
 
             {/* 4. DYNAMIC NOTIFICATIONS & ACTION BUTTONS */}
@@ -856,7 +899,7 @@ export default function DriverHomeDashboard() {
                   </Text>
                 </View>
                 <Text style={styles.notificationBannerMsg}>
-                  Trip delivered and containers discharged at {activeTrip.destTerminal || 'destination'}! Your completed trip has been sent to the Operations Supervisor. As soon as the supervisor verifies and confirms, your completed trip count (+1) and allowance will update automatically.
+                  Trip delivered and containers discharged at {getTripDischargeTerminal(activeTrip)}! Your completed trip has been sent to the Operations Supervisor. As soon as the supervisor verifies and confirms, your completed trip count (+1) and allowance will update automatically.
                 </Text>
                 <View style={styles.pendingActionInfoRow}>
                   <ActivityIndicator size="small" color="#feb300" />
@@ -914,7 +957,7 @@ export default function DriverHomeDashboard() {
                 <View style={styles.notificationBannerHeader}>
                   <Ionicons name="navigate-circle" size={22} color="#00e5ff" />
                   <Text style={styles.notificationBannerTitleInProgress}>
-                    TRIP IN TRANSIT TO {activeTrip.destTerminal || 'DESTINATION'}
+                    TRIP IN TRANSIT TO {getTripDischargeTerminal(activeTrip)}
                   </Text>
                 </View>
                 <Text style={styles.notificationBannerMsg}>
@@ -933,7 +976,7 @@ export default function DriverHomeDashboard() {
                     <>
                       <Ionicons name="location" size={24} color="#00363d" />
                       <Text style={styles.arriveTerminalBtnText}>
-                        ARRIVED AT TERMINAL ({activeTrip.destTerminal || 'DESTINATION'})
+                        ARRIVED AT TERMINAL ({getTripDischargeTerminal(activeTrip)})
                       </Text>
                     </>
                   )}
@@ -947,7 +990,7 @@ export default function DriverHomeDashboard() {
                 <View style={styles.notificationBannerHeader}>
                   <Ionicons name="flag" size={22} color="#22ef7e" />
                   <Text style={styles.notificationBannerTitleArrived}>
-                    ARRIVED AT {activeTrip.destTerminal || 'DISCHARGE TERMINAL'}
+                    ARRIVED AT {getTripDischargeTerminal(activeTrip)}
                   </Text>
                 </View>
                 <Text style={styles.notificationBannerMsg}>
