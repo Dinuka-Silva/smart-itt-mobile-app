@@ -93,7 +93,7 @@ const initialTrips: MockTrip[] = [
     operator: 'SCK Logistics',
     vesselName: 'MV Colombo Express',
     sourceTerminal: 'CICT',
-    destTerminal: 'JCT',
+    destTerminal: 'JCT & CWIT',
     status: 'IN_PROGRESS',
     startTime: todayTrip1Start,
     createdAt: todayTrip1Start,
@@ -101,7 +101,7 @@ const initialTrips: MockTrip[] = [
     dispatchTime: '08:35',
     containers: [
       { id: 'c-101', containerNumber: 'MSKU8821902', size: '20FT', isoType: '20GP', status: 'IN_TRANSIT', destTerminal: 'JCT', damageStatus: 'NONE', isReturn: false, cargoType: 'STANDARD' },
-      { id: 'c-102', containerNumber: 'TGHU3301290', size: '20FT', isoType: '20GP', status: 'IN_TRANSIT', destTerminal: 'JCT', damageStatus: 'DAMAGED', isReturn: true, cargoType: 'RETURN' },
+      { id: 'c-102', containerNumber: 'TGHU3301290', size: '20FT', isoType: '20GP', status: 'IN_TRANSIT', destTerminal: 'CWIT', damageStatus: 'DAMAGED', isReturn: true, cargoType: 'RETURN' },
     ],
   },
   {

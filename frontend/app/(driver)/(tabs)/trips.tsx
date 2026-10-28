@@ -19,6 +19,7 @@ import { colors, radius, spacing } from '../../../src/theme';
 import { useMockTripStore } from '../../../src/store/mockTripStore';
 import { useResponsive } from '../../../src/hooks/useResponsive';
 import { getTripTimingDetails } from '../../../src/utils/tripDateUtils';
+import { getTripDischargeTerminal } from '../../../src/utils/tripTerminalUtils';
 
 const TERMINALS = ['CWIT', 'JCT', 'ECT', 'UCT', 'SAGT', 'CICT'];
 
@@ -311,7 +312,7 @@ export default function DriverJobQueue() {
                     </View>
                     <View style={styles.termBox}>
                       <Text style={styles.termLabel}>DESTINATION</Text>
-                      <Text style={styles.termCode}>{trip.destTerminal || 'JCT'}</Text>
+                      <Text style={styles.termCode}>{getTripDischargeTerminal(trip)}</Text>
                     </View>
                   </View>
 
@@ -367,7 +368,7 @@ export default function DriverJobQueue() {
                   {/* Containers List */}
                   <View style={styles.containersBox}>
                     {(trip.containers || []).map((c: any, cIdx: number) => {
-                      const sel = unloadSelections[c.id] || c.unloadedTerminal || trip.destTerminal;
+                      const sel = unloadSelections[c.id] || c.unloadedTerminal || c.destTerminal || trip.destTerminal;
                       return (
                         <View key={c.id || cIdx} style={styles.containerItem}>
                           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -375,7 +376,9 @@ export default function DriverJobQueue() {
                               <Ionicons name="cube" size={14} color={colors.primaryContainer} />
                               <Text style={styles.containerNumText}>{c.containerNumber || 'MSKU-88219-0'}</Text>
                             </View>
-                            <Text style={styles.isoType}>{c.size || c.isoType || '40FT'}</Text>
+                            <Text style={styles.isoType}>
+                              {c.size || c.isoType || '20FT'} ➔ {c.destTerminal || getTripDischargeTerminal(trip)}
+                            </Text>
                           </View>
 
                           {/* Unload Terminal Selector if in progress and arrived */}
@@ -408,7 +411,7 @@ export default function DriverJobQueue() {
                       <View style={styles.pendingNoticeBox}>
                         <Ionicons name="time-outline" size={16} color="#feb300" />
                         <Text style={styles.pendingNoticeText}>
-                          Containers discharged at {trip.destTerminal}. Awaiting Operations Supervisor confirmation to credit your completed trip count & allowance.
+                          Containers discharged at {getTripDischargeTerminal(trip)}. Awaiting Operations Supervisor confirmation to credit your completed trip count & allowance.
                         </Text>
                       </View>
                       <TouchableOpacity

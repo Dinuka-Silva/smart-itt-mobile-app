@@ -24,6 +24,7 @@ import { colors, radius, spacing } from '../../../src/theme';
 import { resolveCheNumber, resolveOperator, findFleetVehicle } from '../../../src/config/fleet';
 import { useResponsive } from '../../../src/hooks/useResponsive';
 import { getTripTimingDetails } from '../../../src/utils/tripDateUtils';
+import { getTripDischargeTerminal } from '../../../src/utils/tripTerminalUtils';
 
 
 const DRIVER_PHOTO_POOL = [
@@ -645,7 +646,7 @@ export default function SupervisorHomeDashboard() {
                   {/* Route & Cargo details */}
                   <View style={styles.pendingSpecsRow}>
                     <Text style={styles.pendingSpec}>
-                      Route: <Text style={styles.pendingSpecHighlight}>{trip.sourceTerminal} ➔ {trip.destTerminal}</Text>
+                      Route: <Text style={styles.pendingSpecHighlight}>{trip.sourceTerminal} ➔ {getTripDischargeTerminal(trip)}</Text>
                     </Text>
                     <Text style={styles.pendingSpec}>
                       Vessel: <Text style={styles.pendingSpecHighlight}>{trip.vesselName || 'MV Colombo Star'}</Text>
@@ -714,7 +715,7 @@ export default function SupervisorHomeDashboard() {
                         <View key={c.id || idx} style={styles.pendingContainerPill}>
                           <Ionicons name="cube" size={12} color="#00e5ff" />
                           <Text style={styles.pendingContNum}>{c.containerNumber}</Text>
-                          <Text style={styles.pendingContSize}>({c.size})</Text>
+                          <Text style={styles.pendingContSize}>({c.size || '20FT'} ➔ {c.destTerminal || getTripDischargeTerminal(trip)})</Text>
                           <Text style={styles.pendingContStatus}>Status: {c.status}</Text>
                         </View>
                       ))}

@@ -42,6 +42,7 @@ interface ContainerEntry {
   size: '20FT' | '40FT';
   loadType?: '1x20FT' | '2x20FT' | '40FT';
   destTerminal: string;
+  destTerminal2?: string; // used for container #2 when dual 20FT
   sealNumber?: string;
   damageStatus?: string;
   remarks?: string;
@@ -55,6 +56,7 @@ function emptyContainer(defaultDest: string): ContainerEntry {
     size: '20FT',
     loadType: '1x20FT',
     destTerminal: defaultDest,
+    destTerminal2: defaultDest,
     isReturnContainer: false,
   };
 }
@@ -425,6 +427,7 @@ function ContainerCard({
             onChange('loadType', '1x20FT');
             onChange('size', '20FT');
             onChange('containerNumber2', '');
+            onChange('destTerminal2', entry.destTerminal);
           }}
         >
           <Text style={[cc.sizeTxt, isSingle20 && cc.sizeTxtActive]}>1 × 20FT</Text>
@@ -436,6 +439,9 @@ function ContainerCard({
           onPress={() => {
             onChange('loadType', '2x20FT');
             onChange('size', '20FT');
+            if (!entry.destTerminal2) {
+              onChange('destTerminal2', entry.destTerminal);
+            }
           }}
         >
           <Text style={[cc.sizeTxt, isTwin20 && cc.sizeTxtActive]}>2 × 20FT</Text>
@@ -448,6 +454,7 @@ function ContainerCard({
             onChange('loadType', '40FT');
             onChange('size', '40FT');
             onChange('containerNumber2', '');
+            onChange('destTerminal2', entry.destTerminal);
           }}
         >
           <Text style={[cc.sizeTxt, is40FT && cc.sizeTxtActive]}>1 × 40FT</Text>
@@ -462,44 +469,111 @@ function ContainerCard({
           {isSingle20
             ? '1 × 20FT Mode: Driver loaded 1 × 20ft container (1 TEU / ~14.0T).'
             : isTwin20
-            ? '2 × 20FT Mode: Driver loaded 2 × 20ft twin containers on chassis (2 TEU / ~26.5T).'
+            ? '2 × 20FT Mode: Driver loaded 2 × 20ft twin containers on chassis (2 TEU / ~26.5T). Select discharge terminal for each container.'
             : '40FT Mode: Driver loaded 1 × 40ft container on chassis (2 TEU / ~26.5T).'}
         </Text>
       </View>
 
-      {/* Container numbers */}
+      {/* Container numbers and Destination Terminals */}
       {isTwin20 ? (
-        <>
-          <Text style={cc.fieldLabel}>Container No. 1 * (Manual Entry)</Text>
-          <TextInput
-            style={cc.input}
-            placeholder="e.g. MSCU7721892"
-            placeholderTextColor="#849396"
-            autoCapitalize="characters"
-            maxLength={16}
-            value={entry.containerNumber}
-            onChangeText={(v) => onChange('containerNumber', v.toUpperCase())}
-          />
-          <ContainerValidationPill
-            containerNumber={entry.containerNumber}
-            onFixCheckDigit={(corrected) => onChange('containerNumber', corrected)}
-          />
+        <View style={{ gap: 12 }}>
+          {/* Container No. 1 */}
+          <View style={cc.containerSectionCard}>
+            <View style={cc.containerSectionHeader}>
+              <View style={cc.contBadge1}>
+                <Ionicons name="cube" size={13} color="#00363d" />
+                <Text style={cc.contBadgeText1}>CONTAINER #1 (20FT)</Text>
+              </View>
+              <Text style={cc.contSectionDestHint}>
+                Discharge: <Text style={{ color: '#00e5ff', fontWeight: '800' }}>{entry.destTerminal || 'JCT'}</Text>
+              </Text>
+            </View>
 
-          <Text style={cc.fieldLabel}>Container No. 2 * (Manual Entry)</Text>
-          <TextInput
-            style={cc.input}
-            placeholder="e.g. TCKU3456789"
-            placeholderTextColor="#849396"
-            autoCapitalize="characters"
-            maxLength={16}
-            value={entry.containerNumber2}
-            onChangeText={(v) => onChange('containerNumber2', v.toUpperCase())}
-          />
-          <ContainerValidationPill
-            containerNumber={entry.containerNumber2 || ''}
-            onFixCheckDigit={(corrected) => onChange('containerNumber2', corrected)}
-          />
-        </>
+            <Text style={cc.fieldLabel}>Container No. 1 Number * (Manual Entry)</Text>
+            <TextInput
+              style={cc.input}
+              placeholder="e.g. MSCU7721892"
+              placeholderTextColor="#849396"
+              autoCapitalize="characters"
+              maxLength={16}
+              value={entry.containerNumber}
+              onChangeText={(v) => onChange('containerNumber', v.toUpperCase())}
+            />
+            <ContainerValidationPill
+              containerNumber={entry.containerNumber}
+              onFixCheckDigit={(corrected) => onChange('containerNumber', corrected)}
+            />
+
+            <TerminalPicker
+              label="Container #1 Discharge Terminal *"
+              selected={entry.destTerminal}
+              onSelect={(t) => onChange('destTerminal', t)}
+              accentColor="#00e5ff"
+              exclude={loadingTerminal}
+            />
+          </View>
+
+          {/* Container No. 2 */}
+          <View style={[cc.containerSectionCard, { borderColor: 'rgba(254, 179, 0, 0.45)' }]}>
+            <View style={cc.containerSectionHeader}>
+              <View style={cc.contBadge2}>
+                <Ionicons name="cube" size={13} color="#432c00" />
+                <Text style={cc.contBadgeText2}>CONTAINER #2 (20FT)</Text>
+              </View>
+              <Text style={cc.contSectionDestHint}>
+                Discharge: <Text style={{ color: '#feb300', fontWeight: '800' }}>{entry.destTerminal2 || entry.destTerminal || 'JCT'}</Text>
+              </Text>
+            </View>
+
+            <Text style={cc.fieldLabel}>Container No. 2 Number * (Manual Entry)</Text>
+            <TextInput
+              style={cc.input}
+              placeholder="e.g. TCKU3456789"
+              placeholderTextColor="#849396"
+              autoCapitalize="characters"
+              maxLength={16}
+              value={entry.containerNumber2}
+              onChangeText={(v) => onChange('containerNumber2', v.toUpperCase())}
+            />
+            <ContainerValidationPill
+              containerNumber={entry.containerNumber2 || ''}
+              onFixCheckDigit={(corrected) => onChange('containerNumber2', corrected)}
+            />
+
+            <TerminalPicker
+              label="Container #2 Discharge Terminal *"
+              selected={entry.destTerminal2 || entry.destTerminal}
+              onSelect={(t) => onChange('destTerminal2', t)}
+              accentColor="#feb300"
+              exclude={loadingTerminal}
+            />
+          </View>
+
+          {/* Single vs Dual Discharge Status Notification */}
+          {entry.destTerminal === (entry.destTerminal2 || entry.destTerminal) ? (
+            <View style={cc.singleDischargeBanner}>
+              <Ionicons name="checkmark-circle" size={16} color="#22ef7e" />
+              <View style={{ flex: 1 }}>
+                <Text style={cc.singleDischargeTitle}>SINGLE TERMINAL DISCHARGE: {entry.destTerminal}</Text>
+                <Text style={cc.singleDischargeSub}>
+                  Both 20FT twin containers will be discharged at {entry.destTerminal}. Displays as one discharge terminal across all logins.
+                </Text>
+              </View>
+            </View>
+          ) : (
+            <View style={cc.dualDischargeBanner}>
+              <Ionicons name="swap-horizontal" size={16} color="#00e5ff" />
+              <View style={{ flex: 1 }}>
+                <Text style={cc.dualDischargeTitle}>
+                  DUAL TERMINAL DISCHARGE: {entry.destTerminal} & {entry.destTerminal2 || entry.destTerminal}
+                </Text>
+                <Text style={cc.dualDischargeSub}>
+                  Container #1 ➔ {entry.destTerminal} • Container #2 ➔ {entry.destTerminal2 || entry.destTerminal}. Both discharge terminals will appear in trip details across all logins.
+                </Text>
+              </View>
+            </View>
+          )}
+        </View>
       ) : (
         <>
           <Text style={cc.fieldLabel}>
@@ -518,17 +592,19 @@ function ContainerCard({
             containerNumber={entry.containerNumber}
             onFixCheckDigit={(corrected) => onChange('containerNumber', corrected)}
           />
+
+          <TerminalPicker
+            label="Destination Terminal *"
+            selected={entry.destTerminal}
+            onSelect={(t) => {
+              onChange('destTerminal', t);
+              onChange('destTerminal2', t);
+            }}
+            accentColor="#00e5ff"
+            exclude={loadingTerminal}
+          />
         </>
       )}
-
-      {/* Destination Terminal */}
-      <TerminalPicker
-        label="Destination Terminal *"
-        selected={entry.destTerminal}
-        onSelect={(t) => onChange('destTerminal', t)}
-        accentColor="#00e5ff"
-        exclude={loadingTerminal}
-      />
 
       {/* Damage Status */}
       <Text style={cc.fieldLabel}>Damage Status</Text>
@@ -623,6 +699,99 @@ const cc = StyleSheet.create({
     marginBottom: spacing.md,
     borderWidth: 1,
     borderColor: '#242a34',
+  },
+  containerSectionCard: {
+    backgroundColor: '#0a101a',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 229, 255, 0.4)',
+    borderRadius: radius.md,
+    padding: 12,
+    marginBottom: 6,
+  },
+  containerSectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  contBadge1: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: '#00e5ff',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 4,
+  },
+  contBadgeText1: {
+    fontSize: 10,
+    fontWeight: '900',
+    color: '#00363d',
+    letterSpacing: 0.5,
+  },
+  contBadge2: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: '#feb300',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 4,
+  },
+  contBadgeText2: {
+    fontSize: 10,
+    fontWeight: '900',
+    color: '#432c00',
+    letterSpacing: 0.5,
+  },
+  contSectionDestHint: {
+    fontSize: 11,
+    color: '#849396',
+    fontWeight: '600',
+  },
+  singleDischargeBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: 'rgba(34, 239, 126, 0.1)',
+    borderWidth: 1,
+    borderColor: '#22ef7e',
+    borderRadius: radius.md,
+    padding: 10,
+    marginTop: 4,
+  },
+  singleDischargeTitle: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#22ef7e',
+    letterSpacing: 0.5,
+  },
+  singleDischargeSub: {
+    fontSize: 10,
+    color: '#bac9cc',
+    marginTop: 2,
+  },
+  dualDischargeBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: 'rgba(0, 229, 255, 0.1)',
+    borderWidth: 1,
+    borderColor: '#00e5ff',
+    borderRadius: radius.md,
+    padding: 10,
+    marginTop: 4,
+  },
+  dualDischargeTitle: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#00e5ff',
+    letterSpacing: 0.5,
+  },
+  dualDischargeSub: {
+    fontSize: 10,
+    color: '#bac9cc',
+    marginTop: 2,
   },
   fieldLabel: { fontSize: 13, fontWeight: '600', color: '#849396', marginBottom: 6 },
   input: {
@@ -922,6 +1091,21 @@ export default function NewTripScreen() {
         );
         return;
       }
+
+      if (loadType === '2x20FT') {
+        const d2 = entry.destTerminal2 || entry.destTerminal;
+        if (!d2) {
+          showAlert('Required', `Please select a destination terminal for Container ${i + 1} (#2).`);
+          return;
+        }
+        if (d2 === sourceTerminal) {
+          showAlert(
+            'Invalid Route',
+            `Container ${i + 1} (#2) destination terminal cannot be the same as the loading terminal (${sourceTerminal}).`
+          );
+          return;
+        }
+      }
     }
 
     setShowVerify(true);
@@ -956,7 +1140,7 @@ export default function NewTripScreen() {
           containerNumber: c.containerNumber2.trim().toUpperCase(),
           size: '20FT',
           loadType: '2x20FT',
-          destTerminal: c.destTerminal,
+          destTerminal: c.destTerminal2 || c.destTerminal,
           sealNumber: c.sealNumber,
           damageStatus: c.damageStatus,
           remarks: c.remarks,
@@ -969,9 +1153,12 @@ export default function NewTripScreen() {
     const hasReturn = allTripContainers.some((c) => c.isReturn);
 
     try {
-      // Build payload — one trip with multiple containers, each with own destTerminal
-      // We use the first container's destTerminal as the trip-level destTerminal
-      const tripDestTerminal = containers[0].destTerminal;
+      // Build trip-level discharge terminal:
+      // If driver selected the same discharge terminal for both containers -> shows as one terminal discharge
+      // If driver selected 2 different discharge terminals -> shows both (e.g. CICT & SAGT)
+      const allDests = allTripContainers.map((tc) => tc.destTerminal).filter(Boolean);
+      const uniqueDests = Array.from(new Set(allDests));
+      const tripDestTerminal = uniqueDests.join(' & ');
 
       const assignedVeh = driverTruck || user?.vehicleNumber || 'LY-6439';
       const assignedChe = resolveCheNumber(assignedVeh, driverChe || user?.chassisNumber || user?.cheNumber);
@@ -1377,9 +1564,19 @@ export default function NewTripScreen() {
             <Text style={styles.summaryVal}>{sourceTerminal || '—'}</Text>
           </View>
           <View style={styles.summaryRow}>
-            <Text style={styles.summaryKey}>Destinations</Text>
+            <Text style={styles.summaryKey}>Discharge Terminal(s)</Text>
             <Text style={styles.summaryVal}>
-              {[...new Set(containers.map((c) => c.destTerminal))].join(', ') || '—'}
+              {(() => {
+                const list = containers.flatMap((c) => {
+                  const lt = c.loadType || (c.size === '40FT' ? '40FT' : '1x20FT');
+                  const d = [c.destTerminal];
+                  if (lt === '2x20FT' && c.containerNumber2) {
+                    d.push(c.destTerminal2 || c.destTerminal);
+                  }
+                  return d;
+                }).filter(Boolean);
+                return Array.from(new Set(list)).join(' & ') || '—';
+              })()}
             </Text>
           </View>
           <View style={styles.summaryRow}>
@@ -1447,7 +1644,17 @@ export default function NewTripScreen() {
           mode="verify"
           vesselName={vesselName}
           sourceTerminal={sourceTerminal}
-          destTerminals={[...new Set(containers.map((c) => c.destTerminal))].join(', ')}
+          destTerminals={(() => {
+            const list = containers.flatMap((c) => {
+              const lt = c.loadType || (c.size === '40FT' ? '40FT' : '1x20FT');
+              const d = [c.destTerminal];
+              if (lt === '2x20FT' && c.containerNumber2) {
+                d.push(c.destTerminal2 || c.destTerminal);
+              }
+              return d;
+            }).filter(Boolean);
+            return Array.from(new Set(list)).join(' & ');
+          })()}
           vehicleNumber={driverTruck || user?.vehicleNumber || 'LY-6439'}
           driverName={driverName || user?.name || 'Kamal Perera'}
           containers={containers.flatMap((c) => {
@@ -1462,7 +1669,7 @@ export default function NewTripScreen() {
               list.push({
                 containerNumber: c.containerNumber2.trim().toUpperCase(),
                 size: '20FT',
-                destTerminal: c.destTerminal,
+                destTerminal: c.destTerminal2 || c.destTerminal,
                 isReturn: c.isReturnContainer,
               });
             }

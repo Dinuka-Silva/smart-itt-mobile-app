@@ -15,6 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { adminService } from '../../../src/services/adminService';
 import { useResponsive } from '../../../src/hooks/useResponsive';
 import { useMockTripStore } from '../../../src/store/mockTripStore';
+import { getTripDischargeTerminal } from '../../../src/utils/tripTerminalUtils';
 
 export default function AdminTripsScreen() {
   const { topInset, bottomInset, containerPaddingHorizontal } = useResponsive();
@@ -63,7 +64,11 @@ export default function AdminTripsScreen() {
         list = list.filter((t) => t.status === statusFilter);
       }
       if (terminalFilter !== 'ALL') {
-        list = list.filter((t) => t.sourceTerminal === terminalFilter || t.destTerminal === terminalFilter);
+        list = list.filter((t) =>
+          t.sourceTerminal === terminalFilter ||
+          getTripDischargeTerminal(t).includes(terminalFilter) ||
+          (t.containers || []).some((c: any) => c.destTerminal === terminalFilter)
+        );
       }
       if (search && search.trim()) {
         const q = search.trim().toLowerCase();
@@ -85,7 +90,11 @@ export default function AdminTripsScreen() {
         list = list.filter((t) => t.status === statusFilter);
       }
       if (terminalFilter !== 'ALL') {
-        list = list.filter((t) => t.sourceTerminal === terminalFilter || t.destTerminal === terminalFilter);
+        list = list.filter((t) =>
+          t.sourceTerminal === terminalFilter ||
+          getTripDischargeTerminal(t).includes(terminalFilter) ||
+          (t.containers || []).some((c: any) => c.destTerminal === terminalFilter)
+        );
       }
       if (search && search.trim()) {
         const q = search.trim().toLowerCase();
@@ -269,7 +278,7 @@ export default function AdminTripsScreen() {
                   </View>
                   <Ionicons name="arrow-forward" size={16} color="#00e5ff" style={{ marginHorizontal: 8 }} />
                   <View style={styles.terminalBox}>
-                    <Text style={styles.terminalBoxText}>{trip.destTerminal}</Text>
+                    <Text style={styles.terminalBoxText}>{getTripDischargeTerminal(trip)}</Text>
                   </View>
                   <Text style={styles.vehicleFleetText}>
                     • {trip.vehicleNumber} ({trip.chassisNumber || 'CHE'})
@@ -293,7 +302,7 @@ export default function AdminTripsScreen() {
                       <View key={idx} style={styles.containerTag}>
                         <Ionicons name="cube-outline" size={12} color="#00e5ff" style={{ marginRight: 4 }} />
                         <Text style={styles.containerTagText}>
-                          {c.containerNumber} ({c.size})
+                          {c.containerNumber} ({c.size || '20FT'} ➔ {c.destTerminal || getTripDischargeTerminal(trip)})
                         </Text>
                       </View>
                     ))}
@@ -339,7 +348,7 @@ export default function AdminTripsScreen() {
 
               <View style={styles.infoRow}>
                 <Text style={styles.infoLabel}>Discharge Terminal:</Text>
-                <Text style={styles.infoVal}>{selectedTrip?.destTerminal}</Text>
+                <Text style={styles.infoVal}>{getTripDischargeTerminal(selectedTrip)}</Text>
               </View>
 
               <View style={styles.infoRow}>
@@ -359,7 +368,9 @@ export default function AdminTripsScreen() {
               {selectedTrip?.containers?.map((c: any, i: number) => (
                 <View key={i} style={styles.containerDetailItem}>
                   <Text style={styles.containerDetailNum}>{c.containerNumber}</Text>
-                  <Text style={styles.containerDetailSize}>{c.size}</Text>
+                  <Text style={styles.containerDetailSize}>
+                    {c.size || '20FT'} ➔ {c.destTerminal || getTripDischargeTerminal(selectedTrip)}
+                  </Text>
                   <Text style={styles.containerDetailStatus}>{c.status || 'LOADED'}</Text>
                 </View>
               ))}

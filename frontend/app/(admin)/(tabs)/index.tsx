@@ -17,6 +17,7 @@ import { adminFleetStore, AdminVehicle, AdminDriver } from '../../../src/store/a
 import { useResponsive } from '../../../src/hooks/useResponsive';
 import { AdminSignOutModal } from '../../../src/components/AdminSignOutModal';
 import { useMockTripStore } from '../../../src/store/mockTripStore';
+import { getTripDischargeTerminal } from '../../../src/utils/tripTerminalUtils';
 
 type DashboardSection = 'OVERVIEW' | 'TRIPS' | 'FLEET' | 'SUPERVISORS';
 
@@ -485,7 +486,7 @@ export default function AdminDashboardScreen() {
                   <View style={styles.tripRouteRow}>
                     <Text style={styles.tripRouteTerm}>{trip.sourceTerminal}</Text>
                     <Ionicons name="arrow-forward" size={14} color="#78909c" />
-                    <Text style={styles.tripRouteTerm}>{trip.destTerminal}</Text>
+                    <Text style={styles.tripRouteTerm}>{getTripDischargeTerminal(trip)}</Text>
                     <Text style={styles.tripVesselText}>• {trip.vesselName || 'ITT Harbor Transfer'}</Text>
                   </View>
 
@@ -539,8 +540,8 @@ export default function AdminDashboardScreen() {
                       </View>
                       <Ionicons name="arrow-forward-circle" size={24} color="#00e5ff" />
                       <View style={styles.terminalPoint}>
-                        <Text style={styles.terminalPointLabel}>DESTINATION</Text>
-                        <Text style={styles.terminalPointVal}>{trip.destTerminal}</Text>
+                        <Text style={styles.terminalPointLabel}>DISCHARGE</Text>
+                        <Text style={styles.terminalPointVal}>{getTripDischargeTerminal(trip)}</Text>
                       </View>
                     </View>
 
@@ -560,7 +561,16 @@ export default function AdminDashboardScreen() {
                       <View style={styles.tripDetailItem}>
                         <Text style={styles.tripDetailLabel}>Containers:</Text>
                         <Text style={styles.tripDetailVal}>
-                          {Array.isArray(trip.containers) ? trip.containers.join(', ') : '1 unit'} ({trip.containerSize || '40FT'})
+                          {Array.isArray(trip.containers)
+                            ? trip.containers
+                                .map((c: any) =>
+                                  typeof c === 'string'
+                                    ? c
+                                    : `${c.containerNumber || 'Cont'} (${c.size || '20FT'}${c.destTerminal ? ` ➔ ${c.destTerminal}` : ''})`
+                                )
+                                .join(', ')
+                            : '1 unit'}{' '}
+                          ({trip.containerSize || '40FT'})
                         </Text>
                       </View>
                     </View>

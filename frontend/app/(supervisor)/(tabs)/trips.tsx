@@ -22,6 +22,7 @@ import { colors, radius, spacing } from '../../../src/theme';
 import { resolveCheNumber, resolveOperator } from '../../../src/config/fleet';
 import { useResponsive } from '../../../src/hooks/useResponsive';
 import { getTripTimingDetails } from '../../../src/utils/tripDateUtils';
+import { getTripDischargeTerminal } from '../../../src/utils/tripTerminalUtils';
 
 const DRIVER_PHOTO_POOL = [
   'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80',
@@ -227,7 +228,8 @@ export default function SupervisorMissionDispatcher() {
     return dateFilteredTrips.filter((t) => {
       // 1. Discharge Terminal Filter
       if (selectedTerminal !== 'ALL') {
-        const matchesDest = (t.destTerminal || '').toUpperCase() === selectedTerminal.toUpperCase();
+        const tripDest = getTripDischargeTerminal(t).toUpperCase();
+        const matchesDest = tripDest.includes(selectedTerminal.toUpperCase());
         const matchesContainerDest = (t.containers || []).some(
           (c: any) => (c.destTerminal || '').toUpperCase() === selectedTerminal.toUpperCase()
         );
@@ -753,7 +755,7 @@ export default function SupervisorMissionDispatcher() {
                               </Text>
                               <Ionicons name="arrow-forward" size={13} color="#00e5ff" />
                               <Text style={styles.monRouteText}>
-                                {t.destTerminal || 'JCT'}
+                                {getTripDischargeTerminal(t)}
                               </Text>
                             </View>
                             <View style={styles.monRouteTag}>
@@ -831,7 +833,7 @@ export default function SupervisorMissionDispatcher() {
                             <View style={styles.monContainersRow}>
                               <Ionicons name="cube" size={13} color="#00e5ff" />
                               <Text style={styles.monContainersText}>
-                                {t.containers.map((c: any) => `${c.containerNumber} (${c.size || '40FT'})`).join('  •  ')}
+                                {t.containers.map((c: any) => `${c.containerNumber} (${c.size || '20FT'} ➔ ${c.destTerminal || getTripDischargeTerminal(t)})`).join('  •  ')}
                               </Text>
                             </View>
                           )}

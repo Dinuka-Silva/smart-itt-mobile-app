@@ -26,6 +26,7 @@ import axios from 'axios';
 import API_BASE_URL from '../../../src/config/api';
 import { useResponsive } from '../../../src/hooks/useResponsive';
 import { getTripTimingDetails } from '../../../src/utils/tripDateUtils';
+import { getTripDischargeTerminal } from '../../../src/utils/tripTerminalUtils';
 
 const TERMINALS = ['CICT', 'CWIT', 'ECT', 'JCT', 'UCT', 'SAGT'] as const;
 type TerminalCode = (typeof TERMINALS)[number];
@@ -281,11 +282,11 @@ export default function DriverHomeDashboard() {
       await axios.patch(`${API_BASE_URL}/trips/${tripId}/status`, { status: 'ARRIVED' });
       useMockTripStore.getState().updateTripStatus(tripId, 'ARRIVED' as any);
       await loadData();
-      Alert.alert('Arrived at Terminal! 📍', `Gate-In clearance registered at destination terminal: ${activeTrip?.destTerminal || 'ECT'}.`);
+      Alert.alert('Arrived at Terminal! 📍', `Gate-In clearance registered at destination terminal: ${getTripDischargeTerminal(activeTrip)}.`);
     } catch {
       useMockTripStore.getState().updateTripStatus(tripId, 'ARRIVED' as any);
       await loadData();
-      Alert.alert('Arrived at Terminal! 📍', `Gate-In clearance registered at destination terminal: ${activeTrip?.destTerminal || 'ECT'}.`);
+      Alert.alert('Arrived at Terminal! 📍', `Gate-In clearance registered at destination terminal: ${getTripDischargeTerminal(activeTrip)}.`);
     } finally {
       setActionInProgress(false);
     }
@@ -802,7 +803,7 @@ export default function DriverHomeDashboard() {
               <View style={[styles.routeCol, { alignItems: 'flex-end' }]}>
                 <Text style={styles.routeLabel}>DISCHARGE TO</Text>
                 <Text style={[styles.routeTerminal, { color: '#22ef7e' }]}>
-                  {activeTrip.destTerminal || 'JCT'}
+                  {getTripDischargeTerminal(activeTrip)}
                 </Text>
                 <Text style={styles.routeSub}>Destination Bay</Text>
               </View>
@@ -833,7 +834,7 @@ export default function DriverHomeDashboard() {
                   <View style={{ flex: 1 }}>
                     <Text style={styles.containerItemNumber}>{c.containerNumber || 'MSKU-88219-0'}</Text>
                     <Text style={styles.containerItemSub}>
-                      {c.size || '40FT'} · {c.damageStatus === 'DAMAGED' ? '⚠️ DAMAGED' : '✓ SOUND'} · Dest: {c.destTerminal || activeTrip.destTerminal}
+                      {c.size || '20FT'} · {c.damageStatus === 'DAMAGED' ? '⚠️ DAMAGED' : '✓ SOUND'} · Dest: {c.destTerminal || getTripDischargeTerminal(activeTrip)}
                     </Text>
                   </View>
                   <View style={styles.containerStatusTag}>
