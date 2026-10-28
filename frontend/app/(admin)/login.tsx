@@ -9,6 +9,7 @@ import {
   Alert,
   ScrollView,
   Platform,
+  Image,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -16,6 +17,7 @@ import { useAuthStore } from '../../src/store/authStore';
 import { authService } from '../../src/services/authService';
 import { colors, radius, spacing } from '../../src/theme';
 import { useResponsive } from '../../src/hooks/useResponsive';
+import { AppBackgroundOverlay } from '../../src/components/AppBackgroundOverlay';
 
 export default function AdminLoginScreen() {
   const router = useRouter();
@@ -100,6 +102,9 @@ export default function AdminLoginScreen() {
 
   return (
     <View style={styles.root}>
+      {/* Branded Subtle Watermark Background */}
+      <AppBackgroundOverlay opacity={0.07} />
+
       {/* Background Accent Gradients */}
       <View style={styles.glowTop} pointerEvents="none" />
       <View style={styles.glowBottom} pointerEvents="none" />
@@ -126,10 +131,17 @@ export default function AdminLoginScreen() {
           <Text style={styles.backButtonText}>Back to Operator Login</Text>
         </TouchableOpacity>
 
-        {/* Security Shield Header */}
+        {/* Security Shield Header with Inside App Brand Icon */}
         <View style={styles.hero}>
-          <View style={styles.shieldIconWrap}>
-            <Ionicons name="shield-half" size={42} color="#00e5ff" />
+          <View style={styles.brandIconCard}>
+            <Image
+              source={require('../../assets/icon.png')}
+              style={styles.brandIconImg}
+              resizeMode="cover"
+            />
+            <View style={styles.adminMiniShield}>
+              <Ionicons name="shield-checkmark" size={13} color="#070f1e" />
+            </View>
           </View>
           <Text style={styles.brandTitle}>ADMIN CONTROL CONSOLE</Text>
           <Text style={styles.brandSubtitle}>SCK LOGISTICS — INTER TERMINAL OPERATIONS</Text>
@@ -275,16 +287,41 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 28,
   },
-  shieldIconWrap: {
-    width: 76,
-    height: 76,
-    borderRadius: 38,
-    backgroundColor: 'rgba(0, 229, 255, 0.1)',
-    borderWidth: 1.5,
-    borderColor: 'rgba(0, 229, 255, 0.4)',
+  brandIconCard: {
+    width: 86,
+    height: 86,
+    borderRadius: 22,
+    backgroundColor: '#070c14',
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#dfa837',
+    shadowColor: '#00e5ff',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.35,
+    shadowRadius: 12,
+    elevation: 8,
     marginBottom: 16,
+    position: 'relative',
+  },
+  brandIconImg: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 20,
+  },
+  adminMiniShield: {
+    position: 'absolute',
+    bottom: -4,
+    right: -4,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#00e5ff',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#070c14',
+    elevation: 4,
   },
   brandTitle: {
     fontSize: 20,

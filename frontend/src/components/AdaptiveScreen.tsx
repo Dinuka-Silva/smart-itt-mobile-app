@@ -11,6 +11,8 @@ import {
 } from 'react-native';
 import { useResponsive } from '../hooks/useResponsive';
 
+import { AppBackgroundOverlay } from './AppBackgroundOverlay';
+
 interface AdaptiveScreenProps {
   children: React.ReactNode;
   scrollable?: boolean;
@@ -19,6 +21,8 @@ interface AdaptiveScreenProps {
   scrollViewProps?: Partial<ScrollViewProps>;
   maxWidth?: number;
   useSafeArea?: boolean;
+  showBackground?: boolean;
+  backgroundOpacity?: number;
 }
 
 /**
@@ -26,6 +30,7 @@ interface AdaptiveScreenProps {
  * - Proper safe area spacing (avoids camera notches, Dynamic Island, and navigation bars)
  * - Auto-centered responsive max-width on tablets and desktops
  * - Flexible full-width on mobile devices (iOS / Android)
+ * - Optional subtle brand watermark background
  */
 export function AdaptiveScreen({
   children,
@@ -35,6 +40,8 @@ export function AdaptiveScreen({
   scrollViewProps,
   maxWidth,
   useSafeArea = true,
+  showBackground = false,
+  backgroundOpacity = 0.06,
 }: AdaptiveScreenProps) {
   const { topInset, bottomInset, contentMaxWidth, containerPaddingHorizontal } = useResponsive();
 
@@ -79,6 +86,7 @@ export function AdaptiveScreen({
       style={containerStyle}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
+      {showBackground && <AppBackgroundOverlay opacity={backgroundOpacity} />}
       {content}
     </KeyboardAvoidingView>
   );

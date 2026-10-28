@@ -310,6 +310,15 @@ export default function LoginScreen() {
           delayLongPress={2000}
           style={styles.hero}
         >
+          {/* Inside App Brand Icon */}
+          <View style={styles.brandIconCard}>
+            <Image
+              source={require('../../assets/icon.png')}
+              style={styles.brandIconImg}
+              resizeMode="cover"
+            />
+          </View>
+
           <View style={styles.companyPill}>
             <Ionicons name="shield-checkmark" size={13} color="#00e5ff" />
             <Text style={styles.companyPillText}>POWERED BY SCK LOGISTICS</Text>
@@ -562,11 +571,13 @@ const styles = StyleSheet.create({
     zIndex: 0,
     overflow: 'hidden',
     backgroundColor: '#070c14',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   backgroundImage: {
     width: '100%',
     height: '100%',
-    opacity: 0.18,
+    opacity: 0.08,
   },
   backgroundOverlay: {
     position: 'absolute',
@@ -574,7 +585,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(7, 12, 20, 0.40)',
+    backgroundColor: 'rgba(7, 12, 20, 0.45)',
   },
   scroll: {
     flexGrow: 1,
@@ -588,9 +599,31 @@ const styles = StyleSheet.create({
   },
   hero: {
     paddingTop: 16,
-    paddingBottom: 20,
+    paddingBottom: 18,
     alignItems: 'center',
     gap: 8,
+  },
+  brandIconCard: {
+    width: 90,
+    height: 90,
+    borderRadius: 22,
+    backgroundColor: '#070c14',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#dfa837',
+    shadowColor: '#00e5ff',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.35,
+    shadowRadius: 12,
+    elevation: 8,
+    marginBottom: 8,
+    overflow: 'hidden',
+  },
+  brandIconImg: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 20,
   },
   companyPill: {
     flexDirection: 'row',
