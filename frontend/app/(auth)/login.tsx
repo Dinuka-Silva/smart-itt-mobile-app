@@ -219,7 +219,7 @@ export default function LoginScreen() {
       const role: 'ADMIN' | 'SUPERVISOR' | 'DRIVER' = isAdminFormat ? 'ADMIN' : (isSupervisorFormat ? 'SUPERVISOR' : 'DRIVER');
 
       if (role === 'ADMIN') {
-        if (cleanPass === 'AdminSecure@2026' || cleanPass.toLowerCase() === 'admin') {
+        if (cleanPass === 'Admin@123' || cleanPass === 'AdminSecure@2026' || cleanPass.toLowerCase() === 'admin') {
           const adminUser = {
             id: 'admin-root',
             username: cleanUser,

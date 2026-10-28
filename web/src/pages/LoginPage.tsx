@@ -7,8 +7,8 @@ interface LoginPageProps {
 }
 
 export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
-  const [username, setUsername] = useState('admin@smartitt.lk');
-  const [password, setPassword] = useState('AdminSecure@2026');
+  const [username, setUsername] = useState('ADMIN');
+  const [password, setPassword] = useState('Admin@123');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -41,12 +41,12 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
       // Offline dev fallback
       if (
         (username.toLowerCase().includes('admin')) &&
-        (password.includes('AdminSecure') || password.includes('admin'))
+        (password.includes('Admin@123') || password.includes('AdminSecure') || password.includes('admin'))
       ) {
         const fallbackUser = {
           id: 'admin-root',
-          username: 'admin@smartitt.lk',
-          fullName: 'System Administrator (Bootstrap)',
+          username: 'ADMIN',
+          fullName: 'System Administrator',
           role: 'ADMIN',
         };
         localStorage.setItem('smart_itt_admin_token', 'admin-token-bootstrap');
@@ -59,12 +59,12 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
     } catch (err: any) {
       if (
         (username.toLowerCase().includes('admin')) &&
-        (password.includes('AdminSecure') || password.includes('admin') || !password.trim())
+        (password.includes('Admin@123') || password.includes('AdminSecure') || password.includes('admin') || !password.trim())
       ) {
         const fallbackUser = {
           id: 'admin-root',
-          username: 'admin@smartitt.lk',
-          fullName: 'System Administrator (Bootstrap)',
+          username: 'ADMIN',
+          fullName: 'System Administrator',
           role: 'ADMIN',
         };
         localStorage.setItem('smart_itt_admin_token', 'admin-token-bootstrap');
@@ -80,12 +80,12 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
   };
 
   const handleQuickAdminLogin = () => {
-    setUsername('admin@smartitt.lk');
-    setPassword('AdminSecure@2026');
+    setUsername('ADMIN');
+    setPassword('Admin@123');
     const fallbackUser = {
       id: 'admin-root',
-      username: 'admin@smartitt.lk',
-      fullName: 'System Administrator (Bootstrap)',
+      username: 'ADMIN',
+      fullName: 'System Administrator',
       role: 'ADMIN',
     };
     localStorage.setItem('smart_itt_admin_token', 'admin-token-bootstrap');
@@ -113,7 +113,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
 
         <form onSubmit={handleSubmit}>
           <div style={styles.field}>
-            <label style={styles.label}>ADMIN EMAIL / OPERATOR CODE</label>
+            <label style={styles.label}>ADMIN USERNAME / OPERATOR CODE</label>
             <div style={styles.inputWrap}>
               <Mail size={16} color="#78909c" />
               <input
@@ -121,7 +121,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
                 required
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                placeholder="admin@smartitt.lk"
+                placeholder="ADMIN"
                 style={styles.input}
               />
             </div>

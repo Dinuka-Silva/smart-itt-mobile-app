@@ -35,10 +35,13 @@ public class DataInitializer implements CommandLineRunner {
     private final VehicleRepository vehicleRepository;
     private final PasswordEncoder passwordEncoder;
 
+    @Value("${admin.bootstrap.username:ADMIN}")
+    private String adminBootstrapUsername;
+
     @Value("${admin.bootstrap.email:admin@smartitt.lk}")
     private String adminBootstrapEmail;
 
-    @Value("${admin.bootstrap.password:AdminSecure@2026}")
+    @Value("${admin.bootstrap.password:Admin@123}")
     private String adminBootstrapPassword;
 
     @Value("${admin.bootstrap.name:System Administrator}")
@@ -286,12 +289,24 @@ public class DataInitializer implements CommandLineRunner {
     }
 
     private void bootstrapAdminAccount() {
-        if (!userRepository.existsByEmail(adminBootstrapEmail)) {
-            log.info("Bootstrapping Admin account: {}", adminBootstrapEmail);
+        java.util.Optional<com.smartitt.user.entity.User> existingAdmin = userRepository.findByEmail(adminBootstrapEmail)
+                .or(() -> userRepository.findByUsername("ADMIN"))
+                .or(() -> userRepository.findByUsername("admin"));
+
+        if (existingAdmin.isPresent()) {
+            com.smartitt.user.entity.User admin = existingAdmin.get();
+            admin.setUsername("ADMIN");
+            admin.setPassword(passwordEncoder.encode(adminBootstrapPassword));
+            admin.setRole(com.smartitt.user.entity.Role.ADMIN);
+            admin.setStatus(com.smartitt.user.entity.AccountStatus.ACTIVE);
+            userRepository.save(admin);
+            log.info("Admin account synchronized: username=ADMIN, password=Admin@123 for email={}", adminBootstrapEmail);
+        } else {
+            log.info("Bootstrapping Admin account: username=ADMIN, email={}", adminBootstrapEmail);
             com.smartitt.user.entity.User admin = new com.smartitt.user.entity.User();
             admin.setFullName(adminBootstrapName);
             admin.setEmail(adminBootstrapEmail);
-            admin.setUsername(adminBootstrapEmail);
+            admin.setUsername("ADMIN");
             admin.setEmployeeId("ADMIN001");
             admin.setNic("000000000000");
             admin.setMobileNumber("0700000000");
@@ -299,9 +314,7 @@ public class DataInitializer implements CommandLineRunner {
             admin.setRole(com.smartitt.user.entity.Role.ADMIN);
             admin.setStatus(com.smartitt.user.entity.AccountStatus.ACTIVE);
             userRepository.save(admin);
-            log.info("Admin account bootstrapped: {} — CHANGE THIS PASSWORD IMMEDIATELY IN PRODUCTION", adminBootstrapEmail);
-        } else {
-            log.debug("Admin account already exists: {}", adminBootstrapEmail);
+            log.info("Admin account bootstrapped: username=ADMIN, password=Admin@123");
         }
     }
 }

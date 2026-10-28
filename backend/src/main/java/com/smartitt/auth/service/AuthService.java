@@ -265,6 +265,12 @@ public class AuthService {
                         .map(d -> (User) d)
                         .orElseGet(() -> {
                             String cleanId = identifier.toUpperCase().replaceAll("[^A-Z0-9]", "");
+                            // Recognize ADMIN (e.g. ADMIN, ADMINISTRATOR)
+                            if (cleanId.equals("ADMIN") || cleanId.equals("ADMINISTRATOR")) {
+                                return userRepository.findByUsername("ADMIN")
+                                        .or(() -> userRepository.findByEmail("admin@smartitt.lk"))
+                                        .orElse(null);
+                            }
                             // Recognize SUP prefix (e.g. SUP-00001, SUP001, SUP01)
                             if (cleanId.startsWith("SUP")) {
                                 return userRepository.findByEmployeeId(cleanId)

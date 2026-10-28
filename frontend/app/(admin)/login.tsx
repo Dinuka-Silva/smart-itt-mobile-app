@@ -24,8 +24,8 @@ export default function AdminLoginScreen() {
   const login = useAuthStore((s) => s.login);
   const { topInset, bottomInset, containerPaddingHorizontal } = useResponsive();
 
-  const [username, setUsername] = useState('admin@smartitt.lk');
-  const [password, setPassword] = useState('AdminSecure@2026');
+  const [username, setUsername] = useState('ADMIN');
+  const [password, setPassword] = useState('Admin@123');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -49,7 +49,7 @@ export default function AdminLoginScreen() {
       });
 
       const userRole = (authResponse?.user?.role || '').toString().toUpperCase();
-      const isAdmin = userRole === 'ADMIN' || cleanUser.toLowerCase() === 'admin@smartitt.lk' || cleanUser.toLowerCase() === 'admin';
+      const isAdmin = userRole === 'ADMIN' || cleanUser.toUpperCase() === 'ADMIN' || cleanUser.toLowerCase() === 'admin@smartitt.lk';
 
       if (authResponse && authResponse.user && isAdmin) {
         await login({
@@ -59,7 +59,7 @@ export default function AdminLoginScreen() {
           name: authResponse.user.name || 'System Administrator',
           fullName: authResponse.user.name || 'System Administrator',
           token: authResponse.token || 'admin-sec-bearer-token',
-          email: cleanUser,
+          email: cleanUser.includes('@') ? cleanUser : 'admin@smartitt.lk',
           status: 'ACTIVE',
         });
         router.replace('/(admin)/(tabs)');
@@ -76,13 +76,15 @@ export default function AdminLoginScreen() {
       throw new Error('Invalid Admin credentials');
     } catch (err: any) {
       // Offline fallback for development / setup bootstrap
-      if ((cleanUser.toLowerCase() === 'admin@smartitt.lk' || cleanUser.toLowerCase() === 'admin') &&
-          (cleanPass === 'AdminSecure@2026' || cleanPass.toLowerCase() === 'admin')) {
+      const isAllowedAdminUser = cleanUser.toUpperCase() === 'ADMIN' || cleanUser.toLowerCase() === 'admin@smartitt.lk';
+      const isAllowedAdminPass = cleanPass === 'Admin@123' || cleanPass === 'AdminSecure@2026' || cleanPass.toLowerCase() === 'admin';
+
+      if (isAllowedAdminUser && isAllowedAdminPass) {
         await login({
           id: 'admin-root-001',
-          username: cleanUser,
+          username: 'ADMIN',
           role: 'ADMIN',
-          name: 'System Administrator (Bootstrap)',
+          name: 'System Administrator',
           fullName: 'System Administrator',
           token: 'admin-sec-bearer-token',
           email: 'admin@smartitt.lk',
@@ -161,8 +163,16 @@ export default function AdminLoginScreen() {
             </View>
           ) : null}
 
+          {/* Admin Credentials Info Badge */}
+          <View style={styles.credentialBanner}>
+            <Ionicons name="key" size={13} color="#00e5ff" />
+            <Text style={styles.credentialBannerText}>
+              Username: <Text style={{ color: '#00e5ff', fontWeight: '800' }}>ADMIN</Text>  •  Password: <Text style={{ color: '#feb300', fontWeight: '800' }}>Admin@123</Text>
+            </Text>
+          </View>
+
           <View style={styles.fieldGroup}>
-            <Text style={styles.fieldLabel}>Administrator Email / Username</Text>
+            <Text style={styles.fieldLabel}>Administrator Username</Text>
             <View style={styles.inputWrap}>
               <Ionicons name="person-outline" size={18} color="#90caf9" style={styles.inputIcon} />
               <TextInput
@@ -172,10 +182,9 @@ export default function AdminLoginScreen() {
                   setUsername(t);
                   if (errorMessage) setErrorMessage(null);
                 }}
-                placeholder="admin@smartitt.lk"
+                placeholder="ADMIN"
                 placeholderTextColor="#546e7a"
                 autoCapitalize="none"
-                keyboardType="email-address"
               />
             </View>
           </View>
@@ -377,6 +386,24 @@ const styles = StyleSheet.create({
     color: '#ff8a80',
     fontSize: 12,
     marginLeft: 8,
+    flex: 1,
+  },
+  credentialBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 229, 255, 0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 229, 255, 0.25)',
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    marginBottom: 16,
+    gap: 8,
+  },
+  credentialBannerText: {
+    color: '#b0bec5',
+    fontSize: 12,
+    fontWeight: '600',
     flex: 1,
   },
   fieldGroup: {
