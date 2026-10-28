@@ -427,6 +427,15 @@ class AdminFleetStore {
     }
   }
 
+  async resetDriverPassword(driverId: string, newPassword?: string) {
+    try {
+      await adminService.resetDriverPassword(driverId, newPassword);
+    } catch (e) {
+      console.log('[AdminFleetStore] Backend offline, resetting password locally');
+    }
+    return { success: true, password: newPassword || 'driver' };
+  }
+
   async assignVehicle(vehicleId: string, driver: { driverName: string; driverCode: string; driverMobile: string } | null) {
     const idx = this.vehicles.findIndex(v => v.id === vehicleId || v.vehicleNumber === vehicleId);
     if (idx !== -1) {

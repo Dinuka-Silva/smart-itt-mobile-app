@@ -10,12 +10,27 @@ import {
   ActivityIndicator,
   Modal,
   Alert,
+  Image,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { adminService } from '../../../src/services/adminService';
 import { adminFleetStore, AdminVehicle } from '../../../src/store/adminFleetStore';
 import { useResponsive } from '../../../src/hooks/useResponsive';
 import { AdminSignOutModal } from '../../../src/components/AdminSignOutModal';
+
+const DRIVER_PHOTO_POOL = [
+  'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80',
+  'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=300&q=80',
+  'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=300&q=80',
+  'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=300&q=80',
+  'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80',
+  'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=300&q=80',
+  'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?auto=format&fit=crop&w=300&q=80',
+  'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=300&q=80',
+  'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=300&q=80',
+  'https://images.unsplash.com/photo-1528892952291-009c663ce843?auto=format&fit=crop&w=300&q=80',
+];
 
 export default function AdminDriversScreen() {
   const { topInset, bottomInset, containerPaddingHorizontal } = useResponsive();
@@ -46,6 +61,59 @@ export default function AdminDriversScreen() {
   const [selectedDriver, setSelectedDriver] = useState<any | null>(null);
   const [actionModalVisible, setActionModalVisible] = useState(false);
   const [signOutModalVisible, setSignOutModalVisible] = useState(false);
+
+  // Dedicated Password Reset Modal State
+  const [resetModalVisible, setResetModalVisible] = useState(false);
+  const [driverToReset, setDriverToReset] = useState<any | null>(null);
+  const [newTempPassword, setNewTempPassword] = useState('driver');
+  const [resettingPassword, setResettingPassword] = useState(false);
+
+  const openResetPasswordModal = (driver: any) => {
+    setDriverToReset(driver);
+    setNewTempPassword('driver');
+    setResetModalVisible(true);
+  };
+
+  const handleConfirmResetPassword = async () => {
+    if (!driverToReset) return;
+    const pwd = newTempPassword.trim() || 'driver';
+    setResettingPassword(true);
+    try {
+      await adminFleetStore.resetDriverPassword(driverToReset.id || driverToReset.driverCode, pwd);
+      if (Platform.OS === 'web') {
+        window.alert(`Password for ${driverToReset.fullName} (${driverToReset.driverCode}) has been reset to: ${pwd}`);
+      } else {
+        Alert.alert(
+          'Password Reset Successful',
+          `The password for ${driverToReset.fullName} (${driverToReset.driverCode}) has been reset to:\n\n${pwd}\n\nPlease share this credential with the driver.`
+        );
+      }
+      setResetModalVisible(false);
+      if (actionModalVisible) setActionModalVisible(false);
+    } catch (err: any) {
+      Alert.alert('Error', err?.message || 'Failed to reset password');
+    } finally {
+      setResettingPassword(false);
+    }
+  };
+
+  const handleQuickToggleStatus = async (driver: any) => {
+    const nextStatus = driver.status === 'ACTIVE' ? 'SUSPENDED' : 'ACTIVE';
+    try {
+      await adminFleetStore.updateDriverStatus(driver.id || driver.driverCode, nextStatus, `Admin quick-toggled status to ${nextStatus}`);
+      setDrivers(prev => prev.map(d => (d.id === driver.id || d.driverCode === driver.driverCode) ? { ...d, status: nextStatus } : d));
+      if (selectedDriver && (selectedDriver.id === driver.id || selectedDriver.driverCode === driver.driverCode)) {
+        setSelectedDriver({ ...selectedDriver, status: nextStatus });
+      }
+      if (Platform.OS === 'web') {
+        window.alert(`Driver ${driver.fullName} status updated to: ${nextStatus}`);
+      } else {
+        Alert.alert('Status Updated', `${driver.fullName} is now ${nextStatus}`);
+      }
+    } catch (err: any) {
+      Alert.alert('Error', err?.message || 'Failed to update status');
+    }
+  };
 
   // Edit Driver Modal State
   const [editModalVisible, setEditModalVisible] = useState(false);
@@ -318,92 +386,182 @@ export default function AdminDriversScreen() {
               <Text style={styles.emptyCardText}>No drivers found matching your filter.</Text>
             </View>
           ) : (
-            drivers.map((d) => (
-              <TouchableOpacity
-                key={d.id || d.driverCode}
-                style={styles.driverCard}
-                onPress={() => {
-                  setSelectedDriver(d);
-                  setActionModalVisible(true);
-                }}
-                activeOpacity={0.8}
-              >
-                <View style={styles.driverCardHeader}>
-                  <View style={styles.codeWrap}>
-                    <Text style={styles.driverCodeText}>{d.driverCode || d.employeeId}</Text>
-                    <Text style={styles.driverNameText}>{d.fullName}</Text>
-                  </View>
+            drivers.map((d, idx) => {
+              const photo = d.profilePhoto || DRIVER_PHOTO_POOL[idx % DRIVER_PHOTO_POOL.length];
+              const isSdr = (d.vehicleNumber || '').startsWith('LY-65');
+              const opName = isSdr ? 'SDR LINK' : 'SCK Logistics';
+              const isActive = (d.status || 'ACTIVE') === 'ACTIVE';
+              const isSuspended = d.status === 'SUSPENDED';
+              const initial = (d.fullName || 'D').charAt(0).toUpperCase();
 
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                    <TouchableOpacity
-                      style={styles.cardEditBtn}
-                      onPress={() => openEditDriver(d)}
-                      activeOpacity={0.8}
-                    >
-                      <Ionicons name="create-outline" size={11} color="#00e5ff" style={{ marginRight: 2 }} />
-                      <Text style={styles.cardEditBtnText}>EDIT</Text>
-                    </TouchableOpacity>
+              return (
+                <TouchableOpacity
+                  key={d.id || d.driverCode || idx}
+                  style={styles.driverCard}
+                  onPress={() => {
+                    setSelectedDriver(d);
+                    setActionModalVisible(true);
+                  }}
+                  activeOpacity={0.88}
+                >
+                  {/* Top Row: Avatar + Name + Operator Badge + Status */}
+                  <View style={styles.driverTopRow}>
+                    {photo ? (
+                      <Image source={{ uri: photo }} style={styles.driverAvatarImg} />
+                    ) : (
+                      <View style={styles.driverAvatar}>
+                        <Text style={styles.driverAvatarText}>{initial}</Text>
+                      </View>
+                    )}
+
+                    <View style={{ flex: 1 }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                        <Text style={styles.driverFullName}>{d.fullName}</Text>
+                        <View style={[styles.operatorBadge, isSdr ? styles.operatorBadgeAmber : styles.operatorBadgeCyan]}>
+                          <Text style={[styles.operatorBadgeText, isSdr ? { color: '#feb300' } : { color: '#00e5ff' }]}>
+                            {opName}
+                          </Text>
+                        </View>
+                      </View>
+
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 2 }}>
+                        <Text style={styles.driverCode}>
+                          CODE: <Text style={{ color: '#00e5ff', fontWeight: '800' }}>{d.driverCode || d.employeeId}</Text>
+                        </Text>
+                        <Text style={styles.driverEmpId}>
+                          NIC: <Text style={{ color: '#bac9cc' }}>{d.nic}</Text>
+                        </Text>
+                      </View>
+                    </View>
 
                     <View
                       style={[
                         styles.statusBadge,
-                        d.status === 'ACTIVE'
-                          ? styles.statusActive
-                          : d.status === 'SUSPENDED'
-                          ? styles.statusSuspended
-                          : styles.statusDeactivated,
+                        isActive ? styles.statusBadgeActive : isSuspended ? styles.statusBadgeSuspended : styles.statusBadgeInactive,
                       ]}
                     >
-                      <Text style={styles.statusBadgeText}>{d.status || 'ACTIVE'}</Text>
+                      <View style={[styles.dot, { backgroundColor: isActive ? '#22ef7e' : isSuspended ? '#feb300' : '#ff5252' }]} />
+                      <Text
+                        style={[
+                          styles.statusText,
+                          { color: isActive ? '#22ef7e' : isSuspended ? '#feb300' : '#ff5252' },
+                        ]}
+                      >
+                        {d.status || 'ACTIVE'}
+                      </Text>
                     </View>
                   </View>
-                </View>
 
-                <View style={styles.divider} />
-
-                <View style={styles.detailsGrid}>
-                  <View style={styles.detailItem}>
-                    <Ionicons name="car-outline" size={13} color="#90caf9" />
-                    <Text style={styles.detailText}>
-                      {d.vehicleNumber || 'Unassigned'} ({d.cheNumber || d.chassisNumber || 'No CHE'})
-                    </Text>
-                  </View>
-                  <View style={styles.detailItem}>
-                    <Ionicons name="call-outline" size={13} color="#90caf9" />
-                    <Text style={styles.detailText}>{d.mobileNumber || 'No Phone'}</Text>
-                  </View>
-                  <View style={styles.detailItem}>
-                    <Ionicons name="card-outline" size={13} color="#90caf9" />
-                    <Text style={styles.detailText}>NIC: {d.nic}</Text>
-                  </View>
-                  <View style={styles.detailItem}>
-                    <Ionicons name="shield-checkmark-outline" size={13} color="#90caf9" />
-                    <Text style={styles.detailText}>Lic: {d.licenseNumber || d.drivingLicenceNumber || 'N/A'}</Text>
-                  </View>
-                </View>
-
-                {/* Port Pass Renewal Date */}
-                <View style={styles.portPassRow}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                    <Ionicons
-                      name="boat-outline"
-                      size={13}
-                      color={d.portPassStatus === 'RENEWAL_DUE' ? '#ffab00' : '#00e5ff'}
-                    />
-                    <Text style={styles.portPassLabel}>
-                      Port Pass: <Text style={[styles.portPassDate, d.portPassStatus === 'RENEWAL_DUE' && { color: '#ffab00' }]}>{d.portPassExpiryDate || '2026-12-31'}</Text>
-                    </Text>
-                  </View>
-                  {d.portPassStatus === 'RENEWAL_DUE' ? (
-                    <View style={styles.renewalTag}>
-                      <Text style={styles.renewalTagText}>RENEWAL DUE</Text>
+                  {/* 4 Specs Grid */}
+                  <View style={styles.driverSpecsGrid}>
+                    <View style={styles.specBox}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
+                        <Ionicons name="bus" size={10} color="#feb300" />
+                        <Text style={styles.specKey}>VEHICLE NO</Text>
+                      </View>
+                      <Text style={styles.specValHighlight}>{d.vehicleNumber || 'UNASSIGNED'}</Text>
                     </View>
-                  ) : (
-                    <Text style={styles.passNumTag}>{d.portPassNumber || 'SLPA-DPP'}</Text>
-                  )}
-                </View>
-              </TouchableOpacity>
-            ))
+
+                    <View style={styles.specBox}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
+                        <Ionicons name="hardware-chip" size={10} color="#00e5ff" />
+                        <Text style={styles.specKey}>CHE / CHASSIS</Text>
+                      </View>
+                      <Text style={[styles.specVal, { color: '#00e5ff' }]}>
+                        {d.cheNumber || d.chassisNumber || 'SCK 100'}
+                      </Text>
+                    </View>
+
+                    <View style={styles.specBox}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
+                        <Ionicons name="card" size={10} color="#bac9cc" />
+                        <Text style={styles.specKey}>LICENSE NO</Text>
+                      </View>
+                      <Text style={styles.specValMono}>{d.licenseNumber || d.drivingLicenceNumber || 'LIC-001234'}</Text>
+                    </View>
+
+                    <View style={styles.specBox}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
+                        <Ionicons name="call" size={10} color="#849396" />
+                        <Text style={styles.specKey}>MOBILE</Text>
+                      </View>
+                      <Text style={styles.specValMono}>{d.mobileNumber || '0779876543'}</Text>
+                    </View>
+                  </View>
+
+                  {/* Port Pass Status Row */}
+                  <View style={styles.portPassRow}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <Ionicons
+                        name="boat-outline"
+                        size={13}
+                        color={d.portPassStatus === 'RENEWAL_DUE' ? '#ffab00' : '#00e5ff'}
+                      />
+                      <Text style={styles.portPassLabel}>
+                        Port Pass: <Text style={[styles.portPassDate, d.portPassStatus === 'RENEWAL_DUE' && { color: '#ffab00' }]}>{d.portPassExpiryDate || '2026-12-31'}</Text>
+                      </Text>
+                    </View>
+                    {d.portPassStatus === 'RENEWAL_DUE' ? (
+                      <View style={styles.renewalTag}>
+                        <Text style={styles.renewalTagText}>RENEWAL DUE ({d.portPassDaysLeft ?? 10}d)</Text>
+                      </View>
+                    ) : (
+                      <Text style={styles.passNumTag}>{d.portPassNumber || 'SLPA-DPP'}</Text>
+                    )}
+                  </View>
+
+                  {/* Quick Action Button Strip (EDIT, SUSPEND/ACTIVATE, RESET PWD) */}
+                  <View style={styles.cardActionRow}>
+                    <TouchableOpacity
+                      style={styles.cardEditActionBtn}
+                      onPress={(e) => {
+                        e.stopPropagation?.();
+                        openEditDriver(d);
+                      }}
+                      activeOpacity={0.8}
+                    >
+                      <Ionicons name="create-outline" size={13} color="#00e5ff" />
+                      <Text style={styles.cardEditActionText}>EDIT</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={[
+                        styles.cardStatusActionBtn,
+                        isActive
+                          ? { backgroundColor: 'rgba(254, 179, 0, 0.15)', borderColor: '#feb300' }
+                          : { backgroundColor: 'rgba(34, 239, 126, 0.15)', borderColor: '#22ef7e' }
+                      ]}
+                      onPress={(e) => {
+                        e.stopPropagation?.();
+                        handleQuickToggleStatus(d);
+                      }}
+                      activeOpacity={0.8}
+                    >
+                      <Ionicons
+                        name={isActive ? "pause-circle-outline" : "play-circle-outline"}
+                        size={13}
+                        color={isActive ? "#feb300" : "#22ef7e"}
+                      />
+                      <Text style={[styles.cardStatusActionText, { color: isActive ? '#feb300' : '#22ef7e' }]}>
+                        {isActive ? 'SUSPEND' : 'ACTIVATE'}
+                      </Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={styles.cardResetPwdBtn}
+                      onPress={(e) => {
+                        e.stopPropagation?.();
+                        openResetPasswordModal(d);
+                      }}
+                      activeOpacity={0.8}
+                    >
+                      <Ionicons name="key-outline" size={13} color="#90caf9" />
+                      <Text style={styles.cardResetPwdText}>RESET PWD</Text>
+                    </TouchableOpacity>
+                  </View>
+                </TouchableOpacity>
+              );
+            })
           )}
         </ScrollView>
       )}
@@ -606,16 +764,108 @@ export default function AdminDriversScreen() {
                 </TouchableOpacity>
               </View>
 
-              <Text style={[styles.modalSectionLabel, { marginTop: 16 }]}>SECURITY</Text>
+              <Text style={[styles.modalSectionLabel, { marginTop: 16 }]}>SECURITY & ACCOUNT CREDENTIALS</Text>
               <TouchableOpacity
                 style={styles.resetPasswordBtn}
-                onPress={handleResetPassword}
+                onPress={() => openResetPasswordModal(selectedDriver)}
                 activeOpacity={0.8}
               >
                 <Ionicons name="key-outline" size={16} color="#00e5ff" style={{ marginRight: 8 }} />
-                <Text style={styles.resetPasswordBtnText}>Reset Password to Default ('driver')</Text>
+                <Text style={styles.resetPasswordBtnText}>RESET DRIVER PASSWORD (CUSTOM OR DEFAULT)</Text>
               </TouchableOpacity>
             </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Dedicated Driver Password Reset Modal */}
+      <Modal
+        visible={resetModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setResetModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.createModalBox, { maxWidth: 440, width: '92%' }]}>
+            <View style={styles.modalHeader}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(0, 229, 255, 0.15)', alignItems: 'center', justifyContent: 'center' }}>
+                  <Ionicons name="key" size={18} color="#00e5ff" />
+                </View>
+                <View>
+                  <Text style={styles.modalTitle}>Reset Driver Password</Text>
+                  <Text style={{ fontSize: 11, color: '#90caf9' }}>Security Clearance & Portal Access</Text>
+                </View>
+              </View>
+              <TouchableOpacity onPress={() => setResetModalVisible(false)}>
+                <Ionicons name="close" size={22} color="#ffffff" />
+              </TouchableOpacity>
+            </View>
+
+            {/* Target Driver Information Box */}
+            <View style={{ backgroundColor: '#070f1e', padding: 12, borderRadius: 8, marginVertical: 12, borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.08)' }}>
+              <Text style={{ color: '#ffffff', fontSize: 13, fontWeight: '800' }}>{driverToReset?.fullName}</Text>
+              <Text style={{ color: '#00e5ff', fontSize: 11, fontWeight: '700', marginTop: 2 }}>
+                Code: {driverToReset?.driverCode} · NIC: {driverToReset?.nic}
+              </Text>
+              <Text style={{ color: '#849396', fontSize: 10, marginTop: 2 }}>
+                Assigned Truck: {driverToReset?.vehicleNumber || 'UNASSIGNED'} ({driverToReset?.cheNumber || driverToReset?.chassisNumber || 'No CHE'})
+              </Text>
+            </View>
+
+            {/* Password input & Quick Choices */}
+            <Text style={styles.createInputLabel}>NEW TEMPORARY PASSWORD *</Text>
+            <TextInput
+              style={styles.createInput}
+              placeholder="e.g. driver or Driver@123"
+              placeholderTextColor="#546e7a"
+              value={newTempPassword}
+              onChangeText={setNewTempPassword}
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
+
+            <View style={{ flexDirection: 'row', gap: 6, marginBottom: 14 }}>
+              <TouchableOpacity
+                style={{ flex: 1, paddingVertical: 6, backgroundColor: 'rgba(0, 229, 255, 0.1)', borderRadius: 6, borderWidth: 1, borderColor: 'rgba(0, 229, 255, 0.3)', alignItems: 'center' }}
+                onPress={() => setNewTempPassword('driver')}
+              >
+                <Text style={{ fontSize: 10.5, color: '#00e5ff', fontWeight: '800' }}>Default: &apos;driver&apos;</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={{ flex: 1, paddingVertical: 6, backgroundColor: 'rgba(254, 179, 0, 0.1)', borderRadius: 6, borderWidth: 1, borderColor: 'rgba(254, 179, 0, 0.3)', alignItems: 'center' }}
+                onPress={() => setNewTempPassword('Driver@123')}
+              >
+                <Text style={{ fontSize: 10.5, color: '#feb300', fontWeight: '800' }}>&apos;Driver@123&apos;</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Action Buttons */}
+            <View style={{ gap: 8, marginTop: 4 }}>
+              <TouchableOpacity
+                style={[styles.createSubmitBtn, resettingPassword && { opacity: 0.6 }]}
+                onPress={handleConfirmResetPassword}
+                disabled={resettingPassword}
+                activeOpacity={0.8}
+              >
+                {resettingPassword ? (
+                  <ActivityIndicator size="small" color="#001529" />
+                ) : (
+                  <>
+                    <Ionicons name="checkmark-circle-outline" size={16} color="#001529" style={{ marginRight: 6 }} />
+                    <Text style={styles.createSubmitBtnText}>CONFIRM & RESET PASSWORD</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.createCancelBtn}
+                onPress={() => setResetModalVisible(false)}
+              >
+                <Text style={styles.createCancelBtnText}>CANCEL</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </Modal>
@@ -1606,5 +1856,194 @@ const styles = StyleSheet.create({
     color: '#90caf9',
     fontSize: 12,
     fontWeight: '700',
+  },
+
+  // Supervisor-style rich driver card styles
+  driverTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 10,
+  },
+  driverAvatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(0, 229, 255, 0.15)',
+    borderWidth: 1.5,
+    borderColor: '#00e5ff',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  driverAvatarText: {
+    color: '#00e5ff',
+    fontSize: 18,
+    fontWeight: '900',
+  },
+  driverAvatarImg: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    borderWidth: 1.5,
+    borderColor: '#00e5ff',
+  },
+  driverFullName: {
+    color: '#ffffff',
+    fontSize: 14,
+    fontWeight: '800',
+  },
+  operatorBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 1.5,
+    borderRadius: 4,
+    borderWidth: 1,
+  },
+  operatorBadgeCyan: {
+    backgroundColor: 'rgba(0, 229, 255, 0.12)',
+    borderColor: 'rgba(0, 229, 255, 0.4)',
+  },
+  operatorBadgeAmber: {
+    backgroundColor: 'rgba(254, 179, 0, 0.12)',
+    borderColor: 'rgba(254, 179, 0, 0.4)',
+  },
+  operatorBadgeText: {
+    fontSize: 9,
+    fontWeight: '800',
+  },
+  driverCode: {
+    color: '#78909c',
+    fontSize: 10,
+    fontWeight: '600',
+  },
+  driverEmpId: {
+    color: '#78909c',
+    fontSize: 10,
+    fontWeight: '600',
+  },
+  statusBadgeActive: {
+    backgroundColor: 'rgba(34, 239, 126, 0.12)',
+    borderColor: 'rgba(34, 239, 126, 0.3)',
+    borderWidth: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  statusBadgeSuspended: {
+    backgroundColor: 'rgba(254, 179, 0, 0.12)',
+    borderColor: 'rgba(254, 179, 0, 0.3)',
+    borderWidth: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  statusBadgeInactive: {
+    backgroundColor: 'rgba(255, 82, 82, 0.12)',
+    borderColor: 'rgba(255, 82, 82, 0.3)',
+    borderWidth: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  dot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  statusText: {
+    fontSize: 9,
+    fontWeight: '800',
+  },
+  driverSpecsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    backgroundColor: '#070f1e',
+    borderRadius: 8,
+    padding: 8,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.05)',
+  },
+  specBox: {
+    width: '48%',
+    gap: 2,
+  },
+  specKey: {
+    color: '#78909c',
+    fontSize: 8.5,
+    fontWeight: '700',
+    letterSpacing: 0.3,
+  },
+  specVal: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#dde2f0',
+  },
+  specValHighlight: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#feb300',
+  },
+  specValMono: {
+    fontSize: 10.5,
+    fontWeight: '700',
+    color: '#dde2f0',
+  },
+  cardActionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 8,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.06)',
+  },
+  cardEditActionBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(0, 229, 255, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 229, 255, 0.4)',
+    borderRadius: 6,
+    paddingVertical: 7,
+  },
+  cardEditActionText: {
+    color: '#00e5ff',
+    fontSize: 10.5,
+    fontWeight: '800',
+  },
+  cardStatusActionBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    borderWidth: 1,
+    borderRadius: 6,
+    paddingVertical: 7,
+  },
+  cardStatusActionText: {
+    fontSize: 10.5,
+    fontWeight: '800',
+  },
+  cardResetPwdBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(144, 202, 249, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(144, 202, 249, 0.35)',
+    borderRadius: 6,
+    paddingVertical: 7,
+  },
+  cardResetPwdText: {
+    color: '#90caf9',
+    fontSize: 10.5,
+    fontWeight: '800',
   },
 });

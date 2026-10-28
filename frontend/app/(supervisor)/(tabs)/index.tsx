@@ -77,6 +77,12 @@ export default function SupervisorHomeDashboard() {
   const [terminalPanelPeriod, setTerminalPanelPeriod] = useState<'WEEKLY' | 'MONTHLY' | 'TODAY' | 'ALL'>('WEEKLY');
   const [terminalPanelTrafficType, setTerminalPanelTrafficType] = useState<'ALL' | 'ORIGIN' | 'DESTINATION'>('ALL');
 
+  // Compliance & Expiry Advisory Tab Filter State
+  const [complianceTab, setComplianceTab] = useState<'ALL' | 'VEHICLES' | 'PORT_PASS'>('ALL');
+
+  // Supervisor Dashboard Driver Search State
+  const [driverSearchQuery, setDriverSearchQuery] = useState('');
+
   // Modal States
   const [rejectModalVisible, setRejectModalVisible] = useState(false);
   const [tripToReject, setTripToReject] = useState<any | null>(null);
@@ -405,7 +411,7 @@ export default function SupervisorHomeDashboard() {
             </View>
             <View style={{ flex: 1 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 6 }}>
-                <Text style={styles.supervisorPermitTitle}>SUPERVISOR PORT PERMIT & GATE PASS</Text>
+                <Text style={styles.supervisorPermitTitle}>SLPA SUPERVISOR CLEARANCE & GATE PASS</Text>
                 <View style={[
                   styles.permitStatusPill,
                   isSupervisorPassExpired
@@ -426,16 +432,30 @@ export default function SupervisorHomeDashboard() {
                       ? 'EXPIRED'
                       : isSupervisorPassRenewalDue
                       ? `RENEWAL DUE (${supervisorPassDaysLeft}D)`
-                      : 'VALID PERMIT'}
+                      : 'VALID CLEARANCE'}
                   </Text>
                 </View>
               </View>
               <Text style={styles.supervisorPermitSub}>
-                SLPA ALL-TERMINAL GATE CLEARANCE · CICT · SAGT · CWIT · ECT · JCT · UCT
+                SLPA Official Multi-Terminal Oversight Clearance · Colombo Port
               </Text>
             </View>
           </View>
 
+          {/* Authorized Port Terminals Strip */}
+          <View style={styles.authorizedTerminalsWrap}>
+            <Text style={styles.authorizedTerminalsLabel}>AUTHORIZED HARBOR TERMINALS:</Text>
+            <View style={styles.terminalBadgesRow}>
+              {['CICT', 'SAGT', 'CWIT', 'ECT', 'JCT', 'UCT'].map((term) => (
+                <View key={term} style={styles.terminalAuthBadge}>
+                  <View style={styles.termAuthDot} />
+                  <Text style={styles.terminalAuthText}>{term}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+
+          {/* 4-Item Credential Details Grid */}
           <View style={styles.supervisorPermitGrid}>
             <View style={[styles.supervisorPermitCol, { minWidth: isSmallMobile ? '48%' : '23%' }]}>
               <Text style={styles.supervisorPermitLabel}>SUPERVISOR PASS NO</Text>
@@ -443,10 +463,10 @@ export default function SupervisorHomeDashboard() {
             </View>
             <View style={[styles.supervisorPermitCol, { minWidth: isSmallMobile ? '48%' : '23%' }]}>
               <Text style={styles.supervisorPermitLabel}>EMPLOYEE ID</Text>
-              <Text style={styles.supervisorPermitVal}>{user?.employeeId || 'SUP001'}</Text>
+              <Text style={styles.supervisorPermitVal}>{user?.employeeId || 'SUP-9365'}</Text>
             </View>
             <View style={[styles.supervisorPermitCol, { minWidth: isSmallMobile ? '48%' : '23%' }]}>
-              <Text style={styles.supervisorPermitLabel}>PORT PASS EXPIRY DATE</Text>
+              <Text style={styles.supervisorPermitLabel}>PORT PASS EXPIRY</Text>
               <Text style={[styles.supervisorPermitVal, { color: isSupervisorPassRenewalDue ? '#feb300' : '#22ef7e' }]}>
                 {supervisorPassExpiry}
               </Text>
@@ -454,14 +474,14 @@ export default function SupervisorHomeDashboard() {
             <View style={[styles.supervisorPermitCol, { minWidth: isSmallMobile ? '48%' : '23%' }]}>
               <Text style={styles.supervisorPermitLabel}>TIME REMAINING</Text>
               <Text style={[styles.supervisorPermitVal, { color: isSupervisorPassRenewalDue ? '#feb300' : '#00e5ff' }]}>
-                {isSupervisorPassExpired ? 'Expired' : `${supervisorPassDaysLeft} Days`}
+                {isSupervisorPassExpired ? 'Expired' : `${supervisorPassDaysLeft} Days Left`}
               </Text>
             </View>
           </View>
 
           {isSupervisorPassRenewalDue && (
             <View style={styles.permitNoticeWrap}>
-              <Ionicons name="warning-outline" size={16} color="#feb300" style={{ marginTop: 1 }} />
+              <Ionicons name="warning" size={16} color="#feb300" style={{ marginTop: 1 }} />
               <Text style={styles.permitNoticeText}>
                 <Text style={{ fontWeight: '800', color: '#feb300' }}>Renewal Advisory: </Text>
                 Your supervisor port pass expires in {supervisorPassDaysLeft} days. Submit renewal form at SLPA Port Security Clearance Division to retain unrestricted multi-terminal oversight access.
@@ -470,38 +490,22 @@ export default function SupervisorHomeDashboard() {
           )}
         </View>
 
-        {/* ─── VEHICLE REVENUE LICENSE RENEWAL ALERT (Disappears when no renewals within 30 days) ─── */}
+        {/* ─── FLEET COMPLIANCE & EXPIRY ADVISORY CENTER (CONSOLIDATED & NEAT) ─── */}
         {(() => {
-          const renewalDrivers = drivers.filter(
+          // 1. Vehicle Licenses due for renewal within 30 days (Deduplicated by Vehicle Plate Number)
+          const rawRenewalDrivers = drivers.filter(
             (d: any) => d.vehicleLicenseRenewalDue === true || (d.vehicleLicenseDaysLeft != null && d.vehicleLicenseDaysLeft <= 30)
           );
-          if (renewalDrivers.length === 0) return null;
-          return (
-            <View style={styles.licenseAlertBanner}>
-              <View style={styles.licenseAlertIconWrap}>
-                <Ionicons name="alert-circle" size={20} color="#f59e0b" />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.licenseAlertTitle}>
-                  ⚠️ VEHICLE REVENUE LICENSE RENEWAL ({renewalDrivers.length} VEHICLE{renewalDrivers.length > 1 ? 'S' : ''})
-                </Text>
-                {renewalDrivers.slice(0, 3).map((d: any) => (
-                  <Text key={d.id || d.driverCode} style={styles.licenseAlertBody}>
-                    • {d.vehicleNumber || '—'} ({d.fullName || d.driverCode}) — {d.vehicleLicenseDaysLeft != null ? (d.vehicleLicenseDaysLeft <= 0 ? 'EXPIRED' : `${d.vehicleLicenseDaysLeft} days left`) : 'Renewal Due'}
-                  </Text>
-                ))}
-                {renewalDrivers.length > 3 && (
-                  <Text style={styles.licenseAlertBody}>
-                    + {renewalDrivers.length - 3} more vehicle(s) due for renewal
-                  </Text>
-                )}
-              </View>
-            </View>
-          );
-        })()}
+          const uniqueVehiclesMap = new Map<string, any>();
+          rawRenewalDrivers.forEach((d: any) => {
+            const vPlate = (d.vehicleNumber || 'LY-6439').trim().toUpperCase();
+            if (!uniqueVehiclesMap.has(vPlate)) {
+              uniqueVehiclesMap.set(vPlate, d);
+            }
+          });
+          const dedupedVehicleRenewals = Array.from(uniqueVehiclesMap.values());
 
-        {/* ─── PORT PASS EXPIRY REMINDER (SLPA SECURITY GATE PASSES - DRIVER & VEHICLE) ─── */}
-        {(() => {
+          // 2. Port Passes due for renewal within 30 days
           const expiringPassDrivers = drivers.map((d: any) => {
             const drvPassExpiry = d.driverPortPassExpiryDate || '2026-11-15';
             const vehPassExpiry = d.vehiclePortPassExpiryDate || '2026-11-20';
@@ -517,39 +521,160 @@ export default function SupervisorHomeDashboard() {
             };
           }).filter((d: any) => d.isNearExpiry);
 
-          if (expiringPassDrivers.length === 0) return null;
+          const totalAdvisories = dedupedVehicleRenewals.length + expiringPassDrivers.length;
+          if (totalAdvisories === 0) return null;
 
           return (
-            <TouchableOpacity
-              activeOpacity={0.88}
-              onPress={() => router.push('/(supervisor)/(tabs)/drivers')}
-              style={[styles.licenseAlertBanner, { borderColor: '#feb300', backgroundColor: 'rgba(254, 179, 0, 0.09)' }]}
-            >
-              <View style={[styles.licenseAlertIconWrap, { backgroundColor: 'rgba(254, 179, 0, 0.2)' }]}>
-                <Ionicons name="card" size={20} color="#feb300" />
-              </View>
-              <View style={{ flex: 1 }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 2 }}>
-                  <Text style={[styles.licenseAlertTitle, { color: '#feb300' }]}>
-                    ⚠️ PORT PASS RENEWAL ADVISORY ({expiringPassDrivers.length} OPERATOR{expiringPassDrivers.length > 1 ? 'S' : ''})
-                  </Text>
-                  <View style={{ backgroundColor: '#feb300', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 }}>
-                    <Text style={{ fontSize: 9, fontWeight: '800', color: '#00363d' }}>SLPA CLEARANCE</Text>
+            <View style={styles.complianceCenterCard}>
+              {/* Card Header */}
+              <View style={styles.complianceHeaderRow}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
+                  <View style={styles.complianceIconBox}>
+                    <Ionicons name="shield-half" size={18} color="#feb300" />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.complianceTitle}>FLEET COMPLIANCE & EXPIRY ADVISORY</Text>
+                    <Text style={styles.complianceSub}>SLPA Harbor Security & Vehicle Revenue License Status</Text>
                   </View>
                 </View>
-                {expiringPassDrivers.slice(0, 3).map((d: any) => (
-                  <Text key={d.id || d.driverCode} style={[styles.licenseAlertBody, { color: '#dde2f0' }]}>
-                    • <Text style={{ fontWeight: '700', color: '#00e5ff' }}>{d.fullName || d.driverCode}</Text> ({d.vehicleNumber}) — Driver Pass: <Text style={{ color: d.drvDays <= 30 ? '#feb300' : '#22ef7e' }}>{d.drvPassExpiry} ({d.drvDays}d)</Text> | Truck Pass: <Text style={{ color: d.vehDays <= 30 ? '#feb300' : '#22ef7e' }}>{d.vehPassExpiry} ({d.vehDays}d)</Text>
-                  </Text>
-                ))}
-                {expiringPassDrivers.length > 3 && (
-                  <Text style={[styles.licenseAlertBody, { color: '#feb300', fontWeight: '700' }]}>
-                    + {expiringPassDrivers.length - 3} more operators due for SLPA security renewal. Tap to view Driver Fleet.
-                  </Text>
-                )}
+                <View style={styles.complianceCountPill}>
+                  <Text style={styles.complianceCountText}>{totalAdvisories} DUE</Text>
+                </View>
               </View>
-              <Ionicons name="chevron-forward" size={16} color="#feb300" />
-            </TouchableOpacity>
+
+              {/* Filter Tabs */}
+              <View style={styles.complianceTabRow}>
+                <TouchableOpacity
+                  style={[styles.complianceTabBtn, complianceTab === 'ALL' && styles.complianceTabBtnActive]}
+                  onPress={() => setComplianceTab('ALL')}
+                >
+                  <Text style={[styles.complianceTabText, complianceTab === 'ALL' && styles.complianceTabTextActive]}>
+                    ALL ({totalAdvisories})
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.complianceTabBtn, complianceTab === 'VEHICLES' && styles.complianceTabBtnActive]}
+                  onPress={() => setComplianceTab('VEHICLES')}
+                >
+                  <Text style={[styles.complianceTabText, complianceTab === 'VEHICLES' && styles.complianceTabTextActive]}>
+                    VEHICLE LICENSES ({dedupedVehicleRenewals.length})
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.complianceTabBtn, complianceTab === 'PORT_PASS' && styles.complianceTabBtnActive]}
+                  onPress={() => setComplianceTab('PORT_PASS')}
+                >
+                  <Text style={[styles.complianceTabText, complianceTab === 'PORT_PASS' && styles.complianceTabTextActive]}>
+                    PORT PASSES ({expiringPassDrivers.length})
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* 1. Vehicle Revenue License Renewals Section */}
+              {(complianceTab === 'ALL' || complianceTab === 'VEHICLES') && dedupedVehicleRenewals.length > 0 && (
+                <View style={styles.complianceSectionBox}>
+                  <View style={styles.complianceSectionHeader}>
+                    <Ionicons name="car-sport" size={14} color="#f59e0b" />
+                    <Text style={styles.complianceSectionTitle}>
+                      VEHICLE REVENUE LICENSES DUE FOR RENEWAL ({dedupedVehicleRenewals.length} VEHICLES)
+                    </Text>
+                  </View>
+
+                  <View style={{ gap: 6 }}>
+                    {dedupedVehicleRenewals.slice(0, 4).map((d: any) => {
+                      const daysLeft = d.vehicleLicenseDaysLeft ?? 17;
+                      const isExpired = daysLeft <= 0;
+                      const opName = (d.vehicleNumber || '').startsWith('LY-65') ? 'SDR LINK' : 'SCK Logistics';
+
+                      return (
+                        <View key={d.vehicleNumber || d.id} style={styles.complianceItemRow}>
+                          <View style={styles.vehiclePlateBadge}>
+                            <Ionicons name="bus" size={12} color="#00e5ff" style={{ marginRight: 4 }} />
+                            <Text style={styles.vehiclePlateBadgeText}>{d.vehicleNumber || 'LY-6439'}</Text>
+                          </View>
+
+                          <View style={{ flex: 1, paddingHorizontal: 8 }}>
+                            <Text style={styles.complianceItemDriver}>{d.fullName || d.driverCode}</Text>
+                            <Text style={styles.complianceItemSub}>{opName} · CHE: {resolveCheNumber(d.vehicleNumber, d.chassisNumber)}</Text>
+                          </View>
+
+                          <View style={[styles.complianceDaysPill, isExpired ? styles.complianceDaysPillExpired : styles.complianceDaysPillWarning]}>
+                            <Ionicons name={isExpired ? "alert-circle" : "time"} size={11} color={isExpired ? "#ff5252" : "#feb300"} style={{ marginRight: 3 }} />
+                            <Text style={[styles.complianceDaysText, { color: isExpired ? '#ff5252' : '#feb300' }]}>
+                              {isExpired ? 'EXPIRED' : `${daysLeft}d left`}
+                            </Text>
+                          </View>
+                        </View>
+                      );
+                    })}
+                  </View>
+                </View>
+              )}
+
+              {/* 2. Port Pass Expiry Advisories Section */}
+              {(complianceTab === 'ALL' || complianceTab === 'PORT_PASS') && expiringPassDrivers.length > 0 && (
+                <View style={styles.complianceSectionBox}>
+                  <View style={styles.complianceSectionHeader}>
+                    <Ionicons name="card" size={14} color="#feb300" />
+                    <Text style={styles.complianceSectionTitle}>
+                      SLPA SECURITY GATE PASSES ({expiringPassDrivers.length} OPERATORS DUE)
+                    </Text>
+                    <View style={styles.slpaTag}>
+                      <Text style={styles.slpaTagText}>SLPA CLEARANCE</Text>
+                    </View>
+                  </View>
+
+                  <View style={{ gap: 6 }}>
+                    {expiringPassDrivers.slice(0, 4).map((d: any) => (
+                      <View key={d.id || d.driverCode} style={styles.complianceItemRow}>
+                        <View style={{ flex: 1 }}>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 3 }}>
+                            <Text style={styles.complianceItemDriver}>{d.fullName || d.driverCode}</Text>
+                            <View style={styles.miniTruckBadge}>
+                              <Text style={styles.miniTruckBadgeText}>{d.vehicleNumber || 'LY-6439'}</Text>
+                            </View>
+                          </View>
+
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                            <View style={styles.passBadgeWrap}>
+                              <Text style={styles.passBadgeKey}>Driver Pass: </Text>
+                              <Text style={[styles.passBadgeVal, { color: d.drvDays <= 30 ? '#feb300' : '#22ef7e' }]}>
+                                {d.drvPassExpiry} ({d.drvDays}d)
+                              </Text>
+                            </View>
+                            <View style={styles.passBadgeWrap}>
+                              <Text style={styles.passBadgeKey}>Truck Pass: </Text>
+                              <Text style={[styles.passBadgeVal, { color: d.vehDays <= 30 ? '#feb300' : '#22ef7e' }]}>
+                                {d.vehPassExpiry} ({d.vehDays}d)
+                              </Text>
+                            </View>
+                          </View>
+                        </View>
+                      </View>
+                    ))}
+
+                    {expiringPassDrivers.length > 4 && (
+                      <Text style={styles.complianceMoreNotice}>
+                        + {expiringPassDrivers.length - 4} more operators due for SLPA security renewal.
+                      </Text>
+                    )}
+                  </View>
+                </View>
+              )}
+
+              {/* Quick Navigation to Driver Fleet */}
+              <TouchableOpacity
+                style={styles.complianceFleetBtn}
+                activeOpacity={0.85}
+                onPress={() => router.push('/(supervisor)/(tabs)/drivers')}
+              >
+                <Ionicons name="people" size={15} color="#00363d" />
+                <Text style={styles.complianceFleetBtnText}>VIEW ALL IN DRIVER FLEET DIRECTORY</Text>
+                <Ionicons name="arrow-forward" size={14} color="#00363d" />
+              </TouchableOpacity>
+            </View>
           );
         })()}
 
@@ -765,33 +890,104 @@ export default function SupervisorHomeDashboard() {
           </TouchableOpacity>
         </View>
 
-        {/* ─── E. DRIVER MANAGEMENT VIEW ─── */}
+        {/* ─── E. DRIVER MANAGEMENT VIEW WITH LIVE SEARCH ─── */}
         <View style={styles.sectionWrap}>
-          <View style={styles.sectionTitleRow}>
-            <Ionicons name="people" size={18} color="#00e5ff" />
-            <Text style={styles.sectionTitle}>REGISTERED OPERATORS ({drivers.length})</Text>
-          </View>
-
-          <View style={{ gap: 8 }}>
-            {drivers.map((drv, idx) => {
-              const photo = drv.profilePhoto || DRIVER_PHOTO_POOL[idx % DRIVER_PHOTO_POOL.length];
+          {(() => {
+            const q = driverSearchQuery.trim().toLowerCase();
+            const filteredOps = drivers.filter((d: any) => {
+              if (!q) return true;
               return (
-                <View key={drv.id} style={styles.driverRowCard}>
-                  <Image source={{ uri: photo }} style={styles.driverAvatarImg} />
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.driverFullName}>{drv.fullName}</Text>
-                    <Text style={styles.driverDetails}>
-                      Code: {drv.driverCode} · Truck: {drv.vehicleNumber || 'LY-6439'} · CHE: {resolveCheNumber(drv.vehicleNumber, drv.chassisNumber)} · Tel: {drv.mobileNumber}
-                    </Text>
-                  </View>
-                  <View style={styles.driverActivePill}>
-                    <View style={styles.greenDot} />
-                    <Text style={styles.driverActivePillText}>{drv.status || 'ACTIVE'}</Text>
-                  </View>
-                </View>
+                (d.fullName || '').toLowerCase().includes(q) ||
+                (d.driverCode || '').toLowerCase().includes(q) ||
+                (d.vehicleNumber || '').toLowerCase().includes(q) ||
+                (d.chassisNumber || d.cheNumber || '').toLowerCase().includes(q) ||
+                (d.mobileNumber || '').toLowerCase().includes(q)
               );
-            })}
-          </View>
+            });
+
+            return (
+              <>
+                <View style={styles.sectionTitleRow}>
+                  <Ionicons name="people" size={18} color="#00e5ff" />
+                  <Text style={styles.sectionTitle}>
+                    REGISTERED OPERATORS ({filteredOps.length} of {drivers.length})
+                  </Text>
+                  <TouchableOpacity
+                    style={{ marginLeft: 'auto', flexDirection: 'row', alignItems: 'center', gap: 4 }}
+                    onPress={() => router.push('/(supervisor)/(tabs)/drivers')}
+                  >
+                    <Text style={{ color: '#00e5ff', fontSize: 11, fontWeight: '800' }}>VIEW FULL FLEET</Text>
+                    <Ionicons name="chevron-forward" size={14} color="#00e5ff" />
+                  </TouchableOpacity>
+                </View>
+
+                {/* Supervisor Dashboard Driver Search Bar */}
+                <View style={styles.supervisorSearchWrap}>
+                  <Ionicons name="search" size={16} color="#00e5ff" style={{ marginRight: 8 }} />
+                  <TextInput
+                    style={styles.supervisorSearchInput}
+                    placeholder="Search by driver name, code (DRV), vehicle plate (LY), CHE..."
+                    placeholderTextColor="#607d8b"
+                    value={driverSearchQuery}
+                    onChangeText={setDriverSearchQuery}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                  />
+                  {driverSearchQuery.length > 0 && (
+                    <TouchableOpacity onPress={() => setDriverSearchQuery('')}>
+                      <Ionicons name="close-circle" size={18} color="#90caf9" />
+                    </TouchableOpacity>
+                  )}
+                </View>
+
+                <View style={{ gap: 8 }}>
+                  {filteredOps.length === 0 ? (
+                    <View style={styles.emptyPendingCard}>
+                      <Ionicons name="search-outline" size={26} color="#849396" />
+                      <Text style={styles.emptyPendingText}>NO OPERATORS FOUND</Text>
+                      <Text style={styles.emptyPendingSub}>
+                        No driver matched &quot;{driverSearchQuery}&quot;. Clear search or check spelling.
+                      </Text>
+                    </View>
+                  ) : (
+                    filteredOps.map((drv: any, idx: number) => {
+                      const photo = drv.profilePhoto || DRIVER_PHOTO_POOL[idx % DRIVER_PHOTO_POOL.length];
+                      const isSuspended = drv.status === 'SUSPENDED';
+                      const isSdr = (drv.vehicleNumber || '').startsWith('LY-65');
+
+                      return (
+                        <TouchableOpacity
+                          key={drv.id || drv.driverCode || idx}
+                          style={styles.driverRowCard}
+                          activeOpacity={0.85}
+                          onPress={() => router.push('/(supervisor)/(tabs)/drivers')}
+                        >
+                          <Image source={{ uri: photo }} style={styles.driverAvatarImg} />
+                          <View style={{ flex: 1 }}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                              <Text style={styles.driverFullName}>{drv.fullName}</Text>
+                              <View style={[styles.operatorMiniBadge, isSdr ? styles.operatorMiniBadgeAmber : styles.operatorMiniBadgeCyan]}>
+                                <Text style={[styles.operatorMiniBadgeText, isSdr ? { color: '#feb300' } : { color: '#00e5ff' }]}>
+                                  {isSdr ? 'SDR LINK' : 'SCK LOGISTICS'}
+                                </Text>
+                              </View>
+                            </View>
+                            <Text style={styles.driverDetails}>
+                              Code: <Text style={{ color: '#00e5ff', fontWeight: '800' }}>{drv.driverCode}</Text> · Truck: <Text style={{ color: '#feb300', fontWeight: '700' }}>{drv.vehicleNumber || 'LY-6439'}</Text> · CHE: {resolveCheNumber(drv.vehicleNumber, drv.chassisNumber)} · Tel: {drv.mobileNumber}
+                            </Text>
+                          </View>
+                          <View style={[styles.driverActivePill, isSuspended && styles.driverSuspendedPill]}>
+                            <View style={[styles.greenDot, isSuspended && { backgroundColor: '#feb300' }]} />
+                            <Text style={[styles.driverActivePillText, isSuspended && { color: '#feb300' }]}>{drv.status || 'ACTIVE'}</Text>
+                          </View>
+                        </TouchableOpacity>
+                      );
+                    })
+                  )}
+                </View>
+              </>
+            );
+          })()}
         </View>
 
         {/* ─── F. TERMINAL AND CONTAINER REPORTS SUMMARY WITH WEEKLY & MONTHLY FILTERS ─── */}
@@ -2286,5 +2482,305 @@ const styles = StyleSheet.create({
     fontSize: 11,
     lineHeight: 16,
     fontWeight: '600',
+  },
+  authorizedTerminalsWrap: {
+    backgroundColor: '#080e17',
+    borderRadius: radius.sm,
+    padding: 8,
+    gap: 6,
+    borderWidth: 1,
+    borderColor: '#1e293b',
+  },
+  authorizedTerminalsLabel: {
+    color: '#849396',
+    fontSize: 8.5,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
+  terminalBadgesRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 5,
+  },
+  terminalAuthBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(0, 229, 255, 0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 229, 255, 0.25)',
+    borderRadius: 4,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  termAuthDot: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#00e5ff',
+  },
+  terminalAuthText: {
+    color: '#00e5ff',
+    fontSize: 10,
+    fontWeight: '800',
+  },
+
+  // Compliance Center Card
+  complianceCenterCard: {
+    backgroundColor: '#0b1626',
+    borderRadius: radius.md,
+    borderWidth: 1.5,
+    borderColor: 'rgba(254, 179, 0, 0.45)',
+    padding: 12,
+    gap: 10,
+    marginBottom: 4,
+  },
+  complianceHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  complianceIconBox: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    backgroundColor: 'rgba(254, 179, 0, 0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(254, 179, 0, 0.3)',
+  },
+  complianceTitle: {
+    color: '#feb300',
+    fontSize: 12,
+    fontWeight: '900',
+    letterSpacing: 0.5,
+  },
+  complianceSub: {
+    color: '#90caf9',
+    fontSize: 9.5,
+    marginTop: 1,
+  },
+  complianceCountPill: {
+    backgroundColor: 'rgba(254, 179, 0, 0.2)',
+    borderWidth: 1,
+    borderColor: '#feb300',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+  },
+  complianceCountText: {
+    color: '#feb300',
+    fontSize: 10,
+    fontWeight: '900',
+  },
+  complianceTabRow: {
+    flexDirection: 'row',
+    gap: 6,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.08)',
+    paddingBottom: 8,
+  },
+  complianceTabBtn: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 6,
+    backgroundColor: '#070f1e',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  complianceTabBtnActive: {
+    backgroundColor: 'rgba(254, 179, 0, 0.18)',
+    borderColor: '#feb300',
+  },
+  complianceTabText: {
+    color: '#849396',
+    fontSize: 9.5,
+    fontWeight: '700',
+  },
+  complianceTabTextActive: {
+    color: '#feb300',
+    fontWeight: '900',
+  },
+  complianceSectionBox: {
+    backgroundColor: '#070f1e',
+    borderRadius: 8,
+    padding: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.05)',
+    gap: 8,
+  },
+  complianceSectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 6,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.06)',
+    paddingBottom: 6,
+  },
+  complianceSectionTitle: {
+    color: '#dde2f0',
+    fontSize: 10,
+    fontWeight: '800',
+    flex: 1,
+  },
+  slpaTag: {
+    backgroundColor: '#feb300',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  slpaTagText: {
+    color: '#00363d',
+    fontSize: 8.5,
+    fontWeight: '900',
+  },
+  complianceItemRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#0d1d33',
+    padding: 8,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.06)',
+  },
+  vehiclePlateBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 229, 255, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 229, 255, 0.3)',
+    borderRadius: 4,
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+  },
+  vehiclePlateBadgeText: {
+    color: '#00e5ff',
+    fontSize: 11,
+    fontWeight: '900',
+  },
+  complianceItemDriver: {
+    color: '#ffffff',
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  complianceItemSub: {
+    color: '#849396',
+    fontSize: 9.5,
+    marginTop: 1,
+  },
+  complianceDaysPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    borderRadius: 4,
+    borderWidth: 1,
+  },
+  complianceDaysPillWarning: {
+    backgroundColor: 'rgba(254, 179, 0, 0.15)',
+    borderColor: '#feb300',
+  },
+  complianceDaysPillExpired: {
+    backgroundColor: 'rgba(255, 82, 82, 0.15)',
+    borderColor: '#ff5252',
+  },
+  complianceDaysText: {
+    fontSize: 9.5,
+    fontWeight: '800',
+  },
+  miniTruckBadge: {
+    backgroundColor: 'rgba(0, 229, 255, 0.12)',
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    borderRadius: 3,
+  },
+  miniTruckBadgeText: {
+    color: '#00e5ff',
+    fontSize: 9.5,
+    fontWeight: '800',
+  },
+  passBadgeWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#070f1e',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  passBadgeKey: {
+    color: '#849396',
+    fontSize: 9,
+    fontWeight: '600',
+  },
+  passBadgeVal: {
+    fontSize: 9.5,
+    fontWeight: '800',
+  },
+  complianceMoreNotice: {
+    color: '#feb300',
+    fontSize: 9.5,
+    fontWeight: '700',
+    textAlign: 'center',
+    paddingTop: 4,
+  },
+  complianceFleetBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: '#00e5ff',
+    borderRadius: 6,
+    paddingVertical: 8,
+    marginTop: 4,
+  },
+  complianceFleetBtnText: {
+    color: '#00363d',
+    fontSize: 11,
+    fontWeight: '900',
+    letterSpacing: 0.3,
+  },
+
+  // Supervisor Driver Search Wrap
+  supervisorSearchWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#070f1e',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 229, 255, 0.3)',
+    paddingHorizontal: 10,
+    height: 40,
+    marginBottom: 4,
+  },
+  supervisorSearchInput: {
+    flex: 1,
+    color: '#ffffff',
+    fontSize: 11.5,
+    paddingVertical: 0,
+    ...(Platform.OS === 'web' ? { outlineStyle: 'none' } : {}),
+  } as any,
+  operatorMiniBadge: {
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    borderRadius: 3,
+    borderWidth: 1,
+  },
+  operatorMiniBadgeCyan: {
+    backgroundColor: 'rgba(0, 229, 255, 0.12)',
+    borderColor: 'rgba(0, 229, 255, 0.3)',
+  },
+  operatorMiniBadgeAmber: {
+    backgroundColor: 'rgba(254, 179, 0, 0.12)',
+    borderColor: 'rgba(254, 179, 0, 0.3)',
+  },
+  operatorMiniBadgeText: {
+    fontSize: 8.5,
+    fontWeight: '800',
+  },
+  driverSuspendedPill: {
+    borderColor: '#feb300',
+    backgroundColor: 'rgba(254, 179, 0, 0.1)',
   },
 });
