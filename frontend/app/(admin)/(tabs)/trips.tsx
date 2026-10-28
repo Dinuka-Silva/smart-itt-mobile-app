@@ -15,7 +15,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { adminService } from '../../../src/services/adminService';
 import { useResponsive } from '../../../src/hooks/useResponsive';
 import { useMockTripStore } from '../../../src/store/mockTripStore';
-import { getTripDischargeTerminal } from '../../../src/utils/tripTerminalUtils';
+import {
+  getTripDischargeTerminal,
+  getTripTimingInfo,
+  getContainerTimingInfo,
+  formatTripTime,
+} from '../../../src/utils/tripTerminalUtils';
 
 export default function AdminTripsScreen() {
   const { topInset, bottomInset, containerPaddingHorizontal } = useResponsive();
@@ -239,77 +244,150 @@ export default function AdminTripsScreen() {
               <Text style={styles.emptyCardText}>No ITT trips match your current filters.</Text>
             </View>
           ) : (
-            trips.map((trip) => (
-              <TouchableOpacity
-                key={trip.id || trip.tripNumber}
-                style={styles.tripCard}
-                onPress={() => {
-                  setSelectedTrip(trip);
-                  setModalVisible(true);
-                }}
-                activeOpacity={0.8}
-              >
-                <View style={styles.tripTopRow}>
-                  <View>
-                    <Text style={styles.tripNumberText}>{trip.tripNumber}</Text>
-                    <Text style={styles.vesselText}>{trip.vesselName || 'ITT Harbor Transfer'}</Text>
+            trips.map((trip) => {
+              const timing = getTripTimingInfo(trip);
+              return (
+                <TouchableOpacity
+                  key={trip.id || trip.tripNumber}
+                  style={styles.tripCard}
+                  onPress={() => {
+                    setSelectedTrip(trip);
+                    setModalVisible(true);
+                  }}
+                  activeOpacity={0.8}
+                >
+                  <View style={styles.tripTopRow}>
+                    <View>
+                      <Text style={styles.tripNumberText}>{trip.tripNumber}</Text>
+                      <Text style={styles.vesselText}>{trip.vesselName || 'ITT Harbor Transfer'}</Text>
+                    </View>
+
+                    <View
+                      style={[
+                        styles.statusBadge,
+                        trip.status === 'COMPLETED' || trip.status === 'APPROVED'
+                          ? styles.statusApproved
+                          : trip.status === 'PENDING_APPROVAL'
+                          ? styles.statusPending
+                          : trip.status === 'REJECTED'
+                          ? styles.statusRejected
+                          : styles.statusInProgress,
+                      ]}
+                    >
+                      <Text style={styles.statusBadgeText}>{trip.status}</Text>
+                    </View>
                   </View>
 
-                  <View
-                    style={[
-                      styles.statusBadge,
-                      trip.status === 'COMPLETED' || trip.status === 'APPROVED'
-                        ? styles.statusApproved
-                        : trip.status === 'PENDING_APPROVAL'
-                        ? styles.statusPending
-                        : trip.status === 'REJECTED'
-                        ? styles.statusRejected
-                        : styles.statusInProgress,
-                    ]}
-                  >
-                    <Text style={styles.statusBadgeText}>{trip.status}</Text>
+                  {/* Route */}
+                  <View style={styles.routeRow}>
+                    <View style={styles.terminalBox}>
+                      <Text style={styles.terminalBoxText}>{trip.sourceTerminal}</Text>
+                    </View>
+                    <Ionicons name="arrow-forward" size={16} color="#00e5ff" style={{ marginHorizontal: 8 }} />
+                    <View style={styles.terminalBox}>
+                      <Text style={styles.terminalBoxText}>{getTripDischargeTerminal(trip)}</Text>
+                    </View>
+                    <Text style={styles.vehicleFleetText}>
+                      • {trip.vehicleNumber} ({trip.chassisNumber || 'CHE'})
+                    </Text>
                   </View>
-                </View>
 
-                {/* Route */}
-                <View style={styles.routeRow}>
-                  <View style={styles.terminalBox}>
-                    <Text style={styles.terminalBoxText}>{trip.sourceTerminal}</Text>
+                  {/* Driver & Dispatch Info */}
+                  <View style={styles.driverBar}>
+                    <Text style={styles.driverText}>
+                      👤 {trip.driverName || 'Kamal Perera'} {trip.driverCode ? `(${trip.driverCode})` : ''}
+                    </Text>
+                    <Text style={styles.driverGateText}>
+                      Gate: {trip.dispatchTime ? `Dispatched ${formatTripTime(trip.dispatchTime)}` : 'Logged'}
+                    </Text>
                   </View>
-                  <Ionicons name="arrow-forward" size={16} color="#00e5ff" style={{ marginHorizontal: 8 }} />
-                  <View style={styles.terminalBox}>
-                    <Text style={styles.terminalBoxText}>{getTripDischargeTerminal(trip)}</Text>
-                  </View>
-                  <Text style={styles.vehicleFleetText}>
-                    • {trip.vehicleNumber} ({trip.chassisNumber || 'CHE'})
-                  </Text>
-                </View>
 
-                {/* Driver & Timing info */}
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 6, marginBottom: 4 }}>
-                  <Text style={{ fontSize: 12, fontWeight: '700', color: '#849396' }}>
-                    👤 {trip.driverName || 'Kamal Perera'} {trip.driverCode ? `(${trip.driverCode})` : ''}
-                  </Text>
-                  <Text style={{ fontSize: 11, fontWeight: '600', color: '#687787' }}>
-                    🕒 {trip.operationTime || (trip.startTime ? trip.startTime.slice(11, 16) : 'TODAY')}
-                  </Text>
-                </View>
-
-                {/* Containers Preview */}
-                {trip.containers && trip.containers.length > 0 ? (
-                  <View style={styles.containersWrap}>
-                    {trip.containers.map((c: any, idx: number) => (
-                      <View key={idx} style={styles.containerTag}>
-                        <Ionicons name="cube-outline" size={12} color="#00e5ff" style={{ marginRight: 4 }} />
-                        <Text style={styles.containerTagText}>
-                          {c.containerNumber} ({c.size || '20FT'} ➔ {c.destTerminal || getTripDischargeTerminal(trip)})
-                        </Text>
+                  {/* ⏱️ OPERATIONAL TIMING & DURATION BREAKDOWN */}
+                  <View style={styles.timingCard}>
+                    <View style={styles.timingCol}>
+                      <View style={styles.timingLabelRow}>
+                        <Ionicons name="arrow-down-circle" size={11} color="#22ef7e" />
+                        <Text style={styles.timingLabel}>LOADED</Text>
                       </View>
-                    ))}
+                      <Text style={styles.timingTime}>{timing.loadTime}</Text>
+                      <Text style={styles.timingTerminal}>{trip.sourceTerminal || 'CICT'}</Text>
+                    </View>
+
+                    <View style={styles.timingDivider} />
+
+                    <View style={styles.timingCol}>
+                      <View style={styles.timingLabelRow}>
+                        <Ionicons name="flag" size={11} color={timing.isDischarged ? "#00e5ff" : "#feb300"} />
+                        <Text style={styles.timingLabel}>DISCHARGED</Text>
+                      </View>
+                      <Text style={[styles.timingTime, { color: timing.isDischarged ? '#00e5ff' : '#feb300' }]}>
+                        {timing.dischargeTime}
+                      </Text>
+                      <Text style={styles.timingTerminal}>{getTripDischargeTerminal(trip)}</Text>
+                    </View>
+
+                    <View style={styles.timingDivider} />
+
+                    <View style={styles.timingCol}>
+                      <View style={styles.timingLabelRow}>
+                        <Ionicons name="time" size={11} color="#ffd54f" />
+                        <Text style={styles.timingLabel}>TIME SPENT</Text>
+                      </View>
+                      <Text style={[styles.timingTime, { color: '#ffd54f' }]}>{timing.timeSpent}</Text>
+                      <Text style={styles.timingTerminal}>
+                        {timing.isCompleted ? 'Turnaround' : 'In Transit'}
+                      </Text>
+                    </View>
                   </View>
-                ) : null}
-              </TouchableOpacity>
-            ))
+
+                  {/* Containers Preview with per-container timing */}
+                  {trip.containers && trip.containers.length > 0 ? (
+                    <View style={styles.containersWrap}>
+                      {trip.containers.map((c: any, idx: number) => {
+                        const cTiming = getContainerTimingInfo(c, trip, idx);
+                        return (
+                          <View key={idx} style={styles.containerTagEnhanced}>
+                            <View style={styles.cTopRow}>
+                              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                                <Ionicons name="cube" size={12} color="#00e5ff" />
+                                <Text style={styles.cNumText}>{cTiming.containerNumber}</Text>
+                                <View style={styles.cSizeBadge}>
+                                  <Text style={styles.cSizeText}>{cTiming.size}</Text>
+                                </View>
+                              </View>
+                              <View
+                                style={[
+                                  styles.cStatusPill,
+                                  cTiming.isDischarged ? styles.cStatusDischarged : styles.cStatusTransit,
+                                ]}
+                              >
+                                <Text style={styles.cStatusText}>
+                                  {cTiming.isDischarged ? 'DISCHARGED' : 'IN TRANSIT'}
+                                </Text>
+                              </View>
+                            </View>
+
+                            <View style={styles.cTimingDetailsRow}>
+                              <Text style={styles.cTimeText}>
+                                📥 Load: <Text style={styles.cTimeHighlight}>{cTiming.loadTime}</Text>
+                              </Text>
+                              <Text style={styles.cTimeArrow}>➔</Text>
+                              <Text style={styles.cTimeText}>
+                                📤 Disch:{' '}
+                                <Text style={[styles.cTimeHighlight, { color: cTiming.isDischarged ? '#00e5ff' : '#feb300' }]}>
+                                  {cTiming.dischargeTime} ({cTiming.destTerminal})
+                                </Text>
+                              </Text>
+                              <Text style={styles.cSpentBadge}>⏱️ {cTiming.timeSpent}</Text>
+                            </View>
+                          </View>
+                        );
+                      })}
+                    </View>
+                  ) : null}
+                </TouchableOpacity>
+              );
+            })
           )}
         </ScrollView>
       )}
@@ -333,60 +411,137 @@ export default function AdminTripsScreen() {
               </TouchableOpacity>
             </View>
 
-            <ScrollView style={{ maxHeight: 380 }} showsVerticalScrollIndicator={false}>
-              <View style={styles.infoRow}>
-                <Text style={styles.infoLabel}>Current Status:</Text>
-                <Text style={[styles.infoVal, { color: '#00e5ff', fontWeight: '800' }]}>
-                  {selectedTrip?.status}
-                </Text>
-              </View>
+            {selectedTrip && (() => {
+              const selTiming = getTripTimingInfo(selectedTrip);
+              return (
+                <ScrollView style={{ maxHeight: 440 }} showsVerticalScrollIndicator={false}>
+                  {/* ⏱️ Top Operational Timing & Turnaround Report Banner */}
+                  <View style={styles.modalTimingBox}>
+                    <View style={styles.modalTimingHeader}>
+                      <Ionicons name="timer-outline" size={15} color="#00e5ff" />
+                      <Text style={styles.modalTimingTitle}>ITT OPERATIONAL TIMING & DISCHARGE REPORT</Text>
+                    </View>
 
-              <View style={styles.infoRow}>
-                <Text style={styles.infoLabel}>Origin Terminal:</Text>
-                <Text style={styles.infoVal}>{selectedTrip?.sourceTerminal}</Text>
-              </View>
+                    <View style={styles.modalTimingGrid}>
+                      <View style={styles.modalTimingStat}>
+                        <Text style={styles.modalStatLabel}>DRIVER LOAD TIME</Text>
+                        <Text style={styles.modalStatVal}>{selTiming.loadTime}</Text>
+                        <Text style={styles.modalStatSub}>{selectedTrip.sourceTerminal} Terminal</Text>
+                      </View>
 
-              <View style={styles.infoRow}>
-                <Text style={styles.infoLabel}>Discharge Terminal:</Text>
-                <Text style={styles.infoVal}>{getTripDischargeTerminal(selectedTrip)}</Text>
-              </View>
+                      <View style={styles.modalTimingStat}>
+                        <Text style={styles.modalStatLabel}>DISCHARGE TIME</Text>
+                        <Text style={[styles.modalStatVal, { color: selTiming.isDischarged ? '#00e5ff' : '#feb300' }]}>
+                          {selTiming.dischargeTime}
+                        </Text>
+                        <Text style={styles.modalStatSub}>{getTripDischargeTerminal(selectedTrip)}</Text>
+                      </View>
 
-              <View style={styles.infoRow}>
-                <Text style={styles.infoLabel}>Assigned Vehicle:</Text>
-                <Text style={styles.infoVal}>
-                  {selectedTrip?.vehicleNumber} ({selectedTrip?.chassisNumber})
-                </Text>
-              </View>
+                      <View style={styles.modalTimingStat}>
+                        <Text style={styles.modalStatLabel}>TIME SPENT</Text>
+                        <Text style={[styles.modalStatVal, { color: '#ffd54f' }]}>{selTiming.timeSpent}</Text>
+                        <Text style={styles.modalStatSub}>Turnaround Duration</Text>
+                      </View>
+                    </View>
+                  </View>
 
-              <View style={styles.infoRow}>
-                <Text style={styles.infoLabel}>Containers Handled:</Text>
-                <Text style={styles.infoVal}>{selectedTrip?.containers?.length || 0}</Text>
-              </View>
+                  <View style={styles.infoRow}>
+                    <Text style={styles.infoLabel}>Current Status:</Text>
+                    <Text style={[styles.infoVal, { color: '#00e5ff', fontWeight: '800' }]}>
+                      {selectedTrip?.status}
+                    </Text>
+                  </View>
 
-              {/* Containers List */}
-              <Text style={[styles.infoLabel, { marginTop: 12, marginBottom: 6 }]}>CONTAINER DETAILS:</Text>
-              {selectedTrip?.containers?.map((c: any, i: number) => (
-                <View key={i} style={styles.containerDetailItem}>
-                  <Text style={styles.containerDetailNum}>{c.containerNumber}</Text>
-                  <Text style={styles.containerDetailSize}>
-                    {c.size || '20FT'} ➔ {c.destTerminal || getTripDischargeTerminal(selectedTrip)}
+                  <View style={styles.infoRow}>
+                    <Text style={styles.infoLabel}>Origin Terminal:</Text>
+                    <Text style={styles.infoVal}>{selectedTrip?.sourceTerminal}</Text>
+                  </View>
+
+                  <View style={styles.infoRow}>
+                    <Text style={styles.infoLabel}>Discharge Terminal(s):</Text>
+                    <Text style={styles.infoVal}>{getTripDischargeTerminal(selectedTrip)}</Text>
+                  </View>
+
+                  <View style={styles.infoRow}>
+                    <Text style={styles.infoLabel}>Assigned Vehicle:</Text>
+                    <Text style={styles.infoVal}>
+                      {selectedTrip?.vehicleNumber} ({selectedTrip?.chassisNumber})
+                    </Text>
+                  </View>
+
+                  <View style={styles.infoRow}>
+                    <Text style={styles.infoLabel}>Driver in Charge:</Text>
+                    <Text style={styles.infoVal}>
+                      {selectedTrip?.driverName || 'Kamal Perera'} {selectedTrip?.driverCode ? `(${selectedTrip.driverCode})` : ''}
+                    </Text>
+                  </View>
+
+                  {/* Containers List with Individual Load & Discharge Log */}
+                  <Text style={[styles.infoLabel, { marginTop: 14, marginBottom: 8, color: '#00e5ff' }]}>
+                    CONTAINER DISCHARGE & TURNAROUND LOG ({selectedTrip?.containers?.length || 0}):
                   </Text>
-                  <Text style={styles.containerDetailStatus}>{c.status || 'LOADED'}</Text>
-                </View>
-              ))}
+                  {selectedTrip?.containers?.map((c: any, i: number) => {
+                    const cInfo = getContainerTimingInfo(c, selectedTrip, i);
+                    return (
+                      <View key={i} style={styles.modalContainerCard}>
+                        <View style={styles.modalContHeader}>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                            <Ionicons name="cube" size={14} color="#00e5ff" />
+                            <Text style={styles.containerDetailNum}>{cInfo.containerNumber}</Text>
+                            <View style={styles.cSizeBadge}>
+                              <Text style={styles.cSizeText}>{cInfo.size}</Text>
+                            </View>
+                          </View>
+                          <View
+                            style={[
+                              styles.cStatusPill,
+                              cInfo.isDischarged ? styles.cStatusDischarged : styles.cStatusTransit,
+                            ]}
+                          >
+                            <Text style={styles.cStatusText}>
+                              {cInfo.isDischarged ? 'DISCHARGED' : 'IN TRANSIT'}
+                            </Text>
+                          </View>
+                        </View>
 
-              {/* Reason Input */}
-              <View style={{ marginTop: 14 }}>
-                <Text style={styles.infoLabel}>Audit Reason / Notes (required for rejection):</Text>
-                <TextInput
-                  style={styles.reasonInput}
-                  placeholder="Enter reason for audit record..."
-                  placeholderTextColor="#546e7a"
-                  value={actionReason}
-                  onChangeText={setActionReason}
-                />
-              </View>
-            </ScrollView>
+                        <View style={styles.modalContGrid}>
+                          <View style={styles.modalContMetric}>
+                            <Text style={styles.modalContMetricLabel}>Loaded At:</Text>
+                            <Text style={styles.modalContMetricVal}>
+                              {cInfo.loadTime} ({cInfo.sourceTerminal})
+                            </Text>
+                          </View>
+                          <View style={styles.modalContMetric}>
+                            <Text style={styles.modalContMetricLabel}>Discharged At:</Text>
+                            <Text style={[styles.modalContMetricVal, { color: cInfo.isDischarged ? '#00e5ff' : '#feb300' }]}>
+                              {cInfo.dischargeTime} ({cInfo.destTerminal})
+                            </Text>
+                          </View>
+                          <View style={styles.modalContMetric}>
+                            <Text style={styles.modalContMetricLabel}>Time Spent:</Text>
+                            <Text style={[styles.modalContMetricVal, { color: '#ffd54f' }]}>
+                              {cInfo.timeSpent}
+                            </Text>
+                          </View>
+                        </View>
+                      </View>
+                    );
+                  })}
+
+                  {/* Reason Input */}
+                  <View style={{ marginTop: 14 }}>
+                    <Text style={styles.infoLabel}>Audit Reason / Notes (required for rejection):</Text>
+                    <TextInput
+                      style={styles.reasonInput}
+                      placeholder="Enter reason for audit record..."
+                      placeholderTextColor="#546e7a"
+                      value={actionReason}
+                      onChangeText={setActionReason}
+                    />
+                  </View>
+                </ScrollView>
+              );
+            })()}
 
             {/* Direct Admin Action Buttons */}
             <View style={styles.actionRow}>
@@ -721,5 +876,229 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '800',
     letterSpacing: 0.5,
+  },
+  driverBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 6,
+    marginBottom: 6,
+  },
+  driverText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#90caf9',
+  },
+  driverGateText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#78909c',
+  },
+  timingCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(7, 15, 30, 0.95)',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 229, 255, 0.18)',
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    marginTop: 4,
+    marginBottom: 4,
+  },
+  timingCol: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  timingLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    marginBottom: 2,
+  },
+  timingLabel: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: '#78909c',
+    letterSpacing: 0.4,
+  },
+  timingTime: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#ffffff',
+  },
+  timingTerminal: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#90caf9',
+    marginTop: 1,
+  },
+  timingDivider: {
+    width: 1,
+    height: 28,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    marginHorizontal: 4,
+  },
+  containerTagEnhanced: {
+    width: '100%',
+    backgroundColor: '#070f1e',
+    borderRadius: 8,
+    padding: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 229, 255, 0.15)',
+    marginBottom: 4,
+  },
+  cTopRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  cNumText: {
+    color: '#ffffff',
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  cSizeBadge: {
+    backgroundColor: 'rgba(0, 229, 255, 0.12)',
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    borderRadius: 4,
+  },
+  cSizeText: {
+    color: '#00e5ff',
+    fontSize: 10,
+    fontWeight: '800',
+  },
+  cStatusPill: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  cStatusDischarged: {
+    backgroundColor: 'rgba(34, 239, 126, 0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(34, 239, 126, 0.3)',
+  },
+  cStatusTransit: {
+    backgroundColor: 'rgba(254, 179, 0, 0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(254, 179, 0, 0.3)',
+  },
+  cStatusText: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: '#ffffff',
+  },
+  cTimingDetailsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 6,
+    paddingTop: 4,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.05)',
+  },
+  cTimeText: {
+    fontSize: 10,
+    color: '#90a4ae',
+    fontWeight: '600',
+  },
+  cTimeHighlight: {
+    color: '#ffffff',
+    fontWeight: '800',
+  },
+  cTimeArrow: {
+    fontSize: 10,
+    color: '#546e7a',
+  },
+  cSpentBadge: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#ffd54f',
+    marginLeft: 'auto',
+  },
+  modalTimingBox: {
+    backgroundColor: 'rgba(0, 229, 255, 0.06)',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 229, 255, 0.25)',
+    padding: 12,
+    marginBottom: 12,
+  },
+  modalTimingHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 10,
+  },
+  modalTimingTitle: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#00e5ff',
+    letterSpacing: 0.6,
+  },
+  modalTimingGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  modalTimingStat: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  modalStatLabel: {
+    fontSize: 9,
+    fontWeight: '700',
+    color: '#78909c',
+    marginBottom: 2,
+    textAlign: 'center',
+  },
+  modalStatVal: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#ffffff',
+    textAlign: 'center',
+  },
+  modalStatSub: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#90caf9',
+    marginTop: 1,
+    textAlign: 'center',
+  },
+  modalContainerCard: {
+    backgroundColor: '#070f1e',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+    padding: 10,
+    marginBottom: 8,
+  },
+  modalContHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  modalContGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingTop: 6,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.06)',
+  },
+  modalContMetric: {
+    flex: 1,
+  },
+  modalContMetricLabel: {
+    fontSize: 9,
+    color: '#78909c',
+    fontWeight: '600',
+  },
+  modalContMetricVal: {
+    fontSize: 11,
+    color: '#ffffff',
+    fontWeight: '700',
+    marginTop: 2,
   },
 });

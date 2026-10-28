@@ -1,6 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Search, ArrowRight, CheckCircle, XCircle, Clock, Check, Eye } from 'lucide-react';
-import { adminTripWebStore, WebTrip } from '../store/adminTripWebStore';
+import {
+  adminTripWebStore,
+  WebTrip,
+  getWebTripTimingInfo,
+  getWebContainerTimingInfo,
+  formatWebTripTime,
+} from '../store/adminTripWebStore';
 
 export const TripsPage: React.FC = () => {
   const [trips, setTrips] = useState<WebTrip[]>([]);
@@ -140,6 +146,7 @@ export const TripsPage: React.FC = () => {
               <th>Vessel</th>
               <th>Vehicle / Chassis</th>
               <th>Containers</th>
+              <th>Operational Timing</th>
               <th>Status</th>
               <th>Actions</th>
             </tr>
@@ -147,13 +154,13 @@ export const TripsPage: React.FC = () => {
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={8} style={{ textAlign: 'center', padding: '28px', color: '#90caf9' }}>
+                <td colSpan={9} style={{ textAlign: 'center', padding: '28px', color: '#90caf9' }}>
                   Loading ITT operations records...
                 </td>
               </tr>
             ) : trips.length === 0 ? (
               <tr>
-                <td colSpan={8} style={{ textAlign: 'center', padding: '28px', color: '#78909c' }}>
+                <td colSpan={9} style={{ textAlign: 'center', padding: '28px', color: '#78909c' }}>
                   No ITT trips match criteria.
                 </td>
               </tr>
@@ -167,6 +174,7 @@ export const TripsPage: React.FC = () => {
                       minute: '2-digit',
                     })
                   : 'N/A';
+                const timing = getWebTripTimingInfo(t);
 
                 return (
                   <tr key={t.id || t.tripNumber}>
@@ -197,6 +205,19 @@ export const TripsPage: React.FC = () => {
                             </span>
                           );
                         })}
+                      </div>
+                    </td>
+                    <td>
+                      <div style={{ fontSize: '11px', display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                        <div style={{ color: '#22ef7e', fontWeight: 600 }}>
+                          📥 Load: <span style={{ color: '#ffffff' }}>{timing.loadTime}</span>
+                        </div>
+                        <div style={{ color: timing.isDischarged ? '#00e5ff' : '#feb300', fontWeight: 600 }}>
+                          📤 Disch: <span style={{ color: '#ffffff' }}>{timing.dischargeTime}</span>
+                        </div>
+                        <div style={{ color: '#ffd54f', fontWeight: 700, fontSize: '10px' }}>
+                          ⏱️ Spent: {timing.timeSpent} <span style={{ opacity: 0.8 }}>({timing.isCompleted ? 'Turnaround' : 'In Transit'})</span>
+                        </div>
                       </div>
                     </td>
                     <td>
@@ -250,17 +271,85 @@ export const TripsPage: React.FC = () => {
               <div><span style={{ color: '#78909c' }}>Dispatch:</span> <strong>{selectedTrip.dispatchTime || selectedTrip.operationTime || 'Standard'}</strong></div>
             </div>
 
-            <h4 style={styles.modalSectionTitle}>CONTAINERS IN THIS MOVEMENT:</h4>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '16px' }}>
+            {/* Operational Timing & Discharge Breakdown Card */}
+            {(() => {
+              const timing = getWebTripTimingInfo(selectedTrip);
+              return (
+                <div style={{
+                  background: 'rgba(0, 229, 255, 0.04)',
+                  border: '1px solid rgba(0, 229, 255, 0.2)',
+                  borderRadius: '10px',
+                  padding: '12px 14px',
+                  marginBottom: '16px',
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+                    <Clock size={16} color="#00e5ff" />
+                    <span style={{ fontSize: '11px', fontWeight: 800, color: '#00e5ff', letterSpacing: '0.8px' }}>
+                      OPERATIONAL TIMING & DISCHARGE REPORT
+                    </span>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', textAlign: 'center' }}>
+                    <div style={{ background: 'rgba(34, 239, 126, 0.08)', padding: '10px 8px', borderRadius: '8px', border: '1px solid rgba(34, 239, 126, 0.2)' }}>
+                      <div style={{ fontSize: '10px', color: '#81c784', fontWeight: 700, textTransform: 'uppercase' }}>📥 Load Time</div>
+                      <div style={{ fontSize: '14px', fontWeight: 800, color: '#ffffff', marginTop: '4px' }}>{timing.loadTime}</div>
+                      <div style={{ fontSize: '10px', color: '#81c784', marginTop: '2px' }}>{selectedTrip.sourceTerminal}</div>
+                    </div>
+
+                    <div style={{ background: timing.isDischarged ? 'rgba(0, 229, 255, 0.08)' : 'rgba(254, 179, 0, 0.08)', padding: '10px 8px', borderRadius: '8px', border: `1px solid ${timing.isDischarged ? 'rgba(0, 229, 255, 0.2)' : 'rgba(254, 179, 0, 0.2)'}` }}>
+                      <div style={{ fontSize: '10px', color: timing.isDischarged ? '#80deea' : '#ffe082', fontWeight: 700, textTransform: 'uppercase' }}>📤 Discharge Time</div>
+                      <div style={{ fontSize: '14px', fontWeight: 800, color: timing.isDischarged ? '#00e5ff' : '#feb300', marginTop: '4px' }}>{timing.dischargeTime}</div>
+                      <div style={{ fontSize: '10px', color: timing.isDischarged ? '#80deea' : '#ffe082', marginTop: '2px' }}>{selectedTrip.destTerminal}</div>
+                    </div>
+
+                    <div style={{ background: 'rgba(255, 213, 79, 0.08)', padding: '10px 8px', borderRadius: '8px', border: '1px solid rgba(255, 213, 79, 0.2)' }}>
+                      <div style={{ fontSize: '10px', color: '#ffe082', fontWeight: 700, textTransform: 'uppercase' }}>⏱️ Time Spent</div>
+                      <div style={{ fontSize: '14px', fontWeight: 800, color: '#ffd54f', marginTop: '4px' }}>{timing.timeSpent}</div>
+                      <div style={{ fontSize: '10px', color: '#ffe082', marginTop: '2px' }}>{timing.isCompleted ? 'Full Turnaround' : 'In Transit'}</div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+
+            <h4 style={styles.modalSectionTitle}>CONTAINERS IN THIS MOVEMENT (WITH TIMING & DISCHARGE):</h4>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
               {selectedTrip.containers?.map((c: any, i: number) => {
-                const cNum = typeof c === 'string' ? c : c.containerNumber;
-                const cSize = typeof c === 'string' ? '40FT' : c.size || '40FT';
-                const cStatus = typeof c === 'string' ? (selectedTrip.status === 'COMPLETED' ? 'DISCHARGED' : 'LOADED') : (c.status || 'LOADED');
+                const cTiming = getWebContainerTimingInfo(c, selectedTrip, i);
                 return (
-                  <div key={i} style={styles.containerRow}>
-                    <strong style={{ color: '#ffffff' }}>{cNum}</strong>
-                    <span className="badge badge-cyan">{cSize}</span>
-                    <span className={`badge ${cStatus === 'DISCHARGED' ? 'badge-green' : 'badge-cyan'}`}>{cStatus}</span>
+                  <div key={i} style={{
+                    background: '#0a1628',
+                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                    borderRadius: '8px',
+                    padding: '10px 12px',
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <strong style={{ color: '#ffffff', fontSize: '13px' }}>{cTiming.containerNumber}</strong>
+                        <span className="badge badge-cyan" style={{ fontSize: '10px' }}>{cTiming.size}</span>
+                      </div>
+                      <span className={`badge ${cTiming.isDischarged ? 'badge-green' : 'badge-amber'}`} style={{ fontSize: '10px' }}>
+                        {cTiming.status}
+                      </span>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', fontSize: '11px', background: '#070f1e', padding: '8px 10px', borderRadius: '6px' }}>
+                      <div>
+                        <span style={{ color: '#78909c' }}>Loaded: </span>
+                        <strong style={{ color: '#22ef7e' }}>{cTiming.loadTime}</strong>
+                        <div style={{ fontSize: '10px', color: '#90a4ae' }}>Origin: {cTiming.sourceTerminal}</div>
+                      </div>
+                      <div>
+                        <span style={{ color: '#78909c' }}>Discharged: </span>
+                        <strong style={{ color: cTiming.isDischarged ? '#00e5ff' : '#feb300' }}>{cTiming.dischargeTime}</strong>
+                        <div style={{ fontSize: '10px', color: '#90a4ae' }}>Dest: {cTiming.destTerminal}</div>
+                      </div>
+                      <div>
+                        <span style={{ color: '#78909c' }}>Spent: </span>
+                        <strong style={{ color: '#ffd54f' }}>{cTiming.timeSpent}</strong>
+                        <div style={{ fontSize: '10px', color: '#90a4ae' }}>Duration</div>
+                      </div>
+                    </div>
                   </div>
                 );
               })}

@@ -8,6 +8,7 @@ export interface MockContainer {
   isoType?: string;
   destTerminal?: string;
   status?: 'LOCKED' | 'IN_TRANSIT' | 'DISCHARGED';
+  loadedAt?: string;
   unloadedAt?: string;
   unloadedTerminal?: string;
   damageStatus?: 'NONE' | 'DAMAGED' | string;
@@ -100,8 +101,8 @@ const initialTrips: MockTrip[] = [
     operationTime: '08:15',
     dispatchTime: '08:35',
     containers: [
-      { id: 'c-101', containerNumber: 'MSKU8821902', size: '20FT', isoType: '20GP', status: 'IN_TRANSIT', destTerminal: 'JCT', damageStatus: 'NONE', isReturn: false, cargoType: 'STANDARD' },
-      { id: 'c-102', containerNumber: 'TGHU3301290', size: '20FT', isoType: '20GP', status: 'IN_TRANSIT', destTerminal: 'CWIT', damageStatus: 'DAMAGED', isReturn: true, cargoType: 'RETURN' },
+      { id: 'c-101', containerNumber: 'MSKU8821902', size: '20FT', isoType: '20GP', status: 'IN_TRANSIT', loadedAt: todayTrip1Start, destTerminal: 'JCT', damageStatus: 'NONE', isReturn: false, cargoType: 'STANDARD' },
+      { id: 'c-102', containerNumber: 'TGHU3301290', size: '20FT', isoType: '20GP', status: 'IN_TRANSIT', loadedAt: todayTrip1Start, destTerminal: 'CWIT', damageStatus: 'DAMAGED', isReturn: true, cargoType: 'RETURN' },
     ],
   },
   {
@@ -124,7 +125,7 @@ const initialTrips: MockTrip[] = [
     isReturn: true,
     dischargedAt: todayTrip2Discharged,
     containers: [
-      { id: 'c-103', containerNumber: 'CMAU9012347', size: '40FT', isoType: '40HC', status: 'DISCHARGED', unloadedAt: todayTrip2Discharged, destTerminal: 'UCT', damageStatus: 'NONE', isReturn: true, cargoType: 'RETURN' },
+      { id: 'c-103', containerNumber: 'CMAU9012347', size: '40FT', isoType: '40HC', status: 'DISCHARGED', loadedAt: todayTrip2Start, unloadedAt: todayTrip2Discharged, destTerminal: 'UCT', damageStatus: 'NONE', isReturn: true, cargoType: 'RETURN' },
     ],
   },
   {
@@ -142,9 +143,11 @@ const initialTrips: MockTrip[] = [
     status: 'PENDING_APPROVAL',
     startTime: todayTrip2Start,
     createdAt: todayTrip2Start,
+    operationTime: '09:00',
+    dispatchTime: '09:20',
     dischargedAt: todayTrip2Discharged,
     containers: [
-      { id: 'c-104', containerNumber: 'MSCU4491022', size: '40FT', isoType: '40HC', status: 'IN_TRANSIT', destTerminal: 'CICT', damageStatus: 'DAMAGED' },
+      { id: 'c-104', containerNumber: 'MSCU4491022', size: '40FT', isoType: '40HC', status: 'DISCHARGED', loadedAt: todayTrip2Start, unloadedAt: todayTrip2Discharged, destTerminal: 'CICT', damageStatus: 'DAMAGED' },
     ],
   },
   {

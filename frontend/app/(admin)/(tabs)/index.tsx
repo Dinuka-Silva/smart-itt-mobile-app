@@ -17,7 +17,12 @@ import { adminFleetStore, AdminVehicle, AdminDriver } from '../../../src/store/a
 import { useResponsive } from '../../../src/hooks/useResponsive';
 import { AdminSignOutModal } from '../../../src/components/AdminSignOutModal';
 import { useMockTripStore } from '../../../src/store/mockTripStore';
-import { getTripDischargeTerminal } from '../../../src/utils/tripTerminalUtils';
+import {
+  getTripDischargeTerminal,
+  getTripTimingInfo,
+  getContainerTimingInfo,
+  formatTripTime,
+} from '../../../src/utils/tripTerminalUtils';
 
 type DashboardSection = 'OVERVIEW' | 'TRIPS' | 'FLEET' | 'SUPERVISORS';
 
@@ -465,36 +470,52 @@ export default function AdminDashboardScreen() {
                 </TouchableOpacity>
               </View>
 
-              {trips.slice(0, 3).map((trip) => (
-                <View key={trip.id || trip.tripNumber} style={styles.tripItemCard}>
-                  <View style={styles.tripItemHeader}>
-                    <Text style={styles.tripItemNumber}>{trip.tripNumber}</Text>
-                    <View
-                      style={[
-                        styles.statusPill,
-                        trip.status === 'COMPLETED' || trip.status === 'APPROVED'
-                          ? styles.statusPillGreen
-                          : trip.status === 'PENDING_APPROVAL'
-                          ? styles.statusPillAmber
-                          : styles.statusPillCyan,
-                      ]}
-                    >
-                      <Text style={styles.statusPillText}>{trip.status}</Text>
+              {trips.slice(0, 3).map((trip) => {
+                const tTiming = getTripTimingInfo(trip);
+                return (
+                  <View key={trip.id || trip.tripNumber} style={styles.tripItemCard}>
+                    <View style={styles.tripItemHeader}>
+                      <Text style={styles.tripItemNumber}>{trip.tripNumber}</Text>
+                      <View
+                        style={[
+                          styles.statusPill,
+                          trip.status === 'COMPLETED' || trip.status === 'APPROVED'
+                            ? styles.statusPillGreen
+                            : trip.status === 'PENDING_APPROVAL'
+                            ? styles.statusPillAmber
+                            : styles.statusPillCyan,
+                        ]}
+                      >
+                        <Text style={styles.statusPillText}>{trip.status}</Text>
+                      </View>
                     </View>
-                  </View>
 
-                  <View style={styles.tripRouteRow}>
-                    <Text style={styles.tripRouteTerm}>{trip.sourceTerminal}</Text>
-                    <Ionicons name="arrow-forward" size={14} color="#78909c" />
-                    <Text style={styles.tripRouteTerm}>{getTripDischargeTerminal(trip)}</Text>
-                    <Text style={styles.tripVesselText}>• {trip.vesselName || 'ITT Harbor Transfer'}</Text>
-                  </View>
+                    <View style={styles.tripRouteRow}>
+                      <Text style={styles.tripRouteTerm}>{trip.sourceTerminal}</Text>
+                      <Ionicons name="arrow-forward" size={14} color="#78909c" />
+                      <Text style={styles.tripRouteTerm}>{getTripDischargeTerminal(trip)}</Text>
+                      <Text style={styles.tripVesselText}>• {trip.vesselName || 'ITT Harbor Transfer'}</Text>
+                    </View>
 
-                  <Text style={styles.tripVehicleText}>
-                    Prime Mover: {trip.vehicleNumber} ({trip.chassisNumber}) • Driver: {trip.driverName || 'Authorized Driver'}
-                  </Text>
-                </View>
-              ))}
+                    {/* Operational Timing & Turnaround Metric */}
+                    <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 10, marginVertical: 4 }}>
+                      <Text style={{ fontSize: 11, color: '#22ef7e', fontWeight: '700' }}>
+                        📥 Load: {tTiming.loadTime}
+                      </Text>
+                      <Text style={{ fontSize: 11, color: tTiming.isDischarged ? '#00e5ff' : '#feb300', fontWeight: '700' }}>
+                        📤 Disch: {tTiming.dischargeTime}
+                      </Text>
+                      <Text style={{ fontSize: 11, color: '#ffd54f', fontWeight: '800' }}>
+                        ⏱️ Spent: {tTiming.timeSpent}
+                      </Text>
+                    </View>
+
+                    <Text style={styles.tripVehicleText}>
+                      Prime Mover: {trip.vehicleNumber} ({trip.chassisNumber}) • Driver: {trip.driverName || 'Authorized Driver'}
+                    </Text>
+                  </View>
+                );
+              })}
             </>
           )}
 
@@ -512,6 +533,7 @@ export default function AdminDashboardScreen() {
 
               {trips.map((trip) => {
                 const isPending = trip.status === 'PENDING_APPROVAL';
+                const tTiming = getTripTimingInfo(trip);
                 return (
                   <View key={trip.id || trip.tripNumber} style={styles.fullTripCard}>
                     <View style={styles.tripItemHeader}>
@@ -542,6 +564,57 @@ export default function AdminDashboardScreen() {
                       <View style={styles.terminalPoint}>
                         <Text style={styles.terminalPointLabel}>DISCHARGE</Text>
                         <Text style={styles.terminalPointVal}>{getTripDischargeTerminal(trip)}</Text>
+                      </View>
+                    </View>
+
+                    {/* Operational Timing & Turnaround Duration Box */}
+                    <View
+                      style={{
+                        flexDirection: 'row',
+                        backgroundColor: 'rgba(7, 15, 30, 0.95)',
+                        borderRadius: 8,
+                        borderWidth: 1,
+                        borderColor: 'rgba(0, 229, 255, 0.2)',
+                        paddingVertical: 8,
+                        paddingHorizontal: 10,
+                        marginVertical: 6,
+                      }}
+                    >
+                      <View style={{ flex: 1, alignItems: 'center' }}>
+                        <Text style={{ fontSize: 9, fontWeight: '800', color: '#78909c' }}>LOADED</Text>
+                        <Text style={{ fontSize: 12, fontWeight: '800', color: '#ffffff', marginTop: 2 }}>
+                          {tTiming.loadTime}
+                        </Text>
+                        <Text style={{ fontSize: 10, fontWeight: '600', color: '#90caf9' }}>
+                          {trip.sourceTerminal || 'CICT'}
+                        </Text>
+                      </View>
+                      <View style={{ width: 1, height: 26, backgroundColor: 'rgba(255, 255, 255, 0.1)', marginHorizontal: 4 }} />
+                      <View style={{ flex: 1, alignItems: 'center' }}>
+                        <Text style={{ fontSize: 9, fontWeight: '800', color: '#78909c' }}>DISCHARGED</Text>
+                        <Text
+                          style={{
+                            fontSize: 12,
+                            fontWeight: '800',
+                            color: tTiming.isDischarged ? '#00e5ff' : '#feb300',
+                            marginTop: 2,
+                          }}
+                        >
+                          {tTiming.dischargeTime}
+                        </Text>
+                        <Text style={{ fontSize: 10, fontWeight: '600', color: '#90caf9' }}>
+                          {getTripDischargeTerminal(trip)}
+                        </Text>
+                      </View>
+                      <View style={{ width: 1, height: 26, backgroundColor: 'rgba(255, 255, 255, 0.1)', marginHorizontal: 4 }} />
+                      <View style={{ flex: 1, alignItems: 'center' }}>
+                        <Text style={{ fontSize: 9, fontWeight: '800', color: '#78909c' }}>TIME SPENT</Text>
+                        <Text style={{ fontSize: 12, fontWeight: '800', color: '#ffd54f', marginTop: 2 }}>
+                          {tTiming.timeSpent}
+                        </Text>
+                        <Text style={{ fontSize: 10, fontWeight: '600', color: '#90caf9' }}>
+                          {tTiming.isCompleted ? 'Turnaround' : 'Transit'}
+                        </Text>
                       </View>
                     </View>
 

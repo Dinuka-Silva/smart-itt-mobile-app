@@ -11,6 +11,8 @@ export interface WebContainer {
   damageStatus?: string;
   cargoType?: string;
   isReturn?: boolean;
+  loadedAt?: string;
+  unloadedAt?: string;
 }
 
 export interface WebTrip {
@@ -34,6 +36,115 @@ export interface WebTrip {
   operationTime?: string;
   dispatchTime?: string;
   containers: WebContainer[];
+}
+
+export function formatWebTripTime(val?: string | Date | null): string {
+  if (!val) return '—';
+  if (typeof val === 'string' && /^\d{1,2}:\d{2}$/.test(val.trim())) {
+    const [hStr, mStr] = val.trim().split(':');
+    let h = parseInt(hStr, 10);
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    h = h % 12 || 12;
+    return `${h.toString().padStart(2, '0')}:${mStr} ${ampm}`;
+  }
+  const d = val instanceof Date ? val : new Date(val);
+  if (isNaN(d.getTime())) return String(val);
+  return d.toLocaleTimeString('en-US', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true,
+  });
+}
+
+export function parseWebTripDateTime(val?: string | Date | null, baseDate?: Date): Date | null {
+  if (!val) return null;
+  if (val instanceof Date) return isNaN(val.getTime()) ? null : val;
+  if (typeof val === 'string' && /^\d{1,2}:\d{2}$/.test(val.trim())) {
+    const [hStr, mStr] = val.trim().split(':');
+    const base = baseDate ? new Date(baseDate) : new Date();
+    base.setHours(parseInt(hStr, 10), parseInt(mStr, 10), 0, 0);
+    return base;
+  }
+  const d = new Date(val);
+  return isNaN(d.getTime()) ? null : d;
+}
+
+export function formatWebDurationBetween(startVal?: string | Date | null, endVal?: string | Date | null): string {
+  const start = parseWebTripDateTime(startVal);
+  if (!start) return '—';
+  const end = parseWebTripDateTime(endVal) || new Date();
+  const diffMs = end.getTime() - start.getTime();
+  if (diffMs < 0) return 'Just loaded';
+  const totalMins = Math.floor(diffMs / 60000);
+  if (totalMins < 1) return '< 1 min';
+  const hours = Math.floor(totalMins / 60);
+  const mins = totalMins % 60;
+  if (hours > 0) {
+    return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
+  }
+  return `${mins} mins`;
+}
+
+export function getWebTripTimingInfo(trip: WebTrip) {
+  const loadTime = formatWebTripTime(trip.startTime || trip.operationTime || trip.createdAt);
+  const isCompleted = trip.status === 'COMPLETED' || trip.status === 'APPROVED';
+  const isArrived = trip.status === 'ARRIVED' || trip.status === 'PENDING_APPROVAL';
+  const isDischarged = isCompleted || isArrived;
+
+  let rawDischargeTime = trip.endTime;
+  if (!rawDischargeTime && isDischarged) {
+    const dischCont = (trip.containers || []).find((c) => c.unloadedAt);
+    if (dischCont?.unloadedAt) {
+      rawDischargeTime = dischCont.unloadedAt;
+    }
+  }
+
+  const dischargeTime = rawDischargeTime
+    ? formatWebTripTime(rawDischargeTime)
+    : isDischarged
+    ? 'Discharged'
+    : 'In Transit';
+
+  const startTimeVal = trip.startTime || trip.operationTime || trip.createdAt;
+  const endTimeVal = isDischarged ? (rawDischargeTime || trip.endTime) : null;
+  const timeSpent = formatWebDurationBetween(startTimeVal, endTimeVal);
+
+  return {
+    loadTime,
+    dispatchTime: trip.dispatchTime ? formatWebTripTime(trip.dispatchTime) : '—',
+    dischargeTime,
+    timeSpent,
+    isDischarged,
+    isCompleted,
+  };
+}
+
+export function getWebContainerTimingInfo(container: WebContainer, trip: WebTrip, index: number = 0) {
+  const tripTiming = getWebTripTimingInfo(trip);
+  const cLoadTime = container.loadedAt ? formatWebTripTime(container.loadedAt) : tripTiming.loadTime;
+  const isDischarged = container.status === 'DISCHARGED' || (container.unloadedAt ? true : tripTiming.isDischarged);
+  const cDischTime = container.unloadedAt
+    ? formatWebTripTime(container.unloadedAt)
+    : isDischarged
+    ? tripTiming.dischargeTime
+    : 'In Transit';
+
+  const cSpent = formatWebDurationBetween(
+    container.loadedAt || trip.startTime || trip.operationTime || trip.createdAt,
+    container.unloadedAt || (isDischarged ? trip.endTime : null)
+  );
+
+  return {
+    containerNumber: container.containerNumber || `CONT-${index + 1}`,
+    size: container.size || '40FT',
+    sourceTerminal: container.sourceTerminal || trip.sourceTerminal || 'CICT',
+    destTerminal: container.destTerminal || trip.destTerminal || 'JCT',
+    loadTime: cLoadTime,
+    dischargeTime: cDischTime,
+    timeSpent: cSpent,
+    isDischarged,
+    status: isDischarged ? 'DISCHARGED' : 'IN_TRANSIT',
+  };
 }
 
 const STORAGE_KEY = 'smart_itt_admin_trips_data';
