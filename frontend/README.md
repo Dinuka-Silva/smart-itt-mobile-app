@@ -89,6 +89,78 @@ npx tsc --noEmit
 
 ---
 
+## 📸 Application Visual Showcase
+
+### 1. Operator Portal & Fleet Registration
+<div align="center">
+  <table>
+    <tr>
+      <th width="50%">Authentication Portal</th>
+      <th width="50%">Fleet Registration Chips</th>
+    </tr>
+    <tr>
+      <td><img src="../docs/screenshots/login_portal.png" alt="Login Portal" width="100%"/></td>
+      <td><img src="../docs/screenshots/register_fleet_picker.png" alt="Fleet Picker" width="100%"/></td>
+    </tr>
+  </table>
+</div>
+
+### 2. Vehicle Matching & Automated CHE Lookup
+<div align="center">
+  <table>
+    <tr>
+      <th width="50%">SCK Logistics (SCK 100)</th>
+      <th width="50%">SDR LINK (SCK 115)</th>
+    </tr>
+    <tr>
+      <td><img src="../docs/screenshots/vehicle_che_sck100.png" alt="SCK 100 Match" width="100%"/></td>
+      <td><img src="../docs/screenshots/vehicle_che_sck115.png" alt="SCK 115 Match" width="100%"/></td>
+    </tr>
+  </table>
+</div>
+
+### 3. ITT Mission Lifecycle & Communications Hub
+<div align="center">
+  <table>
+    <tr>
+      <th width="33%">Step 1: Driver Submit</th>
+      <th width="33%">Step 2: Gate Pass Approval</th>
+      <th width="33%">Step 3: Trip In-Transit</th>
+    </tr>
+    <tr>
+      <td><img src="../docs/screenshots/trip_01_submitted.png" alt="Trip Submitted" width="100%"/></td>
+      <td><img src="../docs/screenshots/trip_02_supervisor_approved.png" alt="Gate Pass Approved" width="100%"/></td>
+      <td><img src="../docs/screenshots/trip_03_in_transit.png" alt="Trip In-Transit" width="100%"/></td>
+    </tr>
+    <tr>
+      <th width="33%">Step 4: Terminal Discharge</th>
+      <th width="33%">Step 5: My Trips Archive</th>
+      <th width="33%">Radio Message Hub</th>
+    </tr>
+    <tr>
+      <td><img src="../docs/screenshots/trip_04_completed.png" alt="Discharged" width="100%"/></td>
+      <td><img src="../docs/screenshots/trip_05_my_trips_archived.png" alt="My Trips Archive" width="100%"/></td>
+      <td><img src="../docs/screenshots/driver_messages_hub.png" alt="Message Hub" width="100%"/></td>
+    </tr>
+  </table>
+</div>
+
+### 4. Supervisor Command Center & Date-Wise Dispatch
+<div align="center">
+  <table>
+    <tr>
+      <th width="50%">Supervisor Operations Cockpit</th>
+      <th width="50%">Date-Wise Dispatch Reports</th>
+    </tr>
+    <tr>
+      <td><img src="../docs/screenshots/supervisor_dashboard.png" alt="Supervisor Dashboard" width="100%"/></td>
+      <td><img src="../docs/screenshots/supervisor_reports_datewise.png" alt="Supervisor Reports" width="100%"/></td>
+    </tr>
+  </table>
+</div>
+
+---
+
 ## 👥 Demo Credentials
 
 | Role | Username | Password | Notes |

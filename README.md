@@ -239,48 +239,80 @@ The Admin Login portal is an enterprise-hardened entry point engineered with mul
 
 ## 📸 System Screenshots & Visual Showcase
 
-### 1. Vehicle Telematics & Automatic CHE No (SCK No) Recognition
-When a driver enters a vehicle license plate, the system automatically detects and displays the **Port CHE No (SCK No)** and **Fleet Operator** in real-time.
+### 1. Authentication Portal & Interactive Fleet Registration
+The mobile application features a secure, cyber-themed login portal and a dedicated driver onboarding workflow with real-time prime mover chip selection.
 
 <div align="center">
   <table>
     <tr>
-      <th width="50%">SCK Logistics (SCK 100)</th>
-      <th width="50%">SDR LINK (SCK 115)</th>
+      <th width="50%">Operator Authentication Portal</th>
+      <th width="50%">Driver Registration & Fleet Picker</th>
     </tr>
     <tr>
-      <td><img src="docs/screenshots/vehicle_che_sck100.png" alt="SCK 100 Vehicle Match" width="100%"/></td>
-      <td><img src="docs/screenshots/vehicle_che_sck115.png" alt="SCK 115 Vehicle Match" width="100%"/></td>
+      <td><img src="docs/screenshots/login_portal.png" alt="Operator Authentication Portal" width="100%"/></td>
+      <td><img src="docs/screenshots/register_fleet_picker.png" alt="Driver Registration & Fleet Picker" width="100%"/></td>
     </tr>
     <tr>
-      <td align="center"><b>Vehicle:</b> <code>LY 5234</code><br/><b>CHE:</b> <code>SCK 100</code></td>
-      <td align="center"><b>Vehicle:</b> <code>LY 6528</code><br/><b>CHE:</b> <code>SCK 115</code></td>
+      <td align="center"><small>Driver & Supervisor login with auto-role detection & biometrics</small></td>
+      <td align="center"><small>One-tap prime mover chip selector with automatic equipment pre-fill</small></td>
     </tr>
   </table>
 </div>
 
 ---
 
-### 2. Driver Communications & Telematics Message Center
+### 2. Vehicle Telematics & Automatic CHE No (SCK No) Recognition
+When a driver registers or selects a vehicle license plate, the system automatically detects and displays the **Port CHE No (SCK No)** and **Fleet Operator** in real-time.
+
+<div align="center">
+  <table>
+    <tr>
+      <th width="33%">SCK Logistics (SCK 100)</th>
+      <th width="33%">SDR LINK (SCK 115)</th>
+      <th width="33%">SDR LINK (SCK 123)</th>
+    </tr>
+    <tr>
+      <td><img src="docs/screenshots/vehicle_che_sck100.png" alt="SCK 100 Vehicle Match" width="100%"/></td>
+      <td><img src="docs/screenshots/vehicle_che_sck115.png" alt="SCK 115 Vehicle Match" width="100%"/></td>
+      <td><img src="docs/screenshots/vehicle_che_sck123.png" alt="SCK 123 Vehicle Match" width="100%"/></td>
+    </tr>
+    <tr>
+      <td align="center"><b>Vehicle:</b> <code>LY 5234</code><br/><b>CHE:</b> <code>SCK 100</code></td>
+      <td align="center"><b>Vehicle:</b> <code>LY 6528</code><br/><b>CHE:</b> <code>SCK 115</code></td>
+      <td align="center"><b>Vehicle:</b> <code>LY 6530</code><br/><b>CHE:</b> <code>SCK 123</code></td>
+    </tr>
+  </table>
+</div>
+
+---
+
+### 3. Driver Communications & Telematics Message Center
 Dedicated driver communication hub featuring channel filters (`ALL`, `DISPATCH`, `SAFETY`, `OPERATIONS`, `MAINTENANCE`), priority visual badges, and simulated terminal dispatch audio transmissions.
 
 <div align="center">
   <table>
     <tr>
-      <th width="50%">Driver Communications Center</th>
-      <th width="50%">Filtered Dispatch Transmissions</th>
+      <th width="33%">Driver Communications Hub</th>
+      <th width="33%">Filtered Dispatch Messages</th>
+      <th width="33%">Safety & Weather Advisories</th>
     </tr>
     <tr>
       <td><img src="docs/screenshots/driver_messages_hub.png" alt="Driver Messages Hub" width="100%"/></td>
       <td><img src="docs/screenshots/dispatch_filter_selected_1791700652694.png" alt="Dispatch Filtered Messages" width="100%"/></td>
+      <td><img src="docs/screenshots/safety_filter_selected_1791700674382.png" alt="Safety Filtered Messages" width="100%"/></td>
+    </tr>
+    <tr>
+      <td align="center"><small>Unified dispatcher feed with live audio playback</small></td>
+      <td align="center"><small>Gate allocation & terminal transfer orders</small></td>
+      <td align="center"><small>Emergency speed limits & harbor wind alerts</small></td>
     </tr>
   </table>
 </div>
 
 ---
 
-### 3. End-to-End ITT Trip Execution Lifecycle
-A complete operational trial demonstrating driver submission, supervisor approval, live in-transit tracking, terminal gate-in completion, and local storage in **My Trips**.
+### 4. End-to-End ITT Trip Execution Lifecycle
+A complete operational trial demonstrating driver submission, supervisor approval, live in-transit tracking, terminal gate-in completion, and permanent local storage in **My Trips**.
 
 <div align="center">
   <table>
@@ -310,8 +342,8 @@ A complete operational trial demonstrating driver submission, supervisor approva
 
 ---
 
-### 3.1 Driver Mission Operations Console (Home Section)
-The Driver Home dashboard dynamically guides the operator through each operational milestone without clutter:
+### 5. Driver Mission Operations Console (300 Containers Monthly Target)
+The Driver Home dashboard dynamically guides the operator through each operational milestone and tracks monthly progress toward the **300 Containers target**:
 
 <div align="center">
   <img src="docs/screenshots/driver_home_lifecycle_console.png" alt="Driver Mission Operations Console on Home Dashboard" width="85%" style="border-radius: 8px; border: 1px solid #1e293b;" />
@@ -320,37 +352,64 @@ The Driver Home dashboard dynamically guides the operator through each operation
 
 ---
 
-### 4. Supervisor Command Center & Driver Directory
-Supervisors have access to live date-wise reporting tables and an interactive driver roster with high-resolution profile imagery and telematics telemetry.
+### 6. Supervisor Command Center & Date-Wise Dispatch Reports
+Supervisors have access to live date-wise reporting tables, manifest spreadsheets, and an interactive driver roster with high-resolution profile imagery and telematics telemetry.
 
 <div align="center">
   <table>
     <tr>
       <th width="33%">Supervisor Operations Dashboard</th>
       <th width="33%">Date-Wise Dispatch Reports</th>
-      <th width="33%">Driver Profile Directory</th>
+      <th width="33%">Live Dispatch Sheet Manifest</th>
     </tr>
     <tr>
       <td><img src="docs/screenshots/supervisor_dashboard.png" alt="Supervisor Dashboard" width="100%"/></td>
       <td><img src="docs/screenshots/supervisor_reports_datewise.png" alt="Date-wise Reports" width="100%"/></td>
-      <td><img src="docs/screenshots/supervisor_drivers_directory.png" alt="Supervisor Driver Directory" width="100%"/></td>
+      <td><img src="docs/screenshots/reports_dispatch_sheet_1791686332603.png" alt="Live Dispatch Sheet Manifest" width="100%"/></td>
+    </tr>
+    <tr>
+      <td align="center"><small>Real-time gate metrics & approval queue</small></td>
+      <td align="center"><small>Terminal pair traffic & date selection</small></td>
+      <td align="center"><small>Container check-digits & truck payload log</small></td>
     </tr>
   </table>
 </div>
 
 ---
 
-### 4.1 Terminal-Wise Total Trips Panel (Weekly & Monthly Filters)
+### 7. Terminal-Wise Consolidated Traffic Analytics (Weekly & Monthly)
 A consolidated terminal throughput panel providing multi-dimensional traffic analytics across all 6 container terminals (`CICT`, `CWIT`, `ECT`, `JCT`, `UCT`, `SAGT`):
 
 <div align="center">
-  <img src="docs/screenshots/terminal_totals_weekly_monthly_panel.png" alt="Terminal-Wise Consolidated Totals Panel with Weekly and Monthly Filters" width="85%" style="border-radius: 8px; border: 1px solid #1e293b;" />
-  <p><i>Supervisor Panel: 6-Terminal throughput breakdown with rolling weekly, monthly, and custom range calendar selection.</i></p>
+  <table>
+    <tr>
+      <th width="50%">Consolidated 6-Terminal Panel</th>
+      <th width="50%">7-Day Rolling Weekly Traffic Breakdown</th>
+    </tr>
+    <tr>
+      <td><img src="docs/screenshots/terminal_totals_weekly_monthly_panel.png" alt="Terminal Totals Monthly and Weekly" width="100%"/></td>
+      <td><img src="docs/screenshots/terminal_totals_weekly_view.png" alt="Terminal Totals Weekly View" width="100%"/></td>
+    </tr>
+    <tr>
+      <td align="center"><small>Total load and discharge breakdown across all terminals</small></td>
+      <td align="center"><small>Weekly rolling trend indicators and inbound/outbound flow</small></td>
+    </tr>
+  </table>
 </div>
 
 ---
 
-### 5. Multi-Format Dispatch Export (Excel & PDF)
+### 8. Supervisor Fleet Directory & Driver Dossiers
+Interactive directory of certified active terminal drivers with profile avatars, contact phone numbers, shift status, and monthly container progress:
+
+<div align="center">
+  <img src="docs/screenshots/supervisor_drivers_directory.png" alt="Supervisor Driver Directory" width="85%" style="border-radius: 8px; border: 1px solid #1e293b;" />
+  <p><i>Supervisor Driver Directory: High-resolution avatars, prime mover assignment, shift status, and direct-call actions.</i></p>
+</div>
+
+---
+
+### 9. Multi-Format Dispatch Export (Excel & PDF)
 Supervisors can instantly export terminal dispatch records, driver performance, and container logs in both Microsoft Excel (`.XLS` / `.CSV`) spreadsheet format and printable PDF documents.
 
 <div align="center">
