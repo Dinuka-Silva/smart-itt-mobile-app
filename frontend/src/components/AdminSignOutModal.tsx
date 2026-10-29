@@ -1,5 +1,5 @@
-import React from 'react';
-import { Modal, View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { Modal, View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useAuthStore } from '../store/authStore';
@@ -12,15 +12,20 @@ interface AdminSignOutModalProps {
 export const AdminSignOutModal: React.FC<AdminSignOutModalProps> = ({ visible, onClose }) => {
   const router = useRouter();
   const { logout, user } = useAuthStore();
+  const [loading, setLoading] = useState(false);
 
-  const handleConfirmSignOut = async () => {
+  const handleAction = async (target: '/(auth)/login' | '/(admin)/login') => {
+    setLoading(true);
     try {
-      await logout();
+      await logout(target);
+      onClose();
+      router.replace(target);
     } catch (e) {
       console.warn('Logout error:', e);
-    } finally {
       onClose();
-      router.replace('/(auth)/login');
+      router.replace(target);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -34,20 +39,60 @@ export const AdminSignOutModal: React.FC<AdminSignOutModalProps> = ({ visible, o
       <View style={styles.overlay}>
         <View style={styles.card}>
           <View style={styles.iconCircle}>
-            <Ionicons name="log-out" size={30} color="#ff5252" />
+            <Ionicons name="shield-outline" size={30} color="#00e5ff" />
           </View>
-          <Text style={styles.title}>Sign Out of Admin Console?</Text>
+          <Text style={styles.title}>Admin Session Actions</Text>
           <Text style={styles.message}>
-            You will end your session as {user?.name || user?.fullName || 'Administrator'}. You can log back in at any time.
+            Currently authenticated as {user?.name || user?.fullName || 'Administrator'}. Choose an action below:
           </Text>
 
-          <View style={styles.btnRow}>
-            <TouchableOpacity style={styles.cancelBtn} onPress={onClose} activeOpacity={0.7}>
-              <Text style={styles.cancelText}>Cancel</Text>
+          <View style={styles.actionColumn}>
+            {/* Switch Account */}
+            <TouchableOpacity
+              style={styles.switchAccountBtn}
+              onPress={() => handleAction('/(auth)/login')}
+              disabled={loading}
+              activeOpacity={0.8}
+            >
+              <View style={styles.btnIconWrapCyan}>
+                <Ionicons name="swap-horizontal" size={18} color="#00e5ff" />
+              </View>
+              <View style={styles.btnTextWrap}>
+                <Text style={styles.switchAccountTitle}>Switch Account</Text>
+                <Text style={styles.switchAccountSubtitle}>Go to Operator Login (Drivers / Supervisors)</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={16} color="#00e5ff" />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.confirmBtn} onPress={handleConfirmSignOut} activeOpacity={0.8}>
-              <Ionicons name="log-out-outline" size={16} color="#ffffff" style={{ marginRight: 6 }} />
-              <Text style={styles.confirmText}>Sign Out</Text>
+
+            {/* Sign Out to Admin Login */}
+            <TouchableOpacity
+              style={styles.signOutBtn}
+              onPress={() => handleAction('/(admin)/login')}
+              disabled={loading}
+              activeOpacity={0.8}
+            >
+              <View style={styles.btnIconWrapRed}>
+                <Ionicons name="log-out-outline" size={18} color="#f43f5e" />
+              </View>
+              <View style={styles.btnTextWrap}>
+                <Text style={styles.signOutTitle}>Sign Out</Text>
+                <Text style={styles.signOutSubtitle}>End session & return to Admin Login</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={16} color="#f43f5e" />
+            </TouchableOpacity>
+
+            {/* Cancel Button */}
+            <TouchableOpacity
+              style={styles.cancelBtn}
+              onPress={onClose}
+              disabled={loading}
+              activeOpacity={0.7}
+            >
+              {loading ? (
+                <ActivityIndicator size="small" color="#90caf9" />
+              ) : (
+                <Text style={styles.cancelText}>Cancel</Text>
+              )}
             </TouchableOpacity>
           </View>
         </View>
@@ -59,33 +104,33 @@ export const AdminSignOutModal: React.FC<AdminSignOutModalProps> = ({ visible, o
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(2, 6, 17, 0.85)',
+    backgroundColor: 'rgba(2, 6, 17, 0.88)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 24,
   },
   card: {
     width: '100%',
-    maxWidth: 360,
+    maxWidth: 380,
     backgroundColor: '#0c192c',
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 82, 82, 0.3)',
+    borderRadius: 22,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255, 255, 255, 0.12)',
     padding: 24,
     alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.5,
-    shadowRadius: 20,
-    elevation: 10,
+    shadowOpacity: 0.6,
+    shadowRadius: 24,
+    elevation: 12,
   },
   iconCircle: {
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: 'rgba(255, 82, 82, 0.15)',
+    backgroundColor: 'rgba(0, 229, 255, 0.12)',
     borderWidth: 1.5,
-    borderColor: 'rgba(255, 82, 82, 0.35)',
+    borderColor: 'rgba(0, 229, 255, 0.35)',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 16,
@@ -103,47 +148,89 @@ const styles = StyleSheet.create({
     color: '#90a4ae',
     textAlign: 'center',
     lineHeight: 19,
-    marginBottom: 24,
+    marginBottom: 20,
   },
-  btnRow: {
-    flexDirection: 'row',
-    gap: 12,
+  actionColumn: {
     width: '100%',
+    gap: 10,
+  },
+  switchAccountBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    borderRadius: 14,
+    backgroundColor: 'rgba(0, 229, 255, 0.08)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(0, 229, 255, 0.35)',
+  },
+  signOutBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    borderRadius: 14,
+    backgroundColor: 'rgba(244, 63, 94, 0.08)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(244, 63, 94, 0.35)',
+  },
+  btnIconWrapCyan: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: 'rgba(0, 229, 255, 0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  btnIconWrapRed: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: 'rgba(244, 63, 94, 0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  btnTextWrap: {
+    flex: 1,
+  },
+  switchAccountTitle: {
+    color: '#ffffff',
+    fontSize: 14,
+    fontWeight: '800',
+    letterSpacing: 0.2,
+  },
+  switchAccountSubtitle: {
+    color: '#80deea',
+    fontSize: 11,
+    marginTop: 2,
+  },
+  signOutTitle: {
+    color: '#ffffff',
+    fontSize: 14,
+    fontWeight: '800',
+    letterSpacing: 0.2,
+  },
+  signOutSubtitle: {
+    color: '#fda4af',
+    fontSize: 11,
+    marginTop: 2,
   },
   cancelBtn: {
-    flex: 1,
     paddingVertical: 12,
     borderRadius: 12,
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.12)',
     alignItems: 'center',
     justifyContent: 'center',
+    marginTop: 4,
   },
   cancelText: {
     color: '#b0bec5',
     fontWeight: '700',
     fontSize: 13,
-  },
-  confirmBtn: {
-    flex: 1.2,
-    flexDirection: 'row',
-    paddingVertical: 12,
-    borderRadius: 12,
-    backgroundColor: '#d32f2f',
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#d32f2f',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  confirmText: {
-    color: '#ffffff',
-    fontWeight: '800',
-    fontSize: 13,
-    letterSpacing: 0.3,
   },
 });
 

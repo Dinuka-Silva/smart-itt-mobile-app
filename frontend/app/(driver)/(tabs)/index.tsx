@@ -22,6 +22,7 @@ import { dashboardService, DriverDashboardStats } from '../../../src/services/da
 import { driverService } from '../../../src/services/driverService';
 import { colors, radius, spacing } from '../../../src/theme';
 import { useMockTripStore } from '../../../src/store/mockTripStore';
+import { adminFleetStore } from '../../../src/store/adminFleetStore';
 import axios from 'axios';
 import API_BASE_URL from '../../../src/config/api';
 import { useResponsive } from '../../../src/hooks/useResponsive';
@@ -51,6 +52,13 @@ export default function DriverHomeDashboard() {
   const [refreshing, setRefreshing] = useState(false);
   const [isOnline, setIsOnline] = useState(true);
 
+  // Administrative Suspension Status
+  const isSuspended = useMemo(() => {
+    if (user?.status === 'SUSPENDED') return true;
+    const fleetDriver = adminFleetStore.getDriver(user?.driverCode || user?.username || '');
+    return fleetDriver?.status === 'SUSPENDED';
+  }, [user]);
+
   // Modals state
   const [allowanceModalVisible, setAllowanceModalVisible] = useState(false);
   const [damageReportModalVisible, setDamageReportModalVisible] = useState(false);
@@ -67,7 +75,7 @@ export default function DriverHomeDashboard() {
   const [towerAck, setTowerAck] = useState(false);
 
   // ─── MONTHLY CONTAINER MISSION & CELEBRATION ANIMATION STATE ───
-  const monthlyTarget = 150;
+  const monthlyTarget = 300;
   const [celebrationModalVisible, setCelebrationModalVisible] = useState(false);
   const scaleAnim = useRef(new Animated.Value(0)).current;
   const rotateAnim = useRef(new Animated.Value(0)).current;
@@ -294,6 +302,13 @@ export default function DriverHomeDashboard() {
 
   // 3. COMPLETE TRIP HANDLER -> SENDS TO SUPERVISOR FOR CONFIRMATION
   const handleCompleteActiveTrip = async (tripId: string) => {
+    if (isSuspended) {
+      Alert.alert(
+        'Account Suspended',
+        'Your driver account has been suspended by Administration. You cannot submit or complete trips. Please contact Administration or Port Dispatch.'
+      );
+      return;
+    }
     setActionInProgress(true);
     try {
       const trip = trips.find((t) => t.id === tripId);
@@ -476,6 +491,28 @@ export default function DriverHomeDashboard() {
           </View>
         </View>
 
+        {/* ─── DRIVER ADMINISTRATIVE SUSPENSION BANNER ─── */}
+        {isSuspended && (
+          <View style={styles.suspendedWarningBanner}>
+            <View style={styles.suspendedWarningIconBox}>
+              <Ionicons name="alert-circle" size={22} color="#ff5252" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.suspendedWarningTitle}>ACCOUNT SUSPENDED BY ADMIN</Text>
+              <Text style={styles.suspendedWarningSubtitle}>
+                Your driver account is currently suspended by Port Administration. Operational trip dispatches are restricted. Please contact Port Dispatch Administration.
+              </Text>
+            </View>
+            <TouchableOpacity
+              style={styles.suspendedContactBtn}
+              onPress={() => setSupervisorModalVisible(true)}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.suspendedContactBtnText}>HELP</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
         {/* ─── VEHICLE REVENUE LICENSE RENEWAL NOTIFICATION (Active within 1 month, disappears when renewed for 1 year) ─── */}
         {vehicleLicenseRenewalDue && (
           <TouchableOpacity
@@ -598,7 +635,7 @@ export default function DriverHomeDashboard() {
           </View>
         </View>
 
-        {/* ─── MONTHLY CONTAINER MISSION TARGET (50 / 150 CONTAINERS) ─── */}
+        {/* ─── MONTHLY CONTAINER MISSION TARGET (50 / 300 CONTAINERS) ─── */}
         <View style={styles.monthlyMissionCard}>
           <View style={styles.monthlyMissionHeader}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
@@ -607,7 +644,7 @@ export default function DriverHomeDashboard() {
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.monthlyMissionHeading}>MONTHLY CONTAINER MISSION</Text>
-                <Text style={styles.monthlyMissionSubHeading}>Target: 150 Containers for this month</Text>
+                <Text style={styles.monthlyMissionSubHeading}>Target: 300 Containers for this month</Text>
               </View>
             </View>
             <TouchableOpacity
@@ -1467,7 +1504,7 @@ export default function DriverHomeDashboard() {
             <Text style={styles.celebrationMessage}>
               Outstanding operational excellence! You have achieved the{' '}
               <Text style={{ color: '#feb300', fontWeight: '900' }}>50 Containers Milestone</Text>{' '}
-              toward your monthly mission of <Text style={{ color: '#00e5ff', fontWeight: '900' }}>150 Containers</Text>!
+              toward your monthly mission of <Text style={{ color: '#00e5ff', fontWeight: '900' }}>300 Containers</Text>!
             </Text>
 
             {/* Achievement Highlights Box */}
@@ -3776,5 +3813,48 @@ const styles = StyleSheet.create({
     fontSize: 9,
     fontWeight: '900',
     letterSpacing: 0.4,
+  },
+  suspendedWarningBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: 'rgba(255, 82, 82, 0.12)',
+    borderWidth: 1.5,
+    borderColor: '#ff5252',
+    borderRadius: radius.DEFAULT,
+    padding: 12,
+  },
+  suspendedWarningIconBox: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255, 82, 82, 0.22)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  suspendedWarningTitle: {
+    color: '#ff5252',
+    fontSize: 12,
+    fontWeight: '900',
+    letterSpacing: 0.6,
+  },
+  suspendedWarningSubtitle: {
+    color: '#dde2f0',
+    fontSize: 10.5,
+    lineHeight: 15,
+    marginTop: 2,
+    fontWeight: '500',
+  },
+  suspendedContactBtn: {
+    backgroundColor: '#ff5252',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 6,
+  },
+  suspendedContactBtnText: {
+    color: '#ffffff',
+    fontSize: 10.5,
+    fontWeight: '900',
+    letterSpacing: 0.5,
   },
 });

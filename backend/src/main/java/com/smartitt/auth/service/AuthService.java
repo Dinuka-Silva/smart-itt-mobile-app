@@ -45,6 +45,7 @@ public class AuthService {
     private final DriverCodeGeneratorService driverCodeGeneratorService;
     private final DriverService driverService;
     private final com.smartitt.vehicle.repository.VehicleRepository vehicleRepository;
+    private final com.smartitt.audit.service.AuditLogService auditLogService;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
 
@@ -291,18 +292,53 @@ public class AuthService {
 
         if (user == null) {
             log.warn("User not found for identifier: {}", identifier);
+            auditLogService.logAction(
+                null,
+                "ANONYMOUS",
+                "LOGIN_FAILED",
+                "AUTH",
+                identifier,
+                "Failed login attempt - user not found: " + identifier,
+                null,
+                null,
+                null
+            );
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid Operator Code or password");
         }
 
         if (!passwordEncoder.matches(req.getPassword(), user.getPassword())) {
             log.warn("Password mismatch for identifier: {}", identifier);
+            String roleStr = user.getRole() != null ? user.getRole().name() : "USER";
+            auditLogService.logAction(
+                user.getId(),
+                roleStr,
+                "LOGIN_FAILED",
+                roleStr,
+                user.getId().toString(),
+                "Failed login attempt - password mismatch for " + roleStr + ": " + user.getUsername(),
+                null,
+                null,
+                null
+            );
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid Operator Code or password");
         }
 
         // Account Status Checks
         if (user.getStatus() == AccountStatus.SUSPENDED) {
             log.warn("Login denied: User {} is SUSPENDED", identifier);
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Account is SUSPENDED. Please contact port administration.");
+            String roleStr = user.getRole() != null ? user.getRole().name() : "USER";
+            auditLogService.logAction(
+                user.getId(),
+                roleStr,
+                "LOGIN_BLOCKED_SUSPENDED",
+                roleStr,
+                user.getId().toString(),
+                "Login blocked: Suspended " + roleStr + " " + user.getFullName() + " (" + identifier + ") attempted to log in",
+                null,
+                null,
+                null
+            );
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Your account has been SUSPENDED by Administration. Access to ITT operations is blocked. Please contact port administration.");
         }
         if (user.getStatus() == AccountStatus.DEACTIVATED) {
             log.warn("Login denied: User {} is DEACTIVATED", identifier);
@@ -329,6 +365,26 @@ public class AuthService {
             }
         }
 
+        // Record successful login audit trail entry
+        String roleStr = user.getRole() != null ? user.getRole().name() : "USER";
+        String displayName = user.getFullName() != null ? user.getFullName() : user.getUsername();
+        String entityId = user.getId() != null ? user.getId().toString() : identifier;
+        String desc = roleStr + " logged in: " + displayName + " (" + user.getUsername() + ")";
+        if (user instanceof Driver drv && drv.getVehicleNumber() != null) {
+            desc += " - Truck " + drv.getVehicleNumber();
+        }
+        auditLogService.logAction(
+            user.getId(),
+            roleStr,
+            "LOGIN_SUCCESS",
+            roleStr,
+            entityId,
+            desc,
+            null,
+            null,
+            null
+        );
+
         String token = jwtUtil.generateAccessToken(user);
         return buildResponse(user, token);
     }
@@ -337,6 +393,17 @@ public class AuthService {
     public void logout(String identifier) {
         if (identifier == null || identifier.isBlank()) return;
         log.info("Processing logout for identifier: {}", identifier);
+        auditLogService.logAction(
+            null,
+            "USER",
+            "LOGOUT",
+            "AUTH",
+            identifier,
+            "User logged out from session: " + identifier,
+            null,
+            null,
+            null
+        );
         driverRepository.findByDriverCodeOrUsernameOrEmail(identifier).ifPresent(d -> {
             if (d.getVehicleNumber() != null && !d.getVehicleNumber().isBlank()) {
                 vehicleRepository.findByVehicleNumber(d.getVehicleNumber()).ifPresent(v -> {

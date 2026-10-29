@@ -15,6 +15,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { adminService } from '../../../src/services/adminService';
+import { credentialStore } from '../../../src/services/credentialStore';
 import { adminFleetStore, AdminVehicle } from '../../../src/store/adminFleetStore';
 import { useResponsive } from '../../../src/hooks/useResponsive';
 import { AdminSignOutModal } from '../../../src/components/AdminSignOutModal';
@@ -85,12 +86,19 @@ export default function AdminDriversScreen() {
     setResettingPassword(true);
     try {
       await adminFleetStore.resetDriverPassword(driverToReset.id || driverToReset.driverCode, pwd);
+      if (driverToReset.driverCode) {
+        await credentialStore.resetPasswordByAdmin(driverToReset.driverCode, pwd);
+      }
+      if (driverToReset.employeeId) {
+        await credentialStore.resetPasswordByAdmin(driverToReset.employeeId, pwd);
+      }
+
       if (Platform.OS === 'web') {
-        window.alert(`Password for ${driverToReset.fullName} (${driverToReset.driverCode}) has been reset to: ${pwd}`);
+        window.alert(`Password for ${driverToReset.fullName} (${driverToReset.driverCode}) has been reset to default: ${pwd}`);
       } else {
         Alert.alert(
           'Password Reset Successful',
-          `The password for ${driverToReset.fullName} (${driverToReset.driverCode}) has been reset to:\n\n${pwd}\n\nPlease share this credential with the driver.`
+          `The password for ${driverToReset.fullName} (${driverToReset.driverCode}) has been reset to default:\n\n${pwd}\n\nPlease share this credential with the driver. Account lockouts have been cleared.`
         );
       }
       setResetModalVisible(false);
@@ -262,8 +270,13 @@ export default function AdminDriversScreen() {
   const handleUpdateStatus = async (status: string) => {
     if (!selectedDriver) return;
     try {
-      await adminService.updateDriverStatus(selectedDriver.id, status, `Admin updated status to ${status}`);
-      Alert.alert('Status Updated', `Driver status set to ${status}`);
+      await adminFleetStore.updateDriverStatus(selectedDriver.id || selectedDriver.driverCode, status, `Admin updated status to ${status}`);
+      setDrivers(prev => prev.map(d => (d.id === selectedDriver.id || d.driverCode === selectedDriver.driverCode) ? { ...d, status } : d));
+      setSelectedDriver({ ...selectedDriver, status });
+      const msg = status === 'SUSPENDED'
+        ? `Driver ${selectedDriver.fullName} (${selectedDriver.driverCode}) has been SUSPENDED. They will be blocked from logging into the mobile app and will see the suspension message.`
+        : `Driver ${selectedDriver.fullName} status updated to ${status}.`;
+      Alert.alert('Status Updated', msg);
       setActionModalVisible(false);
       fetchDrivers();
     } catch (err: any) {

@@ -52,10 +52,11 @@ interface AuthState {
   sessionTimeoutMinutes: number;
   lastActiveTimestamp: number;
   isBiometricEnabled: boolean;
+  logoutTargetRoute: string | null;
   login: (user: User) => Promise<void>;
   updateUser: (partialUser: Partial<User>) => void;
   setVehicleStatus: (status: 'ACTIVE' | 'MAINTENANCE' | 'INACTIVE') => Promise<void>;
-  logout: () => Promise<void>;
+  logout: (targetRoute?: string) => Promise<void>;
   lockSession: () => void;
   unlockSession: () => void;
   touchActivity: () => void;
@@ -76,6 +77,7 @@ export const useAuthStore = create<AuthState>((set, get) => {
     sessionTimeoutMinutes: 5, // Default 5 minutes auto-lock
     lastActiveTimestamp: Date.now(),
     isBiometricEnabled: false,
+    logoutTargetRoute: null,
 
     login: async (user: User) => {
       try {
@@ -90,12 +92,31 @@ export const useAuthStore = create<AuthState>((set, get) => {
           isBiometricEnabled: bioEnabled,
         });
 
+        const roleLabel = user.role || 'USER';
+        const displayName = user.name || user.fullName || user.username || 'User';
+        const identifier = user.driverCode || user.employeeId || user.username || '';
+        let description = `${roleLabel} logged in: ${displayName} (${identifier})`;
+        if (user.role === 'DRIVER' && user.vehicleNumber) {
+          description += ` · Truck ${user.vehicleNumber}`;
+        } else if (user.role === 'SUPERVISOR') {
+          description += ` · Port Operations Supervisor`;
+        } else if (user.role === 'ADMIN') {
+          description += ` · System Administrator Console`;
+        }
+
         await securityAuditService.logEvent(
           'LOGIN_SUCCESS',
-          user.username || user.name,
-          `Successful login with role ${user.role}.`,
+          identifier || displayName,
+          description,
           'INFO',
-          user.role
+          user.role,
+          {
+            role: user.role,
+            name: displayName,
+            driverCode: user.driverCode,
+            employeeId: user.employeeId,
+            vehicleNumber: user.vehicleNumber,
+          }
         );
 
         // If user is a driver with assigned vehicle, ensure backend knows it is ACTIVE
@@ -136,7 +157,7 @@ export const useAuthStore = create<AuthState>((set, get) => {
       }
     },
 
-    logout: async () => {
+    logout: async (targetRoute?: string) => {
       const currentUser = get().user;
       if (currentUser?.role === 'DRIVER' && currentUser.vehicleNumber) {
         try {
@@ -154,6 +175,17 @@ export const useAuthStore = create<AuthState>((set, get) => {
         } catch {}
       }
 
+      if (currentUser) {
+        const uIdentifier = currentUser.driverCode || currentUser.employeeId || currentUser.username || 'USER';
+        securityAuditService.logEvent(
+          'LOGOUT',
+          uIdentifier,
+          `${currentUser.role || 'User'} logged out: ${currentUser.name || uIdentifier}${targetRoute ? ` (redirecting to: ${targetRoute})` : ''}`,
+          'INFO',
+          currentUser.role
+        ).catch(() => {});
+      }
+
       try {
         await storage.removeItem('authToken');
       } catch (error) {
@@ -163,6 +195,7 @@ export const useAuthStore = create<AuthState>((set, get) => {
         user: null,
         isAuthenticated: false,
         isSessionLocked: false,
+        logoutTargetRoute: targetRoute || null,
         lastActiveTimestamp: Date.now(),
       });
     },

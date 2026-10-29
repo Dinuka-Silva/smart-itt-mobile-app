@@ -302,12 +302,13 @@ public class AdminService {
 
     @Transactional
     public void resetDriverPassword(String id, String newPassword) {
+        String pwd = (newPassword != null && !newPassword.isBlank()) ? newPassword : "driver";
         Driver driver = findDriver(id);
-        driver.setPassword(passwordEncoder.encode(newPassword));
+        driver.setPassword(passwordEncoder.encode(pwd));
         driverRepository.save(driver);
 
         auditLogService.log(getCurrentActorId(), "ADMIN", "RESET_DRIVER_PASSWORD", "DRIVER", driver.getId().toString(),
-                "Password reset by Admin for " + driver.getDriverCode());
+                "Password reset by Admin for " + driver.getDriverCode() + " (" + driver.getFullName() + ") to default: '" + pwd + "'");
     }
 
     private String generateNextDriverCode() {
@@ -330,6 +331,8 @@ public class AdminService {
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Driver not found"));
         } catch (IllegalArgumentException e) {
             return driverRepository.findByDriverCode(id)
+                    .or(() -> driverRepository.findByUsername(id))
+                    .or(() -> driverRepository.findByEmployeeId(id))
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Driver not found: " + id));
         }
     }

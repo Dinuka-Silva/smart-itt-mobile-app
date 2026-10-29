@@ -1,4 +1,5 @@
 import { adminService } from '../services/adminService';
+import { credentialStore } from '../services/credentialStore';
 
 export interface AdminVehicle {
   id: string;
@@ -43,6 +44,7 @@ export interface AdminDriver {
   email?: string;
   emergencyContactName?: string;
   emergencyContactNumber?: string;
+  operator?: string;
   totalTrips: number;
 }
 
@@ -415,25 +417,75 @@ class AdminFleetStore {
     return newDriver;
   }
 
+  getDriver(identifier: string): AdminDriver | undefined {
+    if (!identifier) return undefined;
+    const clean = identifier.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+    return this.drivers.find(d => {
+      const dCode = (d.driverCode || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+      const dEmp = (d.employeeId || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+      const dNic = (d.nic || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+      const dId = (d.id || '').toUpperCase();
+      const dPhone = (d.mobileNumber || '').replace(/[^0-9]/g, '');
+      const cleanPhone = identifier.replace(/[^0-9]/g, '');
+
+      return dCode === clean ||
+             dEmp === clean ||
+             dNic === clean ||
+             dId === identifier.toUpperCase() ||
+             (cleanPhone.length >= 7 && dPhone.includes(cleanPhone)) ||
+             (d.email && d.email.toLowerCase() === identifier.toLowerCase());
+    });
+  }
+
   async updateDriverStatus(driverId: string, status: string, reason?: string) {
-    try {
-      await adminService.updateDriverStatus(driverId, status, reason);
-    } catch (e) {
-      console.log('[AdminFleetStore] Backend offline, updating status locally');
-    }
-    const idx = this.drivers.findIndex(d => d.id === driverId || d.driverCode === driverId);
+    const idx = this.drivers.findIndex(d => d.id === driverId || d.driverCode === driverId || d.employeeId === driverId);
     if (idx !== -1) {
       this.drivers[idx] = { ...this.drivers[idx], status };
+    }
+    const targetDriver = idx !== -1 ? this.drivers[idx] : undefined;
+
+    // Synchronize suspension status with local secure credential store
+    try {
+      if (targetDriver) {
+        if (targetDriver.driverCode) await credentialStore.setAccountStatus(targetDriver.driverCode, status as any, reason);
+        if (targetDriver.employeeId) await credentialStore.setAccountStatus(targetDriver.employeeId, status as any, reason);
+        if (targetDriver.email) await credentialStore.setAccountStatus(targetDriver.email, status as any, reason);
+      }
+      await credentialStore.setAccountStatus(driverId, status as any, reason);
+    } catch (e) {
+      console.warn('[AdminFleetStore] Local credential store status sync error:', e);
+    }
+
+    try {
+      await adminService.updateDriverStatus(targetDriver?.id || driverId, status, reason);
+    } catch (e) {
+      console.log('[AdminFleetStore] Backend offline, updating status locally');
     }
   }
 
   async resetDriverPassword(driverId: string, newPassword?: string) {
+    const defaultPassword = (newPassword && newPassword.trim()) ? newPassword.trim() : 'driver';
+    const driver = this.drivers.find(d => d.id === driverId || d.driverCode === driverId || d.employeeId === driverId);
+
+    // 1. Reset in local credential store (clear previous password blocking and lockouts)
     try {
-      await adminService.resetDriverPassword(driverId, newPassword);
+      if (driver) {
+        if (driver.driverCode) await credentialStore.resetPasswordByAdmin(driver.driverCode, defaultPassword);
+        if (driver.employeeId) await credentialStore.resetPasswordByAdmin(driver.employeeId, defaultPassword);
+        if (driver.email) await credentialStore.resetPasswordByAdmin(driver.email, defaultPassword);
+      }
+      await credentialStore.resetPasswordByAdmin(driverId, defaultPassword);
+    } catch (e) {
+      console.warn('[AdminFleetStore] Local credential store reset error:', e);
+    }
+
+    // 2. Reset on backend API
+    try {
+      await adminService.resetDriverPassword(driver?.driverCode || driverId, defaultPassword);
     } catch (e) {
       console.log('[AdminFleetStore] Backend offline, resetting password locally');
     }
-    return { success: true, password: newPassword || 'driver' };
+    return { success: true, password: defaultPassword };
   }
 
   async assignVehicle(vehicleId: string, driver: { driverName: string; driverCode: string; driverMobile: string } | null) {
@@ -603,6 +655,17 @@ class AdminFleetStore {
     }
 
     this.drivers[idx] = updatedDriver;
+
+    if (updates.status) {
+      try {
+        if (updatedDriver.driverCode) await credentialStore.setAccountStatus(updatedDriver.driverCode, updates.status as any);
+        if (updatedDriver.employeeId) await credentialStore.setAccountStatus(updatedDriver.employeeId, updates.status as any);
+        if (updatedDriver.email) await credentialStore.setAccountStatus(updatedDriver.email, updates.status as any);
+        await credentialStore.setAccountStatus(driverId, updates.status as any);
+      } catch (e) {
+        console.warn('[AdminFleetStore] Local credential store status sync error:', e);
+      }
+    }
 
     try {
       await adminService.updateDriver(driverId, updates);

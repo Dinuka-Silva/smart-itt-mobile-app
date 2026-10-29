@@ -14,6 +14,8 @@ import java.util.UUID;
 @Repository
 public interface DriverRepository extends JpaRepository<Driver, UUID> {
     Optional<Driver> findByDriverCode(String driverCode);
+    Optional<Driver> findByUsername(String username);
+    Optional<Driver> findByEmployeeId(String employeeId);
 
     @Query("SELECT d FROM Driver d WHERE LOWER(d.driverCode) = LOWER(:codeOrUser) OR LOWER(d.username) = LOWER(:codeOrUser) OR LOWER(d.email) = LOWER(:codeOrUser)")
     Optional<Driver> findByDriverCodeOrUsernameOrEmail(@Param("codeOrUser") String codeOrUser);

@@ -29,7 +29,7 @@ type DashboardSection = 'OVERVIEW' | 'TRIPS' | 'FLEET' | 'SUPERVISORS';
 export default function AdminDashboardScreen() {
   const router = useRouter();
   const { topInset, bottomInset, containerPaddingHorizontal } = useResponsive();
-  const { user } = useAuthStore();
+  const { user, lockSession } = useAuthStore();
   const mockTrips = useMockTripStore((s) => s.mockTrips);
 
   const [activeSection, setActiveSection] = useState<DashboardSection>('OVERVIEW');
@@ -266,6 +266,14 @@ export default function AdminDashboardScreen() {
             activeOpacity={0.7}
           >
             <Ionicons name="person-circle-outline" size={19} color="#90caf9" />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.actionIconBtn, { borderColor: 'rgba(255, 179, 0, 0.35)', backgroundColor: 'rgba(255, 179, 0, 0.1)' }]}
+            onPress={() => lockSession()}
+            activeOpacity={0.7}
+            accessibilityLabel="Lock Admin Session"
+          >
+            <Ionicons name="lock-closed-outline" size={17} color="#feb300" />
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.actionIconBtn, styles.logoutBtn]}

@@ -16,6 +16,8 @@ export type SecurityEventType =
   | 'PASSWORD_CHANGED'
   | 'SESSION_AUTO_LOCKED'
   | 'SESSION_UNLOCKED'
+  | 'LOGOUT'
+  | 'SWITCH_ACCOUNT'
   | 'UNAUTHORIZED_ROUTE_ATTEMPT'
   | 'SECURITY_POLICY_VIOLATION';
 
@@ -33,7 +35,70 @@ export interface SecurityEvent {
 }
 
 const AUDIT_STORAGE_KEY = 'itt_mobile_security_audit_logs';
-const MAX_LOCAL_LOGS = 50;
+const MAX_LOCAL_LOGS = 200;
+
+const INITIAL_DEMO_LOGS: SecurityEvent[] = [
+  {
+    id: 'sec-demo-001',
+    type: 'LOGIN_SUCCESS',
+    severity: 'INFO',
+    username: 'ADMIN',
+    role: 'ADMIN',
+    description: 'ADMIN logged in: System Administrator (ADMIN) · System Administrator Console',
+    timestamp: new Date(Date.now() - 1000 * 60 * 25).toISOString(),
+    metadata: { role: 'ADMIN', name: 'System Administrator' },
+  },
+  {
+    id: 'sec-demo-002',
+    type: 'LOGIN_SUCCESS',
+    severity: 'INFO',
+    username: 'SUP001',
+    role: 'SUPERVISOR',
+    description: 'SUPERVISOR logged in: Nimal Silva (SUP001) · Port Operations Supervisor',
+    timestamp: new Date(Date.now() - 1000 * 60 * 65).toISOString(),
+    metadata: { role: 'SUPERVISOR', name: 'Nimal Silva', terminal: 'CICT' },
+  },
+  {
+    id: 'sec-demo-003',
+    type: 'LOGIN_SUCCESS',
+    severity: 'INFO',
+    username: 'DRV-00001',
+    role: 'DRIVER',
+    description: 'DRIVER logged in: Kamal Perera (DRV-00001) · Truck LY-6439',
+    timestamp: new Date(Date.now() - 1000 * 60 * 110).toISOString(),
+    metadata: { role: 'DRIVER', name: 'Kamal Perera', vehicleNumber: 'LY-6439' },
+  },
+  {
+    id: 'sec-demo-004',
+    type: 'LOGIN_SUCCESS',
+    severity: 'INFO',
+    username: 'DRV-00002',
+    role: 'DRIVER',
+    description: 'DRIVER logged in: Sunil Shantha (DRV-00002) · Truck LY-6434',
+    timestamp: new Date(Date.now() - 1000 * 60 * 180).toISOString(),
+    metadata: { role: 'DRIVER', name: 'Sunil Shantha', vehicleNumber: 'LY-6434' },
+  },
+  {
+    id: 'sec-demo-005',
+    type: 'LOGIN_SUCCESS',
+    severity: 'INFO',
+    username: 'SUP002',
+    role: 'SUPERVISOR',
+    description: 'SUPERVISOR logged in: Bandara Weerasinghe (SUP002) · Port Operations Supervisor',
+    timestamp: new Date(Date.now() - 1000 * 60 * 240).toISOString(),
+    metadata: { role: 'SUPERVISOR', name: 'Bandara Weerasinghe', terminal: 'CWIT' },
+  },
+  {
+    id: 'sec-demo-006',
+    type: 'PASSWORD_CHANGED',
+    severity: 'INFO',
+    username: 'DRV-00001',
+    role: 'ADMIN',
+    description: "Driver password reset by Administrator to default ('driver'). Account lockouts cleared.",
+    timestamp: new Date(Date.now() - 1000 * 60 * 320).toISOString(),
+    metadata: { resetBy: 'ADMIN', defaultPassword: 'driver' },
+  },
+];
 
 export const securityAuditService = {
   /**
@@ -80,12 +145,18 @@ export const securityAuditService = {
     try {
       const raw = await storage.getItem(AUDIT_STORAGE_KEY);
       if (raw) {
-        return JSON.parse(raw) as SecurityEvent[];
+        const parsed = JSON.parse(raw) as SecurityEvent[];
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
+        }
       }
+      // Populate and return initial demo logs on fresh device
+      await storage.setItem(AUDIT_STORAGE_KEY, JSON.stringify(INITIAL_DEMO_LOGS));
+      return INITIAL_DEMO_LOGS;
     } catch (e) {
       console.warn('[SecurityAudit] Error reading logs:', e);
     }
-    return [];
+    return INITIAL_DEMO_LOGS;
   },
 
   /**

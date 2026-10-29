@@ -11,6 +11,8 @@ export interface UserCredentialRecord {
   hasChangedPassword: boolean;
   failedAttempts?: number;
   lockedUntil?: string | null;
+  status?: 'ACTIVE' | 'SUSPENDED' | 'DEACTIVATED';
+  suspensionReason?: string;
   // Legacy migration compatibility fields
   currentPassword?: string;
   previousPasswords?: string[];
@@ -257,6 +259,118 @@ export const credentialStore = {
   },
 
   /**
+   * Resets driver/user password by Administrator to the default password ('driver').
+   * Clears old password blocking, resets failed attempts, and removes lockout.
+   */
+  async resetPasswordByAdmin(
+    rawUsername: string,
+    defaultPassword: string = 'driver'
+  ): Promise<void> {
+    const id = normalizeIdentifier(rawUsername);
+    if (!id) return;
+
+    const existing = await this.getRecord(rawUsername);
+    const salt = existing?.salt || generateSalt();
+    const defaultHash = await hashWithSalt(salt, defaultPassword);
+
+    // Filter out defaultPassword from previousPasswordHashes so driver is NOT blocked
+    const filteredPrev = (existing?.previousPasswordHashes || []).filter(
+      (h) => h !== defaultHash
+    );
+
+    const record: UserCredentialRecord = {
+      username: rawUsername.trim(),
+      salt,
+      passwordHash: defaultHash,
+      previousPasswordHashes: filteredPrev,
+      updatedAt: new Date().toISOString(),
+      hasChangedPassword: false, // reset back to default password status
+      failedAttempts: 0,
+      lockedUntil: null,
+    };
+
+    const recordJson = JSON.stringify(record);
+    await storage.setItem(`${STORAGE_PREFIX}${id}`, recordJson);
+
+    const rawUpper = rawUsername.trim().toUpperCase();
+    if (rawUpper !== id) {
+      await storage.setItem(`${STORAGE_PREFIX}${rawUpper}`, recordJson);
+    }
+
+    await securityAuditService.logEvent(
+      'PASSWORD_CHANGED',
+      rawUsername,
+      `Driver password reset by Administrator to default ('${defaultPassword}'). Account lockouts cleared.`,
+      'INFO',
+      'ADMIN',
+      { resetBy: 'ADMIN', defaultPassword }
+    );
+  },
+
+  /**
+   * Sets the account status (ACTIVE, SUSPENDED, DEACTIVATED) and optional suspension reason.
+   */
+  async setAccountStatus(
+    rawUsername: string,
+    status: 'ACTIVE' | 'SUSPENDED' | 'DEACTIVATED',
+    reason?: string
+  ): Promise<void> {
+    const id = normalizeIdentifier(rawUsername);
+    if (!id) return;
+
+    let record = await this.getRecord(rawUsername);
+    if (!record) {
+      record = {
+        username: rawUsername.trim(),
+        salt: generateSalt(),
+        passwordHash: '',
+        previousPasswordHashes: [],
+        updatedAt: new Date().toISOString(),
+        hasChangedPassword: false,
+        failedAttempts: 0,
+      };
+    }
+
+    record.status = status;
+    if (reason !== undefined) {
+      record.suspensionReason = reason;
+    } else if (status === 'ACTIVE') {
+      record.suspensionReason = undefined;
+    }
+    record.updatedAt = new Date().toISOString();
+
+    const recordJson = JSON.stringify(record);
+    await storage.setItem(`${STORAGE_PREFIX}${id}`, recordJson);
+
+    const rawUpper = rawUsername.trim().toUpperCase();
+    if (rawUpper !== id) {
+      await storage.setItem(`${STORAGE_PREFIX}${rawUpper}`, recordJson);
+    }
+
+    if (status === 'SUSPENDED') {
+      await securityAuditService.logEvent(
+        'SECURITY_POLICY_VIOLATION',
+        rawUsername,
+        `Driver account marked SUSPENDED by Administration.${reason ? ` Reason: ${reason}` : ''}`,
+        'CRITICAL',
+        'ADMIN',
+        { status: 'SUSPENDED', reason }
+      );
+    }
+  },
+
+  /**
+   * Retrieves account status and optional suspension reason.
+   */
+  async getAccountStatus(rawUsername: string): Promise<{ status: string; reason?: string }> {
+    const record = await this.getRecord(rawUsername);
+    return {
+      status: record?.status || 'ACTIVE',
+      reason: record?.suspensionReason,
+    };
+  },
+
+  /**
    * Checks whether the user has previously changed their password.
    */
   async hasUpdatedPassword(rawUsername: string): Promise<boolean> {
@@ -296,8 +410,27 @@ export const credentialStore = {
   ): Promise<{
     valid: boolean;
     isOldPassword?: boolean;
+    isSuspended?: boolean;
     errorMessage?: string;
   }> {
+    // 1. Check account suspension status first
+    const accStatus = await this.getAccountStatus(rawUsername);
+    if (accStatus.status === 'SUSPENDED') {
+      const reasonPart = accStatus.reason ? `\n\nReason: ${accStatus.reason}` : '';
+      return {
+        valid: false,
+        isSuspended: true,
+        errorMessage: `ACCOUNT SUSPENDED: Your account has been suspended by Administration.${reasonPart}\n\nYou cannot log in to the SMART ITT system. Please contact the Operations Supervisor or Administration.`,
+      };
+    }
+    if (accStatus.status === 'DEACTIVATED') {
+      return {
+        valid: false,
+        isSuspended: true,
+        errorMessage: 'ACCOUNT DEACTIVATED: This driver profile has been deactivated by Administration. Access denied.',
+      };
+    }
+
     const lockout = await this.getLockoutStatus(rawUsername);
     if (lockout.isLocked) {
       return {

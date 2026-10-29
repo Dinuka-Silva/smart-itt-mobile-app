@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,8 @@ import {
   TouchableOpacity,
   RefreshControl,
   ActivityIndicator,
+  TextInput,
+  Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -14,60 +16,80 @@ import { adminService } from '../../src/services/adminService';
 import { securityAuditService } from '../../src/services/securityAuditService';
 import { useResponsive } from '../../src/hooks/useResponsive';
 
+type FilterType = 'ALL' | 'LOGINS' | 'DRIVER' | 'SUPERVISOR' | 'ADMIN' | 'SECURITY' | 'TRIP' | 'VEHICLE';
+
 export default function AdminAuditScreen() {
   const router = useRouter();
   const { topInset, bottomInset, containerPaddingHorizontal } = useResponsive();
 
-  const [logs, setLogs] = useState<any[]>([]);
+  const [allLogs, setAllLogs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [entityFilter, setEntityFilter] = useState<string>('ALL');
+  const [activeFilter, setActiveFilter] = useState<FilterType>('ALL');
+  const [searchQuery, setSearchQuery] = useState('');
 
   const fetchAuditLogs = useCallback(async () => {
     try {
+      // 1. Fetch on-device mobile security & login audit logs
       const mobileLogs = await securityAuditService.getRecentEvents();
-      const mappedMobile = mobileLogs.map((m) => ({
-        id: m.id,
-        action: m.type,
-        entityType: 'MOBILE_SECURITY',
-        description: m.description,
-        performedBy: m.username,
-        createdAt: m.timestamp,
-        severity: m.severity,
-      }));
+      const mappedMobile = mobileLogs.map((m) => {
+        const role = (m.role || (m.metadata?.role) || (m.description.includes('DRIVER') ? 'DRIVER' : m.description.includes('SUPERVISOR') ? 'SUPERVISOR' : m.description.includes('ADMIN') ? 'ADMIN' : 'SYSTEM')).toUpperCase();
+        return {
+          id: m.id,
+          action: m.type,
+          entityType: role,
+          actorRole: role,
+          performedBy: m.username || 'SYSTEM',
+          description: m.description,
+          createdAt: m.timestamp,
+          severity: m.severity,
+          metadata: m.metadata,
+        };
+      });
 
+      // 2. Fetch server-side database audit logs
       let serverLogs: any[] = [];
-      if (entityFilter !== 'MOBILE_SECURITY') {
-        try {
-          const data = await adminService.getAuditLogs(
-            0,
-            50,
-            entityFilter === 'ALL' ? undefined : entityFilter
-          );
-          serverLogs = data?.content || data || [];
-        } catch {
-          serverLogs = [];
-        }
+      try {
+        const data = await adminService.getAuditLogs(0, 100);
+        const serverRaw = data?.content || (Array.isArray(data) ? data : []);
+        serverLogs = serverRaw.map((s: any) => ({
+          id: s.id?.toString() || `srv-${Math.random()}`,
+          action: s.action || 'ACTION',
+          entityType: (s.entityType || s.actorRole || 'SYSTEM').toUpperCase(),
+          actorRole: (s.actorRole || 'SYSTEM').toUpperCase(),
+          performedBy: s.actorRole || 'USER',
+          description: s.description || 'System action executed',
+          createdAt: s.createdAt,
+          entityId: s.entityId,
+          oldValue: s.oldValue,
+          newValue: s.newValue,
+          ipAddress: s.ipAddress,
+        }));
+      } catch {
+        serverLogs = [];
       }
 
-      if (entityFilter === 'MOBILE_SECURITY') {
-        setLogs(mappedMobile);
-      } else if (entityFilter === 'ALL') {
-        setLogs(
-          [...mappedMobile, ...serverLogs].sort(
-            (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-          )
-        );
-      } else {
-        setLogs(serverLogs);
-      }
+      // Merge and sort newest first
+      const combined = [...mappedMobile, ...serverLogs].sort(
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+
+      // Deduplicate by ID if any overlap
+      const seen = new Set<string>();
+      const deduplicated = combined.filter((item) => {
+        if (!item.id || seen.has(item.id)) return false;
+        seen.add(item.id);
+        return true;
+      });
+
+      setAllLogs(deduplicated);
     } catch {
-      setLogs([]);
+      setAllLogs([]);
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [entityFilter]);
+  }, []);
 
   useEffect(() => {
     fetchAuditLogs();
@@ -78,54 +100,246 @@ export default function AdminAuditScreen() {
     fetchAuditLogs();
   };
 
+  // Metrics KPI calculations
+  const totalLogsCount = allLogs.length;
+  const loginLogsCount = useMemo(
+    () => allLogs.filter((l) => (l.action || '').toUpperCase().includes('LOGIN')).length,
+    [allLogs]
+  );
+  const driverLoginsCount = useMemo(
+    () =>
+      allLogs.filter(
+        (l) =>
+          (l.action || '').toUpperCase().includes('LOGIN') &&
+          ((l.actorRole || '').toUpperCase() === 'DRIVER' ||
+            (l.entityType || '').toUpperCase() === 'DRIVER' ||
+            (l.description || '').toUpperCase().includes('DRIVER'))
+      ).length,
+    [allLogs]
+  );
+  const supervisorLoginsCount = useMemo(
+    () =>
+      allLogs.filter(
+        (l) =>
+          (l.action || '').toUpperCase().includes('LOGIN') &&
+          ((l.actorRole || '').toUpperCase() === 'SUPERVISOR' ||
+            (l.entityType || '').toUpperCase() === 'SUPERVISOR' ||
+            (l.description || '').toUpperCase().includes('SUPERVISOR'))
+      ).length,
+    [allLogs]
+  );
+  const adminLoginsCount = useMemo(
+    () =>
+      allLogs.filter(
+        (l) =>
+          (l.action || '').toUpperCase().includes('LOGIN') &&
+          ((l.actorRole || '').toUpperCase() === 'ADMIN' ||
+            (l.entityType || '').toUpperCase() === 'ADMIN' ||
+            (l.description || '').toUpperCase().includes('ADMIN'))
+      ).length,
+    [allLogs]
+  );
+
+  // Filtered logs computation
+  const filteredLogs = useMemo(() => {
+    return allLogs.filter((log) => {
+      const act = (log.action || '').toUpperCase();
+      const role = (log.actorRole || '').toUpperCase();
+      const entity = (log.entityType || '').toUpperCase();
+      const desc = (log.description || '').toUpperCase();
+
+      // 1. Category Filter
+      if (activeFilter === 'LOGINS') {
+        if (!act.includes('LOGIN')) return false;
+      } else if (activeFilter === 'DRIVER') {
+        if (role !== 'DRIVER' && entity !== 'DRIVER' && !desc.includes('DRIVER')) return false;
+      } else if (activeFilter === 'SUPERVISOR') {
+        if (role !== 'SUPERVISOR' && entity !== 'SUPERVISOR' && !desc.includes('SUPERVISOR')) return false;
+      } else if (activeFilter === 'ADMIN') {
+        if (role !== 'ADMIN' && entity !== 'ADMIN' && !desc.includes('ADMIN')) return false;
+      } else if (activeFilter === 'SECURITY') {
+        if (
+          !act.includes('LOCKOUT') &&
+          !act.includes('PASSWORD') &&
+          !act.includes('SECURITY') &&
+          !act.includes('POLICY') &&
+          entity !== 'MOBILE_SECURITY'
+        ) {
+          return false;
+        }
+      } else if (activeFilter === 'TRIP') {
+        if (entity !== 'TRIP' && !act.includes('TRIP') && !desc.includes('TRIP')) return false;
+      } else if (activeFilter === 'VEHICLE') {
+        if (entity !== 'VEHICLE' && !act.includes('VEHICLE') && !desc.includes('VEHICLE')) return false;
+      }
+
+      // 2. Search query filter
+      if (searchQuery.trim()) {
+        const q = searchQuery.trim().toUpperCase();
+        const user = (log.performedBy || '').toUpperCase();
+        const refId = (log.entityId || '').toUpperCase();
+        const combinedText = `${act} ${role} ${entity} ${desc} ${user} ${refId}`;
+        if (!combinedText.includes(q)) return false;
+      }
+
+      return true;
+    });
+  }, [allLogs, activeFilter, searchQuery]);
+
+  const formatTimestamp = (iso: string) => {
+    if (!iso) return 'Just now';
+    try {
+      const d = new Date(iso);
+      return d.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+    } catch {
+      return iso;
+    }
+  };
+
+  const getRoleBadgeStyle = (role: string) => {
+    switch (role) {
+      case 'DRIVER':
+        return { bg: 'rgba(0, 229, 255, 0.12)', border: 'rgba(0, 229, 255, 0.35)', color: '#00e5ff', icon: 'car-sport-outline' as const };
+      case 'SUPERVISOR':
+        return { bg: 'rgba(254, 179, 0, 0.12)', border: 'rgba(254, 179, 0, 0.35)', color: '#feb300', icon: 'shield-outline' as const };
+      case 'ADMIN':
+        return { bg: 'rgba(179, 136, 255, 0.15)', border: 'rgba(179, 136, 255, 0.4)', color: '#b388ff', icon: 'key-outline' as const };
+      default:
+        return { bg: 'rgba(144, 202, 249, 0.12)', border: 'rgba(144, 202, 249, 0.3)', color: '#90caf9', icon: 'hardware-chip-outline' as const };
+    }
+  };
+
+  const getActionBadgeStyle = (action: string) => {
+    const act = (action || '').toUpperCase();
+    if (act === 'LOGIN_SUCCESS') {
+      return { bg: 'rgba(34, 239, 126, 0.1)', border: 'rgba(34, 239, 126, 0.35)', color: '#22ef7e', label: 'LOGIN SUCCESS', icon: 'checkmark-circle' as const };
+    }
+    if (act === 'LOGIN_FAILED') {
+      return { bg: 'rgba(255, 82, 82, 0.12)', border: 'rgba(255, 82, 82, 0.35)', color: '#ff5252', label: 'LOGIN FAILED', icon: 'close-circle' as const };
+    }
+    if (act === 'LOGIN_BLOCKED_SUSPENDED' || act.includes('SUSPEND')) {
+      return { bg: 'rgba(255, 82, 82, 0.15)', border: 'rgba(255, 82, 82, 0.45)', color: '#ff5252', label: 'LOGIN BLOCKED (SUSPENDED)', icon: 'ban' as const };
+    }
+    if (act === 'LOCKOUT_TRIGGERED') {
+      return { bg: 'rgba(255, 145, 0, 0.12)', border: 'rgba(255, 145, 0, 0.4)', color: '#ff9100', label: 'LOCKOUT TRIGGERED', icon: 'lock-closed' as const };
+    }
+    if (act === 'PASSWORD_CHANGED' || act === 'RESET_DRIVER_PASSWORD') {
+      return { bg: 'rgba(254, 179, 0, 0.12)', border: 'rgba(254, 179, 0, 0.4)', color: '#feb300', label: 'PASSWORD RESET', icon: 'key' as const };
+    }
+    if (act === 'SESSION_AUTO_LOCKED' || act === 'LOGOUT') {
+      return { bg: 'rgba(144, 202, 249, 0.1)', border: 'rgba(144, 202, 249, 0.3)', color: '#90caf9', label: 'SESSION LOGOUT', icon: 'log-out-outline' as const };
+    }
+    return { bg: 'rgba(0, 229, 255, 0.08)', border: 'rgba(0, 229, 255, 0.25)', color: '#00e5ff', label: action.replace(/_/g, ' '), icon: 'ellipse' as const };
+  };
+
   return (
     <View style={styles.root}>
-      {/* Header */}
+      {/* ─── HEADER ─── */}
       <View style={[styles.header, { paddingTop: Math.max(topInset, 16) }]}>
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-            <Ionicons name="arrow-back" size={20} color="#90caf9" />
+          <TouchableOpacity onPress={() => router.back()} style={styles.backBtn} activeOpacity={0.7}>
+            <Ionicons name="arrow-back" size={20} color="#00e5ff" />
           </TouchableOpacity>
           <View style={{ marginLeft: 10 }}>
             <Text style={styles.headerTitle}>System Audit Trail</Text>
-            <Text style={styles.headerSubtitle}>Immutable security & operations log</Text>
+            <Text style={styles.headerSubtitle}>Immutable Driver, Supervisor & Admin Login Ledger</Text>
           </View>
         </View>
 
         <View style={styles.lockBadge}>
-          <Ionicons name="lock-closed" size={12} color="#00e5ff" style={{ marginRight: 4 }} />
-          <Text style={styles.lockBadgeText}>SECURE</Text>
+          <Ionicons name="shield-checkmark" size={13} color="#22ef7e" style={{ marginRight: 4 }} />
+          <Text style={styles.lockBadgeText}>SECURE LEDGER</Text>
         </View>
       </View>
 
-      {/* Filter Pills */}
+      {/* ─── LOGIN TELEMETRY KPI SUMMARY BAR ─── */}
+      <View style={styles.kpiRow}>
+        <View style={styles.kpiCard}>
+          <Text style={styles.kpiLabel}>ALL LOGINS</Text>
+          <Text style={[styles.kpiValue, { color: '#00e5ff' }]}>{loginLogsCount}</Text>
+          <Text style={styles.kpiSub}>Total Events</Text>
+        </View>
+
+        <View style={styles.kpiCard}>
+          <Text style={styles.kpiLabel}>DRIVERS</Text>
+          <Text style={[styles.kpiValue, { color: '#00e5ff' }]}>{driverLoginsCount}</Text>
+          <Text style={styles.kpiSub}>Driver Logins</Text>
+        </View>
+
+        <View style={styles.kpiCard}>
+          <Text style={styles.kpiLabel}>SUPERVISORS</Text>
+          <Text style={[styles.kpiValue, { color: '#feb300' }]}>{supervisorLoginsCount}</Text>
+          <Text style={styles.kpiSub}>Supervisor Logins</Text>
+        </View>
+
+        <View style={styles.kpiCard}>
+          <Text style={styles.kpiLabel}>ADMIN</Text>
+          <Text style={[styles.kpiValue, { color: '#b388ff' }]}>{adminLoginsCount}</Text>
+          <Text style={styles.kpiSub}>Admin Logins</Text>
+        </View>
+      </View>
+
+      {/* ─── SEARCH BAR ─── */}
+      <View style={styles.searchBarWrap}>
+        <Ionicons name="search" size={16} color="#849396" style={{ marginRight: 8 }} />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search by User, Driver Code (DRV-00001), SUP, Action..."
+          placeholderTextColor="#546e7a"
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          autoCapitalize="none"
+          autoCorrect={false}
+        />
+        {searchQuery.length > 0 && (
+          <TouchableOpacity onPress={() => setSearchQuery('')} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+            <Ionicons name="close-circle" size={16} color="#849396" />
+          </TouchableOpacity>
+        )}
+      </View>
+
+      {/* ─── FILTER TABS ─── */}
       <View style={styles.filterBar}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          {['ALL', 'MOBILE_SECURITY', 'DRIVER', 'VEHICLE', 'SUPERVISOR', 'TRIP'].map((f) => (
-            <TouchableOpacity
-              key={f}
-              style={[styles.filterPill, entityFilter === f && styles.filterPillActive]}
-              onPress={() => setEntityFilter(f)}
-              activeOpacity={0.7}
-            >
-              <Text
-                style={[
-                  styles.filterPillText,
-                  entityFilter === f && styles.filterPillTextActive,
-                ]}
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 12, gap: 6 }}>
+          {(['ALL', 'LOGINS', 'DRIVER', 'SUPERVISOR', 'ADMIN', 'SECURITY', 'TRIP', 'VEHICLE'] as FilterType[]).map((f) => {
+            const isActive = activeFilter === f;
+            const filterLabels: Record<FilterType, string> = {
+              ALL: `ALL (${totalLogsCount})`,
+              LOGINS: `LOGINS (${loginLogsCount})`,
+              DRIVER: `DRIVERS (${driverLoginsCount})`,
+              SUPERVISOR: `SUPERVISORS (${supervisorLoginsCount})`,
+              ADMIN: `ADMIN (${adminLoginsCount})`,
+              SECURITY: 'SECURITY',
+              TRIP: 'TRIPS',
+              VEHICLE: 'FLEET',
+            };
+            return (
+              <TouchableOpacity
+                key={f}
+                style={[styles.filterPill, isActive && styles.filterPillActive]}
+                onPress={() => setActiveFilter(f)}
+                activeOpacity={0.7}
               >
-                {f.replace('_', ' ')}
-              </Text>
-            </TouchableOpacity>
-          ))}
+                <Text style={[styles.filterPillText, isActive && styles.filterPillTextActive]}>
+                  {filterLabels[f]}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
         </ScrollView>
       </View>
 
-      {/* Logs List */}
+      {/* ─── LOGS LIST CONTENT ─── */}
       {loading && !refreshing ? (
         <View style={styles.centerLoading}>
           <ActivityIndicator size="large" color="#00e5ff" />
-          <Text style={styles.loadingText}>Fetching audit logs...</Text>
+          <Text style={styles.loadingText}>Loading system audit logs...</Text>
         </View>
       ) : (
         <ScrollView
@@ -139,44 +353,73 @@ export default function AdminAuditScreen() {
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#00e5ff" />
           }
+          showsVerticalScrollIndicator={false}
         >
-          {logs.length === 0 ? (
+          {filteredLogs.length === 0 ? (
             <View style={styles.emptyCard}>
-              <Ionicons name="document-text-outline" size={32} color="#607d8b" />
-              <Text style={styles.emptyCardText}>No audit records found for this category.</Text>
+              <Ionicons name="shield-outline" size={38} color="#546e7a" />
+              <Text style={styles.emptyCardTitle}>No Audit Records Found</Text>
+              <Text style={styles.emptyCardText}>
+                No audit events match the current filter or search criteria.
+              </Text>
             </View>
           ) : (
-            logs.map((log: any, idx: number) => {
-              const timeStr = log.createdAt
-                ? new Date(log.createdAt).toLocaleString('en-US', {
-                    month: 'short',
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  })
-                : 'Just now';
+            filteredLogs.map((log: any, idx: number) => {
+              const roleBadge = getRoleBadgeStyle(log.actorRole || log.entityType);
+              const actionBadge = getActionBadgeStyle(log.action);
+              const timeDisplay = formatTimestamp(log.createdAt);
 
               return (
                 <View key={log.id || idx} style={styles.logCard}>
-                  <View style={styles.logTopRow}>
-                    <View style={styles.actionWrap}>
-                      <Text style={styles.actionText}>{log.action}</Text>
-                      <View style={styles.entityTag}>
-                        <Text style={styles.entityTagText}>{log.entityType || 'SYSTEM'}</Text>
+                  {/* Top Badges Row */}
+                  <View style={styles.cardHeaderRow}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                      {/* Role Pill */}
+                      <View style={[styles.rolePill, { backgroundColor: roleBadge.bg, borderColor: roleBadge.border }]}>
+                        <Ionicons name={roleBadge.icon} size={11} color={roleBadge.color} style={{ marginRight: 4 }} />
+                        <Text style={[styles.rolePillText, { color: roleBadge.color }]}>
+                          {log.actorRole || log.entityType || 'SYSTEM'}
+                        </Text>
+                      </View>
+
+                      {/* Action Pill */}
+                      <View style={[styles.actionPill, { backgroundColor: actionBadge.bg, borderColor: actionBadge.border }]}>
+                        <Ionicons name={actionBadge.icon} size={11} color={actionBadge.color} style={{ marginRight: 4 }} />
+                        <Text style={[styles.actionPillText, { color: actionBadge.color }]}>
+                          {actionBadge.label}
+                        </Text>
                       </View>
                     </View>
-                    <Text style={styles.timeText}>{timeStr}</Text>
+
+                    {/* Timestamp */}
+                    <Text style={styles.timeText}>{timeDisplay}</Text>
                   </View>
 
-                  <Text style={styles.descText}>{log.description || 'Action executed'}</Text>
+                  {/* Description Box */}
+                  <Text style={styles.descText}>{log.description || 'System event recorded'}</Text>
 
-                  <View style={styles.logBottomRow}>
-                    <Text style={styles.actorText}>
-                      By: <Text style={{ color: '#00e5ff' }}>{log.actorRole || 'ADMIN'}</Text>
-                    </Text>
+                  {/* Bottom Metadata Footer */}
+                  <View style={styles.cardFooterRow}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                      <Ionicons name="person-circle-outline" size={13} color="#849396" />
+                      <Text style={styles.actorText}>
+                        User:{' '}
+                        <Text style={{ color: '#dde2f0', fontWeight: '700' }}>
+                          {log.performedBy || log.actorRole || 'System'}
+                        </Text>
+                      </Text>
+                    </View>
+
                     {log.entityId ? (
-                      <Text style={styles.entityIdText}>Ref: {log.entityId.slice(0, 8)}...</Text>
-                    ) : null}
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                        <Ionicons name="link-outline" size={12} color="#546e7a" />
+                        <Text style={styles.entityIdText}>
+                          Ref: {log.entityId.length > 16 ? `${log.entityId.slice(0, 14)}...` : log.entityId}
+                        </Text>
+                      </View>
+                    ) : (
+                      <Text style={styles.entityIdText}>Immutable Audit Entry</Text>
+                    )}
                   </View>
                 </View>
               );
@@ -191,7 +434,7 @@ export default function AdminAuditScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: '#070f1e',
+    backgroundColor: '#070c14',
   },
   header: {
     flexDirection: 'row',
@@ -199,153 +442,239 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingBottom: 14,
-    backgroundColor: '#0a1628',
+    backgroundColor: '#0c1524',
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.08)',
+    borderBottomColor: '#1d2e47',
   },
   backBtn: {
-    padding: 6,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    padding: 7,
+    backgroundColor: 'rgba(0, 229, 255, 0.08)',
     borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 229, 255, 0.25)',
   },
   headerTitle: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: '#ffffff',
+    fontSize: 17,
+    fontWeight: '900',
+    color: '#dde2f0',
+    letterSpacing: 0.4,
   },
   headerSubtitle: {
-    fontSize: 11,
-    color: '#90caf9',
+    fontSize: 10.5,
+    color: '#849396',
     marginTop: 2,
     fontWeight: '600',
   },
   lockBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 229, 255, 0.1)',
+    backgroundColor: 'rgba(34, 239, 126, 0.1)',
     borderRadius: 6,
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderWidth: 1,
-    borderColor: 'rgba(0, 229, 255, 0.3)',
+    borderColor: 'rgba(34, 239, 126, 0.3)',
   },
   lockBadgeText: {
-    color: '#00e5ff',
+    color: '#22ef7e',
     fontSize: 9,
-    fontWeight: '800',
+    fontWeight: '900',
+    letterSpacing: 0.5,
   },
-  filterBar: {
-    padding: 12,
-    backgroundColor: '#0c1b30',
+
+  // KPI Summary Bar
+  kpiRow: {
+    flexDirection: 'row',
+    backgroundColor: '#0c1524',
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.06)',
+    borderBottomColor: '#1d2e47',
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    gap: 8,
+  },
+  kpiCard: {
+    flex: 1,
+    backgroundColor: '#070c14',
+    borderWidth: 1,
+    borderColor: '#192b45',
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 6,
+    alignItems: 'center',
+  },
+  kpiLabel: {
+    fontSize: 8.5,
+    fontWeight: '800',
+    color: '#849396',
+    letterSpacing: 0.5,
+  },
+  kpiValue: {
+    fontSize: 16,
+    fontWeight: '900',
+    marginVertical: 2,
+  },
+  kpiSub: {
+    fontSize: 8,
+    color: '#546e7a',
+    fontWeight: '600',
+  },
+
+  // Search Bar
+  searchBarWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#0c1524',
+    borderBottomWidth: 1,
+    borderBottomColor: '#192b45',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+  },
+  searchInput: {
+    flex: 1,
+    color: '#dde2f0',
+    fontSize: 12,
+    height: 34,
+    ...(Platform.OS === 'web' ? { outlineStyle: 'none' } : {}),
+  } as any,
+
+  // Filter Bar
+  filterBar: {
+    backgroundColor: '#0a121e',
+    borderBottomWidth: 1,
+    borderBottomColor: '#1d2e47',
+    paddingVertical: 8,
   },
   filterPill: {
-    paddingVertical: 4,
-    paddingHorizontal: 12,
+    paddingVertical: 5,
+    paddingHorizontal: 11,
     borderRadius: 6,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-    marginRight: 8,
+    backgroundColor: '#122033',
+    borderWidth: 1,
+    borderColor: '#1f3452',
   },
   filterPillActive: {
     backgroundColor: '#00e5ff',
+    borderColor: '#00e5ff',
   },
   filterPillText: {
-    color: '#90caf9',
-    fontSize: 11,
-    fontWeight: '700',
+    color: '#849396',
+    fontSize: 10.5,
+    fontWeight: '800',
+    letterSpacing: 0.4,
   },
   filterPillTextActive: {
-    color: '#001529',
+    color: '#070c14',
+    fontWeight: '900',
   },
+
+  // Loading & Scroll Content
   centerLoading: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    padding: 30,
   },
   loadingText: {
-    color: '#90caf9',
-    fontSize: 13,
-    marginTop: 10,
+    color: '#00e5ff',
+    fontSize: 12,
+    marginTop: 12,
+    fontWeight: '700',
   },
   scrollContent: {
-    paddingTop: 12,
+    paddingTop: 10,
+    gap: 8,
   },
   emptyCard: {
-    backgroundColor: '#0c1b30',
+    backgroundColor: '#0c1524',
     borderRadius: 12,
-    padding: 32,
+    padding: 36,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.06)',
-    marginTop: 20,
+    borderColor: '#192b45',
+    marginTop: 30,
+  },
+  emptyCardTitle: {
+    color: '#dde2f0',
+    fontSize: 14,
+    fontWeight: '800',
+    marginTop: 10,
   },
   emptyCardText: {
-    color: '#78909c',
-    fontSize: 13,
-    marginTop: 8,
+    color: '#849396',
+    fontSize: 11.5,
+    marginTop: 6,
+    textAlign: 'center',
+    lineHeight: 16,
   },
+
+  // Log Card
   logCard: {
-    backgroundColor: '#0c1b30',
+    backgroundColor: '#0c1524',
     borderRadius: 10,
-    padding: 14,
-    marginBottom: 8,
+    padding: 12,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderColor: '#192b45',
   },
-  logTopRow: {
+  cardHeaderRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 6,
+    marginBottom: 8,
   },
-  actionWrap: {
+  rolePill: {
     flexDirection: 'row',
     alignItems: 'center',
-  },
-  actionText: {
-    fontSize: 12,
-    fontWeight: '800',
-    color: '#ffffff',
-    letterSpacing: 0.5,
-  },
-  entityTag: {
-    backgroundColor: 'rgba(0, 229, 255, 0.1)',
-    borderRadius: 4,
+    borderWidth: 1,
+    borderRadius: 5,
     paddingHorizontal: 6,
     paddingVertical: 2,
-    marginLeft: 6,
   },
-  entityTagText: {
-    color: '#00e5ff',
-    fontSize: 9,
-    fontWeight: '800',
+  rolePillText: {
+    fontSize: 9.5,
+    fontWeight: '900',
+    letterSpacing: 0.5,
+  },
+  actionPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderRadius: 5,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  actionPillText: {
+    fontSize: 9.5,
+    fontWeight: '900',
+    letterSpacing: 0.4,
   },
   timeText: {
     fontSize: 10,
-    color: '#78909c',
+    color: '#849396',
+    fontWeight: '600',
   },
   descText: {
     fontSize: 12,
-    color: '#cfd8dc',
-    lineHeight: 16,
+    color: '#dde2f0',
+    lineHeight: 17,
+    fontWeight: '500',
     marginVertical: 4,
   },
-  logBottomRow: {
+  cardFooterRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: 6,
-    paddingTop: 6,
+    marginTop: 8,
+    paddingTop: 8,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(255, 255, 255, 0.04)',
+    borderTopColor: '#122033',
   },
   actorText: {
-    fontSize: 10,
-    color: '#78909c',
+    fontSize: 10.5,
+    color: '#849396',
   },
   entityIdText: {
     fontSize: 10,
     color: '#546e7a',
+    fontWeight: '600',
   },
 });

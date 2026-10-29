@@ -33,6 +33,7 @@ public class DataInitializer implements CommandLineRunner {
     private final DriverRepository driverRepository;
     private final SupervisorRepository supervisorRepository;
     private final VehicleRepository vehicleRepository;
+    private final com.smartitt.audit.repository.AuditLogRepository auditLogRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Value("${admin.bootstrap.username:ADMIN}")
@@ -54,6 +55,7 @@ public class DataInitializer implements CommandLineRunner {
         seedVehicles();
         seedDemoUsers();
         bootstrapAdminAccount();
+        seedAuditLogs();
     }
 
     private void seedTerminals() {
@@ -315,6 +317,82 @@ public class DataInitializer implements CommandLineRunner {
             admin.setStatus(com.smartitt.user.entity.AccountStatus.ACTIVE);
             userRepository.save(admin);
             log.info("Admin account bootstrapped: username=ADMIN, password=Admin@123");
+        }
+    }
+
+    private void seedAuditLogs() {
+        if (auditLogRepository.count() == 0) {
+            log.info("Seeding initial security & operational audit logs including Driver, Supervisor, and Admin logins...");
+            java.time.LocalDateTime now = java.time.LocalDateTime.now();
+
+            List<com.smartitt.audit.entity.AuditLog> logs = List.of(
+                com.smartitt.audit.entity.AuditLog.builder()
+                    .actorId(java.util.UUID.randomUUID())
+                    .actorRole("ADMIN")
+                    .action("LOGIN_SUCCESS")
+                    .entityType("ADMIN")
+                    .entityId("ADMIN001")
+                    .description("System Administrator logged in: System Administrator (ADMIN)")
+                    .createdAt(now.minusHours(1))
+                    .build(),
+                com.smartitt.audit.entity.AuditLog.builder()
+                    .actorId(java.util.UUID.randomUUID())
+                    .actorRole("SUPERVISOR")
+                    .action("LOGIN_SUCCESS")
+                    .entityType("SUPERVISOR")
+                    .entityId("SUP001")
+                    .description("SUPERVISOR logged in: Nimal Silva (SUP001) - CICT Terminal Operations")
+                    .createdAt(now.minusHours(2).minusMinutes(15))
+                    .build(),
+                com.smartitt.audit.entity.AuditLog.builder()
+                    .actorId(java.util.UUID.randomUUID())
+                    .actorRole("SUPERVISOR")
+                    .action("LOGIN_SUCCESS")
+                    .entityType("SUPERVISOR")
+                    .entityId("SUP002")
+                    .description("SUPERVISOR logged in: Bandara Weerasinghe (SUP002) - CWIT Terminal Operations")
+                    .createdAt(now.minusHours(3).minusMinutes(5))
+                    .build(),
+                com.smartitt.audit.entity.AuditLog.builder()
+                    .actorId(java.util.UUID.randomUUID())
+                    .actorRole("DRIVER")
+                    .action("LOGIN_SUCCESS")
+                    .entityType("DRIVER")
+                    .entityId("DRV-00001")
+                    .description("DRIVER logged in: Kamal Perera (DRV-00001) - Truck LY-6439")
+                    .createdAt(now.minusHours(4).minusMinutes(10))
+                    .build(),
+                com.smartitt.audit.entity.AuditLog.builder()
+                    .actorId(java.util.UUID.randomUUID())
+                    .actorRole("DRIVER")
+                    .action("LOGIN_SUCCESS")
+                    .entityType("DRIVER")
+                    .entityId("DRV-00002")
+                    .description("DRIVER logged in: Sunil Shantha (DRV-00002) - Truck LY-6434")
+                    .createdAt(now.minusHours(4).minusMinutes(40))
+                    .build(),
+                com.smartitt.audit.entity.AuditLog.builder()
+                    .actorId(java.util.UUID.randomUUID())
+                    .actorRole("DRIVER")
+                    .action("LOGIN_SUCCESS")
+                    .entityType("DRIVER")
+                    .entityId("DRV-00003")
+                    .description("DRIVER logged in: Anura Kumara (DRV-00003) - Truck LY-6435")
+                    .createdAt(now.minusHours(5).minusMinutes(20))
+                    .build(),
+                com.smartitt.audit.entity.AuditLog.builder()
+                    .actorId(java.util.UUID.randomUUID())
+                    .actorRole("ADMIN")
+                    .action("RESET_DRIVER_PASSWORD")
+                    .entityType("DRIVER")
+                    .entityId("DRV-00001")
+                    .description("Password reset by Admin for DRV-00001 (Kamal Perera) to default: 'driver'")
+                    .createdAt(now.minusHours(6))
+                    .build()
+            );
+
+            auditLogRepository.saveAll(logs);
+            log.info("Successfully seeded {} audit logs.", logs.size());
         }
     }
 }

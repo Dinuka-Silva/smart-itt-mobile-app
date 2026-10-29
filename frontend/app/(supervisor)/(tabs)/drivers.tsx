@@ -166,7 +166,7 @@ export default function SupervisorDrivers() {
       cheNumber: f.cheNumber,
       operator: f.operator,
       status: f.status || 'ACTIVE',
-      monthlyTarget: 150,
+      monthlyTarget: 300,
       monthlyContainers: 50 + ((idx * 4) % 65),
       totalTrips: 50 + ((idx * 4) % 65),
       createdAt: '2024-02-15T08:30:00',
@@ -182,7 +182,7 @@ export default function SupervisorDrivers() {
       if (list.length > 0) {
         setDrivers(list.map((d: any, i: number) => ({
           ...d,
-          monthlyTarget: d.monthlyTarget || 150,
+          monthlyTarget: d.monthlyTarget || 300,
           monthlyContainers: d.monthlyContainers || (50 + ((i * 4) % 65)),
         })));
       } else {
@@ -521,7 +521,7 @@ export default function SupervisorDrivers() {
                       );
                     })()}
 
-                    {/* Monthly Mission Target Bar (150 Containers Target) */}
+                    {/* Monthly Mission Target Bar (300 Containers Target) */}
                     <View style={styles.monthlyMissionCard}>
                       <View style={styles.monthlyMissionTop}>
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
@@ -529,7 +529,7 @@ export default function SupervisorDrivers() {
                           <Text style={styles.monthlyMissionTitle}>MISSION (THIS MONTH TARGET)</Text>
                         </View>
                         <Text style={styles.monthlyMissionStat}>
-                          <Text style={styles.monthlyMissionHighlight}>{drv.monthlyContainers || 50}</Text> / {drv.monthlyTarget || 150} Containers
+                          <Text style={styles.monthlyMissionHighlight}>{drv.monthlyContainers || 50}</Text> / {drv.monthlyTarget || 300} Containers
                         </Text>
                       </View>
                       <View style={styles.progressBarTrack}>
@@ -537,14 +537,14 @@ export default function SupervisorDrivers() {
                           style={[
                             styles.progressBarFill,
                             {
-                              width: `${Math.min(100, Math.round(((drv.monthlyContainers || 50) / (drv.monthlyTarget || 150)) * 100))}%`,
+                              width: `${Math.min(100, Math.round(((drv.monthlyContainers || 50) / (drv.monthlyTarget || 300)) * 100))}%`,
                             },
                           ]}
                         />
                       </View>
                       <View style={styles.monthlyMissionBottom}>
                         <Text style={styles.monthlyMissionPct}>
-                          {Math.round(((drv.monthlyContainers || 50) / (drv.monthlyTarget || 150)) * 100)}% of 150 Containers Target Completed
+                          {Math.round(((drv.monthlyContainers || 50) / (drv.monthlyTarget || 300)) * 100)}% of 300 Containers Target Completed
                         </Text>
                         {(drv.monthlyContainers || 50) >= 50 && (
                           <View style={styles.milestonePill}>
@@ -701,10 +701,10 @@ export default function SupervisorDrivers() {
                       <View style={styles.dossierItemHalf}>
                         <Text style={styles.dossierItemLabel}>MISSION (THIS MONTH TARGET)</Text>
                         <Text style={[styles.dossierItemVal, { color: '#feb300', fontWeight: '900' }]}>
-                          {selectedDriver.monthlyContainers || 50} / {selectedDriver.monthlyTarget || 150} Containers
+                          {selectedDriver.monthlyContainers || 50} / {selectedDriver.monthlyTarget || 300} Containers
                         </Text>
                         <Text style={{ fontSize: 10, color: '#22ef7e', fontWeight: '700', marginTop: 2 }}>
-                          {Math.round(((selectedDriver.monthlyContainers || 50) / (selectedDriver.monthlyTarget || 150)) * 100)}% of 150 Containers Target
+                          {Math.round(((selectedDriver.monthlyContainers || 50) / (selectedDriver.monthlyTarget || 300)) * 100)}% of 300 Containers Target
                         </Text>
                       </View>
                     </View>

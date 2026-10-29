@@ -27,35 +27,51 @@ function RouteSecurityController({ children }: { children: React.ReactNode }) {
   useSessionActivity();
   const segments = useSegments();
   const router = useRouter();
-  const { isAuthenticated, user, touchActivity } = useAuthStore();
+  const { isAuthenticated, user, touchActivity, logoutTargetRoute } = useAuthStore();
 
   useEffect(() => {
     const segmentList = (segments || []) as string[];
     if (segmentList.length === 0) return;
     const rootGroup = segmentList[0];
 
-    // Admin Section Protection
-    if (rootGroup === '(admin)') {
-      const isLoginScreen = segmentList.length > 1 && segmentList[1] === 'login';
-      if (!isLoginScreen) {
-        if (!isAuthenticated || user?.role !== 'ADMIN') {
-          securityAuditService.logEvent(
-            'UNAUTHORIZED_ROUTE_ATTEMPT',
-            user?.username || 'ANONYMOUS',
-            `Unauthorized navigation attempt to admin route: /${segmentList.join('/')}`,
-            'CRITICAL',
-            user?.role
-          );
+    // Handle Unauthenticated state (e.g. after logout or session termination)
+    if (!isAuthenticated) {
+      const explicitTarget = useAuthStore.getState().logoutTargetRoute;
+      if (explicitTarget) {
+        useAuthStore.setState({ logoutTargetRoute: null });
+        router.replace(explicitTarget as any);
+        return;
+      }
+
+      if (rootGroup === '(admin)') {
+        const isLoginScreen = segmentList.length > 1 && segmentList[1] === 'login';
+        if (!isLoginScreen) {
           router.replace('/(admin)/login');
         }
+      } else if (rootGroup === '(supervisor)' || rootGroup === '(driver)') {
+        router.replace('/(auth)/login');
+      }
+      return;
+    }
+
+    // Admin Section Protection: Logged-in non-admins cannot access admin routes
+    if (rootGroup === '(admin)') {
+      const isLoginScreen = segmentList.length > 1 && segmentList[1] === 'login';
+      if (!isLoginScreen && user?.role !== 'ADMIN') {
+        securityAuditService.logEvent(
+          'UNAUTHORIZED_ROUTE_ATTEMPT',
+          user?.username || 'ANONYMOUS',
+          `Unauthorized navigation attempt to admin route: /${segmentList.join('/')}`,
+          'CRITICAL',
+          user?.role
+        );
+        router.replace('/(admin)/login');
       }
     }
 
     // Supervisor Section Protection
     if (rootGroup === '(supervisor)') {
-      if (!isAuthenticated) {
-        router.replace('/(auth)/login');
-      } else if (user?.role === 'DRIVER') {
+      if (user?.role === 'DRIVER') {
         securityAuditService.logEvent(
           'UNAUTHORIZED_ROUTE_ATTEMPT',
           user?.username || 'DRIVER',
@@ -66,14 +82,7 @@ function RouteSecurityController({ children }: { children: React.ReactNode }) {
         router.replace('/(driver)/(tabs)');
       }
     }
-
-    // Driver Section Protection
-    if (rootGroup === '(driver)') {
-      if (!isAuthenticated) {
-        router.replace('/(auth)/login');
-      }
-    }
-  }, [segments, isAuthenticated, user, router]);
+  }, [segments, isAuthenticated, user, logoutTargetRoute, router]);
 
   return (
     <View style={{ flex: 1 }} onTouchStart={() => touchActivity()}>

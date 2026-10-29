@@ -111,32 +111,83 @@ export default function SupervisorMissionDispatcher() {
   const calendarMarkedDates = useMemo(() => {
     const marks: Record<string, any> = {};
     if (dateRangeStart && dateRangeEnd) {
-      const cur = new Date(dateRangeStart + 'T00:00:00');
-      const end = new Date(dateRangeEnd + 'T00:00:00');
-      while (cur <= end) {
-        const iso = cur.toISOString().split('T')[0];
+      const [y, m, d] = dateRangeStart.split('-').map(Number);
+      const [endY, endM, endD] = dateRangeEnd.split('-').map(Number);
+      const curDate = new Date(y, m - 1, d);
+      const targetEndDate = new Date(endY, endM - 1, endD);
+
+      while (curDate <= targetEndDate) {
+        const year = curDate.getFullYear();
+        const month = String(curDate.getMonth() + 1).padStart(2, '0');
+        const day = String(curDate.getDate()).padStart(2, '0');
+        const iso = `${year}-${month}-${day}`;
         const isStart = iso === dateRangeStart;
         const isEnd = iso === dateRangeEnd;
+
         marks[iso] = {
           selected: true,
           startingDay: isStart,
           endingDay: isEnd,
           color: isStart || isEnd ? '#00e5ff' : 'rgba(0, 229, 255, 0.22)',
-          textColor: isStart || isEnd ? '#00363d' : '#00e5ff',
+          textColor: isStart || isEnd ? '#070c14' : '#00e5ff',
         };
-        cur.setDate(cur.getDate() + 1);
+        curDate.setDate(curDate.getDate() + 1);
       }
     } else if (dateRangeStart) {
       marks[dateRangeStart] = {
         selected: true,
         startingDay: true,
         endingDay: true,
-        color: '#feb300',
-        textColor: '#00363d',
+        color: '#00e5ff',
+        textColor: '#070c14',
       };
     }
     return marks;
   }, [dateRangeStart, dateRangeEnd]);
+
+  // Handle day press on calendar for custom range selection
+  const handleDayPress = (dateStr: string) => {
+    if (!dateRangeStart || (dateRangeStart && dateRangeEnd)) {
+      // Start a new range selection
+      setDateRangeStart(dateStr);
+      setDateRangeEnd(null);
+    } else if (dateRangeStart && !dateRangeEnd) {
+      if (dateStr < dateRangeStart) {
+        // Tapped earlier date: make this the new start
+        setDateRangeStart(dateStr);
+      } else {
+        // Complete the range
+        setDateRangeEnd(dateStr);
+      }
+    }
+  };
+
+  // Quick Presets inside Calendar modal
+  const handleApplyPreset = (preset: { label: string; days?: number; type?: string }) => {
+    const now = new Date();
+    const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+
+    if (preset.type === 'month') {
+      const monthStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
+      setDateRangeStart(monthStart);
+      setDateRangeEnd(todayStr);
+    } else if (preset.days === 0) {
+      setDateRangeStart(todayStr);
+      setDateRangeEnd(todayStr);
+    } else if (preset.days === -1) {
+      const y = new Date(now);
+      y.setDate(y.getDate() - 1);
+      const yStr = `${y.getFullYear()}-${String(y.getMonth() + 1).padStart(2, '0')}-${String(y.getDate()).padStart(2, '0')}`;
+      setDateRangeStart(yStr);
+      setDateRangeEnd(yStr);
+    } else if (preset.days) {
+      const past = new Date(now);
+      past.setDate(past.getDate() - preset.days);
+      const pastStr = `${past.getFullYear()}-${String(past.getMonth() + 1).padStart(2, '0')}-${String(past.getDate()).padStart(2, '0')}`;
+      setDateRangeStart(pastStr);
+      setDateRangeEnd(todayStr);
+    }
+  };
 
   // Rejection modal
   const [rejectModalVisible, setRejectModalVisible] = useState(false);
@@ -207,8 +258,10 @@ export default function SupervisorMissionDispatcher() {
           const tDate = new Date(rawDate);
           if (tDate.getFullYear() !== now.getFullYear()) return false;
         } else if (selectedPeriodFilter === 'RANGE') {
-          if (dateRangeStart && tripDateStr < dateRangeStart) return false;
-          if (dateRangeEnd && tripDateStr > dateRangeEnd) return false;
+          const effectiveStart = dateRangeStart;
+          const effectiveEnd = dateRangeEnd || dateRangeStart;
+          if (effectiveStart && tripDateStr < effectiveStart) return false;
+          if (effectiveEnd && tripDateStr > effectiveEnd) return false;
         }
       }
 
@@ -924,6 +977,122 @@ export default function SupervisorMissionDispatcher() {
           </View>
         </View>
       </Modal>
+
+      {/* ─── MODAL: CUSTOM DATE RANGE CALENDAR ─── */}
+      <Modal visible={dateRangeModalVisible} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={styles.calendarModalCard}>
+            {/* Header */}
+            <View style={styles.modalHeader}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <Ionicons name="calendar" size={18} color="#00e5ff" />
+                <Text style={styles.modalTitle}>FILTER BY DATE RANGE</Text>
+              </View>
+              <TouchableOpacity
+                onPress={() => setDateRangeModalVisible(false)}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <Ionicons name="close" size={22} color="#849396" />
+              </TouchableOpacity>
+            </View>
+
+            {/* Quick Presets Row */}
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.calendarPresetsRow}>
+              {[
+                { label: 'Today', days: 0 },
+                { label: 'Yesterday', days: -1 },
+                { label: 'Last 7 Days', days: 7 },
+                { label: 'Last 30 Days', days: 30 },
+                { label: 'This Month', type: 'month' },
+              ].map((p, idx) => (
+                <TouchableOpacity
+                  key={idx}
+                  style={styles.calendarPresetChip}
+                  onPress={() => handleApplyPreset(p)}
+                >
+                  <Text style={styles.calendarPresetText}>{p.label}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+
+            {/* Selected Range Display Status */}
+            <View style={styles.calendarRangeDisplay}>
+              <View style={styles.rangeDateCol}>
+                <Text style={styles.rangeDateLabel}>START DATE</Text>
+                <Text style={styles.rangeDateVal}>
+                  {dateRangeStart ? formatFriendlyDate(dateRangeStart) : 'Select Start'}
+                </Text>
+              </View>
+              <Ionicons name="arrow-forward" size={16} color="#00e5ff" />
+              <View style={styles.rangeDateCol}>
+                <Text style={styles.rangeDateLabel}>END DATE</Text>
+                <Text style={styles.rangeDateVal}>
+                  {dateRangeEnd
+                    ? formatFriendlyDate(dateRangeEnd)
+                    : dateRangeStart
+                      ? 'Tap End Date'
+                      : '—'}
+                </Text>
+              </View>
+            </View>
+
+            {/* Calendar */}
+            <View style={styles.calendarWrapper}>
+              <Calendar
+                markingType={'period'}
+                markedDates={calendarMarkedDates}
+                onDayPress={(day) => handleDayPress(day.dateString)}
+                theme={{
+                  backgroundColor: '#0c1524',
+                  calendarBackground: '#0c1524',
+                  textSectionTitleColor: '#849396',
+                  selectedDayBackgroundColor: '#00e5ff',
+                  selectedDayTextColor: '#070c14',
+                  todayTextColor: '#00e5ff',
+                  dayTextColor: '#dde2f0',
+                  textDisabledColor: '#323f4b',
+                  arrowColor: '#00e5ff',
+                  monthTextColor: '#00e5ff',
+                  indicatorColor: '#00e5ff',
+                  textDayFontWeight: '600',
+                  textMonthFontWeight: '800',
+                  textDayHeaderFontWeight: '700',
+                  textDayFontSize: 13,
+                  textMonthFontSize: 14,
+                  textDayHeaderFontSize: 11,
+                }}
+              />
+            </View>
+
+            {/* Action Buttons */}
+            <View style={styles.calendarModalActions}>
+              <TouchableOpacity
+                style={styles.calendarResetBtn}
+                onPress={() => {
+                  setDateRangeStart(null);
+                  setDateRangeEnd(null);
+                }}
+              >
+                <Ionicons name="refresh" size={14} color="#849396" />
+                <Text style={styles.calendarResetBtnText}>CLEAR DATES</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.calendarApplyBtn}
+                onPress={() => {
+                  if (dateRangeStart) {
+                    setSelectedPeriodFilter('RANGE');
+                  }
+                  setDateRangeModalVisible(false);
+                }}
+              >
+                <Ionicons name="checkmark-done" size={15} color="#002022" />
+                <Text style={styles.calendarApplyBtnText}>APPLY FILTER</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -1560,5 +1729,106 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '900',
     letterSpacing: 0.5,
+  },
+
+  // ─── CALENDAR MODAL ───
+  calendarModalCard: {
+    width: '100%',
+    maxWidth: 440,
+    backgroundColor: '#0c1524',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#1d2e47',
+    padding: 16,
+    gap: 12,
+  },
+  calendarPresetsRow: {
+    flexDirection: 'row',
+    gap: 6,
+    paddingVertical: 2,
+  },
+  calendarPresetChip: {
+    backgroundColor: '#122033',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#1f3452',
+  },
+  calendarPresetText: {
+    color: '#00e5ff',
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  calendarRangeDisplay: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#070c14',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 229, 255, 0.25)',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+  },
+  rangeDateCol: {
+    alignItems: 'center',
+    gap: 2,
+  },
+  rangeDateLabel: {
+    color: '#849396',
+    fontSize: 9,
+    fontWeight: '800',
+    letterSpacing: 0.6,
+  },
+  rangeDateVal: {
+    color: '#dde2f0',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  calendarWrapper: {
+    borderRadius: 12,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#192b45',
+  },
+  calendarModalActions: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 4,
+  },
+  calendarResetBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    height: 42,
+    borderRadius: 10,
+    backgroundColor: '#162233',
+    borderWidth: 1,
+    borderColor: '#233750',
+  },
+  calendarResetBtnText: {
+    color: '#849396',
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
+  calendarApplyBtn: {
+    flex: 2,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    height: 42,
+    borderRadius: 10,
+    backgroundColor: '#00e5ff',
+  },
+  calendarApplyBtnText: {
+    color: '#002022',
+    fontSize: 12,
+    fontWeight: '900',
+    letterSpacing: 0.6,
   },
 });

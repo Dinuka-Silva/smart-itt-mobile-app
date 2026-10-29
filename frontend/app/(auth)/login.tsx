@@ -16,6 +16,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../../src/store/authStore';
 import { authService } from '../../src/services/authService';
 import { credentialStore } from '../../src/services/credentialStore';
+import { adminFleetStore } from '../../src/store/adminFleetStore';
 import { biometricService, BiometricStatus } from '../../src/services/biometricService';
 import { securityAuditService } from '../../src/services/securityAuditService';
 import { colors, radius, spacing } from '../../src/theme';
@@ -247,13 +248,50 @@ export default function LoginScreen() {
         status: authResponse.user.status,
       };
 
+      if (user.status === 'SUSPENDED') {
+        const suspendMsg = 'Account Suspended: Your driver account has been suspended by Administration. You cannot log in to the SMART ITT system. Please contact the Operations Supervisor or Administration.';
+        setErrorMessage(suspendMsg);
+        Alert.alert('Account Suspended', suspendMsg);
+        await securityAuditService.logEvent(
+          'LOGIN_FAILED',
+          cleanUser,
+          `Suspended driver login blocked: ${cleanUser}`,
+          'WARNING',
+          'DRIVER'
+        );
+        setLoading(false);
+        return;
+      }
+
       await login(user);
       if (user.role === 'ADMIN') router.replace('/(admin)/(tabs)');
       else if (user.role === 'SUPERVISOR') router.replace('/(supervisor)/(tabs)');
       else router.replace('/(driver)/(tabs)');
     } catch (err: any) {
-      // If server explicitly returned 401 or 403, credentials failed
-      if (err?.response && (err.response.status === 401 || err.response.status === 403)) {
+      const serverStatus = err?.response?.status;
+      const serverMsg = (err?.response?.data?.message || err?.response?.data?.error || err?.message || '').toString();
+      const isSuspendedError = serverStatus === 403 || serverMsg.toUpperCase().includes('SUSPEND');
+
+      // 1. If account is suspended on server, show clear suspension message and block entry
+      if (isSuspendedError) {
+        const suspendMsg = serverMsg && serverMsg.toUpperCase().includes('SUSPEND')
+          ? serverMsg
+          : 'Account Suspended: Your driver account has been suspended by Administration. You cannot access the SMART ITT system. Please contact the Operations Supervisor or Port Administration.';
+        setErrorMessage(suspendMsg);
+        Alert.alert('Account Suspended', suspendMsg);
+        await securityAuditService.logEvent(
+          'LOGIN_FAILED',
+          cleanUser,
+          `Suspended driver login blocked: ${cleanUser}`,
+          'WARNING',
+          'DRIVER'
+        );
+        setLoading(false);
+        return;
+      }
+
+      // 2. If server explicitly returned 401, credentials failed
+      if (err?.response && err.response.status === 401) {
         const lockoutCheck = await credentialStore.recordFailedAttempt(cleanUser);
         if (lockoutCheck.isLocked) {
           setLockoutSeconds(lockoutCheck.remainingSeconds);
@@ -277,6 +315,27 @@ export default function LoginScreen() {
       const isSupervisorFormat = isSupervisorIdentified || upperUser === 'SUPERVISOR' || upperUser === 'SUPERVISOR1' || upperUser === 'SUPERVISOR@SMARTITT.LK';
       const role: 'ADMIN' | 'SUPERVISOR' | 'DRIVER' = isAdminFormat ? 'ADMIN' : (isSupervisorFormat ? 'SUPERVISOR' : 'DRIVER');
 
+      // Check if driver is marked suspended in fleet store or local credential store
+      const fleetDriver = adminFleetStore.getDriver(cleanUser);
+      const credStatus = await credentialStore.getAccountStatus(cleanUser);
+      const isSuspendedLocally = (fleetDriver && fleetDriver.status === 'SUSPENDED') || credStatus.status === 'SUSPENDED';
+
+      if (isSuspendedLocally) {
+        const reason = credStatus.reason || 'Administrative suspension';
+        const suspendMsg = `Account Suspended: Your driver account has been suspended by Administration.${reason ? `\n\nNotice: ${reason}` : ''}\n\nYou cannot access the SMART ITT system. Please contact the Operations Supervisor or Port Administration.`;
+        setErrorMessage(suspendMsg);
+        Alert.alert('Account Suspended', suspendMsg);
+        await securityAuditService.logEvent(
+          'LOGIN_FAILED',
+          cleanUser,
+          `Suspended driver login blocked: ${cleanUser}`,
+          'WARNING',
+          'DRIVER'
+        );
+        setLoading(false);
+        return;
+      }
+
       if (role === 'ADMIN') {
         if (cleanPass === 'Admin@123' || cleanPass === 'AdminSecure@2026' || cleanPass.toLowerCase() === 'admin') {
           await credentialStore.recordSuccessfulAttempt(cleanUser);
@@ -299,6 +358,21 @@ export default function LoginScreen() {
       const verifyResult = await credentialStore.verifyOffline(cleanUser, cleanPass, role as any);
 
       if (!verifyResult.valid) {
+        if (verifyResult.isSuspended) {
+          const suspendMsg = verifyResult.errorMessage || 'Account Suspended: Your driver account has been suspended by Administration.';
+          setErrorMessage(suspendMsg);
+          Alert.alert('Account Suspended', suspendMsg);
+          await securityAuditService.logEvent(
+            'LOGIN_FAILED',
+            cleanUser,
+            `Suspended driver login blocked: ${cleanUser}`,
+            'WARNING',
+            role as any
+          );
+          setLoading(false);
+          return;
+        }
+
         const lockStatus = await credentialStore.getLockoutStatus(cleanUser);
         if (lockStatus.isLocked) {
           setLockoutSeconds(lockStatus.remainingSeconds);
@@ -318,22 +392,37 @@ export default function LoginScreen() {
       const isSupervisor = role === 'SUPERVISOR';
 
       const mockUser = {
-        id: isSupervisor ? 'sup-demo-001' : 'demo-user-123',
+        id: isSupervisor ? 'sup-demo-001' : (fleetDriver?.id || 'demo-user-123'),
         username: cleanUser,
         role: role as any,
-        name: isSupervisor ? 'Nimal Silva (Supervisor)' : 'Kamal Perera (Driver)',
+        name: isSupervisor ? 'Nimal Silva (Supervisor)' : (fleetDriver?.fullName || 'Kamal Perera (Driver)'),
         token: 'demo-token-xyz',
-        employeeId: isSupervisor ? (cleanUser.toUpperCase().startsWith('SUP') ? cleanUser.toUpperCase() : 'SUP001') : undefined,
+        employeeId: isSupervisor ? (cleanUser.toUpperCase().startsWith('SUP') ? cleanUser.toUpperCase() : 'SUP001') : (fleetDriver?.employeeId || undefined),
         supervisorId: isSupervisor ? 'sup-123' : undefined,
         supervisorPortPassExpiryDate: isSupervisor ? '2026-11-18' : undefined,
-        driverId: isSupervisor ? undefined : 'driver-123',
-        driverCode: isSupervisor ? undefined : (cleanUser.toUpperCase().startsWith('DRV') ? cleanUser.toUpperCase() : 'DRV-00001'),
-        vehicleNumber: isSupervisor ? undefined : 'LY-6439',
-        chassisNumber: isSupervisor ? undefined : 'CHE 100',
-        cheNumber: isSupervisor ? undefined : 'CHE 100',
-        operator: isSupervisor ? undefined : 'SCK Logistics',
-        status: 'ACTIVE',
+        driverId: isSupervisor ? undefined : (fleetDriver?.id || 'driver-123'),
+        driverCode: isSupervisor ? undefined : (fleetDriver?.driverCode || (cleanUser.toUpperCase().startsWith('DRV') ? cleanUser.toUpperCase() : 'DRV-00001')),
+        vehicleNumber: isSupervisor ? undefined : (fleetDriver?.vehicleNumber || 'LY-6439'),
+        chassisNumber: isSupervisor ? undefined : (fleetDriver?.chassisNumber || 'CHE 100'),
+        cheNumber: isSupervisor ? undefined : (fleetDriver?.cheNumber || 'CHE 100'),
+        operator: isSupervisor ? undefined : ((fleetDriver as any)?.operator || 'SCK Logistics'),
+        status: fleetDriver?.status || 'ACTIVE',
       };
+
+      if (mockUser.status === 'SUSPENDED') {
+        const suspendMsg = 'Account Suspended: Your driver account has been suspended by Administration. You cannot access the SMART ITT system. Please contact the Operations Supervisor or Administration.';
+        setErrorMessage(suspendMsg);
+        Alert.alert('Account Suspended', suspendMsg);
+        await securityAuditService.logEvent(
+          'LOGIN_FAILED',
+          cleanUser,
+          `Suspended driver login blocked: ${cleanUser}`,
+          'WARNING',
+          'DRIVER'
+        );
+        setLoading(false);
+        return;
+      }
 
       await login(mockUser as any);
       if (role === 'SUPERVISOR') router.replace('/(supervisor)/(tabs)');
@@ -348,6 +437,23 @@ export default function LoginScreen() {
     const cleanUser = username.trim();
     if (!cleanUser) {
       setErrorMessage('Please enter your Operator Code first to use Biometrics.');
+      return;
+    }
+
+    // Check if account is suspended before authenticating with biometrics
+    const fleetDriver = adminFleetStore.getDriver(cleanUser);
+    const credStatus = await credentialStore.getAccountStatus(cleanUser);
+    if ((fleetDriver && fleetDriver.status === 'SUSPENDED') || credStatus.status === 'SUSPENDED') {
+      const suspendMsg = 'Account Suspended: Your driver account has been suspended by Administration. Biometric access denied. Please contact Port Administration.';
+      setErrorMessage(suspendMsg);
+      Alert.alert('Account Suspended', suspendMsg);
+      await securityAuditService.logEvent(
+        'LOGIN_FAILED',
+        cleanUser,
+        `Suspended driver biometric login blocked: ${cleanUser}`,
+        'WARNING',
+        'DRIVER'
+      );
       return;
     }
 
@@ -375,17 +481,24 @@ export default function LoginScreen() {
         const role = isAdmin ? 'ADMIN' : (isSup ? 'SUPERVISOR' : 'DRIVER');
 
         const mockUser = {
-          id: isSup ? 'sup-demo-001' : (isAdmin ? 'admin-root' : 'demo-user-123'),
+          id: isSup ? 'sup-demo-001' : (isAdmin ? 'admin-root' : (fleetDriver?.id || 'demo-user-123')),
           username: cleanUser,
           role: role as any,
-          name: isSup ? 'Nimal Silva (Supervisor)' : (isAdmin ? 'System Administrator' : 'Kamal Perera (Driver)'),
+          name: isSup ? 'Nimal Silva (Supervisor)' : (isAdmin ? 'System Administrator' : (fleetDriver?.fullName || 'Kamal Perera (Driver)')),
           token: 'bio-verified-secure-token',
-          driverCode: isSup || isAdmin ? undefined : (upperUser.startsWith('DRV') ? upperUser : 'DRV-00001'),
+          driverCode: isSup || isAdmin ? undefined : (fleetDriver?.driverCode || (upperUser.startsWith('DRV') ? upperUser : 'DRV-00001')),
           supervisorId: isSup ? 'sup-123' : undefined,
           supervisorPortPassExpiryDate: isSup ? '2026-11-18' : undefined,
-          vehicleNumber: isSup || isAdmin ? undefined : 'LY-6439',
-          status: 'ACTIVE',
+          vehicleNumber: isSup || isAdmin ? undefined : (fleetDriver?.vehicleNumber || 'LY-6439'),
+          status: fleetDriver?.status || 'ACTIVE',
         };
+
+        if (mockUser.status === 'SUSPENDED') {
+          const suspendMsg = 'Account Suspended: Your driver account has been suspended by Administration. Biometric access denied. Please contact Port Administration.';
+          setErrorMessage(suspendMsg);
+          Alert.alert('Account Suspended', suspendMsg);
+          return;
+        }
 
         await credentialStore.recordSuccessfulAttempt(cleanUser);
         await login(mockUser as any);

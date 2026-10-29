@@ -11,22 +11,26 @@ import {
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
-  Alert,
+  Modal,
   Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { useAuthStore } from '../store/authStore';
 import { biometricService, BiometricStatus } from '../services/biometricService';
 import { credentialStore } from '../services/credentialStore';
 import { securityAuditService } from '../services/securityAuditService';
 
 export function SecurityLockOverlay() {
+  const router = useRouter();
   const { user, isSessionLocked, unlockSession, logout } = useAuthStore();
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [actionLoading, setActionLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [biometricStatus, setBiometricStatus] = useState<BiometricStatus | null>(null);
+  const [confirmAction, setConfirmAction] = useState<'SWITCH' | 'SIGNOUT' | null>(null);
 
   useEffect(() => {
     if (isSessionLocked) {
@@ -116,19 +120,26 @@ export function SecurityLockOverlay() {
     }
   };
 
-  const handleSignOut = () => {
-    Alert.alert(
-      'Sign Out',
-      'Are you sure you want to sign out and terminate this session?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Sign Out',
-          style: 'destructive',
-          onPress: () => logout(),
-        },
-      ]
-    );
+  const handleConfirmAction = async (actionType: 'SWITCH' | 'SIGNOUT') => {
+    setActionLoading(true);
+    try {
+      if (actionType === 'SWITCH') {
+        const target = '/(auth)/login';
+        await logout(target);
+        setConfirmAction(null);
+        router.replace(target);
+      } else {
+        const target = user.role === 'ADMIN' ? '/(admin)/login' : '/(auth)/login';
+        await logout(target);
+        setConfirmAction(null);
+        router.replace(target);
+      }
+    } catch (err) {
+      console.error('Session lock action failed:', err);
+      setConfirmAction(null);
+    } finally {
+      setActionLoading(false);
+    }
   };
 
   return (
@@ -167,7 +178,7 @@ export function SecurityLockOverlay() {
           <TouchableOpacity
             style={[styles.bioButton, { borderColor: `${roleColor}60` }]}
             onPress={handleBiometricUnlock}
-            disabled={loading}
+            disabled={loading || actionLoading}
           >
             <Ionicons
               name={biometricStatus.biometricType === 'FACE_ID' ? 'scan' : 'finger-print'}
@@ -193,7 +204,7 @@ export function SecurityLockOverlay() {
               setPassword(t);
               if (errorMessage) setErrorMessage(null);
             }}
-            editable={!loading}
+            editable={!loading && !actionLoading}
           />
           <TouchableOpacity
             onPress={() => setShowPassword(!showPassword)}
@@ -211,7 +222,7 @@ export function SecurityLockOverlay() {
         <TouchableOpacity
           style={[styles.unlockButton, { backgroundColor: roleColor }]}
           onPress={handlePasswordUnlock}
-          disabled={loading || !password.trim()}
+          disabled={loading || actionLoading || !password.trim()}
         >
           {loading ? (
             <ActivityIndicator color="#070c14" />
@@ -220,12 +231,109 @@ export function SecurityLockOverlay() {
           )}
         </TouchableOpacity>
 
-        {/* Sign Out Option */}
-        <TouchableOpacity style={styles.signOutButton} onPress={handleSignOut} disabled={loading}>
-          <Ionicons name="log-out-outline" size={16} color="#94a3b8" />
-          <Text style={styles.signOutText}>Switch Account or Sign Out</Text>
-        </TouchableOpacity>
+        {/* Explicit Session Actions: Switch Account & Sign Out */}
+        <View style={styles.sessionActionsRow}>
+          <TouchableOpacity
+            style={styles.actionPillBtn}
+            onPress={() => setConfirmAction('SWITCH')}
+            disabled={loading || actionLoading}
+            activeOpacity={0.75}
+          >
+            <Ionicons name="swap-horizontal" size={15} color="#00e5ff" style={{ marginRight: 6 }} />
+            <Text style={[styles.actionPillText, { color: '#00e5ff' }]}>Switch Account</Text>
+          </TouchableOpacity>
+
+          <View style={styles.actionPillDivider} />
+
+          <TouchableOpacity
+            style={styles.actionPillBtn}
+            onPress={() => setConfirmAction('SIGNOUT')}
+            disabled={loading || actionLoading}
+            activeOpacity={0.75}
+          >
+            <Ionicons name="log-out-outline" size={15} color="#f43f5e" style={{ marginRight: 6 }} />
+            <Text style={[styles.actionPillText, { color: '#f43f5e' }]}>Sign Out</Text>
+          </TouchableOpacity>
+        </View>
       </View>
+
+      {/* Cross-Platform Confirmation Modal (iOS / Android / Web) */}
+      <Modal
+        visible={confirmAction !== null}
+        transparent
+        animationType="fade"
+        onRequestClose={() => {
+          if (!actionLoading) setConfirmAction(null);
+        }}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <View
+              style={[
+                styles.modalIconCircle,
+                confirmAction === 'SWITCH'
+                  ? styles.modalIconCircleSwitch
+                  : styles.modalIconCircleSignout,
+              ]}
+            >
+              <Ionicons
+                name={confirmAction === 'SWITCH' ? 'swap-horizontal' : 'log-out-outline'}
+                size={28}
+                color={confirmAction === 'SWITCH' ? '#00e5ff' : '#f43f5e'}
+              />
+            </View>
+
+            <Text style={styles.modalTitle}>
+              {confirmAction === 'SWITCH' ? 'Switch Account?' : 'Sign Out of Session?'}
+            </Text>
+
+            <Text style={styles.modalMessage}>
+              {confirmAction === 'SWITCH'
+                ? `You will end the locked session for ${user.name || user.fullName || 'User'} (${user.role}) and return to the Operator Login screen to sign in with another driver, supervisor, or staff account.`
+                : `You will sign out of your ${user.role} session as ${user.name || user.fullName || 'User'}. You will return to the ${user.role === 'ADMIN' ? 'Admin Login' : 'Login'} portal.`}
+            </Text>
+
+            <View style={styles.modalBtnRow}>
+              <TouchableOpacity
+                style={styles.modalCancelBtn}
+                onPress={() => setConfirmAction(null)}
+                disabled={actionLoading}
+                activeOpacity={0.75}
+              >
+                <Text style={styles.modalCancelBtnText}>Cancel</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.modalConfirmBtn,
+                  confirmAction === 'SWITCH'
+                    ? styles.modalConfirmBtnSwitch
+                    : styles.modalConfirmBtnSignout,
+                ]}
+                onPress={() => confirmAction && handleConfirmAction(confirmAction)}
+                disabled={actionLoading}
+                activeOpacity={0.8}
+              >
+                {actionLoading ? (
+                  <ActivityIndicator size="small" color="#ffffff" />
+                ) : (
+                  <>
+                    <Ionicons
+                      name={confirmAction === 'SWITCH' ? 'arrow-forward' : 'log-out-outline'}
+                      size={15}
+                      color="#ffffff"
+                      style={{ marginRight: 6 }}
+                    />
+                    <Text style={styles.modalConfirmBtnText}>
+                      {confirmAction === 'SWITCH' ? 'Switch Account' : 'Sign Out'}
+                    </Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -382,15 +490,134 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     letterSpacing: 0.5,
   },
-  signOutButton: {
+  sessionActionsRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    paddingVertical: 8,
+    justifyContent: 'center',
+    width: '100%',
+    paddingTop: 14,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.08)',
   },
-  signOutText: {
-    color: '#94a3b8',
+  actionPillBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+    borderRadius: 10,
+    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+  },
+  actionPillText: {
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: '700',
+    letterSpacing: 0.3,
+  },
+  actionPillDivider: {
+    width: 1,
+    height: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    marginHorizontal: 8,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(2, 6, 17, 0.88)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  modalCard: {
+    width: '100%',
+    maxWidth: 380,
+    backgroundColor: '#0c192c',
+    borderRadius: 20,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255, 255, 255, 0.12)',
+    padding: 24,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.6,
+    shadowRadius: 24,
+    elevation: 12,
+  },
+  modalIconCircle: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+    borderWidth: 1.5,
+  },
+  modalIconCircleSwitch: {
+    backgroundColor: 'rgba(0, 229, 255, 0.12)',
+    borderColor: 'rgba(0, 229, 255, 0.35)',
+  },
+  modalIconCircleSignout: {
+    backgroundColor: 'rgba(244, 63, 94, 0.12)',
+    borderColor: 'rgba(244, 63, 94, 0.35)',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#ffffff',
+    textAlign: 'center',
+    marginBottom: 8,
+    letterSpacing: 0.3,
+  },
+  modalMessage: {
+    fontSize: 13,
+    color: '#94a3b8',
+    textAlign: 'center',
+    lineHeight: 19,
+    marginBottom: 24,
+  },
+  modalBtnRow: {
+    flexDirection: 'row',
+    gap: 12,
+    width: '100%',
+  },
+  modalCancelBtn: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.12)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalCancelBtnText: {
+    color: '#b0bec5',
+    fontWeight: '700',
+    fontSize: 13,
+  },
+  modalConfirmBtn: {
+    flex: 1.3,
+    flexDirection: 'row',
+    paddingVertical: 12,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  modalConfirmBtnSwitch: {
+    backgroundColor: '#0891b2',
+    shadowColor: '#0891b2',
+  },
+  modalConfirmBtnSignout: {
+    backgroundColor: '#e11d48',
+    shadowColor: '#e11d48',
+  },
+  modalConfirmBtnText: {
+    color: '#ffffff',
+    fontWeight: '800',
+    fontSize: 13,
+    letterSpacing: 0.3,
   },
 });

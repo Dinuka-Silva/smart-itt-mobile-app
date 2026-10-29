@@ -83,10 +83,15 @@ public class AdminController {
     @Operation(summary = "Reset driver password")
     public ResponseEntity<Map<String, String>> resetDriverPassword(
             @PathVariable String id,
-            @RequestBody Map<String, String> body) {
-        String newPassword = body.getOrDefault("newPassword", "driver");
+            @RequestBody(required = false) Map<String, String> body) {
+        String newPassword = (body != null && body.containsKey("newPassword") && body.get("newPassword") != null && !body.get("newPassword").isBlank())
+                ? body.get("newPassword")
+                : "driver";
         adminService.resetDriverPassword(id, newPassword);
-        return ResponseEntity.ok(Map.of("message", "Driver password successfully reset"));
+        return ResponseEntity.ok(Map.of(
+                "message", "Driver password successfully reset to default: " + newPassword,
+                "defaultPassword", newPassword
+        ));
     }
 
     // ─────────────────────────────────────────────────────────────
