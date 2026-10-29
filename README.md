@@ -182,9 +182,32 @@ flowchart TD
   - Severity level filtering: **`ALL`**, **`INFO`**, **`WARNING`**, **`CRITICAL`**.
   - One-tap **Export Logs (JSON / CSV)** for compliance audits.
 - **Administrative Access & Session Controls**:
-  - **Secret Easter-Egg Unlock**: 7 quick taps or a 2.5-second long press on the Operator Login logo opens the Admin Portal, or direct URL `/(admin)/login`.
+  - **Secret Easter-Egg Unlock**: 7 quick taps within 3.5 seconds or a 2.5-second long press on the Operator Login brand logo opens the Admin Portal, or direct deep-link `/(admin)/login`.
   - **Instant Header Lock Action**: Amber lock button in the header bar locks the session instantly on demand.
   - **Admin Sign-Out Modal**: Custom dual-action modal offering **Switch to Operator Login** or **Sign Out to Admin Login**.
+
+#### 🔐 3.1 Advanced Admin Login & Multi-Factor Security Portal (`app/(admin)/login.tsx`)
+The Admin Login portal is an enterprise-hardened entry point engineered with multi-layer defense, biometrics, and dynamic security controls:
+
+- **Dual Access Gateways**:
+  - **Secret Easter-Egg Trigger**: In the standard Operator Login screen, tapping the brand logo **7 times within 3.5 seconds** or performing a **2.5-second Long-Press** activates dynamic tap hints (`"Admin unlock: 4 more taps"`, `"Admin Portal Unlocked!"`) and unlocks the hidden administrative console.
+  - **Direct URL Deep-Link**: Accessible directly via `/(admin)/login` with a dedicated `"Back to Operator Login"` chevron return link.
+- **Hardware-Level Biometric Authentication**:
+  - Native hardware detection for Apple Face ID, Touch ID, and Android Biometrics with automatic status checking.
+  - 1-tap quick authentication bypassing manual password entry, logging `BIOMETRIC_AUTH_SUCCESS` to security audit trails.
+- **Strict Role-Based Authorization Guard**:
+  - Authenticates via Spring Boot `/auth/login` REST API with Bearer token issuance.
+  - Enforces strict role verification (`user.role === 'ADMIN'`).
+  - Rejects valid non-admin credentials (such as driver or supervisor logins) with explicit security alerts: *"Access Denied: Account lacks administrative privileges"*.
+- **Brute-Force Lockout Defense & Dynamic Countdown**:
+  - Detects and records consecutive failed password attempts via `credentialStore`.
+  - Enforces automatic lockout with a real-time countdown badge displaying remaining seconds before retry is allowed.
+  - Logs `LOCKOUT_TRIGGERED` security alerts with timestamp and IP/client metadata.
+- **Offline Bootstrap & Development Fallback**:
+  - High-resilience offline fallback allowing authorized administrators (`ADMIN`, `admin@smartitt.lk`) to bootstrap the console using verified credentials (`Admin@123`, `AdminSecure@2026`, `admin`).
+  - Built-in Dev Credentials Quick Drawer for streamlined staging and QA operations.
+- **Obsidian Maritime Cyber UI**:
+  - Themed in Obsidian Navy (`#070d17`) with subtle watermarked background overlay (`AppBackgroundOverlay`), radial cyan and cobalt ambient glow filters, high-security verified badge icons, and animated activity indicators.
 
 ---
 

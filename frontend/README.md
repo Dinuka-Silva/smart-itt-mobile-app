@@ -32,6 +32,12 @@ Engineered with **React Native**, **Expo SDK 57**, **Expo Router**, **TypeScript
 - **Vehicle Fleet Management**: Prime mover registration, chassis specs, and license expiration tracking.
 - **Security Audit Trail Explorer (`audit.tsx`)**: Chronological audit trail recording **every login**, logouts, session locks, and biometric checks.
 - **On-Demand Lock Session & Dual Sign-Out**: Amber lock action in header; custom modal with **Switch Account** and **Sign Out**.
+- **Advanced Admin Login Portal (`app/(admin)/login.tsx`)**:
+  - **Secret Easter-Egg Access**: Unlocked via 7 rapid taps in 3.5s or 2.5s long-press on the Operator Login logo with live countdown toast, or direct URL `/(admin)/login`.
+  - **Native Biometric Login**: 1-tap Face ID / Touch ID / Fingerprint verification directly into the admin console with audit log tracking.
+  - **Role-Based Authorization Barrier**: Rejects non-admin users with *"Access Denied"* security alerts even on valid credentials.
+  - **Brute-Force Lockout Defense**: Dynamic countdown timer badge after repeated failed attempts with security event emission.
+  - **Offline Bootstrap & Dev Drawer**: Offline credential support (`ADMIN` with `Admin@123`, `AdminSecure@2026`, `admin`) and quick demo credentials drawer.
 
 ### 🔒 4. Enterprise Mobile Security Engine
 - **Biometric Authentication**: Native hardware Face ID, Touch ID, and Android Biometrics with fallback.
