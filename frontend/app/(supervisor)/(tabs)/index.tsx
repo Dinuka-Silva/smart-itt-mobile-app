@@ -291,12 +291,18 @@ export default function SupervisorHomeDashboard() {
   const handleApproveTrip = async (trip: any) => {
     try {
       await tripService.approveTrip(trip.id, user?.id || 'sup-001', 'Delivery confirmed & trip approved by Operations Supervisor');
-      useMockTripStore.getState().updateTripStatus(trip.id, 'COMPLETED');
-      Alert.alert('Trip Delivery Confirmed & Approved ✅', `Trip ${trip.tripNumber || trip.id} is confirmed. Main trip count and driver completed count updated!`);
+      useMockTripStore.getState().approveTripBySupervisor(trip.id, supervisorName, 'Delivery confirmed & trip approved by Operations Supervisor');
+      Alert.alert(
+        'Trip Delivery Confirmed & Approved ✅',
+        `Trip ${trip.tripNumber || trip.id} is confirmed. Driver completed container count (+1 towards 300 target) and main system metrics have been updated!`
+      );
       await loadDashboardData();
     } catch {
-      useMockTripStore.getState().updateTripStatus(trip.id, 'COMPLETED');
-      Alert.alert('Trip Delivery Confirmed & Approved ✅', `Trip ${trip.tripNumber || trip.id} is confirmed. Main trip count and driver completed count updated!`);
+      useMockTripStore.getState().approveTripBySupervisor(trip.id, supervisorName, 'Delivery confirmed & trip approved by Operations Supervisor');
+      Alert.alert(
+        'Trip Delivery Confirmed & Approved ✅',
+        `Trip ${trip.tripNumber || trip.id} is confirmed. Driver completed container count (+1 towards 300 target) and main system metrics have been updated!`
+      );
       await loadDashboardData();
     }
   };
@@ -316,12 +322,12 @@ export default function SupervisorHomeDashboard() {
     setSubmittingDecision(true);
     try {
       await tripService.rejectTrip(tripToReject.id, user?.id || 'sup-001', rejectionReason.trim());
-      useMockTripStore.getState().updateTripStatus(tripToReject.id, 'REJECTED');
+      useMockTripStore.getState().rejectTripBySupervisor(tripToReject.id, supervisorName, rejectionReason.trim());
       setRejectModalVisible(false);
       Alert.alert('Trip Rejected', `Trip ${tripToReject.tripNumber} rejected: ${rejectionReason}`);
       await loadDashboardData();
     } catch {
-      useMockTripStore.getState().updateTripStatus(tripToReject.id, 'REJECTED');
+      useMockTripStore.getState().rejectTripBySupervisor(tripToReject.id, supervisorName, rejectionReason.trim());
       setRejectModalVisible(false);
       Alert.alert('Trip Rejected (Local)', `Trip ${tripToReject.tripNumber} rejected.`);
       await loadDashboardData();
@@ -846,6 +852,78 @@ export default function SupervisorHomeDashboard() {
                       ))}
                     </View>
                   )}
+
+                  {/* ─── DRIVER DISCHARGE & CARGO INSPECTION VERIFICATION PANEL ─── */}
+                  <View style={styles.pendingDischargeVerificationCard}>
+                    <View style={styles.pendingDischargeVerificationHeader}>
+                      <Ionicons name="clipboard" size={13} color="#00e5ff" />
+                      <Text style={styles.pendingDischargeVerificationTitle}>
+                        DRIVER DISCHARGE & SEAL VERIFICATION MANIFEST
+                      </Text>
+                    </View>
+
+                    <View style={styles.pendingDischargeGrid}>
+                      {/* Row 1: Bay / Slot & Seal Status */}
+                      <View style={styles.pendingDischargeGridRow}>
+                        <View style={styles.pendingDischargeGridCol}>
+                          <Text style={styles.pendingDischargeGridLabel}>DISCHARGE BAY / CRANE SLOT</Text>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 2 }}>
+                            <Ionicons name="location" size={12} color="#feb300" />
+                            <Text style={styles.pendingDischargeGridValue}>
+                              {getTripDischargeTerminal(trip)} · {trip.dischargeBay || 'Bay 04, Crane 02'}
+                            </Text>
+                          </View>
+                        </View>
+
+                        <View style={styles.pendingDischargeGridCol}>
+                          <Text style={styles.pendingDischargeGridLabel}>SEAL INTEGRITY</Text>
+                          <View style={[
+                            styles.pendingSealBadge,
+                            trip.sealStatus?.includes('DAMAGED') ? styles.pendingSealBadgeDamaged : styles.pendingSealBadgeIntact,
+                          ]}>
+                            <Ionicons
+                              name={trip.sealStatus?.includes('DAMAGED') ? 'warning' : 'shield-checkmark'}
+                              size={11}
+                              color={trip.sealStatus?.includes('DAMAGED') ? '#ff5252' : '#22ef7e'}
+                            />
+                            <Text style={[
+                              styles.pendingSealBadgeText,
+                              { color: trip.sealStatus?.includes('DAMAGED') ? '#ff5252' : '#22ef7e' }
+                            ]}>
+                              {trip.sealStatus || 'INTACT (VERIFIED)'}
+                            </Text>
+                          </View>
+                        </View>
+                      </View>
+
+                      {/* Row 2: Cargo Condition & Driver Notes */}
+                      <View style={styles.pendingDischargeGridRow}>
+                        <View style={styles.pendingDischargeGridCol}>
+                          <Text style={styles.pendingDischargeGridLabel}>CARGO CONDITION</Text>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 2 }}>
+                            <Ionicons
+                              name={trip.damageStatus === 'DAMAGED' ? 'alert-circle' : 'checkmark-circle'}
+                              size={12}
+                              color={trip.damageStatus === 'DAMAGED' ? '#ff5252' : '#22ef7e'}
+                            />
+                            <Text style={[
+                              styles.pendingDischargeGridValue,
+                              { color: trip.damageStatus === 'DAMAGED' ? '#ff5252' : '#22ef7e' }
+                            ]}>
+                              {trip.damageStatus === 'DAMAGED' ? 'DAMAGE REPORTED' : 'SOUND (NO DAMAGE)'}
+                            </Text>
+                          </View>
+                        </View>
+
+                        <View style={styles.pendingDischargeGridCol}>
+                          <Text style={styles.pendingDischargeGridLabel}>DRIVER SUBMISSION REMARKS</Text>
+                          <Text style={styles.pendingDischargeNotesText} numberOfLines={2}>
+                            "{trip.driverCompletionNotes || 'Discharged cargo safely at destination berth. Seals inspected and verified intact.'}"
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
+                  </View>
 
                   {/* Supervisor Decision Buttons */}
                   <View style={styles.decisionButtonsRow}>
@@ -2785,5 +2863,83 @@ const styles = StyleSheet.create({
   driverSuspendedPill: {
     borderColor: '#feb300',
     backgroundColor: 'rgba(254, 179, 0, 0.1)',
+  },
+
+  // ─── PENDING DISCHARGE & SEAL VERIFICATION MANIFEST ───
+  pendingDischargeVerificationCard: {
+    backgroundColor: '#0a101d',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 229, 255, 0.25)',
+    padding: 10,
+    gap: 6,
+    marginTop: 4,
+  },
+  pendingDischargeVerificationHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingBottom: 4,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.06)',
+  },
+  pendingDischargeVerificationTitle: {
+    fontSize: 9,
+    fontWeight: '900',
+    color: '#00e5ff',
+    letterSpacing: 0.5,
+  },
+  pendingDischargeGrid: {
+    gap: 6,
+    marginTop: 2,
+  },
+  pendingDischargeGridRow: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  pendingDischargeGridCol: {
+    flex: 1,
+  },
+  pendingDischargeGridLabel: {
+    fontSize: 8,
+    fontWeight: '800',
+    color: '#849396',
+    letterSpacing: 0.4,
+  },
+  pendingDischargeGridValue: {
+    fontSize: 10.5,
+    fontWeight: '800',
+    color: '#dde2f0',
+  },
+  pendingSealBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    alignSelf: 'flex-start',
+    marginTop: 2,
+  },
+  pendingSealBadgeIntact: {
+    backgroundColor: 'rgba(34, 239, 126, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(34, 239, 126, 0.3)',
+  },
+  pendingSealBadgeDamaged: {
+    backgroundColor: 'rgba(255, 82, 82, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 82, 82, 0.3)',
+  },
+  pendingSealBadgeText: {
+    fontSize: 9,
+    fontWeight: '800',
+  },
+  pendingDischargeNotesText: {
+    fontSize: 9.5,
+    color: '#bac9cc',
+    fontStyle: 'italic',
+    marginTop: 2,
+    lineHeight: 13,
   },
 });

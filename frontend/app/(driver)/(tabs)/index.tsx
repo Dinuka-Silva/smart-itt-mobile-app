@@ -13,6 +13,7 @@ import {
   Platform,
   Image,
   Animated,
+  KeyboardAvoidingView,
 } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -63,6 +64,14 @@ export default function DriverHomeDashboard() {
   const [allowanceModalVisible, setAllowanceModalVisible] = useState(false);
   const [damageReportModalVisible, setDamageReportModalVisible] = useState(false);
   const [supervisorModalVisible, setSupervisorModalVisible] = useState(false);
+
+  // Discharge & Supervisor Clearance Submission Modal State
+  const [dischargeModalVisible, setDischargeModalVisible] = useState(false);
+  const [dischargeTerminal, setDischargeTerminal] = useState('');
+  const [dischargeBay, setDischargeBay] = useState('Bay 04, Crane 02');
+  const [sealStatus, setSealStatus] = useState<'INTACT (VERIFIED)' | 'DAMAGED / TAMPERED'>('INTACT (VERIFIED)');
+  const [cargoDamageStatus, setCargoDamageStatus] = useState<'NONE' | 'DAMAGED'>('NONE');
+  const [driverCompletionNotes, setDriverCompletionNotes] = useState('Discharged cargo safely at destination terminal berth. Seals inspected and verified intact.');
 
   // Damage Report Form State
   const [damageContainerNumber, setDamageContainerNumber] = useState('');
@@ -300,8 +309,8 @@ export default function DriverHomeDashboard() {
     }
   };
 
-  // 3. COMPLETE TRIP HANDLER -> SENDS TO SUPERVISOR FOR CONFIRMATION
-  const handleCompleteActiveTrip = async (tripId: string) => {
+  // 3. OPEN DISCHARGE & SUPERVISOR CLEARANCE MODAL
+  const handleOpenDischargeModal = (trip: any) => {
     if (isSuspended) {
       Alert.alert(
         'Account Suspended',
@@ -309,61 +318,86 @@ export default function DriverHomeDashboard() {
       );
       return;
     }
+    const target = trip || activeTrip;
+    setDischargeTerminal(getTripDischargeTerminal(target) || target?.destTerminal || 'ECT');
+    setDischargeBay(target?.dischargeBay || 'Bay 04, Crane 02');
+    setSealStatus(target?.sealStatus || 'INTACT (VERIFIED)');
+    setCargoDamageStatus(target?.damageStatus || 'NONE');
+    setDriverCompletionNotes(target?.driverCompletionNotes || 'Containers discharged safely at destination terminal berth. Seals inspected and verified intact.');
+    setDischargeModalVisible(true);
+  };
+
+  // 4. SUBMIT DISCHARGED TRIP TO SUPERVISOR FOR APPROVAL
+  const handleSubmitDischargeToSupervisor = async (tripId: string) => {
+    if (isSuspended) {
+      Alert.alert(
+        'Account Suspended',
+        'Your driver account has been suspended by Administration. You cannot submit or complete trips.'
+      );
+      return;
+    }
     setActionInProgress(true);
     try {
-      const trip = trips.find((t) => t.id === tripId);
-      const time = new Date().toISOString();
-      const containerUpdates = (trip?.containers || []).map((c: any) => ({
-        containerId: c.id,
-        unloadedTerminal: c.unloadedTerminal || trip?.destTerminal || 'ECT',
-      }));
+      const trip = trips.find((t) => t.id === tripId) || activeTrip;
+      const finalDest = dischargeTerminal || getTripDischargeTerminal(trip) || 'ECT';
+      const finalBay = dischargeBay.trim() || 'Bay 04, Crane 02';
+      const finalNotes = driverCompletionNotes.trim() || 'Containers discharged safely at destination berth. Awaiting supervisor clearance.';
 
       try {
-        await axios.patch(`${API_BASE_URL}/trips/${tripId}/complete`, { containerUpdates });
+        await axios.patch(`${API_BASE_URL}/trips/${tripId}/complete`, {
+          dischargeTerminal: finalDest,
+          dischargeBay: finalBay,
+          sealStatus,
+          damageStatus: cargoDamageStatus,
+          driverNotes: finalNotes,
+        });
+        await axios.patch(`${API_BASE_URL}/trips/${tripId}/submit`, {
+          notes: finalNotes,
+        });
       } catch {}
 
-      useMockTripStore.getState().unloadContainer(tripId, trip?.containers?.[0]?.id || 'c-1', time, trip?.destTerminal);
-      useMockTripStore.getState().updateTripStatus(tripId, 'PENDING_APPROVAL');
+      useMockTripStore.getState().submitCompletedTripToSupervisor(tripId, {
+        dischargeTerminal: finalDest,
+        dischargeBay: finalBay,
+        sealStatus,
+        damageStatus: cargoDamageStatus,
+        driverNotes: finalNotes,
+      });
+
+      setDischargeModalVisible(false);
       await loadData();
+
       Alert.alert(
-        'Delivery Completed! 📋',
-        'Containers discharged successfully. Completed trip has been sent to the Operations Supervisor for confirmation. Once confirmed, your completed trip count and earnings will update!'
+        'Submitted to Supervisor! 📋',
+        `Trip delivery has been successfully sent to the Port Operations Supervisor with Discharge Bay (${finalBay}), Seal Verification (${sealStatus}), and Cargo Condition. Once confirmed, your 300 Containers target (+1) will update!`
       );
     } catch {
-      useMockTripStore.getState().updateTripStatus(tripId, 'PENDING_APPROVAL');
+      useMockTripStore.getState().submitCompletedTripToSupervisor(tripId, {
+        dischargeTerminal: dischargeTerminal || getTripDischargeTerminal(activeTrip) || 'ECT',
+        dischargeBay: dischargeBay.trim() || 'Bay 04, Crane 02',
+        sealStatus,
+        damageStatus: cargoDamageStatus,
+        driverNotes: driverCompletionNotes.trim() || 'Containers discharged safely. Awaiting supervisor clearance.',
+      });
+      setDischargeModalVisible(false);
       await loadData();
       Alert.alert(
-        'Delivery Completed! 📋',
-        'Containers discharged successfully. Completed trip has been sent to the Operations Supervisor for confirmation. Once confirmed, your completed trip count and earnings will update!'
+        'Submitted to Supervisor! 📋',
+        'Trip delivery details sent to Port Operations Supervisor for verification and sign-off.'
       );
     } finally {
       setActionInProgress(false);
     }
   };
 
-  // 4. FINALIZE & COMPLETE TRIP DIRECTLY
+  // 5. BACKWARD-COMPATIBLE COMPLETE TRIP HANDLER
+  const handleCompleteActiveTrip = async (tripId: string) => {
+    const trip = trips.find((t) => t.id === tripId) || activeTrip;
+    handleOpenDischargeModal(trip);
+  };
+
   const handleFinalizeTripComplete = async (tripId: string) => {
-    setActionInProgress(true);
-    try {
-      try {
-        await axios.patch(`${API_BASE_URL}/trips/${tripId}/complete`);
-      } catch {}
-      useMockTripStore.getState().dischargeAndCompleteTrip(tripId, 'driver-completed');
-      await loadData();
-      Alert.alert(
-        'Mission Completed! 🏆',
-        'Trip status is now officially COMPLETED across Driver, Supervisor, and Admin. Completed trip count updated!'
-      );
-    } catch {
-      useMockTripStore.getState().dischargeAndCompleteTrip(tripId, 'driver-completed');
-      await loadData();
-      Alert.alert(
-        'Mission Completed! 🏆',
-        'Trip status is now officially COMPLETED across Driver, Supervisor, and Admin.'
-      );
-    } finally {
-      setActionInProgress(false);
-    }
+    handleOpenDischargeModal(activeTrip);
   };
 
   // Stage transition triggers for progress tracker
@@ -936,31 +970,58 @@ export default function DriverHomeDashboard() {
                   </Text>
                 </View>
                 <Text style={styles.notificationBannerMsg}>
-                  Trip delivered and containers discharged at {getTripDischargeTerminal(activeTrip)}! Your completed trip has been sent to the Operations Supervisor. As soon as the supervisor verifies and confirms, your completed trip count (+1) and allowance will update automatically.
+                  Trip delivered and containers discharged at {activeTrip.destTerminal || getTripDischargeTerminal(activeTrip)}! Complete operational discharge details have been transmitted to the Operations Supervisor for verification and sign-off.
                 </Text>
+
+                {/* Discharge & Seal Verification Manifest Card */}
+                <View style={styles.pendingDetailsCard}>
+                  <View style={styles.pendingDetailsRow}>
+                    <View style={styles.pendingDetailsCol}>
+                      <Text style={styles.pendingDetailsLabel}>DISCHARGE BAY / SLOT</Text>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
+                        <Ionicons name="location" size={12} color="#feb300" />
+                        <Text style={styles.pendingDetailsValue}>
+                          {activeTrip.destTerminal || getTripDischargeTerminal(activeTrip)} · {activeTrip.dischargeBay || 'Bay 04, Crane 02'}
+                        </Text>
+                      </View>
+                    </View>
+                    <View style={styles.pendingDetailsCol}>
+                      <Text style={styles.pendingDetailsLabel}>SEAL INTEGRITY</Text>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
+                        <Ionicons
+                          name={activeTrip.sealStatus?.includes('DAMAGED') ? 'warning' : 'shield-checkmark'}
+                          size={12}
+                          color={activeTrip.sealStatus?.includes('DAMAGED') ? '#ff5252' : '#22ef7e'}
+                        />
+                        <Text style={[styles.pendingDetailsValue, { color: activeTrip.sealStatus?.includes('DAMAGED') ? '#ff5252' : '#22ef7e' }]}>
+                          {activeTrip.sealStatus || 'INTACT (VERIFIED)'}
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
+
+                  <View style={styles.pendingDetailsRow}>
+                    <View style={styles.pendingDetailsCol}>
+                      <Text style={styles.pendingDetailsLabel}>CARGO CONDITION</Text>
+                      <Text style={[styles.pendingDetailsValue, { color: activeTrip.damageStatus === 'DAMAGED' ? '#ff5252' : '#22ef7e', marginTop: 2 }]}>
+                        {activeTrip.damageStatus === 'DAMAGED' ? '⚠️ DAMAGED' : '✓ SOUND (NO DAMAGE)'}
+                      </Text>
+                    </View>
+                    <View style={styles.pendingDetailsCol}>
+                      <Text style={styles.pendingDetailsLabel}>DRIVER SUBMISSION REMARKS</Text>
+                      <Text style={styles.pendingDetailsNotes} numberOfLines={2}>
+                        "{activeTrip.driverCompletionNotes || 'Containers discharged safely at destination berth. Seals inspected and verified intact.'}"
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+
                 <View style={styles.pendingActionInfoRow}>
                   <ActivityIndicator size="small" color="#feb300" />
                   <Text style={styles.pendingWaitingText}>
-                    Awaiting supervisor sign-off to update completed trip count...
+                    Waiting for supervisor sign-off to update 300 Containers target (+1) & allowance...
                   </Text>
                 </View>
-
-                {/* Direct complete action */}
-                <TouchableOpacity
-                  style={[styles.completeTripBtn, { backgroundColor: '#22ef7e', marginTop: 12 }]}
-                  onPress={() => handleFinalizeTripComplete(activeTrip.id)}
-                  disabled={actionInProgress}
-                  activeOpacity={0.88}
-                >
-                  {actionInProgress ? (
-                    <ActivityIndicator color="#00363d" size="small" />
-                  ) : (
-                    <>
-                      <Ionicons name="checkmark-done-circle" size={20} color="#00363d" />
-                      <Text style={styles.completeTripBtnText}>FINALIZE & MARK TRIP COMPLETED</Text>
-                    </>
-                  )}
-                </TouchableOpacity>
               </View>
             )}
 
@@ -1021,7 +1082,7 @@ export default function DriverHomeDashboard() {
               </View>
             )}
 
-            {/* STATE D: Arrived At Terminal -> COMPLETE TRIP & SEND TO SUPERVISOR */}
+            {/* STATE D: Arrived At Terminal -> DISCHARGE & SUBMIT FOR SUPERVISOR APPROVAL */}
             {activeTrip.status === 'ARRIVED' && (
               <View style={styles.notificationBannerArrived}>
                 <View style={styles.notificationBannerHeader}>
@@ -1031,42 +1092,26 @@ export default function DriverHomeDashboard() {
                   </Text>
                 </View>
                 <Text style={styles.notificationBannerMsg}>
-                  Containers are ready to be discharged from chassis {activeTrip.chassisNumber || user?.cheNumber || 'CHE 100'}. Once crane offloading is done, choose an option below to complete the mission.
+                  Containers are ready to be discharged from chassis {activeTrip.chassisNumber || user?.cheNumber || 'CHE 100'}. Verify offloading bay, container seal status, and cargo condition, then submit to Operations Supervisor for delivery clearance.
                 </Text>
 
-                <View style={{ flexDirection: 'row', gap: 8, marginTop: 10 }}>
-                  <TouchableOpacity
-                    style={[styles.completeTripBtn, { flex: 1 }]}
-                    onPress={() => handleCompleteActiveTrip(activeTrip.id)}
-                    disabled={actionInProgress}
-                    activeOpacity={0.88}
-                  >
-                    {actionInProgress ? (
-                      <ActivityIndicator color="#00363d" size="small" />
-                    ) : (
-                      <>
-                        <Ionicons name="paper-plane" size={18} color="#00363d" />
-                        <Text style={styles.completeTripBtnText}>SEND TO SUPERVISOR</Text>
-                      </>
-                    )}
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={[styles.completeTripBtn, { flex: 1, backgroundColor: '#22ef7e' }]}
-                    onPress={() => handleFinalizeTripComplete(activeTrip.id)}
-                    disabled={actionInProgress}
-                    activeOpacity={0.88}
-                  >
-                    {actionInProgress ? (
-                      <ActivityIndicator color="#00363d" size="small" />
-                    ) : (
-                      <>
-                        <Ionicons name="checkmark-done" size={18} color="#00363d" />
-                        <Text style={styles.completeTripBtnText}>MARK COMPLETED</Text>
-                      </>
-                    )}
-                  </TouchableOpacity>
-                </View>
+                <TouchableOpacity
+                  style={[styles.completeTripBtn, { backgroundColor: '#00e5ff', marginTop: 10 }]}
+                  onPress={() => handleOpenDischargeModal(activeTrip)}
+                  disabled={actionInProgress}
+                  activeOpacity={0.88}
+                >
+                  {actionInProgress ? (
+                    <ActivityIndicator color="#00363d" size="small" />
+                  ) : (
+                    <>
+                      <Ionicons name="paper-plane" size={18} color="#00363d" />
+                      <Text style={[styles.completeTripBtnText, { color: '#00363d' }]}>
+                        DISCHARGE & SUBMIT FOR SUPERVISOR APPROVAL
+                      </Text>
+                    </>
+                  )}
+                </TouchableOpacity>
               </View>
             )}
 
@@ -1403,6 +1448,219 @@ export default function DriverHomeDashboard() {
             </TouchableOpacity>
           </View>
         </View>
+      </Modal>
+
+      {/* ─── MODAL: DISCHARGE & SUBMIT TO SUPERVISOR ─── */}
+      <Modal visible={dischargeModalVisible} transparent animationType="slide">
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          style={styles.modalOverlay}
+        >
+          <View style={[styles.modalCard, { maxWidth: 460 }]}>
+            <View style={styles.modalHeader}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <Ionicons name="document-text" size={20} color="#00e5ff" />
+                <Text style={styles.modalTitle}>DISCHARGE & SUPERVISOR CLEARANCE</Text>
+              </View>
+              <TouchableOpacity onPress={() => setDischargeModalVisible(false)}>
+                <Ionicons name="close" size={22} color="#849396" />
+              </TouchableOpacity>
+            </View>
+
+            <Text style={styles.modalSubtitle}>
+              Confirm accurate discharge bay, seal verification, and cargo condition. Details are transmitted directly to the Operations Supervisor for verification and sign-off.
+            </Text>
+
+            {/* Discharge Terminal */}
+            <View style={{ gap: 4 }}>
+              <Text style={styles.modalLabel}>DESTINATION DISCHARGE TERMINAL</Text>
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
+                {TERMINALS.map((term) => {
+                  const isSel = dischargeTerminal === term;
+                  return (
+                    <TouchableOpacity
+                      key={term}
+                      style={[styles.termSelectChip, isSel && styles.termSelectChipActive]}
+                      onPress={() => setDischargeTerminal(term)}
+                      activeOpacity={0.8}
+                    >
+                      <Text style={[styles.termSelectChipText, isSel && styles.termSelectChipTextActive]}>
+                        {term}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </View>
+
+            {/* Discharge Bay / Yard Slot */}
+            <View style={{ gap: 4 }}>
+              <Text style={styles.modalLabel}>DISCHARGE BAY / CRANE SLOT</Text>
+              <View style={styles.inputWrap}>
+                <Ionicons name="location-outline" size={16} color="#00e5ff" />
+                <TextInput
+                  style={styles.modalInput}
+                  placeholder="e.g. Bay 04, Crane 02 / Block C-14"
+                  placeholderTextColor="#849396"
+                  value={dischargeBay}
+                  onChangeText={setDischargeBay}
+                />
+              </View>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6, marginTop: 4 }}>
+                {['Bay 04, Crane 02', 'Bay 12, Crane 05', 'Block C, Row 14', 'Yard Slot 08-A'].map((preset) => (
+                  <TouchableOpacity
+                    key={preset}
+                    style={[styles.presetChip, dischargeBay === preset && styles.presetChipActive]}
+                    onPress={() => setDischargeBay(preset)}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={[styles.presetChipText, dischargeBay === preset && styles.presetChipTextActive]}>
+                      {preset}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
+
+            {/* Seal Status Selection */}
+            <View style={{ gap: 4 }}>
+              <Text style={styles.modalLabel}>CONTAINER SEAL VERIFICATION</Text>
+              <View style={{ flexDirection: 'row', gap: 8 }}>
+                <TouchableOpacity
+                  style={[
+                    styles.toggleOptionBtn,
+                    sealStatus === 'INTACT (VERIFIED)' && styles.toggleOptionBtnGreenActive,
+                  ]}
+                  onPress={() => setSealStatus('INTACT (VERIFIED)')}
+                  activeOpacity={0.8}
+                >
+                  <Ionicons
+                    name="shield-checkmark"
+                    size={15}
+                    color={sealStatus === 'INTACT (VERIFIED)' ? '#00363d' : '#22ef7e'}
+                  />
+                  <Text
+                    style={[
+                      styles.toggleOptionBtnText,
+                      sealStatus === 'INTACT (VERIFIED)' && styles.toggleOptionBtnTextDark,
+                    ]}
+                  >
+                    SEALS INTACT (VERIFIED)
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[
+                    styles.toggleOptionBtn,
+                    sealStatus === 'DAMAGED / TAMPERED' && styles.toggleOptionBtnRedActive,
+                  ]}
+                  onPress={() => setSealStatus('DAMAGED / TAMPERED')}
+                  activeOpacity={0.8}
+                >
+                  <Ionicons
+                    name="warning"
+                    size={15}
+                    color={sealStatus === 'DAMAGED / TAMPERED' ? '#fff' : '#ff5252'}
+                  />
+                  <Text
+                    style={[
+                      styles.toggleOptionBtnText,
+                      sealStatus === 'DAMAGED / TAMPERED' && styles.toggleOptionBtnTextWhite,
+                    ]}
+                  >
+                    SEAL DEFECTIVE
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* Cargo Condition Selection */}
+            <View style={{ gap: 4 }}>
+              <Text style={styles.modalLabel}>CARGO CONDITION</Text>
+              <View style={{ flexDirection: 'row', gap: 8 }}>
+                <TouchableOpacity
+                  style={[
+                    styles.toggleOptionBtn,
+                    cargoDamageStatus === 'NONE' && styles.toggleOptionBtnGreenActive,
+                  ]}
+                  onPress={() => setCargoDamageStatus('NONE')}
+                  activeOpacity={0.8}
+                >
+                  <Ionicons
+                    name="checkmark-circle"
+                    size={15}
+                    color={cargoDamageStatus === 'NONE' ? '#00363d' : '#22ef7e'}
+                  />
+                  <Text
+                    style={[
+                      styles.toggleOptionBtnText,
+                      cargoDamageStatus === 'NONE' && styles.toggleOptionBtnTextDark,
+                    ]}
+                  >
+                    SOUND (NO DAMAGE)
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[
+                    styles.toggleOptionBtn,
+                    cargoDamageStatus === 'DAMAGED' && styles.toggleOptionBtnRedActive,
+                  ]}
+                  onPress={() => setCargoDamageStatus('DAMAGED')}
+                  activeOpacity={0.8}
+                >
+                  <Ionicons
+                    name="alert-circle"
+                    size={15}
+                    color={cargoDamageStatus === 'DAMAGED' ? '#fff' : '#ff5252'}
+                  />
+                  <Text
+                    style={[
+                      styles.toggleOptionBtnText,
+                      cargoDamageStatus === 'DAMAGED' && styles.toggleOptionBtnTextWhite,
+                    ]}
+                  >
+                    DAMAGE REPORTED
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* Driver Operational Remarks */}
+            <View style={{ gap: 4 }}>
+              <Text style={styles.modalLabel}>DRIVER COMPLETION REMARKS</Text>
+              <View style={[styles.inputWrap, { height: 68, alignItems: 'flex-start', paddingTop: 6 }]}>
+                <TextInput
+                  style={[styles.modalInput, { height: 56, textAlignVertical: 'top' }]}
+                  placeholder="Enter completion remarks (e.g. Discharged at Berth 04 without delay)..."
+                  placeholderTextColor="#849396"
+                  multiline
+                  value={driverCompletionNotes}
+                  onChangeText={setDriverCompletionNotes}
+                />
+              </View>
+            </View>
+
+            {/* Submit Action */}
+            <TouchableOpacity
+              style={[styles.modalSubmitBtn, { backgroundColor: '#00e5ff', marginTop: 4 }]}
+              onPress={() => activeTrip && handleSubmitDischargeToSupervisor(activeTrip.id)}
+              disabled={actionInProgress}
+              activeOpacity={0.88}
+            >
+              {actionInProgress ? (
+                <ActivityIndicator color="#00363d" size="small" />
+              ) : (
+                <>
+                  <Ionicons name="paper-plane" size={18} color="#00363d" />
+                  <Text style={[styles.modalSubmitBtnText, { color: '#00363d', fontWeight: '900' }]}>
+                    SUBMIT FOR SUPERVISOR APPROVAL
+                  </Text>
+                </>
+              )}
+            </TouchableOpacity>
+          </View>
+        </KeyboardAvoidingView>
       </Modal>
 
       {/* ─── MODAL: 50 CONTAINERS CELEBRATION WITH ANIMATION ─── */}
@@ -3856,5 +4114,124 @@ const styles = StyleSheet.create({
     fontSize: 10.5,
     fontWeight: '900',
     letterSpacing: 0.5,
+  },
+
+  // ─── PENDING DETAILS CARD (DISCHARGE & SEAL VERIFICATION) ───
+  pendingDetailsCard: {
+    backgroundColor: '#080e17',
+    borderWidth: 1,
+    borderColor: 'rgba(254, 179, 0, 0.35)',
+    borderRadius: 8,
+    padding: 10,
+    gap: 8,
+    marginTop: 4,
+  },
+  pendingDetailsRow: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  pendingDetailsCol: {
+    flex: 1,
+  },
+  pendingDetailsLabel: {
+    fontSize: 8.5,
+    fontWeight: '800',
+    color: '#849396',
+    letterSpacing: 0.5,
+  },
+  pendingDetailsValue: {
+    fontSize: 10.5,
+    fontWeight: '800',
+    color: '#00e5ff',
+  },
+  pendingDetailsNotes: {
+    fontSize: 9.5,
+    color: '#bac9cc',
+    fontStyle: 'italic',
+    marginTop: 2,
+    lineHeight: 13,
+  },
+
+  // ─── DISCHARGE MODAL CONTROLS ───
+  modalSubtitle: {
+    color: '#bac9cc',
+    fontSize: 10.5,
+    lineHeight: 15,
+  },
+  termSelectChip: {
+    backgroundColor: '#161c25',
+    borderWidth: 1,
+    borderColor: '#242a34',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 6,
+  },
+  termSelectChipActive: {
+    backgroundColor: 'rgba(0, 229, 255, 0.15)',
+    borderColor: '#00e5ff',
+  },
+  termSelectChipText: {
+    color: '#849396',
+    fontSize: 10,
+    fontWeight: '800',
+  },
+  termSelectChipTextActive: {
+    color: '#00e5ff',
+    fontWeight: '900',
+  },
+  presetChip: {
+    backgroundColor: '#161c25',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 229, 255, 0.25)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  presetChipActive: {
+    backgroundColor: 'rgba(0, 229, 255, 0.2)',
+    borderColor: '#00e5ff',
+  },
+  presetChipText: {
+    color: '#849396',
+    fontSize: 9.5,
+    fontWeight: '700',
+  },
+  presetChipTextActive: {
+    color: '#00e5ff',
+    fontWeight: '800',
+  },
+  toggleOptionBtn: {
+    flex: 1,
+    height: 38,
+    backgroundColor: '#161c25',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#242a34',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingHorizontal: 4,
+  },
+  toggleOptionBtnGreenActive: {
+    backgroundColor: '#22ef7e',
+    borderColor: '#22ef7e',
+  },
+  toggleOptionBtnRedActive: {
+    backgroundColor: '#ff5252',
+    borderColor: '#ff5252',
+  },
+  toggleOptionBtnText: {
+    fontSize: 9.5,
+    fontWeight: '800',
+    color: '#dde2f0',
+  },
+  toggleOptionBtnTextDark: {
+    color: '#00363d',
+    fontWeight: '900',
+  },
+  toggleOptionBtnTextWhite: {
+    color: '#ffffff',
+    fontWeight: '900',
   },
 });

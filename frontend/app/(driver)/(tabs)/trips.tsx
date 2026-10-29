@@ -121,20 +121,45 @@ export default function DriverJobQueue() {
     setUpdatingId(tripId);
     try {
       const trip = trips.find((t) => t.id === tripId);
-      const containerUpdates = (trip?.containers || []).map((c: any) => ({
-        containerId: c.id,
-        unloadedTerminal: unloadSelections[c.id] || c.unloadedTerminal || trip?.destTerminal || 'ECT',
-      }));
+      const selTerm = (trip?.containers || []).map((c: any) => unloadSelections[c.id]).filter(Boolean)[0] || trip?.destTerminal || 'ECT';
+      const dischargeBay = trip?.dischargeBay || 'Bay 04, Crane 02';
+      const sealStatus = trip?.sealStatus || 'INTACT (VERIFIED)';
+      const damageStatus = trip?.damageStatus || 'NONE';
+      const driverNotes = trip?.driverCompletionNotes || 'Containers discharged safely at destination terminal berth. Seals verified.';
 
-      await axios.patch(`${API_BASE_URL}/trips/${tripId}/complete`, { containerUpdates }).catch(() => {});
-      useMockTripStore.getState().unloadContainer(tripId, trip?.containers?.[0]?.id || 'c-1', new Date().toISOString());
-      useMockTripStore.getState().updateTripStatus(tripId, 'PENDING_APPROVAL');
-      showMessage('Trip Submitted to Supervisor! 📋', 'Containers discharged at destination. Submitted to Port Operations Supervisor to confirm delivery and update your trip count!');
+      await axios.patch(`${API_BASE_URL}/trips/${tripId}/complete`, {
+        dischargeTerminal: selTerm,
+        dischargeBay,
+        sealStatus,
+        damageStatus,
+        driverNotes,
+      }).catch(() => {});
+      await axios.patch(`${API_BASE_URL}/trips/${tripId}/submit`, { notes: driverNotes }).catch(() => {});
+
+      useMockTripStore.getState().submitCompletedTripToSupervisor(tripId, {
+        dischargeTerminal: selTerm,
+        dischargeBay,
+        sealStatus,
+        damageStatus,
+        driverNotes,
+      });
+      showMessage(
+        'Trip Submitted to Supervisor! 📋',
+        'Discharge details & seal status submitted to Port Operations Supervisor to confirm delivery and credit your 300 Containers target (+1)!'
+      );
       fetchTrips();
     } catch {
-      useMockTripStore.getState().unloadContainer(tripId, 'c-1', new Date().toISOString());
-      useMockTripStore.getState().updateTripStatus(tripId, 'PENDING_APPROVAL');
-      showMessage('Trip Submitted to Supervisor! 📋', 'Containers discharged at destination. Submitted to Port Operations Supervisor to confirm delivery and update your trip count!');
+      useMockTripStore.getState().submitCompletedTripToSupervisor(tripId, {
+        dischargeTerminal: 'ECT',
+        dischargeBay: 'Bay 04, Crane 02',
+        sealStatus: 'INTACT (VERIFIED)',
+        damageStatus: 'NONE',
+        driverNotes: 'Containers discharged safely. Awaiting supervisor clearance.',
+      });
+      showMessage(
+        'Trip Submitted to Supervisor! 📋',
+        'Discharge details submitted to Port Operations Supervisor for clearance.'
+      );
       fetchTrips();
     } finally {
       setUpdatingId(null);
@@ -142,19 +167,7 @@ export default function DriverJobQueue() {
   };
 
   const handleDirectCompleteTrip = async (tripId: string) => {
-    setUpdatingId(tripId);
-    try {
-      await axios.patch(`${API_BASE_URL}/trips/${tripId}/complete`).catch(() => {});
-      useMockTripStore.getState().dischargeAndCompleteTrip(tripId, 'driver-completed');
-      showMessage('Trip Completed! 🏆', 'Trip status is now officially COMPLETED across Driver, Supervisor, and Admin.');
-      fetchTrips();
-    } catch {
-      useMockTripStore.getState().dischargeAndCompleteTrip(tripId, 'driver-completed');
-      showMessage('Trip Completed! 🏆', 'Trip status is now officially COMPLETED.');
-      fetchTrips();
-    } finally {
-      setUpdatingId(null);
-    }
+    handleCompleteTrip(tripId);
   };
 
   const completedCount = trips.filter((t) => t.status === 'COMPLETED' || t.status === 'APPROVED').length;
@@ -448,23 +461,57 @@ export default function DriverJobQueue() {
                       <View style={styles.pendingNoticeBox}>
                         <Ionicons name="time-outline" size={16} color="#feb300" />
                         <Text style={styles.pendingNoticeText}>
-                          Containers discharged at {getTripDischargeTerminal(trip)}. Awaiting Operations Supervisor confirmation to credit your completed trip count & allowance.
+                          Cargo discharged at {getTripDischargeTerminal(trip)}. Submitted to Port Operations Supervisor for delivery verification & sign-off.
                         </Text>
                       </View>
-                      <TouchableOpacity
-                        style={[styles.completeBtn, { backgroundColor: '#22ef7e' }]}
-                        onPress={() => handleDirectCompleteTrip(trip.id)}
-                        disabled={updatingId === trip.id}
-                      >
-                        {updatingId === trip.id ? (
-                          <ActivityIndicator size="small" color="#00363d" />
-                        ) : (
-                          <>
-                            <Ionicons name="checkmark-done-circle" size={18} color="#00363d" />
-                            <Text style={styles.completeBtnText}>FINALIZE & MARK TRIP COMPLETED</Text>
-                          </>
-                        )}
-                      </TouchableOpacity>
+
+                      {/* Discharge Manifest Summary */}
+                      <View style={{
+                        backgroundColor: '#080e17',
+                        borderRadius: 8,
+                        borderWidth: 1,
+                        borderColor: 'rgba(254, 179, 0, 0.3)',
+                        padding: 8,
+                        gap: 6,
+                      }}>
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                            <Ionicons name="location" size={12} color="#feb300" />
+                            <Text style={{ fontSize: 10, fontWeight: '800', color: '#00e5ff' }}>
+                              {trip.destTerminal} · {trip.dischargeBay || 'Bay 04, Crane 02'}
+                            </Text>
+                          </View>
+                          <View style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            gap: 4,
+                            backgroundColor: trip.sealStatus?.includes('DAMAGED') ? 'rgba(255, 82, 82, 0.15)' : 'rgba(34, 239, 126, 0.15)',
+                            paddingHorizontal: 6,
+                            paddingVertical: 2,
+                            borderRadius: 4,
+                          }}>
+                            <Ionicons
+                              name={trip.sealStatus?.includes('DAMAGED') ? 'warning' : 'shield-checkmark'}
+                              size={11}
+                              color={trip.sealStatus?.includes('DAMAGED') ? '#ff5252' : '#22ef7e'}
+                            />
+                            <Text style={{ fontSize: 9, fontWeight: '800', color: trip.sealStatus?.includes('DAMAGED') ? '#ff5252' : '#22ef7e' }}>
+                              {trip.sealStatus || 'INTACT (VERIFIED)'}
+                            </Text>
+                          </View>
+                        </View>
+
+                        <Text style={{ fontSize: 9.5, color: '#bac9cc', fontStyle: 'italic' }} numberOfLines={2}>
+                          Notes: "{trip.driverCompletionNotes || 'Containers discharged safely at destination terminal berth.'}"
+                        </Text>
+                      </View>
+
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, justifyContent: 'center', paddingVertical: 4 }}>
+                        <ActivityIndicator size="small" color="#feb300" />
+                        <Text style={{ fontSize: 10, fontWeight: '700', color: '#feb300' }}>
+                          Awaiting supervisor approval to credit container quota (+1)...
+                        </Text>
+                      </View>
                     </View>
                   )}
 
@@ -509,46 +556,32 @@ export default function DriverJobQueue() {
                     </TouchableOpacity>
                   )}
 
-                  {/* ─── State 4: ARRIVED -> DISCHARGE & COMPLETE ─── */}
+                  {/* ─── State 4: ARRIVED -> DISCHARGE & SUBMIT FOR SUPERVISOR APPROVAL ─── */}
                   {isProgress && arrivedTrips.has(trip.id) && (
                     <View style={{ gap: 8 }}>
                       <View style={styles.arrivedNoticeBox}>
                         <Ionicons name="pin" size={16} color="#22ef7e" />
                         <Text style={styles.arrivedNoticeText}>
-                          Arrived at {getTripDischargeTerminal(trip)}. Confirm unload bay and discharge cargo.
+                          Arrived at {getTripDischargeTerminal(trip)}. Confirm discharge bay and submit mission for supervisor approval.
                         </Text>
                       </View>
-                      <View style={{ flexDirection: 'row', gap: 8 }}>
-                        <TouchableOpacity
-                          style={[styles.completeBtn, { flex: 1, backgroundColor: '#feb300' }]}
-                          onPress={() => handleCompleteTrip(trip.id)}
-                          disabled={updatingId === trip.id}
-                        >
-                          {updatingId === trip.id ? (
-                            <ActivityIndicator size="small" color="#00363d" />
-                          ) : (
-                            <>
-                              <Ionicons name="paper-plane" size={16} color="#00363d" />
-                              <Text style={styles.completeBtnText}>SEND TO SUPERVISOR</Text>
-                            </>
-                          )}
-                        </TouchableOpacity>
 
-                        <TouchableOpacity
-                          style={[styles.completeBtn, { flex: 1, backgroundColor: '#22ef7e' }]}
-                          onPress={() => handleDirectCompleteTrip(trip.id)}
-                          disabled={updatingId === trip.id}
-                        >
-                          {updatingId === trip.id ? (
-                            <ActivityIndicator size="small" color="#00363d" />
-                          ) : (
-                            <>
-                              <Ionicons name="checkmark-done" size={16} color="#00363d" />
-                              <Text style={styles.completeBtnText}>MARK COMPLETED</Text>
-                            </>
-                          )}
-                        </TouchableOpacity>
-                      </View>
+                      <TouchableOpacity
+                        style={[styles.completeBtn, { backgroundColor: '#00e5ff' }]}
+                        onPress={() => handleCompleteTrip(trip.id)}
+                        disabled={updatingId === trip.id}
+                      >
+                        {updatingId === trip.id ? (
+                          <ActivityIndicator size="small" color="#00363d" />
+                        ) : (
+                          <>
+                            <Ionicons name="paper-plane" size={16} color="#00363d" />
+                            <Text style={[styles.completeBtnText, { color: '#00363d' }]}>
+                              DISCHARGE & SUBMIT FOR SUPERVISOR APPROVAL
+                            </Text>
+                          </>
+                        )}
+                      </TouchableOpacity>
                     </View>
                   )}
 

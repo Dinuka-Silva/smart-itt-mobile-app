@@ -14,6 +14,9 @@ export interface MockContainer {
   damageStatus?: 'NONE' | 'DAMAGED' | string;
   isReturn?: boolean;
   cargoType?: string;
+  sealNumber?: string;
+  sealStatus?: 'INTACT' | 'DEFECTIVE' | 'VERIFIED' | string;
+  dischargeBay?: string;
 }
 
 export interface MockTrip {
@@ -22,6 +25,7 @@ export interface MockTrip {
   driverId: string;
   driverCode?: string;
   driverName: string;
+  driverPhone?: string;
   vehicleNumber: string;
   chassisNumber?: string;
   chaiNumber?: string;
@@ -40,7 +44,18 @@ export interface MockTrip {
   startTime: string;
   endTime?: string;
   createdAt?: string;
+  arrivedAt?: string;
   dischargedAt?: string;
+  dischargeBay?: string;
+  driverCompletionNotes?: string;
+  sealStatus?: string;
+  damageStatus?: string;
+  approvedAt?: string;
+  approvedBy?: string;
+  supervisorApprovalNotes?: string;
+  rejectedAt?: string;
+  rejectedBy?: string;
+  rejectionReason?: string;
 }
 
 interface MockTripState {
@@ -51,6 +66,18 @@ interface MockTripState {
   getPendingTrips: () => MockTrip[];
   unloadContainer: (tripId: string, containerId: string, unloadedAt?: string, destTerminal?: string) => void;
   dischargeAndCompleteTrip: (tripId: string, supervisorId?: string) => void;
+  submitCompletedTripToSupervisor: (
+    tripId: string,
+    details?: {
+      dischargeTerminal?: string;
+      dischargeBay?: string;
+      driverNotes?: string;
+      sealStatus?: string;
+      damageStatus?: string;
+    }
+  ) => void;
+  approveTripBySupervisor: (tripId: string, supervisorName?: string, notes?: string) => void;
+  rejectTripBySupervisor: (tripId: string, supervisorName?: string, reason?: string) => void;
   addManualContainerToTrip: (tripId: string | undefined, container: any) => void;
 }
 
@@ -124,8 +151,12 @@ const initialTrips: MockTrip[] = [
     dispatchTime: '09:20',
     isReturn: true,
     dischargedAt: todayTrip2Discharged,
+    dischargeBay: 'Bay 04, Crane 02',
+    driverCompletionNotes: '40FT High-Cube container discharged safely at UCT Bay 04. Harbor seals intact.',
+    sealStatus: 'INTACT (VERIFIED)',
+    damageStatus: 'NONE',
     containers: [
-      { id: 'c-103', containerNumber: 'CMAU9012347', size: '40FT', isoType: '40HC', status: 'DISCHARGED', loadedAt: todayTrip2Start, unloadedAt: todayTrip2Discharged, destTerminal: 'UCT', damageStatus: 'NONE', isReturn: true, cargoType: 'RETURN' },
+      { id: 'c-103', containerNumber: 'CMAU9012347', size: '40FT', isoType: '40HC', status: 'DISCHARGED', loadedAt: todayTrip2Start, unloadedAt: todayTrip2Discharged, destTerminal: 'UCT', damageStatus: 'NONE', isReturn: true, cargoType: 'RETURN', sealNumber: 'SLPA-88129', sealStatus: 'INTACT (VERIFIED)', dischargeBay: 'Bay 04' },
     ],
   },
   {
@@ -146,8 +177,12 @@ const initialTrips: MockTrip[] = [
     operationTime: '09:00',
     dispatchTime: '09:20',
     dischargedAt: todayTrip2Discharged,
+    dischargeBay: 'Bay 12, Gantry 03',
+    driverCompletionNotes: 'Transferred from SAGT to CICT. Offloaded safely under Gantry 03.',
+    sealStatus: 'INTACT (VERIFIED)',
+    damageStatus: 'DAMAGED',
     containers: [
-      { id: 'c-104', containerNumber: 'MSCU4491022', size: '40FT', isoType: '40HC', status: 'DISCHARGED', loadedAt: todayTrip2Start, unloadedAt: todayTrip2Discharged, destTerminal: 'CICT', damageStatus: 'DAMAGED' },
+      { id: 'c-104', containerNumber: 'MSCU4491022', size: '40FT', isoType: '40HC', status: 'DISCHARGED', loadedAt: todayTrip2Start, unloadedAt: todayTrip2Discharged, destTerminal: 'CICT', damageStatus: 'DAMAGED', sealNumber: 'MSC-99014', sealStatus: 'INTACT (VERIFIED)', dischargeBay: 'Bay 12' },
     ],
   },
   {
@@ -334,7 +369,80 @@ export const useMockTripStore = create<MockTripState>((set, get) => ({
           status: 'COMPLETED' as const,
           endTime: time,
           dischargedAt: t.dischargedAt || time,
+          approvedAt: time,
+          approvedBy: supervisorId || 'Operations Supervisor',
           containers: newContainers,
+        };
+      });
+      return { mockTrips: newTrips };
+    }),
+
+  submitCompletedTripToSupervisor: (tripId, details) =>
+    set((state) => {
+      const time = new Date().toISOString();
+      const newTrips = state.mockTrips.map((t) => {
+        if (t.id !== tripId) return t;
+        const targetTerm = details?.dischargeTerminal || t.destTerminal;
+        const newContainers = (t.containers || []).map((c) => ({
+          ...c,
+          status: 'DISCHARGED' as const,
+          unloadedAt: c.unloadedAt || time,
+          unloadedTerminal: targetTerm,
+          sealStatus: details?.sealStatus || c.sealStatus || 'INTACT (VERIFIED)',
+          damageStatus: details?.damageStatus || c.damageStatus || 'NONE',
+          dischargeBay: details?.dischargeBay || c.dischargeBay || 'Bay 04',
+        }));
+        return {
+          ...t,
+          status: 'PENDING_APPROVAL' as const,
+          dischargedAt: time,
+          destTerminal: targetTerm,
+          dischargeBay: details?.dischargeBay || 'Bay 04, Crane 02',
+          driverCompletionNotes: details?.driverNotes || 'Containers discharged safely at destination terminal. Awaiting supervisor clearance.',
+          sealStatus: details?.sealStatus || 'INTACT (VERIFIED)',
+          damageStatus: details?.damageStatus || 'NONE',
+          containers: newContainers,
+        };
+      });
+      return { mockTrips: newTrips };
+    }),
+
+  approveTripBySupervisor: (tripId, supervisorName, notes) =>
+    set((state) => {
+      const time = new Date().toISOString();
+      const newTrips = state.mockTrips.map((t) => {
+        if (t.id !== tripId) return t;
+        const newContainers = (t.containers || []).map((c) => ({
+          ...c,
+          status: 'DISCHARGED' as const,
+          unloadedAt: c.unloadedAt || time,
+          unloadedTerminal: c.unloadedTerminal || t.destTerminal,
+        }));
+        return {
+          ...t,
+          status: 'COMPLETED' as const,
+          endTime: time,
+          dischargedAt: t.dischargedAt || time,
+          approvedAt: time,
+          approvedBy: supervisorName || 'Port Operations Supervisor',
+          supervisorApprovalNotes: notes || 'Delivery confirmed & approved by Operations Supervisor',
+          containers: newContainers,
+        };
+      });
+      return { mockTrips: newTrips };
+    }),
+
+  rejectTripBySupervisor: (tripId, supervisorName, reason) =>
+    set((state) => {
+      const time = new Date().toISOString();
+      const newTrips = state.mockTrips.map((t) => {
+        if (t.id !== tripId) return t;
+        return {
+          ...t,
+          status: 'REJECTED' as const,
+          rejectedAt: time,
+          rejectedBy: supervisorName || 'Port Operations Supervisor',
+          rejectionReason: reason || 'Cargo inspection hold / clearance rejected by supervisor',
         };
       });
       return { mockTrips: newTrips };

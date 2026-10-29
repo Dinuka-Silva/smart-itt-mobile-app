@@ -65,16 +65,30 @@ export default function SupervisorApprovals() {
     fetchPending();
   };
 
+  const supervisorName = user?.name || user?.fullName || 'Nimal Silva';
+  const supervisorInitials = supervisorName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase();
+  const currentDateFormatted = new Date().toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  }).toUpperCase();
+
   const handleApprove = async (tripId: string) => {
     setProcessingId(tripId);
     try {
       await tripService.approveTrip(tripId, user?.supervisorId || user?.id || 'sup-001', 'Delivery confirmed & approved by Operations Supervisor');
-      useMockTripStore.getState().updateTripStatus(tripId, 'COMPLETED');
-      Alert.alert('Trip Confirmed & Completed! ✅', `Trip ${tripId} delivery has been approved. Driver completed trip count (+1) and main system metrics have been updated.`);
+      useMockTripStore.getState().approveTripBySupervisor(tripId, supervisorName, 'Delivery confirmed & approved by Operations Supervisor');
+      Alert.alert(
+        'Trip Confirmed & Completed! ✅',
+        `Trip ${tripId} delivery has been approved. Driver completed container count (+1 towards 300 target) and main system metrics have been updated.`
+      );
       fetchPending();
     } catch {
-      useMockTripStore.getState().updateTripStatus(tripId, 'COMPLETED');
-      Alert.alert('Trip Confirmed & Completed! ✅', `Trip ${tripId} delivery has been approved. Driver completed trip count (+1) and main system metrics have been updated.`);
+      useMockTripStore.getState().approveTripBySupervisor(tripId, supervisorName, 'Delivery confirmed & approved by Operations Supervisor');
+      Alert.alert(
+        'Trip Confirmed & Completed! ✅',
+        `Trip ${tripId} delivery has been approved. Driver completed container count (+1 towards 300 target) and main system metrics have been updated.`
+      );
       fetchPending();
     } finally {
       setProcessingId(null);
@@ -98,12 +112,12 @@ export default function SupervisorApprovals() {
     setProcessingId(tripId);
     try {
       await tripService.rejectTrip(tripId, user?.supervisorId || user?.id || 'sup-001', rejectionReason.trim());
-      useMockTripStore.getState().updateTripStatus(tripId, 'REJECTED');
+      useMockTripStore.getState().rejectTripBySupervisor(tripId, supervisorName, rejectionReason.trim());
       setRejectModalVisible(false);
       Alert.alert('Trip Rejected', `Trip ${tripToReject.tripNumber || tripId} has been rejected.`);
       fetchPending();
     } catch {
-      useMockTripStore.getState().updateTripStatus(tripId, 'REJECTED');
+      useMockTripStore.getState().rejectTripBySupervisor(tripId, supervisorName, rejectionReason.trim());
       setRejectModalVisible(false);
       Alert.alert('Trip Rejected (Local)', `Trip ${tripToReject.tripNumber || tripId} has been rejected.`);
       fetchPending();
@@ -111,14 +125,6 @@ export default function SupervisorApprovals() {
       setProcessingId(null);
     }
   };
-
-  const supervisorName = user?.name || user?.fullName || 'Nimal Silva';
-  const supervisorInitials = supervisorName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase();
-  const currentDateFormatted = new Date().toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  }).toUpperCase();
 
   return (
     <View style={styles.container}>
@@ -289,6 +295,78 @@ export default function SupervisorApprovals() {
                         <Text style={styles.containerDischargeText}>➔ {c.destTerminal || to}</Text>
                       </View>
                     ))}
+                  </View>
+
+                  {/* ─── DRIVER DISCHARGE & CARGO INSPECTION VERIFICATION PANEL ─── */}
+                  <View style={styles.dischargeVerificationCard}>
+                    <View style={styles.dischargeVerificationHeader}>
+                      <Ionicons name="clipboard" size={13} color="#00e5ff" />
+                      <Text style={styles.dischargeVerificationTitle}>
+                        DRIVER DISCHARGE & SEAL VERIFICATION MANIFEST
+                      </Text>
+                    </View>
+
+                    <View style={styles.dischargeGrid}>
+                      {/* Row 1: Bay / Slot & Seal Status */}
+                      <View style={styles.dischargeGridRow}>
+                        <View style={styles.dischargeGridCol}>
+                          <Text style={styles.dischargeGridLabel}>DISCHARGE BAY / CRANE SLOT</Text>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 2 }}>
+                            <Ionicons name="location" size={12} color="#feb300" />
+                            <Text style={styles.dischargeGridValue}>
+                              {trip.destTerminal || to} · {trip.dischargeBay || 'Bay 04, Crane 02'}
+                            </Text>
+                          </View>
+                        </View>
+
+                        <View style={styles.dischargeGridCol}>
+                          <Text style={styles.dischargeGridLabel}>SEAL INTEGRITY</Text>
+                          <View style={[
+                            styles.sealBadge,
+                            trip.sealStatus?.includes('DAMAGED') ? styles.sealBadgeDamaged : styles.sealBadgeIntact,
+                          ]}>
+                            <Ionicons
+                              name={trip.sealStatus?.includes('DAMAGED') ? 'warning' : 'shield-checkmark'}
+                              size={11}
+                              color={trip.sealStatus?.includes('DAMAGED') ? '#ff5252' : '#22ef7e'}
+                            />
+                            <Text style={[
+                              styles.sealBadgeText,
+                              { color: trip.sealStatus?.includes('DAMAGED') ? '#ff5252' : '#22ef7e' }
+                            ]}>
+                              {trip.sealStatus || 'INTACT (VERIFIED)'}
+                            </Text>
+                          </View>
+                        </View>
+                      </View>
+
+                      {/* Row 2: Cargo Condition & Driver Notes */}
+                      <View style={styles.dischargeGridRow}>
+                        <View style={styles.dischargeGridCol}>
+                          <Text style={styles.dischargeGridLabel}>CARGO CONDITION</Text>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 2 }}>
+                            <Ionicons
+                              name={trip.damageStatus === 'DAMAGED' ? 'alert-circle' : 'checkmark-circle'}
+                              size={12}
+                              color={trip.damageStatus === 'DAMAGED' ? '#ff5252' : '#22ef7e'}
+                            />
+                            <Text style={[
+                              styles.dischargeGridValue,
+                              { color: trip.damageStatus === 'DAMAGED' ? '#ff5252' : '#22ef7e' }
+                            ]}>
+                              {trip.damageStatus === 'DAMAGED' ? 'DAMAGE REPORTED' : 'SOUND (NO DAMAGE)'}
+                            </Text>
+                          </View>
+                        </View>
+
+                        <View style={styles.dischargeGridCol}>
+                          <Text style={styles.dischargeGridLabel}>DRIVER SUBMISSION REMARKS</Text>
+                          <Text style={styles.dischargeDriverNotesText} numberOfLines={2}>
+                            "{trip.driverCompletionNotes || 'Discharged cargo safely at destination berth. Seals inspected and verified intact.'}"
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
                   </View>
 
                   {/* Decision Buttons */}
@@ -762,5 +840,83 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     letterSpacing: 0.6,
     color: '#fff',
+  },
+
+  // ─── DRIVER DISCHARGE & SEAL VERIFICATION MANIFEST ───
+  dischargeVerificationCard: {
+    backgroundColor: '#0d1420',
+    borderRadius: radius.sm,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 229, 255, 0.25)',
+    padding: 10,
+    gap: 6,
+    marginTop: 4,
+  },
+  dischargeVerificationHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingBottom: 4,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.06)',
+  },
+  dischargeVerificationTitle: {
+    fontSize: 9,
+    fontWeight: '900',
+    color: '#00e5ff',
+    letterSpacing: 0.5,
+  },
+  dischargeGrid: {
+    gap: 6,
+    marginTop: 2,
+  },
+  dischargeGridRow: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  dischargeGridCol: {
+    flex: 1,
+  },
+  dischargeGridLabel: {
+    fontSize: 8,
+    fontWeight: '800',
+    color: '#849396',
+    letterSpacing: 0.4,
+  },
+  dischargeGridValue: {
+    fontSize: 10.5,
+    fontWeight: '800',
+    color: '#dde2f0',
+  },
+  sealBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    alignSelf: 'flex-start',
+    marginTop: 2,
+  },
+  sealBadgeIntact: {
+    backgroundColor: 'rgba(34, 239, 126, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(34, 239, 126, 0.3)',
+  },
+  sealBadgeDamaged: {
+    backgroundColor: 'rgba(255, 82, 82, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 82, 82, 0.3)',
+  },
+  sealBadgeText: {
+    fontSize: 9,
+    fontWeight: '800',
+  },
+  dischargeDriverNotesText: {
+    fontSize: 9.5,
+    color: '#bac9cc',
+    fontStyle: 'italic',
+    marginTop: 2,
+    lineHeight: 13,
   },
 });
