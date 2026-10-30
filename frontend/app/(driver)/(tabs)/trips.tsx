@@ -470,40 +470,106 @@ export default function DriverJobQueue() {
                         backgroundColor: '#080e17',
                         borderRadius: 8,
                         borderWidth: 1,
-                        borderColor: 'rgba(254, 179, 0, 0.3)',
-                        padding: 8,
-                        gap: 6,
+                        borderColor: 'rgba(254, 179, 0, 0.35)',
+                        padding: 10,
+                        gap: 8,
                       }}>
-                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                            <Ionicons name="location" size={12} color="#feb300" />
-                            <Text style={{ fontSize: 10, fontWeight: '800', color: '#00e5ff' }}>
-                              {trip.destTerminal} · {trip.dischargeBay || 'Bay 04, Crane 02'}
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingBottom: 4, borderBottomWidth: 1, borderBottomColor: 'rgba(255, 255, 255, 0.06)' }}>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                            <Ionicons name="shield-checkmark" size={13} color="#00e5ff" />
+                            <Text style={{ fontSize: 9.5, fontWeight: '900', color: '#00e5ff', letterSpacing: 0.4 }}>
+                              SLPA PORT CLEARANCE MANIFEST
                             </Text>
                           </View>
                           <View style={{
-                            flexDirection: 'row',
-                            alignItems: 'center',
-                            gap: 4,
-                            backgroundColor: trip.sealStatus?.includes('DAMAGED') ? 'rgba(255, 82, 82, 0.15)' : 'rgba(34, 239, 126, 0.15)',
-                            paddingHorizontal: 6,
-                            paddingVertical: 2,
+                            backgroundColor: 'rgba(34, 239, 126, 0.12)',
+                            paddingHorizontal: 5,
+                            paddingVertical: 1.5,
                             borderRadius: 4,
+                            borderWidth: 1,
+                            borderColor: 'rgba(34, 239, 126, 0.3)',
                           }}>
-                            <Ionicons
-                              name={trip.sealStatus?.includes('DAMAGED') ? 'warning' : 'shield-checkmark'}
-                              size={11}
-                              color={trip.sealStatus?.includes('DAMAGED') ? '#ff5252' : '#22ef7e'}
-                            />
-                            <Text style={{ fontSize: 9, fontWeight: '800', color: trip.sealStatus?.includes('DAMAGED') ? '#ff5252' : '#22ef7e' }}>
-                              {trip.sealStatus || 'INTACT (VERIFIED)'}
-                            </Text>
+                            <Text style={{ fontSize: 8, fontWeight: '800', color: '#22ef7e' }}>LOGGED</Text>
                           </View>
                         </View>
 
-                        <Text style={{ fontSize: 9.5, color: '#bac9cc', fontStyle: 'italic' }} numberOfLines={2}>
-                          Notes: "{trip.driverCompletionNotes || 'Containers discharged safely at destination terminal berth.'}"
-                        </Text>
+                        <View style={{ flexDirection: 'row', gap: 6 }}>
+                          <View style={{ flex: 1, backgroundColor: '#0d1625', borderRadius: 6, borderWidth: 1, borderColor: '#242a34', padding: 6 }}>
+                            <Text style={{ fontSize: 8, fontWeight: '800', color: '#849396' }}>BAY / SLOT</Text>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
+                              <Ionicons name="location" size={11} color="#feb300" />
+                              <Text style={{ fontSize: 9.5, fontWeight: '800', color: '#00e5ff' }} numberOfLines={1}>
+                                {trip.destTerminal} · {trip.dischargeBay || 'Bay 04, Crane 02'}
+                              </Text>
+                            </View>
+                          </View>
+
+                          <View style={{
+                            flex: 1,
+                            backgroundColor: '#0d1625',
+                            borderRadius: 6,
+                            borderWidth: 1,
+                            borderColor: trip.sealStatus?.includes('DAMAGED') ? 'rgba(255, 82, 82, 0.35)' : 'rgba(34, 239, 126, 0.35)',
+                            padding: 6,
+                          }}>
+                            <Text style={{ fontSize: 8, fontWeight: '800', color: '#849396' }}>SEAL STATUS</Text>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
+                              <Ionicons
+                                name={trip.sealStatus?.includes('DAMAGED') ? 'warning' : 'shield-checkmark'}
+                                size={11}
+                                color={trip.sealStatus?.includes('DAMAGED') ? '#ff5252' : '#22ef7e'}
+                              />
+                              <Text style={{ fontSize: 9.5, fontWeight: '800', color: trip.sealStatus?.includes('DAMAGED') ? '#ff5252' : '#22ef7e' }} numberOfLines={1}>
+                                {trip.sealStatus || 'INTACT (VERIFIED)'}
+                              </Text>
+                            </View>
+                          </View>
+
+                          <View style={{
+                            flex: 1,
+                            backgroundColor: '#0d1625',
+                            borderRadius: 6,
+                            borderWidth: 1,
+                            borderColor: trip.damageStatus === 'DAMAGED' ? 'rgba(255, 82, 82, 0.35)' : 'rgba(34, 239, 126, 0.35)',
+                            padding: 6,
+                          }}>
+                            <Text style={{ fontSize: 8, fontWeight: '800', color: '#849396' }}>CARGO</Text>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
+                              <Ionicons
+                                name={trip.damageStatus === 'DAMAGED' ? 'alert-circle' : 'checkmark-circle'}
+                                size={11}
+                                color={trip.damageStatus === 'DAMAGED' ? '#ff5252' : '#22ef7e'}
+                              />
+                              <Text style={{ fontSize: 9.5, fontWeight: '800', color: trip.damageStatus === 'DAMAGED' ? '#ff5252' : '#22ef7e' }} numberOfLines={1}>
+                                {trip.damageStatus === 'DAMAGED' ? 'DAMAGED' : 'SOUND'}
+                              </Text>
+                            </View>
+                          </View>
+                        </View>
+
+                        {/* Full width remarks */}
+                        <View style={{
+                          backgroundColor: '#0c1421',
+                          borderRadius: 6,
+                          borderLeftWidth: 3,
+                          borderLeftColor: '#00e5ff',
+                          paddingHorizontal: 8,
+                          paddingVertical: 6,
+                        }}>
+                          <Text style={{ fontSize: 7.5, fontWeight: '900', color: '#00e5ff', letterSpacing: 0.4, marginBottom: 2 }}>
+                            DRIVER COMPLETION NOTES
+                          </Text>
+                          <Text style={{ fontSize: 9.5, color: '#dde2f0', fontStyle: 'italic', lineHeight: 13 }}>
+                            "{trip.driverCompletionNotes || 'Containers discharged safely at destination terminal berth. Seals inspected and verified intact.'}"
+                          </Text>
+                        </View>
+
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, paddingTop: 2 }}>
+                          <Ionicons name="lock-closed" size={10} color="#849396" />
+                          <Text style={{ fontSize: 8.5, color: '#849396' }}>
+                            SLPA Digital Handover Audit • Transmitted to Port Supervisor
+                          </Text>
+                        </View>
                       </View>
 
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, justifyContent: 'center', paddingVertical: 4 }}>

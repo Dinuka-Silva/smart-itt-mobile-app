@@ -73,6 +73,21 @@ export default function DriverHomeDashboard() {
   const [cargoDamageStatus, setCargoDamageStatus] = useState<'NONE' | 'DAMAGED'>('NONE');
   const [driverCompletionNotes, setDriverCompletionNotes] = useState('Discharged cargo safely at destination terminal berth. Seals inspected and verified intact.');
 
+  // Official Delivery Handover Receipt Modal State
+  const [submissionReceiptVisible, setSubmissionReceiptVisible] = useState(false);
+  const [submissionReceipt, setSubmissionReceipt] = useState<{
+    tripNumber: string;
+    route: string;
+    dischargeBay: string;
+    sealStatus: string;
+    damageStatus: string;
+    notes: string;
+    timestamp: string;
+    containersCount: number;
+    vehicleNumber: string;
+    cheNumber: string;
+  } | null>(null);
+
   // Damage Report Form State
   const [damageContainerNumber, setDamageContainerNumber] = useState('');
   const [damageDescription, setDamageDescription] = useState('');
@@ -364,27 +379,53 @@ export default function DriverHomeDashboard() {
         driverNotes: finalNotes,
       });
 
-      setDischargeModalVisible(false);
-      await loadData();
-
-      Alert.alert(
-        'Submitted to Supervisor! 📋',
-        `Trip delivery has been successfully sent to the Port Operations Supervisor with Discharge Bay (${finalBay}), Seal Verification (${sealStatus}), and Cargo Condition. Once confirmed, your 300 Containers target (+1) will update!`
-      );
-    } catch {
-      useMockTripStore.getState().submitCompletedTripToSupervisor(tripId, {
-        dischargeTerminal: dischargeTerminal || getTripDischargeTerminal(activeTrip) || 'ECT',
-        dischargeBay: dischargeBay.trim() || 'Bay 04, Crane 02',
+      const nowTime = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+      setSubmissionReceipt({
+        tripNumber: trip?.tripNumber || tripId,
+        route: `${trip?.sourceTerminal || 'Origin'} ➔ ${finalDest}`,
+        dischargeBay: `${finalDest} · ${finalBay}`,
         sealStatus,
         damageStatus: cargoDamageStatus,
-        driverNotes: driverCompletionNotes.trim() || 'Containers discharged safely. Awaiting supervisor clearance.',
+        notes: finalNotes,
+        timestamp: nowTime,
+        containersCount: trip?.containers?.length || 1,
+        vehicleNumber: trip?.vehicleNumber || user?.vehicleNumber || 'LY-6439',
+        cheNumber: trip?.chassisNumber || user?.cheNumber || 'CHE 100',
       });
+
       setDischargeModalVisible(false);
+      setSubmissionReceiptVisible(true);
       await loadData();
-      Alert.alert(
-        'Submitted to Supervisor! 📋',
-        'Trip delivery details sent to Port Operations Supervisor for verification and sign-off.'
-      );
+    } catch {
+      const fallbackDest = dischargeTerminal || getTripDischargeTerminal(activeTrip) || 'ECT';
+      const fallbackBay = dischargeBay.trim() || 'Bay 04, Crane 02';
+      const fallbackNotes = driverCompletionNotes.trim() || 'Containers discharged safely. Awaiting supervisor clearance.';
+      const nowTime = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+
+      useMockTripStore.getState().submitCompletedTripToSupervisor(tripId, {
+        dischargeTerminal: fallbackDest,
+        dischargeBay: fallbackBay,
+        sealStatus,
+        damageStatus: cargoDamageStatus,
+        driverNotes: fallbackNotes,
+      });
+
+      setSubmissionReceipt({
+        tripNumber: activeTrip?.tripNumber || tripId,
+        route: `${activeTrip?.sourceTerminal || 'Origin'} ➔ ${fallbackDest}`,
+        dischargeBay: `${fallbackDest} · ${fallbackBay}`,
+        sealStatus,
+        damageStatus: cargoDamageStatus,
+        notes: fallbackNotes,
+        timestamp: nowTime,
+        containersCount: activeTrip?.containers?.length || 1,
+        vehicleNumber: activeTrip?.vehicleNumber || user?.vehicleNumber || 'LY-6439',
+        cheNumber: activeTrip?.chassisNumber || user?.cheNumber || 'CHE 100',
+      });
+
+      setDischargeModalVisible(false);
+      setSubmissionReceiptVisible(true);
+      await loadData();
     } finally {
       setActionInProgress(false);
     }
@@ -973,46 +1014,88 @@ export default function DriverHomeDashboard() {
                   Trip delivered and containers discharged at {activeTrip.destTerminal || getTripDischargeTerminal(activeTrip)}! Complete operational discharge details have been transmitted to the Operations Supervisor for verification and sign-off.
                 </Text>
 
-                {/* Discharge & Seal Verification Manifest Card */}
+                {/* ─── ELEGANT DISCHARGE & SEAL VERIFICATION MANIFEST CARD ─── */}
                 <View style={styles.pendingDetailsCard}>
-                  <View style={styles.pendingDetailsRow}>
-                    <View style={styles.pendingDetailsCol}>
-                      <Text style={styles.pendingDetailsLabel}>DISCHARGE BAY / SLOT</Text>
+                  {/* Card Header Strip */}
+                  <View style={styles.pendingCardHeaderStrip}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <Ionicons name="shield-checkmark" size={13} color="#00e5ff" />
+                      <Text style={styles.pendingCardHeaderTitle}>
+                        SLPA PORT CLEARANCE MANIFEST
+                      </Text>
+                    </View>
+                    <View style={styles.pendingAuditedBadge}>
+                      <Text style={styles.pendingAuditedBadgeText}>VERIFIED & LOGGED</Text>
+                    </View>
+                  </View>
+
+                  {/* Operational Details Metrics Row */}
+                  <View style={styles.pendingDetailsMetricsRow}>
+                    {/* Bay / Slot */}
+                    <View style={styles.pendingMetricPill}>
+                      <Text style={styles.pendingMetricPillLabel}>DISCHARGE BAY</Text>
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
-                        <Ionicons name="location" size={12} color="#feb300" />
-                        <Text style={styles.pendingDetailsValue}>
+                        <Ionicons name="location" size={11} color="#feb300" />
+                        <Text style={styles.pendingMetricPillValue} numberOfLines={1}>
                           {activeTrip.destTerminal || getTripDischargeTerminal(activeTrip)} · {activeTrip.dischargeBay || 'Bay 04, Crane 02'}
                         </Text>
                       </View>
                     </View>
-                    <View style={styles.pendingDetailsCol}>
-                      <Text style={styles.pendingDetailsLabel}>SEAL INTEGRITY</Text>
+
+                    {/* Seal Status */}
+                    <View style={[
+                      styles.pendingMetricPill,
+                      activeTrip.sealStatus?.includes('DAMAGED') ? styles.pillRedBorder : styles.pillGreenBorder,
+                    ]}>
+                      <Text style={styles.pendingMetricPillLabel}>SEAL STATUS</Text>
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
                         <Ionicons
                           name={activeTrip.sealStatus?.includes('DAMAGED') ? 'warning' : 'shield-checkmark'}
-                          size={12}
+                          size={11}
                           color={activeTrip.sealStatus?.includes('DAMAGED') ? '#ff5252' : '#22ef7e'}
                         />
-                        <Text style={[styles.pendingDetailsValue, { color: activeTrip.sealStatus?.includes('DAMAGED') ? '#ff5252' : '#22ef7e' }]}>
+                        <Text style={[styles.pendingMetricPillValue, { color: activeTrip.sealStatus?.includes('DAMAGED') ? '#ff5252' : '#22ef7e' }]} numberOfLines={1}>
                           {activeTrip.sealStatus || 'INTACT (VERIFIED)'}
+                        </Text>
+                      </View>
+                    </View>
+
+                    {/* Cargo Condition */}
+                    <View style={[
+                      styles.pendingMetricPill,
+                      activeTrip.damageStatus === 'DAMAGED' ? styles.pillRedBorder : styles.pillGreenBorder,
+                    ]}>
+                      <Text style={styles.pendingMetricPillLabel}>CARGO</Text>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
+                        <Ionicons
+                          name={activeTrip.damageStatus === 'DAMAGED' ? 'alert-circle' : 'checkmark-circle'}
+                          size={11}
+                          color={activeTrip.damageStatus === 'DAMAGED' ? '#ff5252' : '#22ef7e'}
+                        />
+                        <Text style={[styles.pendingMetricPillValue, { color: activeTrip.damageStatus === 'DAMAGED' ? '#ff5252' : '#22ef7e' }]} numberOfLines={1}>
+                          {activeTrip.damageStatus === 'DAMAGED' ? 'DAMAGED' : 'SOUND'}
                         </Text>
                       </View>
                     </View>
                   </View>
 
-                  <View style={styles.pendingDetailsRow}>
-                    <View style={styles.pendingDetailsCol}>
-                      <Text style={styles.pendingDetailsLabel}>CARGO CONDITION</Text>
-                      <Text style={[styles.pendingDetailsValue, { color: activeTrip.damageStatus === 'DAMAGED' ? '#ff5252' : '#22ef7e', marginTop: 2 }]}>
-                        {activeTrip.damageStatus === 'DAMAGED' ? '⚠️ DAMAGED' : '✓ SOUND (NO DAMAGE)'}
-                      </Text>
+                  {/* Full-Width Driver Remarks Box */}
+                  <View style={styles.driverRemarksCallout}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 3 }}>
+                      <Ionicons name="chatbubble-ellipses" size={12} color="#00e5ff" />
+                      <Text style={styles.driverRemarksCalloutLabel}>DRIVER COMPLETION NOTES</Text>
                     </View>
-                    <View style={styles.pendingDetailsCol}>
-                      <Text style={styles.pendingDetailsLabel}>DRIVER SUBMISSION REMARKS</Text>
-                      <Text style={styles.pendingDetailsNotes} numberOfLines={2}>
-                        "{activeTrip.driverCompletionNotes || 'Containers discharged safely at destination berth. Seals inspected and verified intact.'}"
-                      </Text>
-                    </View>
+                    <Text style={styles.driverRemarksCalloutText}>
+                      "{activeTrip.driverCompletionNotes || 'Containers discharged safely at destination terminal berth. Seals inspected and verified intact.'}"
+                    </Text>
+                  </View>
+
+                  {/* Security Footer */}
+                  <View style={styles.pendingAuditFooter}>
+                    <Ionicons name="lock-closed" size={11} color="#849396" />
+                    <Text style={styles.pendingAuditFooterText}>
+                      SLPA Digital Handover Audit • Transmitted to Port Operations Supervisor
+                    </Text>
                   </View>
                 </View>
 
@@ -1471,6 +1554,25 @@ export default function DriverHomeDashboard() {
               Confirm accurate discharge bay, seal verification, and cargo condition. Details are transmitted directly to the Operations Supervisor for verification and sign-off.
             </Text>
 
+            {/* Mission Identity Strip */}
+            <View style={styles.dischargeTripContextStrip}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <Ionicons name="git-network" size={13} color="#00e5ff" />
+                  <Text style={styles.dischargeTripContextId}>
+                    TRIP #{activeTrip?.tripNumber || activeTrip?.id?.slice(0, 8)}
+                  </Text>
+                </View>
+                <View style={styles.slpaSecurityBadge}>
+                  <Ionicons name="shield-checkmark" size={10} color="#22ef7e" />
+                  <Text style={styles.slpaSecurityBadgeText}>SLPA PROTOCOL</Text>
+                </View>
+              </View>
+              <Text style={styles.dischargeTripContextSub}>
+                {activeTrip?.sourceTerminal || 'Origin'} ➔ {dischargeTerminal || getTripDischargeTerminal(activeTrip)} • {activeTrip?.vehicleNumber || user?.vehicleNumber || 'LY-6439'} ({activeTrip?.chassisNumber || user?.cheNumber || 'CHE 100'})
+              </Text>
+            </View>
+
             {/* Discharge Terminal */}
             <View style={{ gap: 4 }}>
               <Text style={styles.modalLabel}>DESTINATION DISCHARGE TERMINAL</Text>
@@ -1661,6 +1763,158 @@ export default function DriverHomeDashboard() {
             </TouchableOpacity>
           </View>
         </KeyboardAvoidingView>
+      </Modal>
+
+      {/* ─── MODAL: OFFICIAL DELIVERY HANDOVER RECEIPT ─── */}
+      <Modal visible={submissionReceiptVisible} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalCard, { maxWidth: 440, borderColor: 'rgba(34, 239, 126, 0.4)' }]}>
+            {/* Receipt Top Icon & Title */}
+            <View style={{ alignItems: 'center', paddingVertical: 4, gap: 4 }}>
+              <View style={{
+                width: 48,
+                height: 48,
+                borderRadius: 24,
+                backgroundColor: 'rgba(34, 239, 126, 0.15)',
+                borderWidth: 1.5,
+                borderColor: '#22ef7e',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}>
+                <Ionicons name="shield-checkmark" size={26} color="#22ef7e" />
+              </View>
+              <Text style={{ fontSize: 13, fontWeight: '900', color: '#22ef7e', letterSpacing: 0.8, marginTop: 4 }}>
+                DELIVERY SUBMITTED TO SUPERVISOR
+              </Text>
+              <Text style={{ fontSize: 10, color: '#849396', fontWeight: '600' }}>
+                Official SLPA Handover Receipt • Transmission Logged
+              </Text>
+            </View>
+
+            {/* Receipt Details Box */}
+            {submissionReceipt && (
+              <View style={{
+                backgroundColor: '#080e17',
+                borderRadius: 10,
+                borderWidth: 1,
+                borderColor: 'rgba(255, 255, 255, 0.08)',
+                padding: 12,
+                gap: 8,
+              }}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingBottom: 6, borderBottomWidth: 1, borderBottomColor: 'rgba(255, 255, 255, 0.06)' }}>
+                  <Text style={{ fontSize: 10, color: '#849396', fontWeight: '700' }}>MISSION ID</Text>
+                  <Text style={{ fontSize: 11, color: '#00e5ff', fontWeight: '900', fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace' }}>
+                    {submissionReceipt.tripNumber}
+                  </Text>
+                </View>
+
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                  <Text style={{ fontSize: 10, color: '#849396', fontWeight: '700' }}>CORRIDOR ROUTE</Text>
+                  <Text style={{ fontSize: 10.5, color: '#dde2f0', fontWeight: '800' }}>
+                    {submissionReceipt.route}
+                  </Text>
+                </View>
+
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                  <Text style={{ fontSize: 10, color: '#849396', fontWeight: '700' }}>DISCHARGE BERTH</Text>
+                  <Text style={{ fontSize: 10.5, color: '#feb300', fontWeight: '800' }}>
+                    {submissionReceipt.dischargeBay}
+                  </Text>
+                </View>
+
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Text style={{ fontSize: 10, color: '#849396', fontWeight: '700' }}>SEAL INTEGRITY</Text>
+                  <View style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 4,
+                    backgroundColor: submissionReceipt.sealStatus?.includes('DAMAGED') ? 'rgba(255, 82, 82, 0.15)' : 'rgba(34, 239, 126, 0.15)',
+                    paddingHorizontal: 6,
+                    paddingVertical: 2,
+                    borderRadius: 4,
+                  }}>
+                    <Ionicons
+                      name={submissionReceipt.sealStatus?.includes('DAMAGED') ? 'warning' : 'shield-checkmark'}
+                      size={11}
+                      color={submissionReceipt.sealStatus?.includes('DAMAGED') ? '#ff5252' : '#22ef7e'}
+                    />
+                    <Text style={{
+                      fontSize: 9.5,
+                      fontWeight: '800',
+                      color: submissionReceipt.sealStatus?.includes('DAMAGED') ? '#ff5252' : '#22ef7e',
+                    }}>
+                      {submissionReceipt.sealStatus}
+                    </Text>
+                  </View>
+                </View>
+
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Text style={{ fontSize: 10, color: '#849396', fontWeight: '700' }}>CARGO CONDITION</Text>
+                  <Text style={{
+                    fontSize: 10,
+                    fontWeight: '800',
+                    color: submissionReceipt.damageStatus === 'DAMAGED' ? '#ff5252' : '#22ef7e',
+                  }}>
+                    {submissionReceipt.damageStatus === 'DAMAGED' ? '⚠️ DAMAGE LOGGED' : '✓ SOUND (NO DAMAGE)'}
+                  </Text>
+                </View>
+
+                {/* Driver Notes Quote */}
+                <View style={{
+                  backgroundColor: '#0d1625',
+                  borderRadius: 6,
+                  borderLeftWidth: 3,
+                  borderLeftColor: '#00e5ff',
+                  padding: 8,
+                  marginTop: 2,
+                }}>
+                  <Text style={{ fontSize: 8.5, color: '#00e5ff', fontWeight: '800', letterSpacing: 0.5, marginBottom: 2 }}>
+                    TRANSMITTED DRIVER REMARKS
+                  </Text>
+                  <Text style={{ fontSize: 9.5, color: '#dde2f0', fontStyle: 'italic', lineHeight: 14 }}>
+                    "{submissionReceipt.notes}"
+                  </Text>
+                </View>
+
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingTop: 4 }}>
+                  <Text style={{ fontSize: 9, color: '#556575' }}>AUDIT TIMESTAMP</Text>
+                  <Text style={{ fontSize: 9, color: '#849396', fontWeight: '700' }}>
+                    {submissionReceipt.timestamp} • DISPATCH QUEUED
+                  </Text>
+                </View>
+              </View>
+            )}
+
+            {/* Notice */}
+            <View style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 8,
+              backgroundColor: 'rgba(254, 179, 0, 0.08)',
+              borderWidth: 1,
+              borderColor: 'rgba(254, 179, 0, 0.25)',
+              borderRadius: 8,
+              padding: 10,
+            }}>
+              <Ionicons name="time" size={16} color="#feb300" />
+              <Text style={{ fontSize: 9.5, color: '#dde2f0', flex: 1, lineHeight: 14 }}>
+                Your completed delivery is now in the supervisor review queue. As soon as verified, your <Text style={{ color: '#feb300', fontWeight: '800' }}>300 Containers target (+1)</Text> will credit automatically.
+              </Text>
+            </View>
+
+            {/* Dismiss Button */}
+            <TouchableOpacity
+              style={[styles.modalSubmitBtn, { backgroundColor: '#22ef7e', height: 44 }]}
+              onPress={() => setSubmissionReceiptVisible(false)}
+              activeOpacity={0.88}
+            >
+              <Ionicons name="checkmark-done" size={18} color="#00363d" />
+              <Text style={[styles.modalSubmitBtnText, { color: '#00363d', fontWeight: '900' }]}>
+                VIEW IN DASHBOARD
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
       </Modal>
 
       {/* ─── MODAL: 50 CONTAINERS CELEBRATION WITH ANIMATION ─── */}
@@ -4121,38 +4375,139 @@ const styles = StyleSheet.create({
     backgroundColor: '#080e17',
     borderWidth: 1,
     borderColor: 'rgba(254, 179, 0, 0.35)',
-    borderRadius: 8,
-    padding: 10,
-    gap: 8,
+    borderRadius: 10,
+    padding: 12,
+    gap: 10,
     marginTop: 4,
   },
-  pendingDetailsRow: {
+  pendingCardHeaderStrip: {
     flexDirection: 'row',
-    gap: 10,
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingBottom: 6,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.06)',
   },
-  pendingDetailsCol: {
-    flex: 1,
-  },
-  pendingDetailsLabel: {
-    fontSize: 8.5,
-    fontWeight: '800',
-    color: '#849396',
+  pendingCardHeaderTitle: {
+    fontSize: 9.5,
+    fontWeight: '900',
+    color: '#00e5ff',
     letterSpacing: 0.5,
   },
-  pendingDetailsValue: {
-    fontSize: 10.5,
-    fontWeight: '800',
-    color: '#00e5ff',
+  pendingAuditedBadge: {
+    backgroundColor: 'rgba(34, 239, 126, 0.12)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(34, 239, 126, 0.3)',
   },
-  pendingDetailsNotes: {
-    fontSize: 9.5,
-    color: '#bac9cc',
+  pendingAuditedBadgeText: {
+    fontSize: 8.5,
+    fontWeight: '800',
+    color: '#22ef7e',
+    letterSpacing: 0.4,
+  },
+  pendingDetailsMetricsRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  pendingMetricPill: {
+    flex: 1,
+    backgroundColor: '#0d1625',
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#242a34',
+    padding: 7,
+  },
+  pillGreenBorder: {
+    borderColor: 'rgba(34, 239, 126, 0.35)',
+    backgroundColor: 'rgba(34, 239, 126, 0.05)',
+  },
+  pillRedBorder: {
+    borderColor: 'rgba(255, 82, 82, 0.35)',
+    backgroundColor: 'rgba(255, 82, 82, 0.05)',
+  },
+  pendingMetricPillLabel: {
+    fontSize: 8,
+    fontWeight: '800',
+    color: '#849396',
+    letterSpacing: 0.4,
+  },
+  pendingMetricPillValue: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#dde2f0',
+  },
+  driverRemarksCallout: {
+    backgroundColor: '#0c1421',
+    borderRadius: 6,
+    borderLeftWidth: 3,
+    borderLeftColor: '#00e5ff',
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+  },
+  driverRemarksCalloutLabel: {
+    fontSize: 8,
+    fontWeight: '900',
+    color: '#00e5ff',
+    letterSpacing: 0.4,
+  },
+  driverRemarksCalloutText: {
+    fontSize: 10,
+    color: '#dde2f0',
     fontStyle: 'italic',
-    marginTop: 2,
-    lineHeight: 13,
+    lineHeight: 14,
+  },
+  pendingAuditFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingTop: 2,
+  },
+  pendingAuditFooterText: {
+    fontSize: 8.5,
+    color: '#849396',
+    fontWeight: '600',
   },
 
   // ─── DISCHARGE MODAL CONTROLS ───
+  dischargeTripContextStrip: {
+    backgroundColor: '#09101c',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 229, 255, 0.25)',
+    padding: 8,
+    gap: 3,
+  },
+  dischargeTripContextId: {
+    fontSize: 10.5,
+    fontWeight: '900',
+    color: '#00e5ff',
+    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
+  },
+  dischargeTripContextSub: {
+    fontSize: 9.5,
+    color: '#dde2f0',
+    fontWeight: '700',
+  },
+  slpaSecurityBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: 'rgba(34, 239, 126, 0.12)',
+    paddingHorizontal: 5,
+    paddingVertical: 1.5,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(34, 239, 126, 0.25)',
+  },
+  slpaSecurityBadgeText: {
+    fontSize: 8,
+    fontWeight: '900',
+    color: '#22ef7e',
+    letterSpacing: 0.4,
+  },
   modalSubtitle: {
     color: '#bac9cc',
     fontSize: 10.5,

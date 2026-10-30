@@ -856,72 +856,82 @@ export default function SupervisorHomeDashboard() {
                   {/* ─── DRIVER DISCHARGE & CARGO INSPECTION VERIFICATION PANEL ─── */}
                   <View style={styles.pendingDischargeVerificationCard}>
                     <View style={styles.pendingDischargeVerificationHeader}>
-                      <Ionicons name="clipboard" size={13} color="#00e5ff" />
-                      <Text style={styles.pendingDischargeVerificationTitle}>
-                        DRIVER DISCHARGE & SEAL VERIFICATION MANIFEST
-                      </Text>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                        <Ionicons name="shield-checkmark" size={14} color="#00e5ff" />
+                        <Text style={styles.pendingDischargeVerificationTitle}>
+                          DRIVER DISCHARGE & SEAL VERIFICATION MANIFEST
+                        </Text>
+                      </View>
+                      <View style={styles.pendingRemarksAuditedBadge}>
+                        <Ionicons name="lock-closed" size={10} color="#22ef7e" />
+                        <Text style={styles.pendingRemarksAuditedText}>SLPA AUDITED</Text>
+                      </View>
                     </View>
 
-                    <View style={styles.pendingDischargeGrid}>
-                      {/* Row 1: Bay / Slot & Seal Status */}
-                      <View style={styles.pendingDischargeGridRow}>
-                        <View style={styles.pendingDischargeGridCol}>
-                          <Text style={styles.pendingDischargeGridLabel}>DISCHARGE BAY / CRANE SLOT</Text>
-                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 2 }}>
-                            <Ionicons name="location" size={12} color="#feb300" />
-                            <Text style={styles.pendingDischargeGridValue}>
-                              {getTripDischargeTerminal(trip)} · {trip.dischargeBay || 'Bay 04, Crane 02'}
-                            </Text>
-                          </View>
-                        </View>
-
-                        <View style={styles.pendingDischargeGridCol}>
-                          <Text style={styles.pendingDischargeGridLabel}>SEAL INTEGRITY</Text>
-                          <View style={[
-                            styles.pendingSealBadge,
-                            trip.sealStatus?.includes('DAMAGED') ? styles.pendingSealBadgeDamaged : styles.pendingSealBadgeIntact,
-                          ]}>
-                            <Ionicons
-                              name={trip.sealStatus?.includes('DAMAGED') ? 'warning' : 'shield-checkmark'}
-                              size={11}
-                              color={trip.sealStatus?.includes('DAMAGED') ? '#ff5252' : '#22ef7e'}
-                            />
-                            <Text style={[
-                              styles.pendingSealBadgeText,
-                              { color: trip.sealStatus?.includes('DAMAGED') ? '#ff5252' : '#22ef7e' }
-                            ]}>
-                              {trip.sealStatus || 'INTACT (VERIFIED)'}
-                            </Text>
-                          </View>
-                        </View>
-                      </View>
-
-                      {/* Row 2: Cargo Condition & Driver Notes */}
-                      <View style={styles.pendingDischargeGridRow}>
-                        <View style={styles.pendingDischargeGridCol}>
-                          <Text style={styles.pendingDischargeGridLabel}>CARGO CONDITION</Text>
-                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 2 }}>
-                            <Ionicons
-                              name={trip.damageStatus === 'DAMAGED' ? 'alert-circle' : 'checkmark-circle'}
-                              size={12}
-                              color={trip.damageStatus === 'DAMAGED' ? '#ff5252' : '#22ef7e'}
-                            />
-                            <Text style={[
-                              styles.pendingDischargeGridValue,
-                              { color: trip.damageStatus === 'DAMAGED' ? '#ff5252' : '#22ef7e' }
-                            ]}>
-                              {trip.damageStatus === 'DAMAGED' ? 'DAMAGE REPORTED' : 'SOUND (NO DAMAGE)'}
-                            </Text>
-                          </View>
-                        </View>
-
-                        <View style={styles.pendingDischargeGridCol}>
-                          <Text style={styles.pendingDischargeGridLabel}>DRIVER SUBMISSION REMARKS</Text>
-                          <Text style={styles.pendingDischargeNotesText} numberOfLines={2}>
-                            "{trip.driverCompletionNotes || 'Discharged cargo safely at destination berth. Seals inspected and verified intact.'}"
+                    {/* Row 1: Bay / Slot, Seal Status, Cargo Condition (3 Columns) */}
+                    <View style={styles.pendingDischargeMetricsRow}>
+                      <View style={styles.pendingDischargeMetricBox}>
+                        <Text style={styles.pendingDischargeGridLabel}>DISCHARGE BERTH / BAY</Text>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 3 }}>
+                          <Ionicons name="location" size={11} color="#feb300" />
+                          <Text style={styles.pendingDischargeGridValue} numberOfLines={1}>
+                            {getTripDischargeTerminal(trip)} · {trip.dischargeBay || 'Bay 04, Crane 02'}
                           </Text>
                         </View>
                       </View>
+
+                      <View style={[
+                        styles.pendingDischargeMetricBox,
+                        trip.sealStatus?.includes('DAMAGED') ? styles.pendingBoxRedBorder : styles.pendingBoxGreenBorder,
+                      ]}>
+                        <Text style={styles.pendingDischargeGridLabel}>SEAL INTEGRITY</Text>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 3 }}>
+                          <Ionicons
+                            name={trip.sealStatus?.includes('DAMAGED') ? 'warning' : 'shield-checkmark'}
+                            size={11}
+                            color={trip.sealStatus?.includes('DAMAGED') ? '#ff5252' : '#22ef7e'}
+                          />
+                          <Text style={[styles.pendingDischargeGridValue, { color: trip.sealStatus?.includes('DAMAGED') ? '#ff5252' : '#22ef7e' }]} numberOfLines={1}>
+                            {trip.sealStatus || 'INTACT (VERIFIED)'}
+                          </Text>
+                        </View>
+                      </View>
+
+                      <View style={[
+                        styles.pendingDischargeMetricBox,
+                        trip.damageStatus === 'DAMAGED' ? styles.pendingBoxRedBorder : styles.pendingBoxGreenBorder,
+                      ]}>
+                        <Text style={styles.pendingDischargeGridLabel}>CARGO CONDITION</Text>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 3 }}>
+                          <Ionicons
+                            name={trip.damageStatus === 'DAMAGED' ? 'alert-circle' : 'checkmark-circle'}
+                            size={11}
+                            color={trip.damageStatus === 'DAMAGED' ? '#ff5252' : '#22ef7e'}
+                          />
+                          <Text style={[styles.pendingDischargeGridValue, { color: trip.damageStatus === 'DAMAGED' ? '#ff5252' : '#22ef7e' }]} numberOfLines={1}>
+                            {trip.damageStatus === 'DAMAGED' ? 'DAMAGED' : 'SOUND'}
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
+
+                    {/* Row 2: Full-Width Driver Submission Remarks Box */}
+                    <View style={styles.pendingRemarksCallout}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 3 }}>
+                        <Ionicons name="chatbubble-ellipses" size={12} color="#00e5ff" />
+                        <Text style={styles.pendingRemarksCalloutLabel}>DRIVER COMPLETION & HANDOVER REMARKS</Text>
+                      </View>
+                      <Text style={styles.pendingRemarksCalloutText}>
+                        "{trip.driverCompletionNotes || 'Containers discharged safely at destination berth. Seals inspected and verified intact.'}"
+                      </Text>
+                    </View>
+
+                    {/* Row 3: Security & Clearance Footer */}
+                    <View style={styles.pendingClearanceFooter}>
+                      <Ionicons name="shield-checkmark-outline" size={11} color="#849396" />
+                      <Text style={styles.pendingClearanceFooterText}>
+                        SLPA Official Handover • Gate-In Authenticated at {getTripDischargeTerminal(trip)}
+                      </Text>
                     </View>
                   </View>
 
@@ -2868,37 +2878,63 @@ const styles = StyleSheet.create({
   // ─── PENDING DISCHARGE & SEAL VERIFICATION MANIFEST ───
   pendingDischargeVerificationCard: {
     backgroundColor: '#0a101d',
-    borderRadius: 8,
+    borderRadius: 10,
     borderWidth: 1,
     borderColor: 'rgba(0, 229, 255, 0.25)',
-    padding: 10,
-    gap: 6,
+    padding: 11,
+    gap: 8,
     marginTop: 4,
   },
   pendingDischargeVerificationHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    paddingBottom: 4,
+    justifyContent: 'space-between',
+    paddingBottom: 6,
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(255, 255, 255, 0.06)',
   },
   pendingDischargeVerificationTitle: {
-    fontSize: 9,
+    fontSize: 9.5,
     fontWeight: '900',
     color: '#00e5ff',
     letterSpacing: 0.5,
   },
-  pendingDischargeGrid: {
-    gap: 6,
-    marginTop: 2,
-  },
-  pendingDischargeGridRow: {
+  pendingRemarksAuditedBadge: {
     flexDirection: 'row',
-    gap: 10,
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(34, 239, 126, 0.12)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(34, 239, 126, 0.3)',
   },
-  pendingDischargeGridCol: {
+  pendingRemarksAuditedText: {
+    fontSize: 8.5,
+    fontWeight: '800',
+    color: '#22ef7e',
+    letterSpacing: 0.4,
+  },
+  pendingDischargeMetricsRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  pendingDischargeMetricBox: {
     flex: 1,
+    backgroundColor: '#0f1726',
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#242a34',
+    padding: 7,
+  },
+  pendingBoxGreenBorder: {
+    borderColor: 'rgba(34, 239, 126, 0.35)',
+    backgroundColor: 'rgba(34, 239, 126, 0.05)',
+  },
+  pendingBoxRedBorder: {
+    borderColor: 'rgba(255, 82, 82, 0.35)',
+    backgroundColor: 'rgba(255, 82, 82, 0.05)',
   },
   pendingDischargeGridLabel: {
     fontSize: 8,
@@ -2907,39 +2943,39 @@ const styles = StyleSheet.create({
     letterSpacing: 0.4,
   },
   pendingDischargeGridValue: {
-    fontSize: 10.5,
+    fontSize: 10,
     fontWeight: '800',
     color: '#dde2f0',
   },
-  pendingSealBadge: {
+  pendingRemarksCallout: {
+    backgroundColor: '#0c1421',
+    borderRadius: 6,
+    borderLeftWidth: 3,
+    borderLeftColor: '#00e5ff',
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+  },
+  pendingRemarksCalloutLabel: {
+    fontSize: 8.5,
+    fontWeight: '900',
+    color: '#00e5ff',
+    letterSpacing: 0.4,
+  },
+  pendingRemarksCalloutText: {
+    fontSize: 10,
+    color: '#dde2f0',
+    fontStyle: 'italic',
+    lineHeight: 14,
+  },
+  pendingClearanceFooter: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-    alignSelf: 'flex-start',
-    marginTop: 2,
+    gap: 5,
+    paddingTop: 2,
   },
-  pendingSealBadgeIntact: {
-    backgroundColor: 'rgba(34, 239, 126, 0.12)',
-    borderWidth: 1,
-    borderColor: 'rgba(34, 239, 126, 0.3)',
-  },
-  pendingSealBadgeDamaged: {
-    backgroundColor: 'rgba(255, 82, 82, 0.12)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 82, 82, 0.3)',
-  },
-  pendingSealBadgeText: {
-    fontSize: 9,
-    fontWeight: '800',
-  },
-  pendingDischargeNotesText: {
-    fontSize: 9.5,
-    color: '#bac9cc',
-    fontStyle: 'italic',
-    marginTop: 2,
-    lineHeight: 13,
+  pendingClearanceFooterText: {
+    fontSize: 8.5,
+    color: '#849396',
+    fontWeight: '600',
   },
 });

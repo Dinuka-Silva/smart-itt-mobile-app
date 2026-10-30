@@ -300,72 +300,82 @@ export default function SupervisorApprovals() {
                   {/* ─── DRIVER DISCHARGE & CARGO INSPECTION VERIFICATION PANEL ─── */}
                   <View style={styles.dischargeVerificationCard}>
                     <View style={styles.dischargeVerificationHeader}>
-                      <Ionicons name="clipboard" size={13} color="#00e5ff" />
-                      <Text style={styles.dischargeVerificationTitle}>
-                        DRIVER DISCHARGE & SEAL VERIFICATION MANIFEST
-                      </Text>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                        <Ionicons name="shield-checkmark" size={14} color="#00e5ff" />
+                        <Text style={styles.dischargeVerificationTitle}>
+                          DRIVER DISCHARGE & SEAL VERIFICATION MANIFEST
+                        </Text>
+                      </View>
+                      <View style={styles.supervisorDriverRemarksAuditedBadge}>
+                        <Ionicons name="lock-closed" size={10} color="#22ef7e" />
+                        <Text style={styles.supervisorDriverRemarksAuditedText}>SLPA AUDITED</Text>
+                      </View>
                     </View>
 
-                    <View style={styles.dischargeGrid}>
-                      {/* Row 1: Bay / Slot & Seal Status */}
-                      <View style={styles.dischargeGridRow}>
-                        <View style={styles.dischargeGridCol}>
-                          <Text style={styles.dischargeGridLabel}>DISCHARGE BAY / CRANE SLOT</Text>
-                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 2 }}>
-                            <Ionicons name="location" size={12} color="#feb300" />
-                            <Text style={styles.dischargeGridValue}>
-                              {trip.destTerminal || to} · {trip.dischargeBay || 'Bay 04, Crane 02'}
-                            </Text>
-                          </View>
-                        </View>
-
-                        <View style={styles.dischargeGridCol}>
-                          <Text style={styles.dischargeGridLabel}>SEAL INTEGRITY</Text>
-                          <View style={[
-                            styles.sealBadge,
-                            trip.sealStatus?.includes('DAMAGED') ? styles.sealBadgeDamaged : styles.sealBadgeIntact,
-                          ]}>
-                            <Ionicons
-                              name={trip.sealStatus?.includes('DAMAGED') ? 'warning' : 'shield-checkmark'}
-                              size={11}
-                              color={trip.sealStatus?.includes('DAMAGED') ? '#ff5252' : '#22ef7e'}
-                            />
-                            <Text style={[
-                              styles.sealBadgeText,
-                              { color: trip.sealStatus?.includes('DAMAGED') ? '#ff5252' : '#22ef7e' }
-                            ]}>
-                              {trip.sealStatus || 'INTACT (VERIFIED)'}
-                            </Text>
-                          </View>
-                        </View>
-                      </View>
-
-                      {/* Row 2: Cargo Condition & Driver Notes */}
-                      <View style={styles.dischargeGridRow}>
-                        <View style={styles.dischargeGridCol}>
-                          <Text style={styles.dischargeGridLabel}>CARGO CONDITION</Text>
-                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 2 }}>
-                            <Ionicons
-                              name={trip.damageStatus === 'DAMAGED' ? 'alert-circle' : 'checkmark-circle'}
-                              size={12}
-                              color={trip.damageStatus === 'DAMAGED' ? '#ff5252' : '#22ef7e'}
-                            />
-                            <Text style={[
-                              styles.dischargeGridValue,
-                              { color: trip.damageStatus === 'DAMAGED' ? '#ff5252' : '#22ef7e' }
-                            ]}>
-                              {trip.damageStatus === 'DAMAGED' ? 'DAMAGE REPORTED' : 'SOUND (NO DAMAGE)'}
-                            </Text>
-                          </View>
-                        </View>
-
-                        <View style={styles.dischargeGridCol}>
-                          <Text style={styles.dischargeGridLabel}>DRIVER SUBMISSION REMARKS</Text>
-                          <Text style={styles.dischargeDriverNotesText} numberOfLines={2}>
-                            "{trip.driverCompletionNotes || 'Discharged cargo safely at destination berth. Seals inspected and verified intact.'}"
+                    {/* Row 1: Bay / Slot, Seal Status, Cargo Condition (3 Columns) */}
+                    <View style={styles.dischargeVerificationMetricsRow}>
+                      <View style={styles.dischargeMetricBox}>
+                        <Text style={styles.dischargeGridLabel}>DISCHARGE BERTH / BAY</Text>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 3 }}>
+                          <Ionicons name="location" size={11} color="#feb300" />
+                          <Text style={styles.dischargeGridValue} numberOfLines={1}>
+                            {trip.destTerminal || to} · {trip.dischargeBay || 'Bay 04, Crane 02'}
                           </Text>
                         </View>
                       </View>
+
+                      <View style={[
+                        styles.dischargeMetricBox,
+                        trip.sealStatus?.includes('DAMAGED') ? styles.boxRedBorder : styles.boxGreenBorder,
+                      ]}>
+                        <Text style={styles.dischargeGridLabel}>SEAL INTEGRITY</Text>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 3 }}>
+                          <Ionicons
+                            name={trip.sealStatus?.includes('DAMAGED') ? 'warning' : 'shield-checkmark'}
+                            size={11}
+                            color={trip.sealStatus?.includes('DAMAGED') ? '#ff5252' : '#22ef7e'}
+                          />
+                          <Text style={[styles.dischargeGridValue, { color: trip.sealStatus?.includes('DAMAGED') ? '#ff5252' : '#22ef7e' }]} numberOfLines={1}>
+                            {trip.sealStatus || 'INTACT (VERIFIED)'}
+                          </Text>
+                        </View>
+                      </View>
+
+                      <View style={[
+                        styles.dischargeMetricBox,
+                        trip.damageStatus === 'DAMAGED' ? styles.boxRedBorder : styles.boxGreenBorder,
+                      ]}>
+                        <Text style={styles.dischargeGridLabel}>CARGO CONDITION</Text>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 3 }}>
+                          <Ionicons
+                            name={trip.damageStatus === 'DAMAGED' ? 'alert-circle' : 'checkmark-circle'}
+                            size={11}
+                            color={trip.damageStatus === 'DAMAGED' ? '#ff5252' : '#22ef7e'}
+                          />
+                          <Text style={[styles.dischargeGridValue, { color: trip.damageStatus === 'DAMAGED' ? '#ff5252' : '#22ef7e' }]} numberOfLines={1}>
+                            {trip.damageStatus === 'DAMAGED' ? 'DAMAGED' : 'SOUND'}
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
+
+                    {/* Row 2: Full-Width Driver Submission Remarks Box */}
+                    <View style={styles.supervisorDriverRemarksBox}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 3 }}>
+                        <Ionicons name="chatbubble-ellipses" size={12} color="#00e5ff" />
+                        <Text style={styles.supervisorDriverRemarksLabel}>DRIVER COMPLETION & HANDOVER REMARKS</Text>
+                      </View>
+                      <Text style={styles.supervisorDriverRemarksText}>
+                        "{trip.driverCompletionNotes || 'Containers discharged safely at destination berth. Seals inspected and verified intact.'}"
+                      </Text>
+                    </View>
+
+                    {/* Row 3: Security & Clearance Footer */}
+                    <View style={styles.dischargeAuditFooter}>
+                      <Ionicons name="shield-checkmark-outline" size={11} color="#849396" />
+                      <Text style={styles.dischargeAuditFooterText}>
+                        SLPA Official Handover • Gate-In Authenticated at {trip.destTerminal || to}
+                      </Text>
                     </View>
                   </View>
 
@@ -844,38 +854,64 @@ const styles = StyleSheet.create({
 
   // ─── DRIVER DISCHARGE & SEAL VERIFICATION MANIFEST ───
   dischargeVerificationCard: {
-    backgroundColor: '#0d1420',
-    borderRadius: radius.sm,
+    backgroundColor: '#0a101d',
+    borderRadius: 10,
     borderWidth: 1,
     borderColor: 'rgba(0, 229, 255, 0.25)',
-    padding: 10,
-    gap: 6,
+    padding: 11,
+    gap: 8,
     marginTop: 4,
   },
   dischargeVerificationHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    paddingBottom: 4,
+    justifyContent: 'space-between',
+    paddingBottom: 6,
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(255, 255, 255, 0.06)',
   },
   dischargeVerificationTitle: {
-    fontSize: 9,
+    fontSize: 9.5,
     fontWeight: '900',
     color: '#00e5ff',
     letterSpacing: 0.5,
   },
-  dischargeGrid: {
-    gap: 6,
-    marginTop: 2,
-  },
-  dischargeGridRow: {
+  supervisorDriverRemarksAuditedBadge: {
     flexDirection: 'row',
-    gap: 10,
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(34, 239, 126, 0.12)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(34, 239, 126, 0.3)',
   },
-  dischargeGridCol: {
+  supervisorDriverRemarksAuditedText: {
+    fontSize: 8.5,
+    fontWeight: '800',
+    color: '#22ef7e',
+    letterSpacing: 0.4,
+  },
+  dischargeVerificationMetricsRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  dischargeMetricBox: {
     flex: 1,
+    backgroundColor: '#0f1726',
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#242a34',
+    padding: 7,
+  },
+  boxGreenBorder: {
+    borderColor: 'rgba(34, 239, 126, 0.35)',
+    backgroundColor: 'rgba(34, 239, 126, 0.05)',
+  },
+  boxRedBorder: {
+    borderColor: 'rgba(255, 82, 82, 0.35)',
+    backgroundColor: 'rgba(255, 82, 82, 0.05)',
   },
   dischargeGridLabel: {
     fontSize: 8,
@@ -884,39 +920,39 @@ const styles = StyleSheet.create({
     letterSpacing: 0.4,
   },
   dischargeGridValue: {
-    fontSize: 10.5,
+    fontSize: 10,
     fontWeight: '800',
     color: '#dde2f0',
   },
-  sealBadge: {
+  supervisorDriverRemarksBox: {
+    backgroundColor: '#0c1421',
+    borderRadius: 6,
+    borderLeftWidth: 3,
+    borderLeftColor: '#00e5ff',
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+  },
+  supervisorDriverRemarksLabel: {
+    fontSize: 8.5,
+    fontWeight: '900',
+    color: '#00e5ff',
+    letterSpacing: 0.4,
+  },
+  supervisorDriverRemarksText: {
+    fontSize: 10,
+    color: '#dde2f0',
+    fontStyle: 'italic',
+    lineHeight: 14,
+  },
+  dischargeAuditFooter: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-    alignSelf: 'flex-start',
-    marginTop: 2,
+    gap: 5,
+    paddingTop: 2,
   },
-  sealBadgeIntact: {
-    backgroundColor: 'rgba(34, 239, 126, 0.12)',
-    borderWidth: 1,
-    borderColor: 'rgba(34, 239, 126, 0.3)',
-  },
-  sealBadgeDamaged: {
-    backgroundColor: 'rgba(255, 82, 82, 0.12)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 82, 82, 0.3)',
-  },
-  sealBadgeText: {
-    fontSize: 9,
-    fontWeight: '800',
-  },
-  dischargeDriverNotesText: {
-    fontSize: 9.5,
-    color: '#bac9cc',
-    fontStyle: 'italic',
-    marginTop: 2,
-    lineHeight: 13,
+  dischargeAuditFooterText: {
+    fontSize: 8.5,
+    color: '#849396',
+    fontWeight: '600',
   },
 });
