@@ -27,6 +27,7 @@ export interface AdminVehicle {
 
 export interface AdminDriver {
   id: string;
+  username: string; // Official System Login Username (e.g. DRV-00001)
   driverCode: string;
   fullName: string;
   employeeId: string;
@@ -113,7 +114,7 @@ const INITIAL_VEHICLES: AdminVehicle[] = [
 ];
 
 // Initial 23 Registered Drivers (DRV-00001 through DRV-00023)
-const INITIAL_DRIVERS: AdminDriver[] = [
+const INITIAL_DRIVERS_RAW = [
   { id: 'd-1', driverCode: 'DRV-00001', fullName: 'Kamal Perera', employeeId: 'DRV001', mobileNumber: '0779876543', nic: '198512345678', status: 'ACTIVE', vehicleNumber: 'LY-6439', chassisNumber: 'SCK 100', cheNumber: 'SCK 100', licenseNumber: 'LIC-001234', licenseExpiryDate: '2028-12-31', portPassNumber: 'SLPA-DPP-001', portPassExpiryDate: '2026-11-06', portPassStatus: 'RENEWAL_DUE', portPassDaysLeft: 10, address: 'No. 45, Harbour View Road, Colombo 15', email: 'driver@smartitt.lk', emergencyContactName: 'Sunil Perera (Brother)', emergencyContactNumber: '0771122334', totalTrips: 18 },
   { id: 'd-2', driverCode: 'DRV-00002', fullName: 'Sunil Shantha', employeeId: 'DRV002', mobileNumber: '0779876544', nic: '198612345679', status: 'ACTIVE', vehicleNumber: 'LY-6434', chassisNumber: 'SCK 101', cheNumber: 'SCK 101', licenseNumber: 'LIC-001235', licenseExpiryDate: '2027-11-20', portPassNumber: 'SLPA-DPP-002', portPassExpiryDate: '2027-05-18', portPassStatus: 'VALID', portPassDaysLeft: 203, address: 'No. 12, Port Access Rd, Peliyagoda', email: 'sunil.drv@smartitt.lk', emergencyContactName: 'M. Shantha (Wife)', emergencyContactNumber: '0772233445', totalTrips: 14 },
   { id: 'd-3', driverCode: 'DRV-00003', fullName: 'Anura Kumara', employeeId: 'DRV003', mobileNumber: '0779876545', nic: '198712345680', status: 'ACTIVE', vehicleNumber: 'LY-6435', chassisNumber: 'SCK 102', cheNumber: 'SCK 102', licenseNumber: 'LIC-001236', licenseExpiryDate: '2029-05-15', portPassNumber: 'SLPA-DPP-003', portPassExpiryDate: '2027-06-25', portPassStatus: 'VALID', portPassDaysLeft: 241, address: 'No. 88, Kandy Road, Kelaniya', email: 'anura.drv@smartitt.lk', emergencyContactName: 'K. Kumara (Father)', emergencyContactNumber: '0773344556', totalTrips: 16 },
@@ -138,6 +139,11 @@ const INITIAL_DRIVERS: AdminDriver[] = [
   { id: 'd-22', driverCode: 'DRV-00022', fullName: 'Dasun Shanaka', employeeId: 'DRV022', mobileNumber: '0779876564', nic: '199112345699', status: 'ACTIVE', vehicleNumber: 'LY-6532', chassisNumber: 'SCK 121', cheNumber: 'SCK 121', licenseNumber: 'LIC-001255', licenseExpiryDate: '2029-01-20', portPassNumber: 'SLPA-DPP-022', portPassExpiryDate: '2027-07-16', portPassStatus: 'VALID', portPassDaysLeft: 262, address: 'No. 71, Modara Street, Colombo 15', email: 'dasun.drv@smartitt.lk', emergencyContactName: 'D. Shanaka (Father)', emergencyContactNumber: '0725566778', totalTrips: 11 },
   { id: 'd-23', driverCode: 'DRV-00023', fullName: 'Kusal Mendis', employeeId: 'DRV023', mobileNumber: '0779876565', nic: '199312345677', status: 'ACTIVE', vehicleNumber: undefined, chassisNumber: undefined, cheNumber: undefined, licenseNumber: 'LIC-001256', licenseExpiryDate: '2029-02-15', portPassNumber: 'SLPA-DPP-023', portPassExpiryDate: '2026-11-06', portPassStatus: 'RENEWAL_DUE', portPassDaysLeft: 10, address: 'No. 18, Bloemendhal Road, Colombo 13', email: 'kusal.mendis@smartitt.lk', emergencyContactName: 'P. Mendis (Father)', emergencyContactNumber: '0779911223', totalTrips: 20 },
 ];
+
+const INITIAL_DRIVERS: AdminDriver[] = INITIAL_DRIVERS_RAW.map(d => ({
+  ...d,
+  username: d.driverCode,
+}));
 
 class AdminFleetStore {
   private vehicles: AdminVehicle[] = [...INITIAL_VEHICLES];
@@ -426,6 +432,7 @@ class AdminFleetStore {
               ...this.drivers[existingIdx],
               ...r,
               id: r.id || this.drivers[existingIdx].id,
+              username: r.username || r.driverCode || this.drivers[existingIdx].username || this.drivers[existingIdx].driverCode,
               driverCode: r.driverCode || this.drivers[existingIdx].driverCode,
               fullName: r.fullName || this.drivers[existingIdx].fullName,
               employeeId: r.employeeId || this.drivers[existingIdx].employeeId,
@@ -454,6 +461,7 @@ class AdminFleetStore {
             // New driver from remote
             this.drivers.push({
               id: r.id || `d-${r.driverCode}`,
+              username: r.username || r.driverCode,
               driverCode: r.driverCode,
               fullName: r.fullName,
               employeeId: r.employeeId,
@@ -496,7 +504,9 @@ class AdminFleetStore {
       filtered = filtered.filter(d =>
         d.fullName.toLowerCase().includes(q) ||
         d.driverCode.toLowerCase().includes(q) ||
+        (d.username && d.username.toLowerCase().includes(q)) ||
         d.employeeId.toLowerCase().includes(q) ||
+        (d.nic && d.nic.toLowerCase().includes(q)) ||
         d.mobileNumber.includes(q) ||
         (d.vehicleNumber && d.vehicleNumber.toLowerCase().includes(q))
       );
@@ -564,6 +574,7 @@ class AdminFleetStore {
     // 4. Build Complete Driver Dossier Object
     const newDriver: AdminDriver = {
       id: `drv-${driverCode.toLowerCase().replace(/[^a-z0-9]/g, '')}`,
+      username: driverCode,
       driverCode,
       fullName: data.fullName.trim(),
       employeeId: data.employeeId.trim().toUpperCase(),
@@ -715,6 +726,7 @@ class AdminFleetStore {
       const cleanPhone = identifier.replace(/[^0-9]/g, '');
 
       return dCode === clean ||
+             (d.username && d.username.toUpperCase().replace(/[^A-Z0-9]/g, '') === clean) ||
              dEmp === clean ||
              dNic === clean ||
              dId === identifier.toUpperCase() ||

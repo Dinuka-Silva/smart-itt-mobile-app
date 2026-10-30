@@ -494,9 +494,14 @@ export default function AdminDriversScreen() {
                         </View>
                       </View>
 
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 2 }}>
-                        <Text style={styles.driverCode}>
-                          CODE: <Text style={{ color: '#00e5ff', fontWeight: '800' }}>{d.driverCode || d.employeeId}</Text>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap', marginTop: 4 }}>
+                        <View style={styles.usernamePill}>
+                          <Ionicons name="key" size={10} color="#00e5ff" />
+                          <Text style={styles.usernamePillLabel}>LOGIN USERNAME:</Text>
+                          <Text style={styles.usernamePillValue}>{d.username || d.driverCode || d.employeeId}</Text>
+                        </View>
+                        <Text style={styles.driverEmpId}>
+                          EMP: <Text style={{ color: '#bac9cc', fontWeight: '700' }}>{d.employeeId}</Text>
                         </Text>
                         <Text style={styles.driverEmpId}>
                           NIC: <Text style={{ color: '#bac9cc' }}>{d.nic}</Text>
@@ -668,6 +673,49 @@ export default function AdminDriversScreen() {
                 <Text style={{ color: '#90caf9', fontSize: 12, fontWeight: '700' }}>OPERATIONAL STATUS</Text>
                 <View style={[styles.statusBadge, selectedDriver?.status === 'ACTIVE' ? styles.statusActive : selectedDriver?.status === 'SUSPENDED' ? styles.statusSuspended : styles.statusDeactivated]}>
                   <Text style={styles.statusBadgeText}>{selectedDriver?.status || 'ACTIVE'}</Text>
+                </View>
+              </View>
+
+              {/* Exclusive System Login Credentials */}
+              <Text style={styles.modalSectionLabel}>PORTAL LOGIN CREDENTIALS (ADMIN EXCLUSIVE)</Text>
+              <View style={[styles.detailCardBox, { borderColor: 'rgba(0, 229, 255, 0.35)', backgroundColor: 'rgba(0, 229, 255, 0.05)' }]}>
+                <View style={styles.detailRow}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <Ionicons name="key" size={14} color="#00e5ff" />
+                    <Text style={[styles.detailRowLabel, { color: '#00e5ff', fontWeight: '800' }]}>LOGIN USERNAME:</Text>
+                  </View>
+                  <View style={{ backgroundColor: 'rgba(0, 229, 255, 0.15)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6, borderWidth: 1, borderColor: '#00e5ff' }}>
+                    <Text style={{ color: '#00e5ff', fontSize: 13, fontWeight: '900', letterSpacing: 0.8 }}>
+                      {selectedDriver?.username || selectedDriver?.driverCode || selectedDriver?.employeeId}
+                    </Text>
+                  </View>
+                </View>
+                <View style={styles.detailRow}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <Ionicons name="barcode-outline" size={14} color="#bac9cc" />
+                    <Text style={styles.detailRowLabel}>Driver System Code:</Text>
+                  </View>
+                  <Text style={[styles.detailRowValue, { color: '#ffffff', fontWeight: '700' }]}>
+                    {selectedDriver?.driverCode || 'N/A'}
+                  </Text>
+                </View>
+                <View style={styles.detailRow}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <Ionicons name="card-outline" size={14} color="#bac9cc" />
+                    <Text style={styles.detailRowLabel}>Employee ID:</Text>
+                  </View>
+                  <Text style={[styles.detailRowValue, { color: '#ffffff', fontWeight: '700' }]}>
+                    {selectedDriver?.employeeId || 'N/A'}
+                  </Text>
+                </View>
+                <View style={styles.detailRow}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <Ionicons name="shield-checkmark" size={14} color="#22ef7e" />
+                    <Text style={styles.detailRowLabel}>Access Tier:</Text>
+                  </View>
+                  <Text style={[styles.detailRowValue, { color: '#22ef7e', fontWeight: '700' }]}>
+                    Mobile Driver App Enclave
+                  </Text>
                 </View>
               </View>
 
@@ -2062,6 +2110,29 @@ const styles = StyleSheet.create({
   operatorBadgeText: {
     fontSize: 9,
     fontWeight: '800',
+  },
+  usernamePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(0, 229, 255, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 229, 255, 0.35)',
+    borderRadius: 6,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  usernamePillLabel: {
+    color: '#00e5ff',
+    fontSize: 9,
+    fontWeight: '800',
+    letterSpacing: 0.3,
+  },
+  usernamePillValue: {
+    color: '#ffffff',
+    fontSize: 10,
+    fontWeight: '900',
+    letterSpacing: 0.5,
   },
   driverCode: {
     color: '#78909c',
