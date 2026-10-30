@@ -393,9 +393,10 @@ export default function LoginScreen() {
 
       const mockUser = {
         id: isSupervisor ? 'sup-demo-001' : (fleetDriver?.id || 'demo-user-123'),
-        username: cleanUser,
+        username: fleetDriver?.username || cleanUser,
         role: role as any,
         name: isSupervisor ? 'Nimal Silva (Supervisor)' : (fleetDriver?.fullName || 'Kamal Perera (Driver)'),
+        fullName: isSupervisor ? 'Nimal Silva (Supervisor)' : (fleetDriver?.fullName || 'Kamal Perera (Driver)'),
         token: 'demo-token-xyz',
         employeeId: isSupervisor ? (cleanUser.toUpperCase().startsWith('SUP') ? cleanUser.toUpperCase() : 'SUP001') : (fleetDriver?.employeeId || undefined),
         supervisorId: isSupervisor ? 'sup-123' : undefined,
@@ -407,6 +408,19 @@ export default function LoginScreen() {
         cheNumber: isSupervisor ? undefined : (fleetDriver?.cheNumber || 'CHE 100'),
         operator: isSupervisor ? undefined : ((fleetDriver as any)?.operator || 'SCK Logistics'),
         status: fleetDriver?.status || 'ACTIVE',
+        mobileNumber: fleetDriver?.mobileNumber,
+        email: fleetDriver?.email,
+        nic: fleetDriver?.nic,
+        address: fleetDriver?.address,
+        licenseNumber: fleetDriver?.licenseNumber,
+        licenseExpiryDate: fleetDriver?.licenseExpiryDate,
+        dateOfBirth: fleetDriver?.dateOfBirth,
+        emergencyContactName: fleetDriver?.emergencyContactName,
+        emergencyContactNumber: fleetDriver?.emergencyContactNumber,
+        profilePhoto: fleetDriver?.profilePhoto,
+        coverImage: fleetDriver?.coverImage,
+        driverPortPassExpiryDate: fleetDriver?.driverPortPassExpiryDate,
+        vehiclePortPassExpiryDate: fleetDriver?.vehiclePortPassExpiryDate,
       };
 
       if (mockUser.status === 'SUSPENDED') {
@@ -482,15 +496,32 @@ export default function LoginScreen() {
 
         const mockUser = {
           id: isSup ? 'sup-demo-001' : (isAdmin ? 'admin-root' : (fleetDriver?.id || 'demo-user-123')),
-          username: cleanUser,
+          username: fleetDriver?.username || cleanUser,
           role: role as any,
           name: isSup ? 'Nimal Silva (Supervisor)' : (isAdmin ? 'System Administrator' : (fleetDriver?.fullName || 'Kamal Perera (Driver)')),
+          fullName: isSup ? 'Nimal Silva (Supervisor)' : (isAdmin ? 'System Administrator' : (fleetDriver?.fullName || 'Kamal Perera (Driver)')),
           token: 'bio-verified-secure-token',
           driverCode: isSup || isAdmin ? undefined : (fleetDriver?.driverCode || (upperUser.startsWith('DRV') ? upperUser : 'DRV-00001')),
+          employeeId: isSup ? (upperUser.startsWith('SUP') ? upperUser : 'SUP001') : (fleetDriver?.employeeId || undefined),
           supervisorId: isSup ? 'sup-123' : undefined,
           supervisorPortPassExpiryDate: isSup ? '2026-11-18' : undefined,
           vehicleNumber: isSup || isAdmin ? undefined : (fleetDriver?.vehicleNumber || 'LY-6439'),
+          chassisNumber: isSup || isAdmin ? undefined : (fleetDriver?.chassisNumber || 'CHE 100'),
+          cheNumber: isSup || isAdmin ? undefined : (fleetDriver?.cheNumber || 'CHE 100'),
           status: fleetDriver?.status || 'ACTIVE',
+          mobileNumber: fleetDriver?.mobileNumber,
+          email: fleetDriver?.email,
+          nic: fleetDriver?.nic,
+          address: fleetDriver?.address,
+          licenseNumber: fleetDriver?.licenseNumber,
+          licenseExpiryDate: fleetDriver?.licenseExpiryDate,
+          dateOfBirth: fleetDriver?.dateOfBirth,
+          emergencyContactName: fleetDriver?.emergencyContactName,
+          emergencyContactNumber: fleetDriver?.emergencyContactNumber,
+          profilePhoto: fleetDriver?.profilePhoto,
+          coverImage: fleetDriver?.coverImage,
+          driverPortPassExpiryDate: fleetDriver?.driverPortPassExpiryDate,
+          vehiclePortPassExpiryDate: fleetDriver?.vehiclePortPassExpiryDate,
         };
 
         if (mockUser.status === 'SUSPENDED') {

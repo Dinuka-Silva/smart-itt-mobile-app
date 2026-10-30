@@ -295,6 +295,7 @@ export default function SupervisorDrivers() {
       ...d,
       fullName: d.fullName || d.name || `Driver ${idx + 1}`,
       driverCode: d.driverCode || d.empId || `DRV-${String(idx + 1).padStart(5, '0')}`,
+      username: d.username || d.driverCode || d.empId || `DRV-${String(idx + 1).padStart(5, '0')}`,
       employeeId: d.employeeId || `SCK-EMP-${String(1001 + idx)}`,
       nic: d.nic || `198${(5 + idx) % 15}${String(1000000 + idx * 837).slice(1)}V`,
       mobileNumber: d.mobileNumber || vMatch?.assignedDriver?.mobile || `+94 77 ${String(2345678 + idx * 1357).slice(0, 7)}`,
@@ -323,6 +324,7 @@ export default function SupervisorDrivers() {
     return (
       (d.fullName || '').toLowerCase().includes(q) ||
       (d.driverCode || '').toLowerCase().includes(q) ||
+      (d.username || '').toLowerCase().includes(q) ||
       (d.employeeId || '').toLowerCase().includes(q) ||
       (d.nic || '').toLowerCase().includes(q) ||
       (d.licenseNumber || '').toLowerCase().includes(q) ||
@@ -472,6 +474,12 @@ export default function SupervisorDrivers() {
                           <Text style={styles.driverEmpId}>
                             NIC: <Text style={{ color: '#bac9cc' }}>{drv.nic}</Text>
                           </Text>
+                        </View>
+                        {/* LOGIN USERNAME pill */}
+                        <View style={styles.usernamePill}>
+                          <Ionicons name="key" size={10} color="#00e5ff" />
+                          <Text style={styles.usernamePillLabel}>LOGIN USERNAME:</Text>
+                          <Text style={styles.usernamePillValue}>{drv.username || code}</Text>
                         </View>
                       </View>
 
@@ -900,6 +908,61 @@ export default function SupervisorDrivers() {
                         <Text style={styles.dossierItemLabel}>EMERGENCY PHONE NUMBER</Text>
                         <Text style={[styles.dossierItemValMono, { color: '#ffb4ab', fontWeight: '800' }]}>
                           {selectedDriver.emergencyContactNumber || '—'}
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
+
+                  {/* 6. SYSTEM LOGIN CREDENTIALS */}
+                  <View style={[styles.dossierSection, { borderColor: 'rgba(0,229,255,0.4)' }]}>
+                    <View style={styles.dossierSectionHeader}>
+                      <Ionicons name="key" size={15} color="#00e5ff" />
+                      <Text style={[styles.dossierSectionTitle, { color: '#00e5ff' }]}>SYSTEM LOGIN CREDENTIALS</Text>
+                    </View>
+                    {/* Big Username Highlight */}
+                    <View style={{
+                      backgroundColor: 'rgba(0,229,255,0.08)',
+                      borderWidth: 1,
+                      borderColor: 'rgba(0,229,255,0.35)',
+                      borderRadius: 10,
+                      paddingHorizontal: 14,
+                      paddingVertical: 12,
+                      marginBottom: 10,
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: 10,
+                    }}>
+                      <View style={{
+                        width: 36, height: 36,
+                        backgroundColor: 'rgba(0,229,255,0.15)',
+                        borderRadius: 18,
+                        alignItems: 'center', justifyContent: 'center',
+                      }}>
+                        <Ionicons name="person-circle" size={20} color="#00e5ff" />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={{ fontSize: 10, fontWeight: '700', color: '#849396', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 2 }}>
+                          App Login Username
+                        </Text>
+                        <Text style={{ fontSize: 18, fontWeight: '900', color: '#00e5ff', letterSpacing: 1.5, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace' }}>
+                          {selectedDriver.username || selectedDriver.driverCode}
+                        </Text>
+                      </View>
+                      <View style={{ backgroundColor: 'rgba(34,239,126,0.15)', borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3, borderWidth: 1, borderColor: 'rgba(34,239,126,0.4)' }}>
+                        <Text style={{ fontSize: 9, fontWeight: '800', color: '#22ef7e' }}>PORTAL ACCESS</Text>
+                      </View>
+                    </View>
+                    <View style={styles.dossierGrid}>
+                      <View style={styles.dossierItemHalf}>
+                        <Text style={styles.dossierItemLabel}>DRIVER CODE (ID)</Text>
+                        <Text style={[styles.dossierItemValMono, { color: '#00e5ff', fontWeight: '800' }]}>
+                          {selectedDriver.driverCode}
+                        </Text>
+                      </View>
+                      <View style={styles.dossierItemHalf}>
+                        <Text style={styles.dossierItemLabel}>EMPLOYEE ID</Text>
+                        <Text style={[styles.dossierItemValMono, { color: '#bac9cc' }]}>
+                          {selectedDriver.employeeId || '—'}
                         </Text>
                       </View>
                     </View>
@@ -1894,5 +1957,30 @@ const styles = StyleSheet.create({
     color: '#00363d',
     fontSize: 12,
     fontWeight: '800',
+  },
+  usernamePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(0, 229, 255, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 229, 255, 0.35)',
+    borderRadius: 6,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    marginTop: 4,
+    alignSelf: 'flex-start',
+  },
+  usernamePillLabel: {
+    color: '#00e5ff',
+    fontSize: 9,
+    fontWeight: '800',
+    letterSpacing: 0.3,
+  },
+  usernamePillValue: {
+    color: '#ffffff',
+    fontSize: 10,
+    fontWeight: '900',
+    letterSpacing: 0.5,
   },
 });
