@@ -126,12 +126,10 @@ export default function AdminVehiclesScreen() {
       setVehicles(vList);
 
       try {
-        const dData = await adminService.getDrivers();
-        if (Array.isArray(dData) && dData.length > 0) {
-          setDrivers(dData);
-        }
+        const dData = await adminFleetStore.getDrivers();
+        setDrivers(dData);
       } catch (e) {
-        // use local drivers
+        setDrivers(adminFleetStore.getAllDriversList());
       }
     } catch (err: any) {
       console.log('Error fetching vehicles:', err);
@@ -708,14 +706,16 @@ export default function AdminVehiclesScreen() {
 
               {drivers.map((d) => (
                 <TouchableOpacity
-                  key={d.id}
+                  key={d.id || d.driverCode}
                   style={styles.driverSelectItem}
-                  onPress={() => handleAssignDriver(d.id)}
+                  onPress={() => handleAssignDriver(d.id || d.driverCode)}
                 >
                   <Ionicons name="person-circle-outline" size={20} color="#00e5ff" />
-                  <View style={{ marginLeft: 10 }}>
+                  <View style={{ marginLeft: 10, flex: 1 }}>
                     <Text style={styles.driverSelectName}>{d.fullName}</Text>
-                    <Text style={styles.driverSelectCode}>{d.driverCode} • {d.mobileNumber}</Text>
+                    <Text style={styles.driverSelectCode}>
+                      USER: <Text style={{ color: '#00e5ff', fontWeight: '800' }}>{d.username || d.driverCode}</Text> • {d.employeeId} • {d.mobileNumber}
+                    </Text>
                   </View>
                 </TouchableOpacity>
               ))}
