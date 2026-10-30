@@ -20,6 +20,7 @@ import {
 } from '../../src/services/authService';
 import { useAuthStore } from '../../src/store/authStore';
 import { credentialStore } from '../../src/services/credentialStore';
+import { adminFleetStore } from '../../src/store/adminFleetStore';
 import { colors, radius, spacing } from '../../src/theme';
 
 import {
@@ -274,6 +275,10 @@ export default function DriverRegisterScreen() {
     const resolvedEmail = email.trim() || `${resolvedEmployeeId.toLowerCase()}@smartitt.lk`;
     const resolvedPassword = password.trim() || 'Password@123';
     const resolvedConfirm = confirmPassword.trim() || resolvedPassword;
+    const resolvedLicenseExpiry = licenseExpiryDate.trim() || '2030-12-31';
+    const resolvedDriverPortPassExpiry = driverPortPassExpiryDate.trim() || '2026-11-15';
+    const resolvedVehiclePortPassExpiry = vehiclePortPassExpiryDate.trim() || '2026-11-20';
+    const resolvedDob = dateOfBirth.trim() || '1992-06-15';
 
     const payload: DriverRegisterRequest = {
       fullName: resolvedFullName,
@@ -282,10 +287,10 @@ export default function DriverRegisterScreen() {
       mobileNumber: resolvedMobile,
       address: resolvedAddress,
       drivingLicenceNumber: resolvedLicense,
-      licenseExpiryDate: licenseExpiryDate.trim() || '2030-12-31',
-      driverPortPassExpiryDate: driverPortPassExpiryDate.trim() || '2026-11-15',
-      vehiclePortPassExpiryDate: vehiclePortPassExpiryDate.trim() || '2026-11-20',
-      dateOfBirth: dateOfBirth.trim() || '1992-06-15',
+      licenseExpiryDate: resolvedLicenseExpiry,
+      driverPortPassExpiryDate: resolvedDriverPortPassExpiry,
+      vehiclePortPassExpiryDate: resolvedVehiclePortPassExpiry,
+      dateOfBirth: resolvedDob,
       emergencyContactName: resolvedEmergencyName,
       emergencyContactNumber: resolvedEmergencyPhone,
       vehicleNumber: resolvedVehicleNumber,
@@ -304,6 +309,33 @@ export default function DriverRegisterScreen() {
 
       setGeneratedDriverCode(code);
       await credentialStore.recordPasswordChange(code, resolvedPassword);
+
+      // Instantly synchronize complete driver dossier into shared fleet store for Supervisor and Admin
+      await adminFleetStore.registerNewDriverAccount({
+        driverCode: code,
+        fullName: resolvedFullName,
+        employeeId: resolvedEmployeeId,
+        mobileNumber: resolvedMobile,
+        nic: resolvedNic,
+        address: resolvedAddress,
+        drivingLicenceNumber: resolvedLicense,
+        licenseNumber: resolvedLicense,
+        licenseExpiryDate: resolvedLicenseExpiry,
+        dateOfBirth: resolvedDob,
+        driverPortPassExpiryDate: resolvedDriverPortPassExpiry,
+        vehiclePortPassExpiryDate: resolvedVehiclePortPassExpiry,
+        emergencyContactName: resolvedEmergencyName,
+        emergencyContactNumber: resolvedEmergencyPhone,
+        vehicleNumber: resolvedVehicleNumber,
+        chassisNumber: resolvedCheNumber,
+        cheNumber: resolvedCheNumber,
+        operator: resolvedOperator,
+        trailerSize: resolvedTrailerSize,
+        email: resolvedEmail,
+        password: resolvedPassword,
+        status: 'ACTIVE',
+      });
+
       setRegisteredUser({
         ...response.user,
         driverCode: code,
@@ -319,9 +351,10 @@ export default function DriverRegisterScreen() {
         mobileNumber: resolvedMobile,
         address: resolvedAddress,
         licenseNumber: resolvedLicense,
-        licenseExpiryDate: licenseExpiryDate.trim() || '2030-12-31',
-        driverPortPassExpiryDate: driverPortPassExpiryDate.trim() || '2026-11-15',
-        vehiclePortPassExpiryDate: vehiclePortPassExpiryDate.trim() || '2026-11-20',
+        licenseExpiryDate: resolvedLicenseExpiry,
+        dateOfBirth: resolvedDob,
+        driverPortPassExpiryDate: resolvedDriverPortPassExpiry,
+        vehiclePortPassExpiryDate: resolvedVehiclePortPassExpiry,
         emergencyContactName: resolvedEmergencyName,
         emergencyContactNumber: resolvedEmergencyPhone,
       });
@@ -332,6 +365,33 @@ export default function DriverRegisterScreen() {
       const randomNum = String(Math.floor(Math.random() * 900) + 100).padStart(5, '0');
       const offlineCode = `DRV-${randomNum}`;
       setGeneratedDriverCode(offlineCode);
+
+      // Instantly synchronize complete driver dossier into shared fleet store for Supervisor and Admin
+      await adminFleetStore.registerNewDriverAccount({
+        driverCode: offlineCode,
+        fullName: resolvedFullName,
+        employeeId: resolvedEmployeeId,
+        mobileNumber: resolvedMobile,
+        nic: resolvedNic,
+        address: resolvedAddress,
+        drivingLicenceNumber: resolvedLicense,
+        licenseNumber: resolvedLicense,
+        licenseExpiryDate: resolvedLicenseExpiry,
+        dateOfBirth: resolvedDob,
+        driverPortPassExpiryDate: resolvedDriverPortPassExpiry,
+        vehiclePortPassExpiryDate: resolvedVehiclePortPassExpiry,
+        emergencyContactName: resolvedEmergencyName,
+        emergencyContactNumber: resolvedEmergencyPhone,
+        vehicleNumber: resolvedVehicleNumber,
+        chassisNumber: resolvedCheNumber,
+        cheNumber: resolvedCheNumber,
+        operator: resolvedOperator,
+        trailerSize: resolvedTrailerSize,
+        email: resolvedEmail,
+        password: resolvedPassword,
+        status: 'ACTIVE',
+      });
+
       setRegisteredUser({
         id: `mock-${Date.now()}`,
         username: offlineCode,
@@ -345,9 +405,10 @@ export default function DriverRegisterScreen() {
         operator: resolvedOperator,
         trailerSize: resolvedTrailerSize,
         fullName: resolvedFullName,
-        driverPortPassExpiryDate: driverPortPassExpiryDate.trim() || '2026-11-15',
-        vehiclePortPassExpiryDate: vehiclePortPassExpiryDate.trim() || '2026-11-20',
-        licenseExpiryDate: licenseExpiryDate.trim() || '2030-12-31',
+        driverPortPassExpiryDate: resolvedDriverPortPassExpiry,
+        vehiclePortPassExpiryDate: resolvedVehiclePortPassExpiry,
+        licenseExpiryDate: resolvedLicenseExpiry,
+        dateOfBirth: resolvedDob,
         nic: resolvedNic,
         employeeId: resolvedEmployeeId,
         mobileNumber: resolvedMobile,

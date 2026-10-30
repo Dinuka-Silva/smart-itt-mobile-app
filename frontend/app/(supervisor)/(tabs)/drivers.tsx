@@ -17,6 +17,7 @@ import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
 import API_BASE_URL from '../../../src/config/api';
 import { useAuthStore } from '../../../src/store/authStore';
+import { adminFleetStore } from '../../../src/store/adminFleetStore';
 import { radius, spacing } from '../../../src/theme';
 import { SCK_FLEET, resolveCheNumber, resolveOperator, findFleetVehicle } from '../../../src/config/fleet';
 import { useResponsive } from '../../../src/hooks/useResponsive';
@@ -122,6 +123,7 @@ export default function SupervisorDrivers() {
 
     try {
       await axios.put(`${API_BASE_URL}/drivers/${drvId}`, payload);
+      await adminFleetStore.updateDriverDetails(drvId, payload);
       setDrivers((prev) =>
         prev.map((d) => (d.id === drvId || d.driverCode === drvId ? { ...d, ...payload } : d))
       );
@@ -132,6 +134,7 @@ export default function SupervisorDrivers() {
       if (Platform.OS === 'web') window.alert('Driver dossier updated successfully!');
       else Alert.alert('Success', 'Driver dossier updated successfully!');
     } catch {
+      await adminFleetStore.updateDriverDetails(drvId, payload);
       setDrivers((prev) =>
         prev.map((d) => (d.id === drvId || d.driverCode === drvId ? { ...d, ...payload } : d))
       );
@@ -177,17 +180,64 @@ export default function SupervisorDrivers() {
 
   const fetchDrivers = useCallback(async () => {
     try {
-      const res = await axios.get(`${API_BASE_URL}/drivers`);
-      const list = Array.isArray(res.data) ? res.data : [];
-      if (list.length > 0) {
-        setDrivers(list.map((d: any, i: number) => ({
-          ...d,
-          monthlyTarget: d.monthlyTarget || 300,
-          monthlyContainers: d.monthlyContainers || (50 + ((i * 4) % 65)),
-        })));
-      } else {
-        setDrivers(getFallbackDrivers());
+      // 1. Fetch authoritative drivers from adminFleetStore (persisted registered drivers + fleet drivers)
+      const storeDrivers = await adminFleetStore.getDrivers();
+
+      // 2. Attempt remote sync with backend API if online
+      try {
+        const res = await axios.get(`${API_BASE_URL}/drivers`);
+        const list = Array.isArray(res.data) ? res.data : [];
+        if (list.length > 0) {
+          const remoteCodes = new Set(list.map((d: any) => (d.driverCode || d.empId || '').toUpperCase()));
+          const localOnly = storeDrivers.filter(
+            (sd) => !remoteCodes.has((sd.driverCode || '').toUpperCase()) &&
+                    !remoteCodes.has((sd.employeeId || '').toUpperCase())
+          );
+          const mergedRemote = list.map((remoteDriver: any, i: number) => {
+            const matchedStore = storeDrivers.find(
+              (sd) =>
+                (sd.driverCode && sd.driverCode.toUpperCase() === (remoteDriver.driverCode || '').toUpperCase()) ||
+                (sd.employeeId && sd.employeeId.toUpperCase() === (remoteDriver.employeeId || remoteDriver.empId || '').toUpperCase())
+            );
+            return {
+              ...matchedStore,
+              ...remoteDriver,
+              id: remoteDriver.id || matchedStore?.id || `d-${remoteDriver.driverCode || i}`,
+              fullName: remoteDriver.fullName || remoteDriver.name || matchedStore?.fullName || `Driver ${i + 1}`,
+              driverCode: remoteDriver.driverCode || remoteDriver.empId || matchedStore?.driverCode || `DRV-${String(i + 1).padStart(5, '0')}`,
+              employeeId: remoteDriver.employeeId || remoteDriver.empId || matchedStore?.employeeId || `SCK-EMP-${1001 + i}`,
+              nic: remoteDriver.nic || matchedStore?.nic || `1985${String(1000000 + i * 837).slice(1)}V`,
+              mobileNumber: remoteDriver.mobileNumber || matchedStore?.mobileNumber || '+94 77 123 4567',
+              vehicleNumber: remoteDriver.vehicleNumber || matchedStore?.vehicleNumber || 'LY-6439',
+              chassisNumber: remoteDriver.chassisNumber || remoteDriver.cheNumber || matchedStore?.chassisNumber || 'SCK 100',
+              cheNumber: remoteDriver.cheNumber || remoteDriver.chassisNumber || matchedStore?.cheNumber || 'SCK 100',
+              operator: remoteDriver.operator || matchedStore?.operator || 'SCK Logistics',
+              trailerSize: remoteDriver.trailerSize || matchedStore?.trailerSize || '40FT',
+              licenseNumber: remoteDriver.licenseNumber || remoteDriver.drivingLicenceNumber || matchedStore?.licenseNumber || 'LIC-000000',
+              licenseExpiryDate: remoteDriver.licenseExpiryDate || matchedStore?.licenseExpiryDate || '2030-12-31',
+              dateOfBirth: remoteDriver.dateOfBirth || matchedStore?.dateOfBirth || '1992-06-15',
+              driverPortPassExpiryDate: remoteDriver.driverPortPassExpiryDate || matchedStore?.driverPortPassExpiryDate || '2026-11-15',
+              vehiclePortPassExpiryDate: remoteDriver.vehiclePortPassExpiryDate || matchedStore?.vehiclePortPassExpiryDate || '2026-11-20',
+              address: remoteDriver.address || matchedStore?.address || 'Port Access Road, Colombo',
+              email: remoteDriver.email || matchedStore?.email || `${(remoteDriver.employeeId || 'drv').toLowerCase()}@smartitt.lk`,
+              emergencyContactName: remoteDriver.emergencyContactName || matchedStore?.emergencyContactName || 'Port Dispatch Control',
+              emergencyContactNumber: remoteDriver.emergencyContactNumber || matchedStore?.emergencyContactNumber || '0112456789',
+              status: remoteDriver.status || matchedStore?.status || 'ACTIVE',
+              monthlyTarget: remoteDriver.monthlyTarget || matchedStore?.monthlyTarget || 300,
+              monthlyContainers: remoteDriver.monthlyContainers || matchedStore?.monthlyContainers || (50 + ((i * 4) % 65)),
+              totalTrips: remoteDriver.totalTrips ?? matchedStore?.totalTrips ?? (50 + ((i * 4) % 65)),
+              profilePhoto: remoteDriver.profilePhoto || matchedStore?.profilePhoto || DRIVER_PHOTO_POOL[i % DRIVER_PHOTO_POOL.length],
+              coverImage: remoteDriver.coverImage || matchedStore?.coverImage || DRIVER_COVER_POOL[i % DRIVER_COVER_POOL.length],
+            };
+          });
+          setDrivers([...localOnly, ...mergedRemote]);
+          return;
+        }
+      } catch (apiErr) {
+        // Backend offline / mock fallback: use storeDrivers
       }
+
+      setDrivers(storeDrivers);
     } catch {
       setDrivers(getFallbackDrivers());
     } finally {
@@ -211,18 +261,20 @@ export default function SupervisorDrivers() {
     setUpdatingStatus(true);
     try {
       await axios.patch(`${API_BASE_URL}/drivers/${drv.id}/status`, { status: newStatus });
+      await adminFleetStore.updateDriverStatus(drv.id || drv.driverCode, newStatus);
       setDrivers((prev) =>
-        prev.map((d) => (d.id === drv.id ? { ...d, status: newStatus } : d))
+        prev.map((d) => (d.id === drv.id || d.driverCode === drv.driverCode ? { ...d, status: newStatus } : d))
       );
-      if (selectedDriver && selectedDriver.id === drv.id) {
+      if (selectedDriver && (selectedDriver.id === drv.id || selectedDriver.driverCode === drv.id)) {
         setSelectedDriver({ ...selectedDriver, status: newStatus });
       }
     } catch {
+      await adminFleetStore.updateDriverStatus(drv.id || drv.driverCode, newStatus);
       // Local state toggle if offline or demo
       setDrivers((prev) =>
-        prev.map((d) => (d.id === drv.id ? { ...d, status: newStatus } : d))
+        prev.map((d) => (d.id === drv.id || d.driverCode === drv.driverCode ? { ...d, status: newStatus } : d))
       );
-      if (selectedDriver && selectedDriver.id === drv.id) {
+      if (selectedDriver && (selectedDriver.id === drv.id || selectedDriver.driverCode === drv.id)) {
         setSelectedDriver({ ...selectedDriver, status: newStatus });
       }
     } finally {
@@ -235,8 +287,8 @@ export default function SupervisorDrivers() {
       (f) => f.vehicleNumber === d.vehicleNumber || f.cheNumber === d.chassisNumber || f.assignedDriver?.driverCode === d.driverCode
     );
     const resolvedVeh = d.vehicleNumber || vMatch?.vehicleNumber || 'LY-6439';
-    const resolvedChe = resolveCheNumber(resolvedVeh, d.chassisNumber || d.cheNumber || vMatch?.cheNumber);
-    const resolvedOp = resolveOperator(resolvedVeh, d.operator || vMatch?.operator);
+    const resolvedChe = d.chassisNumber || d.cheNumber || resolveCheNumber(resolvedVeh, vMatch?.cheNumber);
+    const resolvedOp = d.operator || resolveOperator(resolvedVeh, vMatch?.operator);
 
     return {
       ...d,
@@ -247,7 +299,7 @@ export default function SupervisorDrivers() {
       mobileNumber: d.mobileNumber || vMatch?.assignedDriver?.mobile || `+94 77 ${String(2345678 + idx * 1357).slice(0, 7)}`,
       email: d.email || `${(d.fullName || d.name || `driver${idx + 1}`).toLowerCase().replace(/\s+/g, '.')}@scklogistics.lk`,
       address: d.address || `No. ${14 + idx * 2}, Port Access Road, Colombo 15, Sri Lanka`,
-      licenseNumber: d.licenseNumber || `B${String(8765400 + idx * 12)}`,
+      licenseNumber: d.licenseNumber || d.drivingLicenceNumber || `B${String(8765400 + idx * 12)}`,
       licenseExpiryDate: d.licenseExpiryDate || `2028-09-${String(10 + (idx % 18)).padStart(2, '0')}`,
       dateOfBirth: d.dateOfBirth || `198${(5 + idx) % 10}-0${1 + (idx % 9)}-${String(12 + (idx % 15)).padStart(2, '0')}`,
       emergencyContactName: d.emergencyContactName || (idx % 2 === 0 ? 'Nimali Perera (Spouse)' : 'Bandara Silva (Brother)'),
@@ -257,7 +309,7 @@ export default function SupervisorDrivers() {
       cheNumber: resolvedChe,
       operator: resolvedOp,
       status: d.status || 'ACTIVE',
-      totalTrips: d.totalTrips || (20 + ((idx * 7) % 35)),
+      totalTrips: d.totalTrips ?? (20 + ((idx * 7) % 35)),
       createdAt: d.createdAt || '2024-02-15T08:30:00',
       driverPortPassExpiryDate: d.driverPortPassExpiryDate || '2026-11-15',
       vehiclePortPassExpiryDate: d.vehiclePortPassExpiryDate || '2026-11-20',

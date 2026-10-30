@@ -1,5 +1,7 @@
 import { adminService } from '../services/adminService';
 import { credentialStore } from '../services/credentialStore';
+import { storage } from '../services/storage';
+import { findFleetVehicle, resolveCheNumber, resolveOperator, resolveTrailerSize } from '../config/fleet';
 
 export interface AdminVehicle {
   id: string;
@@ -45,8 +47,42 @@ export interface AdminDriver {
   emergencyContactName?: string;
   emergencyContactNumber?: string;
   operator?: string;
+  trailerSize?: string;
+  dateOfBirth?: string;
+  driverPortPassExpiryDate?: string;
+  vehiclePortPassExpiryDate?: string;
   totalTrips: number;
+  monthlyTarget?: number;
+  monthlyContainers?: number;
+  createdAt?: string;
+  profilePhoto?: string;
+  coverImage?: string;
 }
+
+const STORAGE_KEY_CUSTOM_DRIVERS = 'itt_admin_fleet_custom_drivers';
+const STORAGE_KEY_CUSTOM_VEHICLES = 'itt_admin_fleet_custom_vehicles';
+const STORAGE_KEY_STATUS_OVERRIDES = 'itt_admin_fleet_status_overrides';
+
+const DRIVER_PHOTO_POOL = [
+  'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80',
+  'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=300&q=80',
+  'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=300&q=80',
+  'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=300&q=80',
+  'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80',
+  'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=300&q=80',
+  'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?auto=format&fit=crop&w=300&q=80',
+  'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=300&q=80',
+  'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=300&q=80',
+  'https://images.unsplash.com/photo-1528892952291-009c663ce843?auto=format&fit=crop&w=300&q=80',
+];
+
+const DRIVER_COVER_POOL = [
+  'https://images.unsplash.com/photo-1578575437130-527eed3abbec?auto=format&fit=crop&w=1200&q=80',
+  'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=1200&q=80',
+  'https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?auto=format&fit=crop&w=1200&q=80',
+  'https://images.unsplash.com/photo-1518241353330-0f7941c2d9b5?auto=format&fit=crop&w=1200&q=80',
+  'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?auto=format&fit=crop&w=1200&q=80',
+];
 
 // Initial 23 Authorized Fleet Vehicles (18 SCK Logistics + 5 SDR LINK)
 const INITIAL_VEHICLES: AdminVehicle[] = [
@@ -106,9 +142,86 @@ const INITIAL_DRIVERS: AdminDriver[] = [
 class AdminFleetStore {
   private vehicles: AdminVehicle[] = [...INITIAL_VEHICLES];
   private drivers: AdminDriver[] = [...INITIAL_DRIVERS];
+  private initialized = false;
+
+  async init(): Promise<void> {
+    if (this.initialized) return;
+    try {
+      // 1. Load custom registered drivers
+      const rawDrivers = await storage.getItem(STORAGE_KEY_CUSTOM_DRIVERS);
+      if (rawDrivers) {
+        const customDrivers = JSON.parse(rawDrivers);
+        if (Array.isArray(customDrivers)) {
+          for (const cd of customDrivers) {
+            const idx = this.drivers.findIndex(
+              d => d.driverCode.toUpperCase() === cd.driverCode?.toUpperCase() ||
+                   d.id === cd.id ||
+                   (cd.employeeId && d.employeeId?.toUpperCase() === cd.employeeId.toUpperCase())
+            );
+            if (idx !== -1) {
+              this.drivers[idx] = { ...this.drivers[idx], ...cd };
+            } else {
+              this.drivers.unshift(cd);
+            }
+          }
+        }
+      }
+
+      // 2. Load custom vehicles
+      const rawVehicles = await storage.getItem(STORAGE_KEY_CUSTOM_VEHICLES);
+      if (rawVehicles) {
+        const customVehicles = JSON.parse(rawVehicles);
+        if (Array.isArray(customVehicles)) {
+          for (const cv of customVehicles) {
+            const idx = this.vehicles.findIndex(
+              v => v.vehicleNumber.toUpperCase() === cv.vehicleNumber?.toUpperCase() || v.id === cv.id
+            );
+            if (idx !== -1) {
+              this.vehicles[idx] = { ...this.vehicles[idx], ...cv };
+            } else {
+              this.vehicles.unshift(cv);
+            }
+          }
+        }
+      }
+
+      // 3. Load status overrides
+      const rawOverrides = await storage.getItem(STORAGE_KEY_STATUS_OVERRIDES);
+      if (rawOverrides) {
+        const overrides: Record<string, string> = JSON.parse(rawOverrides);
+        for (const [codeOrId, status] of Object.entries(overrides)) {
+          const d = this.drivers.find(
+            drv => drv.driverCode.toUpperCase() === codeOrId.toUpperCase() ||
+                   drv.employeeId.toUpperCase() === codeOrId.toUpperCase() ||
+                   drv.id === codeOrId
+          );
+          if (d) d.status = status;
+        }
+      }
+    } catch (e) {
+      console.warn('[AdminFleetStore] Local storage initialization warning:', e);
+    }
+    this.initialized = true;
+  }
+
+  private async persistCustomData(): Promise<void> {
+    try {
+      const initialCodes = new Set(INITIAL_DRIVERS.map(d => d.driverCode.toUpperCase()));
+      const customDrivers = this.drivers.filter(d => !initialCodes.has(d.driverCode.toUpperCase()));
+      await storage.setItem(STORAGE_KEY_CUSTOM_DRIVERS, JSON.stringify(customDrivers));
+
+      const initialPlates = new Set(INITIAL_VEHICLES.map(v => v.vehicleNumber.toUpperCase()));
+      const customVehicles = this.vehicles.filter(v => !initialPlates.has(v.vehicleNumber.toUpperCase()));
+      await storage.setItem(STORAGE_KEY_CUSTOM_VEHICLES, JSON.stringify(customVehicles));
+    } catch (e) {
+      console.warn('[AdminFleetStore] Failed to persist custom data:', e);
+    }
+  }
 
   // ─── VEHICLES ──────────────────────────────────────────────────
   async getVehicles(search?: string, operator?: string, status?: string): Promise<AdminVehicle[]> {
+    await this.init();
+
     try {
       const remote = await adminService.getVehicles(search, operator, status);
       if (Array.isArray(remote) && remote.length > 0) {
@@ -178,6 +291,7 @@ class AdminFleetStore {
     portPassExpiryDate?: string;
     status?: string;
   }): Promise<AdminVehicle> {
+    await this.init();
     const formattedPlate = data.vehicleNumber.trim().toUpperCase();
     const formattedChassis = data.chassisNumber.trim().toUpperCase();
     const operator = data.operator.trim();
@@ -225,6 +339,7 @@ class AdminFleetStore {
 
     // Prepend to authoritative list
     this.vehicles = [newVehicle, ...this.vehicles];
+    await this.persistCustomData();
     return newVehicle;
   }
 
@@ -240,6 +355,7 @@ class AdminFleetStore {
       } catch (e) {
         console.log('[AdminFleetStore] Remote update vehicle status failed, local updated');
       }
+      await this.persistCustomData();
       return this.vehicles[idx];
     }
     return null;
@@ -283,6 +399,7 @@ class AdminFleetStore {
       } catch (e) {
         console.log('[AdminFleetStore] Remote driver assignment failed, local updated');
       }
+      await this.persistCustomData();
       return this.vehicles[idx];
     }
     return null;
@@ -290,34 +407,81 @@ class AdminFleetStore {
 
   // ─── DRIVERS ───────────────────────────────────────────────────
   async getDrivers(search?: string, status?: string): Promise<AdminDriver[]> {
+    await this.init();
+
     try {
       const remote = await adminService.getDrivers(search, status);
       if (Array.isArray(remote) && remote.length > 0) {
-        const remoteCodes = new Set(remote.map((r: any) => (r.driverCode || '').toUpperCase()));
-        const localNew = this.drivers.filter(d => !remoteCodes.has(d.driverCode.toUpperCase()));
-        this.drivers = [...localNew, ...remote.map((r: any) => ({
-          id: r.id || `d-${r.driverCode}`,
-          driverCode: r.driverCode,
-          fullName: r.fullName,
-          employeeId: r.employeeId,
-          mobileNumber: r.mobileNumber,
-          nic: r.nic,
-          status: r.status || 'ACTIVE',
-          vehicleNumber: r.vehicleNumber,
-          chassisNumber: r.chassisNumber || r.cheNumber,
-          cheNumber: r.cheNumber || r.chassisNumber,
-          licenseNumber: r.licenseNumber || r.drivingLicenceNumber || 'LIC-000000',
-          licenseExpiryDate: r.licenseExpiryDate || '2028-12-31',
-          portPassNumber: r.portPassNumber || `SLPA-DPP-${r.driverCode.slice(-3)}`,
-          portPassExpiryDate: r.portPassExpiryDate || '2027-06-30',
-          portPassStatus: r.portPassStatus || 'VALID',
-          portPassDaysLeft: r.portPassDaysLeft ?? 240,
-          address: r.address || '',
-          email: r.email || '',
-          emergencyContactName: r.emergencyContactName || '',
-          emergencyContactNumber: r.emergencyContactNumber || '',
-          totalTrips: r.totalTrips ?? 0,
-        }))];
+        for (const r of remote) {
+          const rCode = (r.driverCode || '').toUpperCase();
+          const rEmp = (r.employeeId || '').toUpperCase();
+          const existingIdx = this.drivers.findIndex(
+            d => (rCode && d.driverCode.toUpperCase() === rCode) ||
+                 (rEmp && d.employeeId.toUpperCase() === rEmp)
+          );
+
+          if (existingIdx !== -1) {
+            // Merge remote while preserving rich local fields
+            this.drivers[existingIdx] = {
+              ...this.drivers[existingIdx],
+              ...r,
+              id: r.id || this.drivers[existingIdx].id,
+              driverCode: r.driverCode || this.drivers[existingIdx].driverCode,
+              fullName: r.fullName || this.drivers[existingIdx].fullName,
+              employeeId: r.employeeId || this.drivers[existingIdx].employeeId,
+              mobileNumber: r.mobileNumber || this.drivers[existingIdx].mobileNumber,
+              nic: r.nic || this.drivers[existingIdx].nic,
+              status: r.status || this.drivers[existingIdx].status,
+              vehicleNumber: r.vehicleNumber || this.drivers[existingIdx].vehicleNumber,
+              chassisNumber: r.chassisNumber || r.cheNumber || this.drivers[existingIdx].chassisNumber,
+              cheNumber: r.cheNumber || r.chassisNumber || this.drivers[existingIdx].cheNumber,
+              licenseNumber: r.licenseNumber || r.drivingLicenceNumber || this.drivers[existingIdx].licenseNumber,
+              licenseExpiryDate: r.licenseExpiryDate || this.drivers[existingIdx].licenseExpiryDate,
+              portPassNumber: r.portPassNumber || this.drivers[existingIdx].portPassNumber,
+              portPassExpiryDate: r.portPassExpiryDate || this.drivers[existingIdx].portPassExpiryDate,
+              dateOfBirth: r.dateOfBirth || this.drivers[existingIdx].dateOfBirth,
+              driverPortPassExpiryDate: r.driverPortPassExpiryDate || this.drivers[existingIdx].driverPortPassExpiryDate,
+              vehiclePortPassExpiryDate: r.vehiclePortPassExpiryDate || this.drivers[existingIdx].vehiclePortPassExpiryDate,
+              address: r.address || this.drivers[existingIdx].address,
+              email: r.email || this.drivers[existingIdx].email,
+              emergencyContactName: r.emergencyContactName || this.drivers[existingIdx].emergencyContactName,
+              emergencyContactNumber: r.emergencyContactNumber || this.drivers[existingIdx].emergencyContactNumber,
+              operator: r.operator || this.drivers[existingIdx].operator,
+              trailerSize: r.trailerSize || this.drivers[existingIdx].trailerSize,
+              totalTrips: r.totalTrips ?? this.drivers[existingIdx].totalTrips,
+            };
+          } else {
+            // New driver from remote
+            this.drivers.push({
+              id: r.id || `d-${r.driverCode}`,
+              driverCode: r.driverCode,
+              fullName: r.fullName,
+              employeeId: r.employeeId,
+              mobileNumber: r.mobileNumber,
+              nic: r.nic,
+              status: r.status || 'ACTIVE',
+              vehicleNumber: r.vehicleNumber,
+              chassisNumber: r.chassisNumber || r.cheNumber,
+              cheNumber: r.cheNumber || r.chassisNumber,
+              licenseNumber: r.licenseNumber || r.drivingLicenceNumber || 'LIC-000000',
+              licenseExpiryDate: r.licenseExpiryDate || '2028-12-31',
+              portPassNumber: r.portPassNumber || `SLPA-DPP-${r.driverCode.slice(-3)}`,
+              portPassExpiryDate: r.portPassExpiryDate || '2027-06-30',
+              portPassStatus: r.portPassStatus || 'VALID',
+              portPassDaysLeft: r.portPassDaysLeft ?? 240,
+              address: r.address || '',
+              email: r.email || '',
+              emergencyContactName: r.emergencyContactName || '',
+              emergencyContactNumber: r.emergencyContactNumber || '',
+              operator: r.operator || (r.vehicleNumber?.startsWith('LY-65') ? 'SDR LINK' : 'SCK Logistics'),
+              trailerSize: r.trailerSize || '40FT',
+              dateOfBirth: r.dateOfBirth || '1990-01-01',
+              driverPortPassExpiryDate: r.driverPortPassExpiryDate || '2026-11-15',
+              vehiclePortPassExpiryDate: r.vehiclePortPassExpiryDate || '2026-11-20',
+              totalTrips: r.totalTrips ?? 0,
+            });
+          }
+        }
       }
     } catch (e) {
       // Backend offline: use memory state
@@ -340,6 +504,181 @@ class AdminFleetStore {
     return filtered;
   }
 
+  /**
+   * Authoritative handler for newly registered drivers (from Auth Register flow or Admin creation).
+   * Instantly creates a complete dossier, persists it locally, links vehicle, and triggers backend persistence.
+   */
+  async registerNewDriverAccount(data: {
+    driverCode?: string;
+    fullName: string;
+    employeeId: string;
+    nic: string;
+    mobileNumber: string;
+    address?: string;
+    drivingLicenceNumber?: string;
+    licenseNumber?: string;
+    licenseExpiryDate?: string;
+    dateOfBirth?: string;
+    driverPortPassExpiryDate?: string;
+    vehiclePortPassExpiryDate?: string;
+    emergencyContactName?: string;
+    emergencyContactNumber?: string;
+    vehicleNumber?: string;
+    chassisNumber?: string;
+    cheNumber?: string;
+    operator?: string;
+    trailerSize?: string;
+    email?: string;
+    password?: string;
+    status?: string;
+    profilePhoto?: string;
+    coverImage?: string;
+  }): Promise<AdminDriver> {
+    await this.init();
+
+    // 1. Resolve Driver Code
+    let driverCode = (data.driverCode || '').trim().toUpperCase();
+    if (!driverCode) {
+      const nextIndex = this.drivers.length + 1;
+      driverCode = `DRV-${String(nextIndex).padStart(5, '0')}`;
+    }
+    const codeSuffix = (driverCode.replace(/[^0-9]/g, '') || String(this.drivers.length + 1)).slice(-3).padStart(3, '0');
+
+    // 2. Port Pass Expirations & Calculations
+    const driverPassExp = data.driverPortPassExpiryDate || '2026-11-15';
+    const vehiclePassExp = data.vehiclePortPassExpiryDate || '2026-11-20';
+    const diffDays = Math.ceil((new Date(driverPassExp).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+    const portPassDaysLeft = isNaN(diffDays) ? 240 : diffDays;
+    const portPassStatus = portPassDaysLeft <= 30 ? 'RENEWAL_DUE' : 'VALID';
+    const portPassNumber = `SLPA-DPP-${codeSuffix}`;
+
+    // 3. Resolve Vehicle, CHE, Operator & Trailer
+    const vPlate = data.vehicleNumber && data.vehicleNumber.trim().toUpperCase() !== 'UNASSIGNED'
+      ? data.vehicleNumber.trim().toUpperCase()
+      : 'UNASSIGNED';
+    const fleetMatch = vPlate !== 'UNASSIGNED' ? findFleetVehicle(vPlate) : undefined;
+    const che = (data.cheNumber || data.chassisNumber || fleetMatch?.cheNumber || resolveCheNumber(vPlate)).toUpperCase();
+    const op = data.operator || fleetMatch?.operator || resolveOperator(vPlate);
+    const trailer = data.trailerSize || fleetMatch?.trailerSize || resolveTrailerSize(vPlate);
+
+    // 4. Build Complete Driver Dossier Object
+    const newDriver: AdminDriver = {
+      id: `drv-${driverCode.toLowerCase().replace(/[^a-z0-9]/g, '')}`,
+      driverCode,
+      fullName: data.fullName.trim(),
+      employeeId: data.employeeId.trim().toUpperCase(),
+      mobileNumber: data.mobileNumber.trim(),
+      nic: data.nic.trim().toUpperCase(),
+      status: data.status || 'ACTIVE',
+      vehicleNumber: vPlate,
+      chassisNumber: che,
+      cheNumber: che,
+      operator: op,
+      trailerSize: trailer,
+      licenseNumber: (data.drivingLicenceNumber || data.licenseNumber || `LIC-${codeSuffix}88`).trim().toUpperCase(),
+      licenseExpiryDate: data.licenseExpiryDate?.trim() || '2030-12-31',
+      dateOfBirth: data.dateOfBirth?.trim() || '1992-06-15',
+      portPassNumber,
+      portPassExpiryDate: driverPassExp,
+      driverPortPassExpiryDate: driverPassExp,
+      vehiclePortPassExpiryDate: vehiclePassExp,
+      portPassStatus,
+      portPassDaysLeft,
+      address: data.address?.trim() || 'No. 45/B, Port Access Road, Colombo 13',
+      email: data.email?.trim() || `${data.employeeId.trim().toLowerCase()}@smartitt.lk`,
+      emergencyContactName: data.emergencyContactName?.trim() || 'Port Dispatch Control',
+      emergencyContactNumber: data.emergencyContactNumber?.trim() || '0112456789',
+      totalTrips: 0,
+      monthlyTarget: 300,
+      monthlyContainers: 0,
+      createdAt: new Date().toISOString(),
+      profilePhoto: data.profilePhoto || DRIVER_PHOTO_POOL[this.drivers.length % DRIVER_PHOTO_POOL.length],
+      coverImage: data.coverImage || DRIVER_COVER_POOL[this.drivers.length % DRIVER_COVER_POOL.length],
+    };
+
+    // 5. Update or Prepend in Authoritative Drivers State
+    const existingIdx = this.drivers.findIndex(
+      d => d.driverCode.toUpperCase() === driverCode ||
+           d.employeeId.toUpperCase() === newDriver.employeeId ||
+           d.nic.toUpperCase() === newDriver.nic
+    );
+    if (existingIdx !== -1) {
+      this.drivers[existingIdx] = { ...this.drivers[existingIdx], ...newDriver };
+    } else {
+      this.drivers = [newDriver, ...this.drivers];
+    }
+
+    // 6. Link assigned Prime Mover vehicle in fleet
+    if (vPlate !== 'UNASSIGNED') {
+      const vIdx = this.vehicles.findIndex(v => v.vehicleNumber.toUpperCase() === vPlate);
+      if (vIdx !== -1) {
+        this.vehicles[vIdx] = {
+          ...this.vehicles[vIdx],
+          driverName: newDriver.fullName,
+          driverCode: newDriver.driverCode,
+          driverMobile: newDriver.mobileNumber,
+        };
+      } else {
+        // Prime mover vehicle not yet in active list: create it
+        const newVehicle: AdminVehicle = {
+          id: `v-${Date.now()}`,
+          vehicleNumber: vPlate,
+          chassisNumber: che,
+          cheNumber: che,
+          operator: op,
+          trailerSize: trailer,
+          status: 'ACTIVE',
+          driverName: newDriver.fullName,
+          driverCode: newDriver.driverCode,
+          driverMobile: newDriver.mobileNumber,
+          licenseStatus: 'VALID',
+          daysUntilExpiry: 365,
+          licenseIssuedDate: new Date().toISOString().split('T')[0],
+          licenseExpiryDate: '2027-10-31',
+          portPassNumber: `SLPA-VPP-${che.replace(/[^A-Za-z0-9]/g, '')}`,
+          portPassExpiryDate: vehiclePassExp,
+          portPassStatus: 'VALID',
+          portPassDaysUntilExpiry: 200,
+          totalTrips: 0,
+        };
+        this.vehicles = [newVehicle, ...this.vehicles];
+      }
+    }
+
+    // 7. Persist to storage
+    await this.persistCustomData();
+
+    // 8. Sync password to secure credentialStore if provided
+    if (data.password) {
+      try {
+        await credentialStore.recordPasswordChange(driverCode, data.password);
+        await credentialStore.recordPasswordChange(newDriver.employeeId, data.password);
+        if (newDriver.email) await credentialStore.recordPasswordChange(newDriver.email, data.password);
+      } catch (e) {
+        console.warn('[AdminFleetStore] Credential recording warning:', e);
+      }
+    }
+
+    // 9. Synchronize with remote backend API (non-blocking)
+    try {
+      await adminService.createDriver({
+        fullName: newDriver.fullName,
+        employeeId: newDriver.employeeId,
+        nic: newDriver.nic,
+        mobileNumber: newDriver.mobileNumber,
+        drivingLicenceNumber: newDriver.licenseNumber,
+        vehicleNumber: newDriver.vehicleNumber !== 'UNASSIGNED' ? newDriver.vehicleNumber : '',
+        chassisNumber: newDriver.chassisNumber !== 'UNASSIGNED' ? newDriver.chassisNumber : '',
+        password: data.password || 'driver',
+        driverCode: newDriver.driverCode,
+      });
+    } catch (e) {
+      console.log('[AdminFleetStore] Backend offline, new driver saved locally');
+    }
+
+    return newDriver;
+  }
+
   async addDriver(data: {
     fullName: string;
     employeeId: string;
@@ -351,70 +690,17 @@ class AdminFleetStore {
     password?: string;
     address?: string;
     email?: string;
+    licenseExpiryDate?: string;
+    driverPortPassExpiryDate?: string;
+    vehiclePortPassExpiryDate?: string;
+    dateOfBirth?: string;
+    emergencyContactName?: string;
+    emergencyContactNumber?: string;
   }): Promise<AdminDriver> {
-    const nextIndex = this.drivers.length + 1;
-    const driverCode = `DRV-${String(nextIndex).padStart(5, '0')}`;
-    const codeSuffix = String(nextIndex).padStart(3, '0');
-
-    // Try backend persistence
-    try {
-      await adminService.createDriver({
-        fullName: data.fullName.trim(),
-        employeeId: data.employeeId.trim().toUpperCase(),
-        nic: data.nic.trim(),
-        mobileNumber: data.mobileNumber.trim(),
-        drivingLicenceNumber: data.drivingLicenceNumber.trim().toUpperCase(),
-        vehicleNumber: data.vehicleNumber ? data.vehicleNumber.trim().toUpperCase() : '',
-        chassisNumber: data.chassisNumber ? data.chassisNumber.trim().toUpperCase() : '',
-        password: data.password || 'driver',
-        driverCode,
-      });
-    } catch (e) {
-      console.log('[AdminFleetStore] Backend offline, saving driver locally');
-    }
-
-    const newDriver: AdminDriver = {
-      id: `d-${Date.now()}`,
-      driverCode,
-      fullName: data.fullName.trim(),
-      employeeId: data.employeeId.trim().toUpperCase(),
-      mobileNumber: data.mobileNumber.trim(),
-      nic: data.nic.trim(),
-      status: 'ACTIVE',
-      vehicleNumber: data.vehicleNumber?.trim().toUpperCase() || 'UNASSIGNED',
-      chassisNumber: data.chassisNumber?.trim().toUpperCase() || 'UNASSIGNED',
-      cheNumber: data.chassisNumber?.trim().toUpperCase() || 'UNASSIGNED',
-      licenseNumber: data.drivingLicenceNumber.trim().toUpperCase(),
-      licenseExpiryDate: '2029-12-31',
-      portPassNumber: `SLPA-DPP-${codeSuffix}`,
-      portPassExpiryDate: '2027-10-31',
-      portPassStatus: 'VALID',
-      portPassDaysLeft: 365,
-      address: data.address || 'Port Access Road, Colombo',
-      email: data.email || `${data.employeeId.toLowerCase()}@smartitt.lk`,
-      emergencyContactName: 'Next of Kin',
-      emergencyContactNumber: data.mobileNumber,
-      totalTrips: 0,
-    };
-
-    // Prepend to driver list
-    this.drivers = [newDriver, ...this.drivers];
-
-    // Link vehicle if assigned
-    if (data.vehicleNumber && data.vehicleNumber.trim().toUpperCase() !== 'UNASSIGNED') {
-      const vPlate = data.vehicleNumber.trim().toUpperCase();
-      const vIdx = this.vehicles.findIndex(v => v.vehicleNumber.toUpperCase() === vPlate);
-      if (vIdx !== -1) {
-        this.vehicles[vIdx] = {
-          ...this.vehicles[vIdx],
-          driverName: newDriver.fullName,
-          driverCode: newDriver.driverCode,
-          driverMobile: newDriver.mobileNumber,
-        };
-      }
-    }
-
-    return newDriver;
+    return await this.registerNewDriverAccount({
+      ...data,
+      licenseNumber: data.drivingLicenceNumber,
+    });
   }
 
   getDriver(identifier: string): AdminDriver | undefined {
@@ -438,11 +724,27 @@ class AdminFleetStore {
   }
 
   async updateDriverStatus(driverId: string, status: string, reason?: string) {
+    await this.init();
     const idx = this.drivers.findIndex(d => d.id === driverId || d.driverCode === driverId || d.employeeId === driverId);
     if (idx !== -1) {
       this.drivers[idx] = { ...this.drivers[idx], status };
     }
     const targetDriver = idx !== -1 ? this.drivers[idx] : undefined;
+
+    // Persist status override
+    try {
+      const rawOverrides = await storage.getItem(STORAGE_KEY_STATUS_OVERRIDES);
+      const overrides: Record<string, string> = rawOverrides ? JSON.parse(rawOverrides) : {};
+      if (targetDriver) {
+        overrides[targetDriver.driverCode] = status;
+        overrides[targetDriver.employeeId] = status;
+      }
+      overrides[driverId] = status;
+      await storage.setItem(STORAGE_KEY_STATUS_OVERRIDES, JSON.stringify(overrides));
+      await this.persistCustomData();
+    } catch (e) {
+      console.warn('[AdminFleetStore] Storage status override save warning:', e);
+    }
 
     // Synchronize suspension status with local secure credential store
     try {
@@ -510,6 +812,7 @@ class AdminFleetStore {
           };
         }
       }
+      await this.persistCustomData();
     }
   }
 
@@ -524,6 +827,7 @@ class AdminFleetStore {
       try {
         await adminService.updateVehicle(vehicleId, { status: nextStatus });
       } catch (e) {}
+      await this.persistCustomData();
       return nextStatus;
     }
     return 'ACTIVE';
@@ -583,6 +887,8 @@ class AdminFleetStore {
       }
     }
 
+    await this.persistCustomData();
+
     try {
       await adminService.updateVehicle(vehicleId, updates);
     } catch (e) {
@@ -606,7 +912,7 @@ class AdminFleetStore {
       fullName: updates.fullName ? updates.fullName.trim() : oldDriver.fullName,
       employeeId: updates.employeeId ? updates.employeeId.trim().toUpperCase() : oldDriver.employeeId,
       mobileNumber: updates.mobileNumber ? updates.mobileNumber.trim() : oldDriver.mobileNumber,
-      nic: updates.nic ? updates.nic.trim() : oldDriver.nic,
+      nic: updates.nic ? updates.nic.trim().toUpperCase() : oldDriver.nic,
     };
 
     // If assigned vehicle changed, sync vehicle's driver info
@@ -655,6 +961,7 @@ class AdminFleetStore {
     }
 
     this.drivers[idx] = updatedDriver;
+    await this.persistCustomData();
 
     if (updates.status) {
       try {

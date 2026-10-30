@@ -54,8 +54,8 @@ export default function AdminDashboardScreen() {
   const fetchDashboardData = useCallback(async () => {
     try {
       // 1. Load active fleet & driver state
-      const vList = adminFleetStore.getAllVehiclesList();
-      const dList = adminFleetStore.getAllDriversList();
+      const vList = await adminFleetStore.getVehicles();
+      const dList = await adminFleetStore.getDrivers();
       setVehicles(vList);
       setDrivers(dList);
 

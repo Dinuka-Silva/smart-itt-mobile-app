@@ -139,6 +139,8 @@ export default function AdminDriversScreen() {
   const [editLicenseExpiryDate, setEditLicenseExpiryDate] = useState('');
   const [editPortPassNumber, setEditPortPassNumber] = useState('');
   const [editPortPassExpiryDate, setEditPortPassExpiryDate] = useState('');
+  const [editDateOfBirth, setEditDateOfBirth] = useState('');
+  const [editVehiclePortPassExpiryDate, setEditVehiclePortPassExpiryDate] = useState('');
   const [editAddress, setEditAddress] = useState('');
   const [editEmail, setEditEmail] = useState('');
   const [editEmergencyContactName, setEditEmergencyContactName] = useState('');
@@ -156,7 +158,9 @@ export default function AdminDriversScreen() {
     setEditDrivingLicenceNumber(driver.licenseNumber || driver.drivingLicenceNumber || '');
     setEditLicenseExpiryDate(driver.licenseExpiryDate || '2028-12-31');
     setEditPortPassNumber(driver.portPassNumber || '');
-    setEditPortPassExpiryDate(driver.portPassExpiryDate || '2027-06-30');
+    setEditPortPassExpiryDate(driver.portPassExpiryDate || driver.driverPortPassExpiryDate || '2027-06-30');
+    setEditDateOfBirth(driver.dateOfBirth || '1992-06-15');
+    setEditVehiclePortPassExpiryDate(driver.vehiclePortPassExpiryDate || '2026-11-20');
     setEditAddress(driver.address || '');
     setEditEmail(driver.email || '');
     setEditEmergencyContactName(driver.emergencyContactName || '');
@@ -183,6 +187,9 @@ export default function AdminDriversScreen() {
         licenseExpiryDate: editLicenseExpiryDate.trim() || undefined,
         portPassNumber: editPortPassNumber.trim() || undefined,
         portPassExpiryDate: editPortPassExpiryDate.trim() || undefined,
+        driverPortPassExpiryDate: editPortPassExpiryDate.trim() || undefined,
+        vehiclePortPassExpiryDate: editVehiclePortPassExpiryDate.trim() || undefined,
+        dateOfBirth: editDateOfBirth.trim() || undefined,
         address: editAddress.trim() || undefined,
         email: editEmail.trim() || undefined,
         emergencyContactName: editEmergencyContactName.trim() || undefined,
@@ -678,12 +685,12 @@ export default function AdminDriversScreen() {
                 <View style={styles.detailRow}>
                   <Text style={styles.detailRowLabel}>Fleet Operator:</Text>
                   <Text style={styles.detailRowValue}>
-                    {selectedDriver?.vehicleNumber?.startsWith('LY-65') ? 'SDR LINK' : 'SCK Logistics'}
+                    {selectedDriver?.operator || (selectedDriver?.vehicleNumber?.startsWith('LY-65') ? 'SDR LINK' : 'SCK Logistics')}
                   </Text>
                 </View>
                 <View style={styles.detailRow}>
                   <Text style={styles.detailRowLabel}>Trailer Standard:</Text>
-                  <Text style={styles.detailRowValue}>40FT Skeletal Container Trailer</Text>
+                  <Text style={styles.detailRowValue}>{selectedDriver?.trailerSize || '40FT Skeletal Container Trailer'}</Text>
                 </View>
               </View>
 
@@ -697,6 +704,10 @@ export default function AdminDriversScreen() {
                 <View style={styles.detailRow}>
                   <Text style={styles.detailRowLabel}>National Identity (NIC):</Text>
                   <Text style={styles.detailRowValue}>{selectedDriver?.nic || '198512345678'}</Text>
+                </View>
+                <View style={styles.detailRow}>
+                  <Text style={styles.detailRowLabel}>Date of Birth:</Text>
+                  <Text style={styles.detailRowValue}>{selectedDriver?.dateOfBirth || '1992-06-15'}</Text>
                 </View>
                 <View style={styles.detailRow}>
                   <Text style={styles.detailRowLabel}>Mobile Phone:</Text>
@@ -745,7 +756,7 @@ export default function AdminDriversScreen() {
                   </Text>
                 </View>
                 <View style={styles.detailRow}>
-                  <Text style={styles.detailRowLabel}>Port Pass Renewal Date:</Text>
+                  <Text style={styles.detailRowLabel}>Driver Port Pass Expiry:</Text>
                   <Text
                     style={[
                       styles.detailRowValue,
@@ -755,7 +766,13 @@ export default function AdminDriversScreen() {
                       },
                     ]}
                   >
-                    {selectedDriver?.portPassExpiryDate || '2026-12-31'}
+                    {selectedDriver?.portPassExpiryDate || selectedDriver?.driverPortPassExpiryDate || '2026-12-31'}
+                  </Text>
+                </View>
+                <View style={styles.detailRow}>
+                  <Text style={styles.detailRowLabel}>Vehicle Permit Expiry:</Text>
+                  <Text style={[styles.detailRowValue, { color: '#feb300', fontWeight: '800' }]}>
+                    {selectedDriver?.vehiclePortPassExpiryDate || '2026-11-20'}
                   </Text>
                 </View>
                 <View style={styles.detailRow}>
@@ -1258,6 +1275,16 @@ export default function AdminDriversScreen() {
                   onChangeText={setEditNic}
                 />
 
+                {/* Date of Birth */}
+                <Text style={styles.createInputLabel}>DATE OF BIRTH</Text>
+                <TextInput
+                  style={styles.createInput}
+                  placeholder="YYYY-MM-DD (e.g. 1992-06-15)"
+                  placeholderTextColor="#546e7a"
+                  value={editDateOfBirth}
+                  onChangeText={setEditDateOfBirth}
+                />
+
                 {/* Mobile Phone */}
                 <Text style={styles.createInputLabel}>MOBILE CONTACT NUMBER *</Text>
                 <TextInput
@@ -1324,13 +1351,23 @@ export default function AdminDriversScreen() {
                 />
 
                 {/* Port Pass Expiry Date */}
-                <Text style={styles.createInputLabel}>PORT PASS EXPIRY / RENEWAL DATE</Text>
+                <Text style={styles.createInputLabel}>DRIVER PORT PASS EXPIRY / RENEWAL DATE</Text>
                 <TextInput
                   style={styles.createInput}
                   placeholder="YYYY-MM-DD (e.g. 2027-06-30)"
                   placeholderTextColor="#546e7a"
                   value={editPortPassExpiryDate}
                   onChangeText={setEditPortPassExpiryDate}
+                />
+
+                {/* Vehicle Port Permit Expiry Date */}
+                <Text style={styles.createInputLabel}>VEHICLE PERMIT EXPIRY DATE</Text>
+                <TextInput
+                  style={styles.createInput}
+                  placeholder="YYYY-MM-DD (e.g. 2026-11-20)"
+                  placeholderTextColor="#546e7a"
+                  value={editVehiclePortPassExpiryDate}
+                  onChangeText={setEditVehiclePortPassExpiryDate}
                 />
 
                 {/* Assigned Vehicle */}
