@@ -1,4 +1,5 @@
 import apiClient from './api';
+import { adminFleetStore } from '../store/adminFleetStore';
 
 export interface DriverProfile {
   id: string;
@@ -35,23 +36,95 @@ export interface DriverProfile {
 
 export const driverService = {
   async getProfile(driverIdOrCode?: string): Promise<DriverProfile | null> {
+    const fallbackId = driverIdOrCode || 'DRV-00001';
     try {
-      const response = await apiClient.get<DriverProfile>('/drivers/me');
-      return response.data;
+      const res = await Promise.race([
+        apiClient.get<DriverProfile>('/drivers/me'),
+        new Promise<never>((_, reject) => setTimeout(() => reject(new Error('timeout')), 2000)),
+      ]);
+      return res.data;
     } catch {
-      const fallbackId = driverIdOrCode || 'DRV-00001';
       try {
-        const response = await apiClient.get<DriverProfile>(`/drivers/${fallbackId}`);
-        return response.data;
+        const res = await Promise.race([
+          apiClient.get<DriverProfile>(`/drivers/${fallbackId}`),
+          new Promise<never>((_, reject) => setTimeout(() => reject(new Error('timeout')), 2000)),
+        ]);
+        return res.data;
       } catch {
+        // Fallback to local adminFleetStore for instant display
+        const local = adminFleetStore.getDriver(fallbackId);
+        if (local) {
+          return {
+            id: local.id,
+            driverCode: local.driverCode,
+            username: local.username || local.driverCode,
+            employeeId: local.employeeId,
+            fullName: local.fullName,
+            nic: local.nic,
+            mobileNumber: local.mobileNumber,
+            email: local.email,
+            address: local.address,
+            licenseNumber: local.licenseNumber,
+            licenseExpiryDate: local.licenseExpiryDate,
+            dateOfBirth: local.dateOfBirth,
+            emergencyContactName: local.emergencyContactName,
+            emergencyContactNumber: local.emergencyContactNumber,
+            profilePhoto: local.profilePhoto,
+            coverImage: local.coverImage,
+            vehicleNumber: local.vehicleNumber,
+            chassisNumber: local.chassisNumber,
+            cheNumber: local.cheNumber,
+            operator: local.operator,
+            driverPortPassExpiryDate: local.driverPortPassExpiryDate,
+            vehiclePortPassExpiryDate: local.vehiclePortPassExpiryDate,
+            status: local.status,
+            createdAt: local.createdAt,
+          };
+        }
         return null;
       }
     }
   },
 
   async getDriverById(id: string): Promise<DriverProfile> {
-    const response = await apiClient.get<DriverProfile>(`/drivers/${id}`);
-    return response.data;
+    try {
+      const response = await Promise.race([
+        apiClient.get<DriverProfile>(`/drivers/${id}`),
+        new Promise<never>((_, reject) => setTimeout(() => reject(new Error('timeout')), 2000)),
+      ]);
+      return response.data;
+    } catch {
+      const local = adminFleetStore.getDriver(id);
+      if (local) {
+        return {
+          id: local.id,
+          driverCode: local.driverCode,
+          username: local.username || local.driverCode,
+          employeeId: local.employeeId,
+          fullName: local.fullName,
+          nic: local.nic,
+          mobileNumber: local.mobileNumber,
+          email: local.email,
+          address: local.address,
+          licenseNumber: local.licenseNumber,
+          licenseExpiryDate: local.licenseExpiryDate,
+          dateOfBirth: local.dateOfBirth,
+          emergencyContactName: local.emergencyContactName,
+          emergencyContactNumber: local.emergencyContactNumber,
+          profilePhoto: local.profilePhoto,
+          coverImage: local.coverImage,
+          vehicleNumber: local.vehicleNumber,
+          chassisNumber: local.chassisNumber,
+          cheNumber: local.cheNumber,
+          operator: local.operator,
+          driverPortPassExpiryDate: local.driverPortPassExpiryDate,
+          vehiclePortPassExpiryDate: local.vehiclePortPassExpiryDate,
+          status: local.status,
+          createdAt: local.createdAt,
+        };
+      }
+      throw new Error(`Driver ${id} not found`);
+    }
   },
 
   async getAllDrivers(status?: string): Promise<DriverProfile[]> {

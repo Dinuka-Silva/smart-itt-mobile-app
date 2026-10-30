@@ -183,9 +183,9 @@ export default function SupervisorDrivers() {
       // 1. Fetch authoritative drivers from adminFleetStore (persisted registered drivers + fleet drivers)
       const storeDrivers = await adminFleetStore.getDrivers();
 
-      // 2. Attempt remote sync with backend API if online
+      // 2. Attempt remote sync with backend API if online (with 2000ms fast timeout)
       try {
-        const res = await axios.get(`${API_BASE_URL}/drivers`);
+        const res = await axios.get(`${API_BASE_URL}/drivers`, { timeout: 2000 });
         const list = Array.isArray(res.data) ? res.data : [];
         if (list.length > 0) {
           const remoteCodes = new Set(list.map((d: any) => (d.driverCode || d.empId || '').toUpperCase()));
@@ -239,7 +239,8 @@ export default function SupervisorDrivers() {
 
       setDrivers(storeDrivers);
     } catch {
-      setDrivers(getFallbackDrivers());
+      const fallback = adminFleetStore.getAllDriversList();
+      setDrivers(fallback.length > 0 ? fallback : getFallbackDrivers());
     } finally {
       setLoading(false);
       setRefreshing(false);

@@ -212,7 +212,10 @@ export default function DriverRegisterScreen() {
       };
 
       try {
-        const response = await authService.registerSupervisor(payload);
+        const response = await Promise.race([
+          authService.registerSupervisor(payload),
+          new Promise<never>((_, reject) => setTimeout(() => reject(new Error('timeout')), 2500)),
+        ]);
         const supervisorCode = response.user.employeeId || response.user.username || resolvedEmail;
         await credentialStore.recordPasswordChange(supervisorCode, resolvedPassword);
         setGeneratedDriverCode(supervisorCode);
@@ -300,7 +303,10 @@ export default function DriverRegisterScreen() {
     };
 
     try {
-      const response = await authService.registerDriver(payload);
+      const response = await Promise.race([
+        authService.registerDriver(payload),
+        new Promise<never>((_, reject) => setTimeout(() => reject(new Error('timeout')), 2500)),
+      ]);
       const code =
         response.driverCode ||
         response.user?.driverCode ||
@@ -361,10 +367,14 @@ export default function DriverRegisterScreen() {
       setSuccessModalVisible(true);
     } catch (err: any) {
       console.warn('Registration fallback trigger:', err);
-      // Offline fallback: generate next driver code
-      const randomNum = String(Math.floor(Math.random() * 900) + 100).padStart(5, '0');
-      const offlineCode = `DRV-${randomNum}`;
+      // Offline fallback: generate next authoritative sequential driver code
+      const currentList = adminFleetStore.getAllDriversList();
+      const nextNum = currentList.length + 1;
+      const offlineCode = `DRV-${String(nextNum).padStart(5, '0')}`;
       setGeneratedDriverCode(offlineCode);
+      await credentialStore.recordPasswordChange(offlineCode, resolvedPassword);
+      await credentialStore.recordPasswordChange(resolvedEmployeeId, resolvedPassword);
+      if (resolvedEmail) await credentialStore.recordPasswordChange(resolvedEmail, resolvedPassword);
 
       // Instantly synchronize complete driver dossier into shared fleet store for Supervisor and Admin
       await adminFleetStore.registerNewDriverAccount({

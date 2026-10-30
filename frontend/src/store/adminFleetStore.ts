@@ -150,6 +150,10 @@ class AdminFleetStore {
   private drivers: AdminDriver[] = [...INITIAL_DRIVERS];
   private initialized = false;
 
+  constructor() {
+    this.init();
+  }
+
   async init(): Promise<void> {
     if (this.initialized) return;
     try {
@@ -229,7 +233,10 @@ class AdminFleetStore {
     await this.init();
 
     try {
-      const remote = await adminService.getVehicles(search, operator, status);
+      const remote = await Promise.race([
+        adminService.getVehicles(search, operator, status),
+        new Promise<never>((_, reject) => setTimeout(() => reject(new Error('timeout')), 2000)),
+      ]);
       if (Array.isArray(remote) && remote.length > 0) {
         const filteredRemote = remote.filter((r: any) => r.vehicleNumber !== 'LY-5650');
         const remotePlates = new Set(filteredRemote.map((r: any) => (r.vehicleNumber || '').toUpperCase()));
@@ -416,7 +423,10 @@ class AdminFleetStore {
     await this.init();
 
     try {
-      const remote = await adminService.getDrivers(search, status);
+      const remote = await Promise.race([
+        adminService.getDrivers(search, status),
+        new Promise<never>((_, reject) => setTimeout(() => reject(new Error('timeout')), 2000)),
+      ]);
       if (Array.isArray(remote) && remote.length > 0) {
         for (const r of remote) {
           const rCode = (r.driverCode || '').toUpperCase();
@@ -670,22 +680,20 @@ class AdminFleetStore {
       }
     }
 
-    // 9. Synchronize with remote backend API (non-blocking)
-    try {
-      await adminService.createDriver({
-        fullName: newDriver.fullName,
-        employeeId: newDriver.employeeId,
-        nic: newDriver.nic,
-        mobileNumber: newDriver.mobileNumber,
-        drivingLicenceNumber: newDriver.licenseNumber,
-        vehicleNumber: newDriver.vehicleNumber !== 'UNASSIGNED' ? newDriver.vehicleNumber : '',
-        chassisNumber: newDriver.chassisNumber !== 'UNASSIGNED' ? newDriver.chassisNumber : '',
-        password: data.password || 'driver',
-        driverCode: newDriver.driverCode,
-      });
-    } catch (e) {
+    // 9. Synchronize with remote backend API (non-blocking, fire-and-forget)
+    adminService.createDriver({
+      fullName: newDriver.fullName,
+      employeeId: newDriver.employeeId,
+      nic: newDriver.nic,
+      mobileNumber: newDriver.mobileNumber,
+      drivingLicenceNumber: newDriver.licenseNumber,
+      vehicleNumber: newDriver.vehicleNumber !== 'UNASSIGNED' ? newDriver.vehicleNumber : '',
+      chassisNumber: newDriver.chassisNumber !== 'UNASSIGNED' ? newDriver.chassisNumber : '',
+      password: data.password || 'driver',
+      driverCode: newDriver.driverCode,
+    }).catch(() => {
       console.log('[AdminFleetStore] Backend offline, new driver saved locally');
-    }
+    });
 
     return newDriver;
   }
