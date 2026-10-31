@@ -315,10 +315,13 @@ export default function DriverRegisterScreen() {
 
       setGeneratedDriverCode(code);
       await credentialStore.recordPasswordChange(code, resolvedPassword);
+      await credentialStore.recordPasswordChange(resolvedEmployeeId, resolvedPassword);
+      if (resolvedEmail) await credentialStore.recordPasswordChange(resolvedEmail, resolvedPassword);
 
       // Instantly synchronize complete driver dossier into shared fleet store for Supervisor and Admin
       await adminFleetStore.registerNewDriverAccount({
         driverCode: code,
+        username: code,
         fullName: resolvedFullName,
         employeeId: resolvedEmployeeId,
         mobileNumber: resolvedMobile,
@@ -367,10 +370,15 @@ export default function DriverRegisterScreen() {
       setSuccessModalVisible(true);
     } catch (err: any) {
       console.warn('Registration fallback trigger:', err);
-      // Offline fallback: generate next authoritative sequential driver code
+      // Offline fallback: generate next authoritative sequential driver code or use user-provided DRV code
       const currentList = adminFleetStore.getAllDriversList();
       const nextNum = currentList.length + 1;
-      const offlineCode = `DRV-${String(nextNum).padStart(5, '0')}`;
+      const cleanEmp = resolvedEmployeeId.toUpperCase().trim();
+      const offlineCode = cleanEmp.startsWith('DRV-')
+        ? cleanEmp
+        : (cleanEmp.startsWith('DRV')
+            ? `DRV-${cleanEmp.replace('DRV', '').trim().padStart(5, '0')}`
+            : `DRV-${String(nextNum).padStart(5, '0')}`);
       setGeneratedDriverCode(offlineCode);
       await credentialStore.recordPasswordChange(offlineCode, resolvedPassword);
       await credentialStore.recordPasswordChange(resolvedEmployeeId, resolvedPassword);
@@ -379,6 +387,7 @@ export default function DriverRegisterScreen() {
       // Instantly synchronize complete driver dossier into shared fleet store for Supervisor and Admin
       await adminFleetStore.registerNewDriverAccount({
         driverCode: offlineCode,
+        username: offlineCode,
         fullName: resolvedFullName,
         employeeId: resolvedEmployeeId,
         mobileNumber: resolvedMobile,

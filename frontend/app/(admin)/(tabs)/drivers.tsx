@@ -14,6 +14,7 @@ import {
   Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from 'expo-router';
 import { adminService } from '../../../src/services/adminService';
 import { credentialStore } from '../../../src/services/credentialStore';
 import { adminFleetStore, AdminVehicle } from '../../../src/store/adminFleetStore';
@@ -34,6 +35,7 @@ const DRIVER_PHOTO_POOL = [
 ];
 
 export default function AdminDriversScreen() {
+  const navigation = useNavigation();
   const { topInset, bottomInset, containerPaddingHorizontal } = useResponsive();
 
   const [drivers, setDrivers] = useState<any[]>([]);
@@ -228,7 +230,19 @@ export default function AdminDriversScreen() {
 
   useEffect(() => {
     fetchDrivers();
-  }, [fetchDrivers]);
+    const unsubStore = adminFleetStore.subscribe(() => {
+      fetchDrivers();
+    });
+    const unsubFocus = navigation?.addListener
+      ? navigation.addListener('focus', () => {
+          fetchDrivers();
+        })
+      : undefined;
+    return () => {
+      unsubStore();
+      if (unsubFocus) unsubFocus();
+    };
+  }, [fetchDrivers, navigation]);
 
   const onRefresh = () => {
     setRefreshing(true);

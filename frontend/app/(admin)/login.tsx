@@ -57,6 +57,10 @@ export default function AdminLoginScreen() {
 
   useEffect(() => {
     fetchRoster();
+    const unsub = adminFleetStore.subscribe(() => {
+      fetchRoster();
+    });
+    return () => unsub();
   }, [fetchRoster]);
 
   const handleOpenRoster = async () => {

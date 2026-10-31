@@ -149,9 +149,27 @@ class AdminFleetStore {
   private vehicles: AdminVehicle[] = [...INITIAL_VEHICLES];
   private drivers: AdminDriver[] = [...INITIAL_DRIVERS];
   private initialized = false;
+  private listeners: Set<() => void> = new Set();
 
   constructor() {
     this.init();
+  }
+
+  subscribe(listener: () => void): () => void {
+    this.listeners.add(listener);
+    return () => {
+      this.listeners.delete(listener);
+    };
+  }
+
+  notify(): void {
+    this.listeners.forEach((fn) => {
+      try {
+        fn();
+      } catch (e) {
+        console.warn('[AdminFleetStore] Listener notify error:', e);
+      }
+    });
   }
 
   async init(): Promise<void> {
@@ -530,6 +548,7 @@ class AdminFleetStore {
    */
   async registerNewDriverAccount(data: {
     driverCode?: string;
+    username?: string;
     fullName: string;
     employeeId: string;
     nic: string;
@@ -584,7 +603,7 @@ class AdminFleetStore {
     // 4. Build Complete Driver Dossier Object
     const newDriver: AdminDriver = {
       id: `drv-${driverCode.toLowerCase().replace(/[^a-z0-9]/g, '')}`,
-      username: driverCode,
+      username: (data.username || driverCode).trim(),
       driverCode,
       fullName: data.fullName.trim(),
       employeeId: data.employeeId.trim().toUpperCase(),
@@ -668,6 +687,7 @@ class AdminFleetStore {
 
     // 7. Persist to storage
     await this.persistCustomData();
+    this.notify();
 
     // 8. Sync password to secure credentialStore if provided
     if (data.password) {
@@ -762,6 +782,7 @@ class AdminFleetStore {
       overrides[driverId] = status;
       await storage.setItem(STORAGE_KEY_STATUS_OVERRIDES, JSON.stringify(overrides));
       await this.persistCustomData();
+      this.notify();
     } catch (e) {
       console.warn('[AdminFleetStore] Storage status override save warning:', e);
     }
@@ -982,6 +1003,7 @@ class AdminFleetStore {
 
     this.drivers[idx] = updatedDriver;
     await this.persistCustomData();
+    this.notify();
 
     if (updates.status) {
       try {

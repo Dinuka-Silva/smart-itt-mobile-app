@@ -14,6 +14,7 @@ import {
   Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from 'expo-router';
 import axios from 'axios';
 import API_BASE_URL from '../../../src/config/api';
 import { useAuthStore } from '../../../src/store/authStore';
@@ -44,6 +45,7 @@ const DRIVER_COVER_POOL = [
 ];
 
 export default function SupervisorDrivers() {
+  const navigation = useNavigation();
   const user = useAuthStore((s) => s.user);
   const [drivers, setDrivers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -249,7 +251,19 @@ export default function SupervisorDrivers() {
 
   useEffect(() => {
     fetchDrivers();
-  }, [fetchDrivers]);
+    const unsubStore = adminFleetStore.subscribe(() => {
+      fetchDrivers();
+    });
+    const unsubFocus = navigation?.addListener
+      ? navigation.addListener('focus', () => {
+          fetchDrivers();
+        })
+      : undefined;
+    return () => {
+      unsubStore();
+      if (unsubFocus) unsubFocus();
+    };
+  }, [fetchDrivers, navigation]);
 
   const onRefresh = () => {
     setRefreshing(true);
