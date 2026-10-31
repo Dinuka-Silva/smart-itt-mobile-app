@@ -21,6 +21,7 @@ import {
 import { useAuthStore } from '../../src/store/authStore';
 import { credentialStore } from '../../src/services/credentialStore';
 import { adminFleetStore } from '../../src/store/adminFleetStore';
+import { securityAuditService } from '../../src/services/securityAuditService';
 import { colors, radius, spacing } from '../../src/theme';
 
 import {
@@ -216,8 +217,34 @@ export default function DriverRegisterScreen() {
           authService.registerSupervisor(payload),
           new Promise<never>((_, reject) => setTimeout(() => reject(new Error('timeout')), 2500)),
         ]);
-        const supervisorCode = response.user.employeeId || response.user.username || resolvedEmail;
+        const supervisorCode = response.user.employeeId || response.user.username || resolvedEmployeeId;
         await credentialStore.recordPasswordChange(supervisorCode, resolvedPassword);
+        if (resolvedEmail) await credentialStore.recordPasswordChange(resolvedEmail, resolvedPassword);
+
+        // Instantly synchronize complete supervisor dossier into shared store for Admin
+        await adminFleetStore.registerNewSupervisorAccount({
+          employeeId: supervisorCode,
+          username: supervisorCode,
+          fullName: resolvedFullName,
+          email: resolvedEmail,
+          mobileNumber: resolvedMobile,
+          nic: resolvedNic,
+          address: resolvedAddress,
+          supervisorPortPassExpiryDate: resolvedPassExpiry,
+          password: resolvedPassword,
+          status: 'ACTIVE',
+        });
+
+        // Record high-security operations audit event
+        await securityAuditService.logEvent(
+          'SUPERVISOR_REGISTERED',
+          supervisorCode,
+          `New Supervisor registered: ${resolvedFullName} (${supervisorCode}) · Scope: All Port Terminals · Tel: ${resolvedMobile}`,
+          'INFO',
+          'SUPERVISOR',
+          { role: 'SUPERVISOR', employeeId: supervisorCode, email: resolvedEmail, fullName: resolvedFullName }
+        );
+
         setGeneratedDriverCode(supervisorCode);
         setRegisteredUser({
           ...response.user,
@@ -236,17 +263,50 @@ export default function DriverRegisterScreen() {
         setSuccessModalVisible(true);
       } catch (err: any) {
         console.warn('Supervisor registration API fallback:', err);
-        const mockCode = `SUP-${randSuffix}`;
-        setGeneratedDriverCode(mockCode);
+        const currentSups = adminFleetStore.getAllSupervisorsList();
+        const nextNum = currentSups.length + 1;
+        const cleanEmp = resolvedEmployeeId.toUpperCase().trim();
+        const supervisorCode = cleanEmp.startsWith('SUP')
+          ? cleanEmp
+          : `SUP${String(nextNum).padStart(3, '0')}`;
+
+        await credentialStore.recordPasswordChange(supervisorCode, resolvedPassword);
+        if (resolvedEmail) await credentialStore.recordPasswordChange(resolvedEmail, resolvedPassword);
+
+        // Instantly synchronize complete supervisor dossier into shared store for Admin
+        await adminFleetStore.registerNewSupervisorAccount({
+          employeeId: supervisorCode,
+          username: supervisorCode,
+          fullName: resolvedFullName,
+          email: resolvedEmail,
+          mobileNumber: resolvedMobile,
+          nic: resolvedNic,
+          address: resolvedAddress,
+          supervisorPortPassExpiryDate: resolvedPassExpiry,
+          password: resolvedPassword,
+          status: 'ACTIVE',
+        });
+
+        // Record high-security operations audit event
+        await securityAuditService.logEvent(
+          'SUPERVISOR_REGISTERED',
+          supervisorCode,
+          `New Supervisor registered: ${resolvedFullName} (${supervisorCode}) · Scope: All Port Terminals · Tel: ${resolvedMobile}`,
+          'INFO',
+          'SUPERVISOR',
+          { role: 'SUPERVISOR', employeeId: supervisorCode, email: resolvedEmail, fullName: resolvedFullName }
+        );
+
+        setGeneratedDriverCode(supervisorCode);
         setRegisteredUser({
-          id: `mock-sup-${Date.now()}`,
-          username: resolvedEmail,
+          id: `sup-${supervisorCode.toLowerCase()}`,
+          username: supervisorCode,
           role: 'SUPERVISOR',
           name: resolvedFullName,
           token: `mock-sup-token-${Date.now()}`,
           fullName: resolvedFullName,
           nic: resolvedNic,
-          employeeId: resolvedEmployeeId,
+          employeeId: supervisorCode,
           mobileNumber: resolvedMobile,
           email: resolvedEmail,
           address: resolvedAddress,
@@ -345,6 +405,16 @@ export default function DriverRegisterScreen() {
         status: 'ACTIVE',
       });
 
+      // Record high-security operations audit event
+      await securityAuditService.logEvent(
+        'DRIVER_REGISTERED',
+        code,
+        `New Driver registered: ${resolvedFullName} (${code}) · Assigned Truck ${resolvedVehicleNumber} (${resolvedCheNumber}) · Tel: ${resolvedMobile}`,
+        'INFO',
+        'DRIVER',
+        { role: 'DRIVER', driverCode: code, employeeId: resolvedEmployeeId, vehicleNumber: resolvedVehicleNumber }
+      );
+
       setRegisteredUser({
         ...response.user,
         driverCode: code,
@@ -410,6 +480,16 @@ export default function DriverRegisterScreen() {
         password: resolvedPassword,
         status: 'ACTIVE',
       });
+
+      // Record high-security operations audit event
+      await securityAuditService.logEvent(
+        'DRIVER_REGISTERED',
+        offlineCode,
+        `New Driver registered: ${resolvedFullName} (${offlineCode}) · Assigned Truck ${resolvedVehicleNumber} (${resolvedCheNumber}) · Tel: ${resolvedMobile}`,
+        'INFO',
+        'DRIVER',
+        { role: 'DRIVER', driverCode: offlineCode, employeeId: resolvedEmployeeId, vehicleNumber: resolvedVehicleNumber }
+      );
 
       setRegisteredUser({
         id: `mock-${Date.now()}`,

@@ -106,36 +106,43 @@ export default function AdminAuditScreen() {
     () => allLogs.filter((l) => (l.action || '').toUpperCase().includes('LOGIN')).length,
     [allLogs]
   );
-  const driverLoginsCount = useMemo(
+  const driverEventsCount = useMemo(
     () =>
       allLogs.filter(
         (l) =>
-          (l.action || '').toUpperCase().includes('LOGIN') &&
-          ((l.actorRole || '').toUpperCase() === 'DRIVER' ||
-            (l.entityType || '').toUpperCase() === 'DRIVER' ||
-            (l.description || '').toUpperCase().includes('DRIVER'))
+          (l.actorRole || '').toUpperCase() === 'DRIVER' ||
+          (l.entityType || '').toUpperCase() === 'DRIVER' ||
+          (l.description || '').toUpperCase().includes('DRIVER')
       ).length,
     [allLogs]
   );
-  const supervisorLoginsCount = useMemo(
+  const supervisorEventsCount = useMemo(
     () =>
       allLogs.filter(
         (l) =>
-          (l.action || '').toUpperCase().includes('LOGIN') &&
-          ((l.actorRole || '').toUpperCase() === 'SUPERVISOR' ||
-            (l.entityType || '').toUpperCase() === 'SUPERVISOR' ||
-            (l.description || '').toUpperCase().includes('SUPERVISOR'))
+          (l.actorRole || '').toUpperCase() === 'SUPERVISOR' ||
+          (l.entityType || '').toUpperCase() === 'SUPERVISOR' ||
+          (l.description || '').toUpperCase().includes('SUPERVISOR')
       ).length,
     [allLogs]
   );
-  const adminLoginsCount = useMemo(
+  const adminEventsCount = useMemo(
     () =>
       allLogs.filter(
         (l) =>
-          (l.action || '').toUpperCase().includes('LOGIN') &&
-          ((l.actorRole || '').toUpperCase() === 'ADMIN' ||
-            (l.entityType || '').toUpperCase() === 'ADMIN' ||
-            (l.description || '').toUpperCase().includes('ADMIN'))
+          (l.actorRole || '').toUpperCase() === 'ADMIN' ||
+          (l.entityType || '').toUpperCase() === 'ADMIN' ||
+          (l.description || '').toUpperCase().includes('ADMIN')
+      ).length,
+    [allLogs]
+  );
+  const tripOperationsCount = useMemo(
+    () =>
+      allLogs.filter(
+        (l) =>
+          (l.action || '').toUpperCase().includes('TRIP') ||
+          (l.entityType || '').toUpperCase() === 'TRIP' ||
+          (l.description || '').toUpperCase().includes('TRIP')
       ).length,
     [allLogs]
   );
@@ -235,6 +242,27 @@ export default function AdminAuditScreen() {
     if (act === 'SESSION_AUTO_LOCKED' || act === 'LOGOUT') {
       return { bg: 'rgba(144, 202, 249, 0.1)', border: 'rgba(144, 202, 249, 0.3)', color: '#90caf9', label: 'SESSION LOGOUT', icon: 'log-out-outline' as const };
     }
+    if (act === 'DRIVER_REGISTERED') {
+      return { bg: 'rgba(0, 229, 255, 0.14)', border: 'rgba(0, 229, 255, 0.45)', color: '#00e5ff', label: 'DRIVER REGISTERED', icon: 'person-add' as const };
+    }
+    if (act === 'SUPERVISOR_REGISTERED') {
+      return { bg: 'rgba(254, 179, 0, 0.15)', border: 'rgba(254, 179, 0, 0.45)', color: '#feb300', label: 'SUPERVISOR REGISTERED', icon: 'shield-checkmark' as const };
+    }
+    if (act === 'TRIP_STARTED') {
+      return { bg: 'rgba(33, 150, 243, 0.15)', border: 'rgba(33, 150, 243, 0.45)', color: '#29b6f6', label: 'TRIP STARTED', icon: 'navigate' as const };
+    }
+    if (act === 'TRIP_COMPLETED') {
+      return { bg: 'rgba(0, 200, 160, 0.15)', border: 'rgba(0, 200, 160, 0.45)', color: '#26a69a', label: 'TRIP COMPLETED', icon: 'flag' as const };
+    }
+    if (act === 'TRIP_APPROVED') {
+      return { bg: 'rgba(34, 239, 126, 0.15)', border: 'rgba(34, 239, 126, 0.45)', color: '#22ef7e', label: 'TRIP APPROVED', icon: 'checkmark-done-circle' as const };
+    }
+    if (act === 'TRIP_REJECTED') {
+      return { bg: 'rgba(255, 82, 82, 0.16)', border: 'rgba(255, 82, 82, 0.5)', color: '#ff5252', label: 'TRIP REJECTED', icon: 'close-circle' as const };
+    }
+    if (act === 'DRIVER_STATUS_UPDATED' || act === 'SUPERVISOR_STATUS_UPDATED') {
+      return { bg: 'rgba(255, 179, 0, 0.15)', border: 'rgba(255, 179, 0, 0.45)', color: '#ffb300', label: act.replace(/_/g, ' '), icon: 'swap-horizontal' as const };
+    }
     return { bg: 'rgba(0, 229, 255, 0.08)', border: 'rgba(0, 229, 255, 0.25)', color: '#00e5ff', label: action.replace(/_/g, ' '), icon: 'ellipse' as const };
   };
 
@@ -248,7 +276,7 @@ export default function AdminAuditScreen() {
           </TouchableOpacity>
           <View style={{ marginLeft: 10 }}>
             <Text style={styles.headerTitle}>System Audit Trail</Text>
-            <Text style={styles.headerSubtitle}>Immutable Driver, Supervisor & Admin Login Ledger</Text>
+            <Text style={styles.headerSubtitle}>Complete Driver & Supervisor Operations & Login Audit Trail</Text>
           </View>
         </View>
 
@@ -258,30 +286,30 @@ export default function AdminAuditScreen() {
         </View>
       </View>
 
-      {/* ─── LOGIN TELEMETRY KPI SUMMARY BAR ─── */}
+      {/* ─── OPERATIONS TELEMETRY KPI SUMMARY BAR ─── */}
       <View style={styles.kpiRow}>
         <View style={styles.kpiCard}>
-          <Text style={styles.kpiLabel}>ALL LOGINS</Text>
-          <Text style={[styles.kpiValue, { color: '#00e5ff' }]}>{loginLogsCount}</Text>
-          <Text style={styles.kpiSub}>Total Events</Text>
+          <Text style={styles.kpiLabel}>TOTAL EVENTS</Text>
+          <Text style={[styles.kpiValue, { color: '#00e5ff' }]}>{totalLogsCount}</Text>
+          <Text style={styles.kpiSub}>System Ledger</Text>
         </View>
 
         <View style={styles.kpiCard}>
-          <Text style={styles.kpiLabel}>DRIVERS</Text>
-          <Text style={[styles.kpiValue, { color: '#00e5ff' }]}>{driverLoginsCount}</Text>
-          <Text style={styles.kpiSub}>Driver Logins</Text>
+          <Text style={styles.kpiLabel}>DRIVER OPS</Text>
+          <Text style={[styles.kpiValue, { color: '#00e5ff' }]}>{driverEventsCount}</Text>
+          <Text style={styles.kpiSub}>Trips & Regs</Text>
         </View>
 
         <View style={styles.kpiCard}>
           <Text style={styles.kpiLabel}>SUPERVISORS</Text>
-          <Text style={[styles.kpiValue, { color: '#feb300' }]}>{supervisorLoginsCount}</Text>
-          <Text style={styles.kpiSub}>Supervisor Logins</Text>
+          <Text style={[styles.kpiValue, { color: '#feb300' }]}>{supervisorEventsCount}</Text>
+          <Text style={styles.kpiSub}>Approvals & Regs</Text>
         </View>
 
         <View style={styles.kpiCard}>
-          <Text style={styles.kpiLabel}>ADMIN</Text>
-          <Text style={[styles.kpiValue, { color: '#b388ff' }]}>{adminLoginsCount}</Text>
-          <Text style={styles.kpiSub}>Admin Logins</Text>
+          <Text style={styles.kpiLabel}>LOGINS</Text>
+          <Text style={[styles.kpiValue, { color: '#b388ff' }]}>{loginLogsCount}</Text>
+          <Text style={styles.kpiSub}>Auth Events</Text>
         </View>
       </View>
 
@@ -307,16 +335,16 @@ export default function AdminAuditScreen() {
       {/* ─── FILTER TABS ─── */}
       <View style={styles.filterBar}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 12, gap: 6 }}>
-          {(['ALL', 'LOGINS', 'DRIVER', 'SUPERVISOR', 'ADMIN', 'SECURITY', 'TRIP', 'VEHICLE'] as FilterType[]).map((f) => {
+          {(['ALL', 'DRIVER', 'SUPERVISOR', 'TRIP', 'LOGINS', 'ADMIN', 'SECURITY', 'VEHICLE'] as FilterType[]).map((f) => {
             const isActive = activeFilter === f;
             const filterLabels: Record<FilterType, string> = {
               ALL: `ALL (${totalLogsCount})`,
+              DRIVER: `DRIVERS (${driverEventsCount})`,
+              SUPERVISOR: `SUPERVISORS (${supervisorEventsCount})`,
+              TRIP: `TRIPS (${tripOperationsCount})`,
               LOGINS: `LOGINS (${loginLogsCount})`,
-              DRIVER: `DRIVERS (${driverLoginsCount})`,
-              SUPERVISOR: `SUPERVISORS (${supervisorLoginsCount})`,
-              ADMIN: `ADMIN (${adminLoginsCount})`,
+              ADMIN: `ADMIN (${adminEventsCount})`,
               SECURITY: 'SECURITY',
-              TRIP: 'TRIPS',
               VEHICLE: 'FLEET',
             };
             return (

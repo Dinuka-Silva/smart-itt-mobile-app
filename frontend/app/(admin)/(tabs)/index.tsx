@@ -41,29 +41,36 @@ export default function AdminDashboardScreen() {
   const [trips, setTrips] = useState<any[]>([]);
   const [signOutModalVisible, setSignOutModalVisible] = useState(false);
 
-  // Default authoritative supervisors roster across all 6 terminals
-  const supervisorsRoster = useMemo(() => [
-    { id: 'sup-1', code: 'SUP001', name: 'Nimal Silva', phone: '0711234567', email: 'supervisor@smartitt.lk', shift: 'Day Shift (06:00 - 18:00)', role: 'Senior Yard Controller', status: 'ACTIVE DUTY' },
-    { id: 'sup-2', code: 'SUP002', name: 'Bandara Weerasinghe', phone: '0712345678', email: 'bandara.cwit@smartitt.lk', shift: 'Day Shift (06:00 - 18:00)', role: 'Gate Operations Lead', status: 'ACTIVE DUTY' },
-    { id: 'sup-3', code: 'SUP003', name: 'Kasun Jayawardena', phone: '0713456789', email: 'kasun.ect@smartitt.lk', shift: 'Night Shift (18:00 - 06:00)', role: 'Marshalling Dispatcher', status: 'ACTIVE DUTY' },
-    { id: 'sup-4', code: 'SUP004', name: 'Prasanna Gunasekara', phone: '0714567890', email: 'prasanna.jct@smartitt.lk', shift: 'Day Shift (06:00 - 18:00)', role: 'Tower Coordination Officer', status: 'ACTIVE DUTY' },
-    { id: 'sup-5', code: 'SUP005', name: 'Ruwan Fernando', phone: '0715678901', email: 'ruwan.sagt@smartitt.lk', shift: 'Night Shift (18:00 - 06:00)', role: 'Gate 04 Harbor Inspector', status: 'ACTIVE DUTY' },
-    { id: 'sup-6', code: 'SUP006', name: 'Dinesh Perera', phone: '0716789012', email: 'dinesh.uct@smartitt.lk', shift: 'Day Shift (06:00 - 18:00)', role: 'Transfer Verification Lead', status: 'ACTIVE DUTY' },
-  ], []);
+  const [supervisorsRoster, setSupervisorsRoster] = useState<any[]>([]);
 
   const fetchDashboardData = useCallback(async () => {
     try {
-      // 1. Load active fleet & driver state
+      // 1. Load active fleet, driver & supervisor state
       const vList = await adminFleetStore.getVehicles();
       const dList = await adminFleetStore.getDrivers();
+      const sList = await adminFleetStore.getSupervisors();
       setVehicles(vList);
       setDrivers(dList);
+
+      const mappedSupervisors = sList.map((s, idx) => ({
+        id: s.id,
+        code: s.employeeId,
+        username: s.username || s.employeeId,
+        name: s.fullName,
+        phone: s.mobileNumber,
+        email: s.email,
+        shift: idx % 2 === 0 ? 'Day Shift (06:00 - 18:00)' : 'Night Shift (18:00 - 06:00)',
+        role: idx === 0 ? 'Senior Yard Controller' : idx === 1 ? 'Gate Operations Lead' : 'Terminal Operations Supervisor',
+        status: s.status === 'ACTIVE' ? 'ACTIVE DUTY' : 'SUSPENDED',
+      }));
+      setSupervisorsRoster(mappedSupervisors);
 
       const sckCount = vList.filter((v) => v.operator === 'SCK Logistics').length;
       const sdrCount = vList.filter((v) => v.operator === 'SDR LINK').length;
       const activeVehicles = vList.filter((v) => v.status === 'ACTIVE').length;
       const maintVehicles = vList.filter((v) => v.status === 'MAINTENANCE').length;
       const activeDrivers = dList.filter((d) => d.status === 'ACTIVE').length;
+      const activeSupervisors = sList.filter((s) => s.status === 'ACTIVE').length;
 
       // Real-time trip metrics from mockTripStore
       const currentTrips = useMockTripStore.getState().mockTrips;
@@ -120,8 +127,8 @@ export default function AdminDashboardScreen() {
           activeDrivers,
           suspendedDrivers: 0,
           deactivatedDrivers: 0,
-          totalSupervisors: 6,
-          activeSupervisors: 6,
+          totalSupervisors: sList.length,
+          activeSupervisors,
           totalVehicles: vList.length,
           activeVehicles,
           maintenanceVehicles: maintVehicles,
@@ -213,6 +220,10 @@ export default function AdminDashboardScreen() {
 
   useEffect(() => {
     fetchDashboardData();
+    const unsub = adminFleetStore.subscribe(() => {
+      fetchDashboardData();
+    });
+    return unsub;
   }, [fetchDashboardData]);
 
   const onRefresh = () => {
@@ -781,7 +792,7 @@ export default function AdminDashboardScreen() {
           {activeSection === 'SUPERVISORS' && (
             <>
               <View style={styles.sectionHeaderRow}>
-                <Text style={styles.sectionHeader}>PORT SUPERVISORS FIELD ROSTER (6)</Text>
+                <Text style={styles.sectionHeader}>PORT SUPERVISORS FIELD ROSTER ({supervisorsRoster.length})</Text>
                 <TouchableOpacity onPress={() => router.push('/(admin)/supervisors')}>
                   <Text style={styles.seeAllText}>Full Directory →</Text>
                 </TouchableOpacity>

@@ -18,6 +18,7 @@ import { Calendar } from 'react-native-calendars';
 import { useAuthStore } from '../../../src/store/authStore';
 import { tripService } from '../../../src/services/tripService';
 import { useMockTripStore } from '../../../src/store/mockTripStore';
+import { securityAuditService } from '../../../src/services/securityAuditService';
 import { colors, radius, spacing } from '../../../src/theme';
 import { resolveCheNumber, resolveOperator } from '../../../src/config/fleet';
 import { useResponsive } from '../../../src/hooks/useResponsive';
@@ -381,15 +382,37 @@ export default function SupervisorMissionDispatcher() {
   }, [filteredTrips]);
 
   const handleDischargeAndComplete = async (trip: any) => {
+    const supName = user?.fullName || user?.name || 'Nimal Silva';
+    const supUser = user?.username || user?.employeeId || 'SUP001';
+    const tripNum = trip?.tripNumber || trip?.id || 'TRP';
+
     try {
-      const supName = user?.fullName || user?.name || 'Nimal Silva';
       await tripService.approveTrip(trip.id, user?.id || 'sup-001', 'Container discharged and trip approved');
       useMockTripStore.getState().approveTripBySupervisor(trip.id, supName, 'Delivery confirmed & approved by Operations Supervisor');
+
+      await securityAuditService.logEvent(
+        'TRIP_APPROVED',
+        supUser,
+        `Supervisor ${supName} (${supUser}) confirmed delivery & approved trip ${tripNum} (${trip?.driverName || trip?.driverId || 'Driver'}) · Discharge: ${trip?.destTerminal || 'ECT'}`,
+        'INFO',
+        'SUPERVISOR',
+        { tripId: trip?.id, tripNumber: tripNum, role: 'SUPERVISOR', driver: trip?.driverName, status: 'APPROVED' }
+      );
+
       Alert.alert('Delivery Confirmed & Approved ✅', `Trip ${trip.tripNumber || trip.id} is confirmed. Driver completed container count (+1 towards 300 target) and main system metrics have been updated.`);
       await loadTrips();
     } catch {
-      const supName = user?.fullName || user?.name || 'Nimal Silva';
       useMockTripStore.getState().approveTripBySupervisor(trip.id, supName, 'Delivery confirmed & approved by Operations Supervisor');
+
+      await securityAuditService.logEvent(
+        'TRIP_APPROVED',
+        supUser,
+        `Supervisor ${supName} (${supUser}) confirmed delivery & approved trip ${tripNum} (${trip?.driverName || trip?.driverId || 'Driver'}) · Discharge: ${trip?.destTerminal || 'ECT'}`,
+        'INFO',
+        'SUPERVISOR',
+        { tripId: trip?.id, tripNumber: tripNum, role: 'SUPERVISOR', driver: trip?.driverName, status: 'APPROVED' }
+      );
+
       Alert.alert('Delivery Confirmed & Approved ✅', `Trip ${trip.tripNumber || trip.id} is confirmed. Driver completed container count (+1 towards 300 target) and main system metrics have been updated.`);
       await loadTrips();
     }
@@ -397,13 +420,37 @@ export default function SupervisorMissionDispatcher() {
 
   // Approval actions
   const handleApproveTrip = async (trip: any) => {
+    const supName = user?.fullName || user?.name || 'Nimal Silva';
+    const supUser = user?.username || user?.employeeId || 'SUP001';
+    const tripNum = trip?.tripNumber || trip?.id || 'TRP';
+
     try {
       await tripService.approveTrip(trip.id, user?.id || 'sup-001', 'Approved by Operations Supervisor');
       useMockTripStore.getState().updateTripStatus(trip.id, 'APPROVED');
+
+      await securityAuditService.logEvent(
+        'TRIP_APPROVED',
+        supUser,
+        `Supervisor ${supName} (${supUser}) approved gate movement for trip ${tripNum} (${trip?.driverName || 'Driver'})`,
+        'INFO',
+        'SUPERVISOR',
+        { tripId: trip?.id, tripNumber: tripNum, role: 'SUPERVISOR', driver: trip?.driverName, status: 'APPROVED' }
+      );
+
       Alert.alert('Gate Pass Approved', `Trip ${trip.tripNumber || trip.id} is approved.`);
       await loadTrips();
     } catch {
       useMockTripStore.getState().updateTripStatus(trip.id, 'APPROVED');
+
+      await securityAuditService.logEvent(
+        'TRIP_APPROVED',
+        supUser,
+        `Supervisor ${supName} (${supUser}) approved gate movement for trip ${tripNum} (${trip?.driverName || 'Driver'})`,
+        'INFO',
+        'SUPERVISOR',
+        { tripId: trip?.id, tripNumber: tripNum, role: 'SUPERVISOR', driver: trip?.driverName, status: 'APPROVED' }
+      );
+
       Alert.alert('Gate Pass Approved (Local)', `Trip ${trip.tripNumber || trip.id} is approved.`);
       await loadTrips();
     }
@@ -422,14 +469,38 @@ export default function SupervisorMissionDispatcher() {
     }
 
     setSubmittingDecision(true);
+    const supName = user?.fullName || user?.name || 'Nimal Silva';
+    const supUser = user?.username || user?.employeeId || 'SUP001';
+    const tripNum = tripToReject?.tripNumber || tripToReject?.id || 'TRP';
+
     try {
       await tripService.rejectTrip(tripToReject.id, user?.id || 'sup-001', rejectionReason.trim());
       useMockTripStore.getState().updateTripStatus(tripToReject.id, 'REJECTED');
+
+      await securityAuditService.logEvent(
+        'TRIP_REJECTED',
+        supUser,
+        `Supervisor ${supName} (${supUser}) rejected trip ${tripNum} (${tripToReject?.driverName || 'Driver'}). Reason: ${rejectionReason.trim()}`,
+        'WARNING',
+        'SUPERVISOR',
+        { tripId: tripToReject?.id, tripNumber: tripNum, role: 'SUPERVISOR', reason: rejectionReason.trim(), status: 'REJECTED' }
+      );
+
       setRejectModalVisible(false);
       Alert.alert('Trip Rejected', `Trip ${tripToReject.tripNumber || tripToReject.id} rejected.`);
       await loadTrips();
     } catch {
       useMockTripStore.getState().updateTripStatus(tripToReject.id, 'REJECTED');
+
+      await securityAuditService.logEvent(
+        'TRIP_REJECTED',
+        supUser,
+        `Supervisor ${supName} (${supUser}) rejected trip ${tripNum} (${tripToReject?.driverName || 'Driver'}). Reason: ${rejectionReason.trim()}`,
+        'WARNING',
+        'SUPERVISOR',
+        { tripId: tripToReject?.id, tripNumber: tripNum, role: 'SUPERVISOR', reason: rejectionReason.trim(), status: 'REJECTED' }
+      );
+
       setRejectModalVisible(false);
       Alert.alert('Trip Rejected (Local)', `Trip ${tripToReject.tripNumber || tripToReject.id} rejected.`);
       await loadTrips();

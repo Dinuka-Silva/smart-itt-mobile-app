@@ -470,6 +470,31 @@ export default function AdminLoginScreen() {
             <Ionicons name="chevron-forward" size={18} color="#00e5ff" />
           </TouchableOpacity>
 
+          {/* System Audit Trail & Operations Ledger (Admin Clearance) */}
+          <TouchableOpacity
+            style={[styles.rosterCardTrigger, { borderColor: 'rgba(254, 179, 0, 0.35)', backgroundColor: 'rgba(254, 179, 0, 0.05)' }]}
+            onPress={() => router.push('/(admin)/audit')}
+            activeOpacity={0.85}
+          >
+            <View style={styles.rosterTriggerLeft}>
+              <View style={[styles.rosterTriggerIconWrap, { backgroundColor: 'rgba(254, 179, 0, 0.15)', borderColor: 'rgba(254, 179, 0, 0.4)' }]}>
+                <Ionicons name="shield-checkmark" size={22} color="#feb300" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <Text style={[styles.rosterTriggerTitle, { color: '#feb300' }]}>SYSTEM AUDIT & OPERATIONS TRAIL</Text>
+                  <View style={[styles.adminOnlyBadge, { backgroundColor: 'rgba(254, 179, 0, 0.2)', borderColor: 'rgba(254, 179, 0, 0.45)' }]}>
+                    <Text style={[styles.adminOnlyBadgeText, { color: '#feb300' }]}>ALL WORK</Text>
+                  </View>
+                </View>
+                <Text style={styles.rosterTriggerSubtitle}>
+                  Driver & Supervisor operations: Registrations, Trips, Approvals & Logins
+                </Text>
+              </View>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color="#feb300" />
+          </TouchableOpacity>
+
           <View style={styles.auditNotice}>
             <Ionicons name="information-circle-outline" size={14} color="#78909c" />
             <Text style={styles.auditNoticeText}>

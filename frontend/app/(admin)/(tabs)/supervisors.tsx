@@ -11,12 +11,16 @@ import {
   Modal,
   Alert,
 } from 'react-native';
+import { useNavigation } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { adminService } from '../../../src/services/adminService';
+import { adminFleetStore } from '../../../src/store/adminFleetStore';
+import { securityAuditService } from '../../../src/services/securityAuditService';
 import { useResponsive } from '../../../src/hooks/useResponsive';
 import AdminSignOutModal from '../../../src/components/AdminSignOutModal';
 
 export default function AdminSupervisorsTab() {
+  const navigation = useNavigation();
   const { topInset, bottomInset, containerPaddingHorizontal } = useResponsive();
 
   const [supervisors, setSupervisors] = useState<any[]>([]);
@@ -40,34 +44,10 @@ export default function AdminSupervisorsTab() {
 
   const fetchSupervisors = useCallback(async () => {
     try {
-      const data = await adminService.getSupervisors(search);
-      if (Array.isArray(data) && data.length > 0) {
-        setSupervisors(data);
-      } else {
-        throw new Error('No supervisors returned');
-      }
+      const data = await adminFleetStore.getSupervisors(search);
+      setSupervisors(data);
     } catch (err: any) {
-      // 6 Port Terminal Supervisors Roster (All Port Jurisdiction)
-      const roster = [
-        { id: 'sup-1', employeeId: 'SUP001', fullName: 'Nimal Silva', email: 'supervisor@smartitt.lk', mobileNumber: '0711234567', nic: '199012345678', status: 'ACTIVE', assignedTerminal: 'ALL TERMINALS', assignedTerminalName: 'Colombo Port Terminals (JCT, CICT, SAGT, ECT, CWIT, UCT)', address: 'Port Operations Complex, Colombo Port', emergencyContactName: 'Amara Silva', emergencyContactNumber: '0719876543' },
-        { id: 'sup-2', employeeId: 'SUP002', fullName: 'Bandara Weerasinghe', email: 'bandara.cwit@smartitt.lk', mobileNumber: '0712345678', nic: '198823456789', status: 'ACTIVE', assignedTerminal: 'ALL TERMINALS', assignedTerminalName: 'Colombo Port Terminals (JCT, CICT, SAGT, ECT, CWIT, UCT)', address: 'Gate Control, Colombo Port', emergencyContactName: 'S. Weerasinghe', emergencyContactNumber: '0718876543' },
-        { id: 'sup-3', employeeId: 'SUP003', fullName: 'Kasun Jayawardena', email: 'kasun.ect@smartitt.lk', mobileNumber: '0713456789', nic: '199134567890', status: 'ACTIVE', assignedTerminal: 'ALL TERMINALS', assignedTerminalName: 'Colombo Port Terminals (JCT, CICT, SAGT, ECT, CWIT, UCT)', address: 'Marshalling Yard Office, Colombo Port', emergencyContactName: 'K. Jayawardena', emergencyContactNumber: '0717765432' },
-        { id: 'sup-4', employeeId: 'SUP004', fullName: 'Prasanna Gunasekara', email: 'prasanna.jct@smartitt.lk', mobileNumber: '0714567890', nic: '198745678901', status: 'ACTIVE', assignedTerminal: 'ALL TERMINALS', assignedTerminalName: 'Colombo Port Terminals (JCT, CICT, SAGT, ECT, CWIT, UCT)', address: 'Operations Tower, Colombo Port', emergencyContactName: 'P. Gunasekara', emergencyContactNumber: '0716654321' },
-        { id: 'sup-5', employeeId: 'SUP005', fullName: 'Ruwan Fernando', email: 'ruwan.sagt@smartitt.lk', mobileNumber: '0715678901', nic: '199256789012', status: 'ACTIVE', assignedTerminal: 'ALL TERMINALS', assignedTerminalName: 'Colombo Port Terminals (JCT, CICT, SAGT, ECT, CWIT, UCT)', address: 'Gate 04, Colombo Port', emergencyContactName: 'R. Fernando', emergencyContactNumber: '0715543210' },
-        { id: 'sup-6', employeeId: 'SUP006', fullName: 'Dinesh Perera', email: 'dinesh.uct@smartitt.lk', mobileNumber: '0716789012', nic: '198967890123', status: 'ACTIVE', assignedTerminal: 'ALL TERMINALS', assignedTerminalName: 'Colombo Port Terminals (JCT, CICT, SAGT, ECT, CWIT, UCT)', address: 'In-Gate Office, Colombo Port', emergencyContactName: 'D. Perera', emergencyContactNumber: '0714432109' },
-      ];
-
-      let filtered = roster;
-      if (search.trim()) {
-        const q = search.toLowerCase().trim();
-        filtered = filtered.filter(
-          (s) =>
-            s.fullName.toLowerCase().includes(q) ||
-            s.employeeId.toLowerCase().includes(q) ||
-            s.mobileNumber.includes(q)
-        );
-      }
-      setSupervisors(filtered);
+      console.warn('[AdminSupervisors] Fetch error:', err);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -76,7 +56,18 @@ export default function AdminSupervisorsTab() {
 
   useEffect(() => {
     fetchSupervisors();
+    const unsubscribe = adminFleetStore.subscribe(() => {
+      fetchSupervisors();
+    });
+    return unsubscribe;
   }, [fetchSupervisors]);
+
+  useEffect(() => {
+    const unsubFocus = navigation.addListener('focus', () => {
+      fetchSupervisors();
+    });
+    return unsubFocus;
+  }, [navigation, fetchSupervisors]);
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -92,46 +83,51 @@ export default function AdminSupervisorsTab() {
     setCreating(true);
     const empIdFormatted = employeeId.trim().toUpperCase();
     try {
-      await adminService.createSupervisor({
+      const newSupervisor = await adminFleetStore.registerNewSupervisorAccount({
         fullName: fullName.trim(),
         employeeId: empIdFormatted,
+        username: empIdFormatted,
         nic: nic.trim(),
         mobileNumber: mobileNumber.trim(),
         password: password.trim() || 'supervisor',
+        status: 'ACTIVE',
       });
+
+      await securityAuditService.logEvent(
+        'SUPERVISOR_REGISTERED',
+        empIdFormatted,
+        `Administrator registered new Supervisor: ${fullName.trim()} (${empIdFormatted}) · Scope: All Port Terminals · Tel: ${mobileNumber.trim()}`,
+        'INFO',
+        'ADMIN',
+        { role: 'SUPERVISOR', employeeId: empIdFormatted, createdBy: 'ADMIN', fullName: fullName.trim() }
+      );
+
+      Alert.alert('Success', `Supervisor ${fullName} (${empIdFormatted}) registered successfully!`);
+      setCreateModalVisible(false);
+      setFullName('');
+      setEmployeeId('');
+      setNic('');
+      setMobileNumber('');
+      fetchSupervisors();
     } catch (err: any) {
-      console.log('[Supervisors] Backend offline, saving supervisor locally');
+      Alert.alert('Error', err?.message || 'Failed to register supervisor');
+    } finally {
+      setCreating(false);
     }
-
-    const newSupervisor = {
-      id: `sup-${Date.now()}`,
-      employeeId: empIdFormatted,
-      fullName: fullName.trim(),
-      email: `${empIdFormatted.toLowerCase()}@smartitt.lk`,
-      mobileNumber: mobileNumber.trim(),
-      nic: nic.trim(),
-      status: 'ACTIVE',
-      assignedTerminal: 'ALL TERMINALS',
-      assignedTerminalName: 'Colombo Port Terminals (JCT, CICT, SAGT, ECT, CWIT, UCT)',
-      address: 'Port Operations Complex, Colombo Port',
-      emergencyContactName: 'Next of Kin',
-      emergencyContactNumber: mobileNumber.trim(),
-    };
-
-    setSupervisors((prev) => [newSupervisor, ...prev.filter(s => s.employeeId !== empIdFormatted)]);
-    Alert.alert('Success', `Supervisor ${fullName} (${empIdFormatted}) registered successfully!`);
-    setCreateModalVisible(false);
-    setFullName('');
-    setEmployeeId('');
-    setNic('');
-    setMobileNumber('');
-    setCreating(false);
   };
 
   const handleToggleStatus = async (supervisor: any) => {
     const newStatus = supervisor.status === 'ACTIVE' ? 'SUSPENDED' : 'ACTIVE';
     try {
-      await adminService.updateSupervisorStatus(supervisor.id, newStatus, 'Admin toggled supervisor status');
+      await adminFleetStore.updateSupervisorStatus(supervisor.id, newStatus, 'Admin toggled supervisor status');
+      await securityAuditService.logEvent(
+        'SUPERVISOR_STATUS_UPDATED',
+        supervisor.username || supervisor.employeeId,
+        `Administrator changed Supervisor status for ${supervisor.fullName} (${supervisor.employeeId}) to ${newStatus}`,
+        newStatus === 'ACTIVE' ? 'INFO' : 'WARNING',
+        'ADMIN',
+        { role: 'SUPERVISOR', supervisorId: supervisor.id, employeeId: supervisor.employeeId, newStatus }
+      );
       Alert.alert('Status Updated', `${supervisor.fullName} is now ${newStatus}`);
       if (selectedSupervisor && selectedSupervisor.id === supervisor.id) {
         setSelectedSupervisor({ ...selectedSupervisor, status: newStatus });
@@ -154,7 +150,15 @@ export default function AdminSupervisorsTab() {
           style: 'destructive',
           onPress: async () => {
             try {
-              await adminService.resetSupervisorPassword(selectedSupervisor.id, 'supervisor');
+              await adminFleetStore.resetSupervisorPassword(selectedSupervisor.id, 'supervisor');
+              await securityAuditService.logEvent(
+                'PASSWORD_CHANGED',
+                selectedSupervisor.username || selectedSupervisor.employeeId,
+                `Administrator reset password for Supervisor ${selectedSupervisor.fullName} (${selectedSupervisor.employeeId}) to default ('supervisor')`,
+                'INFO',
+                'ADMIN',
+                { role: 'SUPERVISOR', supervisorId: selectedSupervisor.id, resetBy: 'ADMIN' }
+              );
               Alert.alert('Success', 'Password has been reset to: supervisor');
             } catch (err: any) {
               Alert.alert('Error', err?.message || 'Failed to reset password');
@@ -239,13 +243,18 @@ export default function AdminSupervisorsTab() {
               activeOpacity={0.85}
             >
               <View style={styles.cardTop}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 10, flex: 1 }}>
                   <View style={styles.avatarCircle}>
                     <Ionicons name="shield" size={18} color="#feb300" />
                   </View>
-                  <View>
+                  <View style={{ flex: 1 }}>
                     <Text style={styles.supName}>{s.fullName}</Text>
                     <Text style={styles.supId}>{s.employeeId} • {s.mobileNumber}</Text>
+                    <View style={styles.usernamePill}>
+                      <Ionicons name="key" size={11} color="#00e5ff" style={{ marginRight: 4 }} />
+                      <Text style={styles.usernamePillLabel}>LOGIN USERNAME: </Text>
+                      <Text style={styles.usernamePillValue}>{s.username || s.employeeId}</Text>
+                    </View>
                   </View>
                 </View>
 
@@ -312,6 +321,34 @@ export default function AdminSupervisorsTab() {
                 <Text style={{ color: '#90caf9', fontSize: 12, fontWeight: '700' }}>ACCOUNT STATUS</Text>
                 <View style={[styles.statusPill, selectedSupervisor?.status === 'ACTIVE' ? styles.statusPillActive : styles.statusPillSuspended]}>
                   <Text style={styles.statusPillText}>{selectedSupervisor?.status || 'ACTIVE'}</Text>
+                </View>
+              </View>
+
+              {/* Portal Login Credentials */}
+              <Text style={styles.modalSectionLabel}>PORTAL LOGIN CREDENTIALS</Text>
+              <View style={[styles.detailCardBox, { borderColor: 'rgba(0, 229, 255, 0.35)', backgroundColor: 'rgba(0, 229, 255, 0.05)' }]}>
+                <View style={styles.detailRow}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <Ionicons name="key" size={14} color="#00e5ff" />
+                    <Text style={[styles.detailRowLabel, { color: '#00e5ff', fontWeight: '800' }]}>System Login Username:</Text>
+                  </View>
+                  <View style={{ backgroundColor: 'rgba(0, 229, 255, 0.15)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6, borderWidth: 1, borderColor: '#00e5ff' }}>
+                    <Text style={{ color: '#00e5ff', fontSize: 13, fontWeight: '900', letterSpacing: 0.8 }}>
+                      {selectedSupervisor?.username || selectedSupervisor?.employeeId}
+                    </Text>
+                  </View>
+                </View>
+                <View style={styles.detailRow}>
+                  <Text style={styles.detailRowLabel}>Employee ID Code:</Text>
+                  <Text style={styles.detailRowValue}>{selectedSupervisor?.employeeId}</Text>
+                </View>
+                <View style={styles.detailRow}>
+                  <Text style={styles.detailRowLabel}>Login Role Clearance:</Text>
+                  <Text style={[styles.detailRowValue, { color: '#feb300', fontWeight: '800' }]}>PORT OPERATIONS SUPERVISOR</Text>
+                </View>
+                <View style={styles.detailRow}>
+                  <Text style={styles.detailRowLabel}>Terminal Control Scope:</Text>
+                  <Text style={[styles.detailRowValue, { color: '#22ef7e', fontWeight: '700' }]}>ALL 6 GATES (PORT-WIDE)</Text>
                 </View>
               </View>
 
@@ -596,6 +633,30 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: '#78909c',
     marginTop: 2,
+  },
+  usernamePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    backgroundColor: 'rgba(0, 229, 255, 0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 229, 255, 0.35)',
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    marginTop: 6,
+  },
+  usernamePillLabel: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#00e5ff',
+    letterSpacing: 0.5,
+  },
+  usernamePillValue: {
+    fontSize: 11,
+    fontWeight: '900',
+    color: '#ffffff',
+    letterSpacing: 0.5,
   },
   terminalBadge: {
     backgroundColor: 'rgba(0, 229, 255, 0.1)',

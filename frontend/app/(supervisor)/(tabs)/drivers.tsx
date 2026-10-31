@@ -14,11 +14,12 @@ import {
   Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation } from 'expo-router';
+import { useNavigation, useRouter } from 'expo-router';
 import axios from 'axios';
 import API_BASE_URL from '../../../src/config/api';
 import { useAuthStore } from '../../../src/store/authStore';
 import { adminFleetStore } from '../../../src/store/adminFleetStore';
+import { securityAuditService } from '../../../src/services/securityAuditService';
 import { radius, spacing } from '../../../src/theme';
 import { SCK_FLEET, resolveCheNumber, resolveOperator, findFleetVehicle } from '../../../src/config/fleet';
 import { useResponsive } from '../../../src/hooks/useResponsive';
@@ -45,6 +46,7 @@ const DRIVER_COVER_POOL = [
 ];
 
 export default function SupervisorDrivers() {
+  const router = useRouter();
   const navigation = useNavigation();
   const user = useAuthStore((s) => s.user);
   const [drivers, setDrivers] = useState<any[]>([]);
@@ -151,103 +153,82 @@ export default function SupervisorDrivers() {
     }
   };
 
-  const getFallbackDrivers = () => {
-    return SCK_FLEET.map((f, idx) => ({
-      id: f.id,
-      fullName: f.assignedDriver?.driverName || `Driver ${idx + 1}`,
-      driverCode: f.assignedDriver?.driverCode || `DRV-${String(idx + 1).padStart(5, '0')}`,
-      employeeId: `SCK-EMP-${String(1001 + idx)}`,
-      nic: `198${(5 + idx) % 15}${String(1000000 + idx * 837).slice(1)}V`,
-      mobileNumber: f.assignedDriver?.mobile || `+94 77 ${String(2345678 + idx * 1357).slice(0, 7)}`,
-      email: `${(f.assignedDriver?.driverName || `driver${idx + 1}`).toLowerCase().replace(/\s+/g, '.')}@scklogistics.lk`,
-      address: `No. ${14 + idx * 2}, Port Access Road, Colombo 15, Sri Lanka`,
-      licenseNumber: `B${String(8765400 + idx * 12)}`,
-      licenseExpiryDate: `2028-09-${String(10 + (idx % 18)).padStart(2, '0')}`,
-      dateOfBirth: `198${(5 + idx) % 10}-0${1 + (idx % 9)}-${String(12 + (idx % 15)).padStart(2, '0')}`,
-      emergencyContactName: idx % 2 === 0 ? 'Nimali Perera (Spouse)' : 'Bandara Silva (Brother)',
-      emergencyContactNumber: `+94 71 ${String(5123456 + idx * 987).slice(0, 7)}`,
-      vehicleNumber: f.vehicleNumber,
-      chassisNumber: f.cheNumber,
-      cheNumber: f.cheNumber,
-      operator: f.operator,
-      status: f.status || 'ACTIVE',
-      monthlyTarget: 300,
-      monthlyContainers: 50 + ((idx * 4) % 65),
-      totalTrips: 50 + ((idx * 4) % 65),
-      createdAt: '2024-02-15T08:30:00',
-      profilePhoto: DRIVER_PHOTO_POOL[idx % DRIVER_PHOTO_POOL.length],
-      coverImage: DRIVER_COVER_POOL[idx % DRIVER_COVER_POOL.length],
-    }));
-  };
-
   const fetchDrivers = useCallback(async () => {
     try {
-      // 1. Fetch authoritative drivers from adminFleetStore (persisted registered drivers + fleet drivers)
-      const storeDrivers = await adminFleetStore.getDrivers();
-
-      // 2. Attempt remote sync with backend API if online (with 2000ms fast timeout)
-      try {
-        const res = await axios.get(`${API_BASE_URL}/drivers`, { timeout: 2000 });
-        const list = Array.isArray(res.data) ? res.data : [];
-        if (list.length > 0) {
-          const remoteCodes = new Set(list.map((d: any) => (d.driverCode || d.empId || '').toUpperCase()));
-          const localOnly = storeDrivers.filter(
-            (sd) => !remoteCodes.has((sd.driverCode || '').toUpperCase()) &&
-                    !remoteCodes.has((sd.employeeId || '').toUpperCase())
-          );
-          const mergedRemote = list.map((remoteDriver: any, i: number) => {
-            const matchedStore = storeDrivers.find(
-              (sd) =>
-                (sd.driverCode && sd.driverCode.toUpperCase() === (remoteDriver.driverCode || '').toUpperCase()) ||
-                (sd.employeeId && sd.employeeId.toUpperCase() === (remoteDriver.employeeId || remoteDriver.empId || '').toUpperCase())
-            );
-            return {
-              ...matchedStore,
-              ...remoteDriver,
-              id: remoteDriver.id || matchedStore?.id || `d-${remoteDriver.driverCode || i}`,
-              fullName: remoteDriver.fullName || remoteDriver.name || matchedStore?.fullName || `Driver ${i + 1}`,
-              driverCode: remoteDriver.driverCode || remoteDriver.empId || matchedStore?.driverCode || `DRV-${String(i + 1).padStart(5, '0')}`,
-              employeeId: remoteDriver.employeeId || remoteDriver.empId || matchedStore?.employeeId || `SCK-EMP-${1001 + i}`,
-              nic: remoteDriver.nic || matchedStore?.nic || `1985${String(1000000 + i * 837).slice(1)}V`,
-              mobileNumber: remoteDriver.mobileNumber || matchedStore?.mobileNumber || '+94 77 123 4567',
-              vehicleNumber: remoteDriver.vehicleNumber || matchedStore?.vehicleNumber || 'LY-6439',
-              chassisNumber: remoteDriver.chassisNumber || remoteDriver.cheNumber || matchedStore?.chassisNumber || 'SCK 100',
-              cheNumber: remoteDriver.cheNumber || remoteDriver.chassisNumber || matchedStore?.cheNumber || 'SCK 100',
-              operator: remoteDriver.operator || matchedStore?.operator || 'SCK Logistics',
-              trailerSize: remoteDriver.trailerSize || matchedStore?.trailerSize || '40FT',
-              licenseNumber: remoteDriver.licenseNumber || remoteDriver.drivingLicenceNumber || matchedStore?.licenseNumber || 'LIC-000000',
-              licenseExpiryDate: remoteDriver.licenseExpiryDate || matchedStore?.licenseExpiryDate || '2030-12-31',
-              dateOfBirth: remoteDriver.dateOfBirth || matchedStore?.dateOfBirth || '1992-06-15',
-              driverPortPassExpiryDate: remoteDriver.driverPortPassExpiryDate || matchedStore?.driverPortPassExpiryDate || '2026-11-15',
-              vehiclePortPassExpiryDate: remoteDriver.vehiclePortPassExpiryDate || matchedStore?.vehiclePortPassExpiryDate || '2026-11-20',
-              address: remoteDriver.address || matchedStore?.address || 'Port Access Road, Colombo',
-              email: remoteDriver.email || matchedStore?.email || `${(remoteDriver.employeeId || 'drv').toLowerCase()}@smartitt.lk`,
-              emergencyContactName: remoteDriver.emergencyContactName || matchedStore?.emergencyContactName || 'Port Dispatch Control',
-              emergencyContactNumber: remoteDriver.emergencyContactNumber || matchedStore?.emergencyContactNumber || '0112456789',
-              status: remoteDriver.status || matchedStore?.status || 'ACTIVE',
-              monthlyTarget: remoteDriver.monthlyTarget || matchedStore?.monthlyTarget || 300,
-              monthlyContainers: remoteDriver.monthlyContainers || matchedStore?.monthlyContainers || (50 + ((i * 4) % 65)),
-              totalTrips: remoteDriver.totalTrips ?? matchedStore?.totalTrips ?? (50 + ((i * 4) % 65)),
-              profilePhoto: remoteDriver.profilePhoto || matchedStore?.profilePhoto || DRIVER_PHOTO_POOL[i % DRIVER_PHOTO_POOL.length],
-              coverImage: remoteDriver.coverImage || matchedStore?.coverImage || DRIVER_COVER_POOL[i % DRIVER_COVER_POOL.length],
-            };
-          });
-          setDrivers([...localOnly, ...mergedRemote]);
-          return;
-        }
-      } catch (apiErr) {
-        // Backend offline / mock fallback: use storeDrivers
-      }
-
-      setDrivers(storeDrivers);
+      // Fetch only newly registered drivers for the Supervisor Portal
+      // (All initial dummy template drivers are removed from supervisor view)
+      const registeredDrivers = await adminFleetStore.getSupervisorRegisteredDrivers();
+      setDrivers(registeredDrivers);
     } catch {
-      const fallback = adminFleetStore.getAllDriversList();
-      setDrivers(fallback.length > 0 ? fallback : getFallbackDrivers());
+      setDrivers([]);
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
   }, []);
+
+  const handleRemoveDriver = (drv: any) => {
+    const drvName = drv.fullName || drv.name || drv.driverCode;
+    const drvCode = drv.driverCode || drv.id;
+
+    Alert.alert(
+      'Remove Driver Account',
+      `Are you sure you want to remove driver ${drvName} (${drvCode}) from the supervisor portal?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Remove',
+          style: 'destructive',
+          onPress: async () => {
+            const curUser = useAuthStore.getState().user;
+            const actorUser = curUser?.username || curUser?.employeeId || 'SUPERVISOR';
+            await adminFleetStore.removeDriver(drvCode);
+            await securityAuditService.logEvent(
+              'DRIVER_STATUS_UPDATED',
+              drvCode,
+              `Supervisor ${curUser?.name || actorUser} removed driver ${drvName} (${drvCode}) from portal roster`,
+              'WARNING',
+              'SUPERVISOR',
+              { driverCode: drvCode, action: 'REMOVED_BY_SUPERVISOR' }
+            );
+            if (selectedDriver && (selectedDriver.id === drv.id || selectedDriver.driverCode === drv.driverCode)) {
+              setSelectedDriver(null);
+            }
+            fetchDrivers();
+          },
+        },
+      ]
+    );
+  };
+
+  const handleClearAllDrivers = () => {
+    Alert.alert(
+      'Remove All Drivers',
+      'Are you sure you want to remove all registered drivers from the supervisor portal?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Remove All',
+          style: 'destructive',
+          onPress: async () => {
+            const curUser = useAuthStore.getState().user;
+            const actorUser = curUser?.username || curUser?.employeeId || 'SUPERVISOR';
+            await adminFleetStore.clearAllCustomDrivers();
+            await securityAuditService.logEvent(
+              'SECURITY_POLICY_VIOLATION',
+              actorUser,
+              `Supervisor ${curUser?.name || actorUser} removed all drivers from the supervisor portal`,
+              'WARNING',
+              'SUPERVISOR',
+              { action: 'ALL_DRIVERS_REMOVED' }
+            );
+            setDrivers([]);
+            fetchDrivers();
+          },
+        },
+      ]
+    );
+  };
 
   useEffect(() => {
     fetchDrivers();
@@ -273,10 +254,22 @@ export default function SupervisorDrivers() {
   const handleToggleStatus = async (drv: any) => {
     const currentStatus = drv.status || 'ACTIVE';
     const newStatus = currentStatus === 'ACTIVE' ? 'SUSPENDED' : 'ACTIVE';
+    const curUser = useAuthStore.getState().user;
+    const actorUser = curUser?.username || curUser?.employeeId || 'SUPERVISOR';
+    const actorName = curUser?.name || curUser?.fullName || 'Port Supervisor';
+
     setUpdatingStatus(true);
     try {
       await axios.patch(`${API_BASE_URL}/drivers/${drv.id}/status`, { status: newStatus });
       await adminFleetStore.updateDriverStatus(drv.id || drv.driverCode, newStatus);
+      await securityAuditService.logEvent(
+        'DRIVER_STATUS_UPDATED',
+        drv.driverCode || drv.id,
+        `${actorName} (${actorUser}) changed driver status for ${drv.fullName} (${drv.driverCode}) to ${newStatus}`,
+        newStatus === 'ACTIVE' ? 'INFO' : 'WARNING',
+        'SUPERVISOR',
+        { driverCode: drv.driverCode, newStatus, updatedBy: actorUser }
+      );
       setDrivers((prev) =>
         prev.map((d) => (d.id === drv.id || d.driverCode === drv.driverCode ? { ...d, status: newStatus } : d))
       );
@@ -285,6 +278,14 @@ export default function SupervisorDrivers() {
       }
     } catch {
       await adminFleetStore.updateDriverStatus(drv.id || drv.driverCode, newStatus);
+      await securityAuditService.logEvent(
+        'DRIVER_STATUS_UPDATED',
+        drv.driverCode || drv.id,
+        `${actorName} (${actorUser}) changed driver status for ${drv.fullName} (${drv.driverCode}) to ${newStatus}`,
+        newStatus === 'ACTIVE' ? 'INFO' : 'WARNING',
+        'SUPERVISOR',
+        { driverCode: drv.driverCode, newStatus, updatedBy: actorUser }
+      );
       // Local state toggle if offline or demo
       setDrivers((prev) =>
         prev.map((d) => (d.id === drv.id || d.driverCode === drv.driverCode ? { ...d, status: newStatus } : d))
@@ -401,9 +402,19 @@ export default function SupervisorDrivers() {
             <Text style={styles.sectionTitle}>
               REGISTERED PORT OPERATORS ({filteredDrivers.length})
             </Text>
+            {drivers.length > 0 && (
+              <TouchableOpacity
+                style={styles.clearAllBtn}
+                onPress={handleClearAllDrivers}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="trash-outline" size={13} color="#ff5252" style={{ marginRight: 4 }} />
+                <Text style={styles.clearAllBtnText}>CLEAR ALL</Text>
+              </TouchableOpacity>
+            )}
             <View style={{ marginLeft: 'auto', flexDirection: 'row', alignItems: 'center', gap: 4 }}>
               <Ionicons name="finger-print" size={13} color="#00e5ff" />
-              <Text style={{ color: '#00e5ff', fontSize: 10, fontWeight: '800' }}>TAP DRIVER FOR FULL SIGN-UP INFO</Text>
+              <Text style={{ color: '#00e5ff', fontSize: 10, fontWeight: '800' }}>TAP FOR DOSSIER</Text>
             </View>
           </View>
 
@@ -431,11 +442,34 @@ export default function SupervisorDrivers() {
             {loading ? (
               <ActivityIndicator size="large" color="#00e5ff" style={{ marginVertical: 20 }} />
             ) : filteredDrivers.length === 0 ? (
-              <View style={styles.emptyCard}>
-                <Ionicons name="search" size={28} color="#849396" />
-                <Text style={styles.emptyTitle}>NO OPERATORS FOUND</Text>
-                <Text style={styles.emptySub}>No drivers matched your search filter.</Text>
-              </View>
+              searchQuery.trim() ? (
+                <View style={styles.emptyCard}>
+                  <Ionicons name="search" size={28} color="#849396" />
+                  <Text style={styles.emptyTitle}>NO OPERATORS FOUND</Text>
+                  <Text style={styles.emptySub}>No drivers matched your search filter.</Text>
+                </View>
+              ) : (
+                <View style={styles.emptyCard}>
+                  <View style={styles.emptyIconCircle}>
+                    <Ionicons name="people-outline" size={36} color="#00e5ff" />
+                  </View>
+                  <Text style={styles.emptyTitle}>NO DRIVERS REGISTERED YET</Text>
+                  <Text style={styles.emptySub}>
+                    All template drivers have been removed from the supervisor portal.
+                  </Text>
+                  <Text style={[styles.emptySub, { marginTop: 6, color: '#90caf9' }]}>
+                    When a driver creates a new account, their login username, assigned truck, and complete dossier will automatically appear here.
+                  </Text>
+                  <TouchableOpacity
+                    style={styles.emptyRegisterBtn}
+                    onPress={() => router.push('/(auth)/register?role=DRIVER')}
+                    activeOpacity={0.8}
+                  >
+                    <Ionicons name="person-add" size={15} color="#001529" style={{ marginRight: 6 }} />
+                    <Text style={styles.emptyRegisterBtnText}>REGISTER DRIVER ACCOUNT</Text>
+                  </TouchableOpacity>
+                </View>
+              )
             ) : (
               filteredDrivers.map((drv) => {
                 const name = drv.fullName;
@@ -630,17 +664,31 @@ export default function SupervisorDrivers() {
                       </View>
                     </View>
 
-                    {/* Footer Row: Inspect Button */}
+                    {/* Footer Row: Actions */}
                     <View style={styles.cardFooterRow}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, flex: 1 }}>
                         <Ionicons name="location" size={12} color="#849396" />
                         <Text style={styles.addressSnippet} numberOfLines={1}>
                           {drv.address || 'Colombo Port Facility'}
                         </Text>
                       </View>
-                      <View style={styles.viewDossierPill}>
-                        <Text style={styles.viewDossierText}>VIEW FULL SIGN-UP DOSSIER</Text>
-                        <Ionicons name="chevron-forward" size={12} color="#00e5ff" />
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                        <TouchableOpacity
+                          style={styles.cardRemoveBtn}
+                          onPress={(e) => {
+                            e.stopPropagation?.();
+                            handleRemoveDriver(drv);
+                          }}
+                          activeOpacity={0.7}
+                        >
+                          <Ionicons name="trash-outline" size={12} color="#ff5252" style={{ marginRight: 3 }} />
+                          <Text style={styles.cardRemoveText}>REMOVE</Text>
+                        </TouchableOpacity>
+
+                        <View style={styles.viewDossierPill}>
+                          <Text style={styles.viewDossierText}>VIEW DOSSIER</Text>
+                          <Ionicons name="chevron-forward" size={12} color="#00e5ff" />
+                        </View>
                       </View>
                     </View>
                   </TouchableOpacity>
@@ -1040,6 +1088,15 @@ export default function SupervisorDrivers() {
                       </Text>
                     </TouchableOpacity>
                   </View>
+
+                  <TouchableOpacity
+                    style={styles.modalRemoveBtn}
+                    onPress={() => handleRemoveDriver(selectedDriver)}
+                    activeOpacity={0.8}
+                  >
+                    <Ionicons name="trash-outline" size={16} color="#ff5252" style={{ marginRight: 6 }} />
+                    <Text style={styles.modalRemoveBtnText}>REMOVE DRIVER ACCOUNT</Text>
+                  </TouchableOpacity>
 
                   <View style={{ height: 20 }} />
                 </ScrollView>
@@ -1994,6 +2051,82 @@ const styles = StyleSheet.create({
   usernamePillValue: {
     color: '#ffffff',
     fontSize: 10,
+    fontWeight: '900',
+    letterSpacing: 0.5,
+  },
+  clearAllBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 82, 82, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 82, 82, 0.35)',
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    marginLeft: 8,
+  },
+  clearAllBtnText: {
+    color: '#ff5252',
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
+  emptyIconCircle: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: 'rgba(0, 229, 255, 0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 229, 255, 0.25)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+  },
+  emptyRegisterBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#00e5ff',
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    marginTop: 16,
+  },
+  emptyRegisterBtnText: {
+    color: '#001529',
+    fontSize: 11,
+    fontWeight: '900',
+    letterSpacing: 0.5,
+  },
+  cardRemoveBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 82, 82, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 82, 82, 0.3)',
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  cardRemoveText: {
+    color: '#ff5252',
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
+  modalRemoveBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255, 82, 82, 0.15)',
+    borderWidth: 1,
+    borderColor: '#ff5252',
+    borderRadius: radius.DEFAULT,
+    height: 44,
+    marginTop: 10,
+  },
+  modalRemoveBtnText: {
+    color: '#ff5252',
+    fontSize: 12,
     fontWeight: '900',
     letterSpacing: 0.5,
   },

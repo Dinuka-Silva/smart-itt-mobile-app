@@ -60,9 +60,37 @@ export interface AdminDriver {
   coverImage?: string;
 }
 
+export interface AdminSupervisor {
+  id: string;
+  employeeId: string;
+  username: string; // Official System Login Username (e.g. SUP001 or SUP-00001)
+  fullName: string;
+  email: string;
+  mobileNumber: string;
+  nic: string;
+  status: string; // 'ACTIVE' | 'SUSPENDED'
+  assignedTerminal: string;
+  assignedTerminalName: string;
+  supervisorPortPassExpiryDate?: string;
+  address?: string;
+  emergencyContactName?: string;
+  emergencyContactNumber?: string;
+  createdAt?: string;
+}
+
 const STORAGE_KEY_CUSTOM_DRIVERS = 'itt_admin_fleet_custom_drivers';
 const STORAGE_KEY_CUSTOM_VEHICLES = 'itt_admin_fleet_custom_vehicles';
+const STORAGE_KEY_CUSTOM_SUPERVISORS = 'itt_admin_fleet_custom_supervisors';
 const STORAGE_KEY_STATUS_OVERRIDES = 'itt_admin_fleet_status_overrides';
+
+const INITIAL_SUPERVISORS: AdminSupervisor[] = [
+  { id: 'sup-1', employeeId: 'SUP001', username: 'SUP001', fullName: 'Nimal Silva', email: 'supervisor@smartitt.lk', mobileNumber: '0711234567', nic: '199012345678', status: 'ACTIVE', assignedTerminal: 'ALL TERMINALS', assignedTerminalName: 'Colombo Port Terminals (JCT, CICT, SAGT, ECT, CWIT, UCT)', supervisorPortPassExpiryDate: '2026-11-18', address: 'Port Operations Complex, Colombo Port', emergencyContactName: 'Amara Silva', emergencyContactNumber: '0719876543', createdAt: '2024-01-15T08:00:00Z' },
+  { id: 'sup-2', employeeId: 'SUP002', username: 'SUP002', fullName: 'Bandara Weerasinghe', email: 'bandara.cwit@smartitt.lk', mobileNumber: '0712345678', nic: '198823456789', status: 'ACTIVE', assignedTerminal: 'ALL TERMINALS', assignedTerminalName: 'Colombo Port Terminals (JCT, CICT, SAGT, ECT, CWIT, UCT)', supervisorPortPassExpiryDate: '2026-11-18', address: 'Gate Control, Colombo Port', emergencyContactName: 'S. Weerasinghe', emergencyContactNumber: '0718876543', createdAt: '2024-01-20T08:00:00Z' },
+  { id: 'sup-3', employeeId: 'SUP003', username: 'SUP003', fullName: 'Kasun Jayawardena', email: 'kasun.ect@smartitt.lk', mobileNumber: '0713456789', nic: '199134567890', status: 'ACTIVE', assignedTerminal: 'ALL TERMINALS', assignedTerminalName: 'Colombo Port Terminals (JCT, CICT, SAGT, ECT, CWIT, UCT)', supervisorPortPassExpiryDate: '2026-11-18', address: 'Marshalling Yard Office, Colombo Port', emergencyContactName: 'K. Jayawardena', emergencyContactNumber: '0717765432', createdAt: '2024-02-01T08:00:00Z' },
+  { id: 'sup-4', employeeId: 'SUP004', username: 'SUP004', fullName: 'Prasanna Gunasekara', email: 'prasanna.jct@smartitt.lk', mobileNumber: '0714567890', nic: '198745678901', status: 'ACTIVE', assignedTerminal: 'ALL TERMINALS', assignedTerminalName: 'Colombo Port Terminals (JCT, CICT, SAGT, ECT, CWIT, UCT)', supervisorPortPassExpiryDate: '2026-11-18', address: 'Operations Tower, Colombo Port', emergencyContactName: 'P. Gunasekara', emergencyContactNumber: '0716654321', createdAt: '2024-02-10T08:00:00Z' },
+  { id: 'sup-5', employeeId: 'SUP005', username: 'SUP005', fullName: 'Ruwan Fernando', email: 'ruwan.sagt@smartitt.lk', mobileNumber: '0715678901', nic: '199256789012', status: 'ACTIVE', assignedTerminal: 'ALL TERMINALS', assignedTerminalName: 'Colombo Port Terminals (JCT, CICT, SAGT, ECT, CWIT, UCT)', supervisorPortPassExpiryDate: '2026-11-18', address: 'Gate 04, Colombo Port', emergencyContactName: 'R. Fernando', emergencyContactNumber: '0715543210', createdAt: '2024-02-15T08:00:00Z' },
+  { id: 'sup-6', employeeId: 'SUP006', username: 'SUP006', fullName: 'Dinesh Perera', email: 'dinesh.uct@smartitt.lk', mobileNumber: '0716789012', nic: '198967890123', status: 'ACTIVE', assignedTerminal: 'ALL TERMINALS', assignedTerminalName: 'Colombo Port Terminals (JCT, CICT, SAGT, ECT, CWIT, UCT)', supervisorPortPassExpiryDate: '2026-11-18', address: 'In-Gate Office, Colombo Port', emergencyContactName: 'D. Perera', emergencyContactNumber: '0714432109', createdAt: '2024-03-01T08:00:00Z' },
+];
 
 const DRIVER_PHOTO_POOL = [
   'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80',
@@ -148,6 +176,7 @@ const INITIAL_DRIVERS: AdminDriver[] = INITIAL_DRIVERS_RAW.map(d => ({
 class AdminFleetStore {
   private vehicles: AdminVehicle[] = [...INITIAL_VEHICLES];
   private drivers: AdminDriver[] = [...INITIAL_DRIVERS];
+  private supervisors: AdminSupervisor[] = [...INITIAL_SUPERVISORS];
   private initialized = false;
   private listeners: Set<() => void> = new Set();
 
@@ -226,6 +255,24 @@ class AdminFleetStore {
           if (d) d.status = status;
         }
       }
+
+      // 4. Load custom registered supervisors
+      const rawSupervisors = await storage.getItem(STORAGE_KEY_CUSTOM_SUPERVISORS);
+      if (rawSupervisors) {
+        const customSupervisors = JSON.parse(rawSupervisors);
+        if (Array.isArray(customSupervisors)) {
+          for (const cs of customSupervisors) {
+            const idx = this.supervisors.findIndex(
+              s => s.employeeId.toUpperCase() === cs.employeeId?.toUpperCase() || s.id === cs.id
+            );
+            if (idx !== -1) {
+              this.supervisors[idx] = { ...this.supervisors[idx], ...cs };
+            } else {
+              this.supervisors.unshift(cs);
+            }
+          }
+        }
+      }
     } catch (e) {
       console.warn('[AdminFleetStore] Local storage initialization warning:', e);
     }
@@ -241,6 +288,10 @@ class AdminFleetStore {
       const initialPlates = new Set(INITIAL_VEHICLES.map(v => v.vehicleNumber.toUpperCase()));
       const customVehicles = this.vehicles.filter(v => !initialPlates.has(v.vehicleNumber.toUpperCase()));
       await storage.setItem(STORAGE_KEY_CUSTOM_VEHICLES, JSON.stringify(customVehicles));
+
+      const initialSupCodes = new Set(INITIAL_SUPERVISORS.map(s => s.employeeId.toUpperCase()));
+      const customSupervisors = this.supervisors.filter(s => !initialSupCodes.has(s.employeeId.toUpperCase()));
+      await storage.setItem(STORAGE_KEY_CUSTOM_SUPERVISORS, JSON.stringify(customSupervisors));
     } catch (e) {
       console.warn('[AdminFleetStore] Failed to persist custom data:', e);
     }
@@ -540,6 +591,68 @@ class AdminFleetStore {
       );
     }
     return filtered;
+  }
+
+  /**
+   * Returns only newly registered drivers created by users or admins (excluding pre-seeded template drivers).
+   * Used by Supervisor Portal to ensure clean registration verification without clutter.
+   */
+  async getSupervisorRegisteredDrivers(search?: string, status?: string): Promise<AdminDriver[]> {
+    await this.init();
+    const initialCodes = new Set(INITIAL_DRIVERS.map(d => d.driverCode.toUpperCase()));
+    let registered = this.drivers.filter(d => !initialCodes.has(d.driverCode.toUpperCase()) && !d.id.startsWith('d-'));
+
+    if (status && status !== 'ALL') {
+      registered = registered.filter(d => d.status === status);
+    }
+    if (search && search.trim()) {
+      const q = search.trim().toLowerCase();
+      registered = registered.filter(d =>
+        d.fullName.toLowerCase().includes(q) ||
+        d.driverCode.toLowerCase().includes(q) ||
+        (d.username && d.username.toLowerCase().includes(q)) ||
+        d.employeeId.toLowerCase().includes(q) ||
+        (d.nic && d.nic.toLowerCase().includes(q)) ||
+        d.mobileNumber.includes(q) ||
+        (d.vehicleNumber && d.vehicleNumber.toLowerCase().includes(q))
+      );
+    }
+    return registered;
+  }
+
+  async removeDriver(identifier: string): Promise<boolean> {
+    await this.init();
+    const clean = identifier.trim().toUpperCase();
+    const idx = this.drivers.findIndex(
+      d => d.id.toUpperCase() === clean ||
+           d.driverCode.toUpperCase() === clean ||
+           d.employeeId.toUpperCase() === clean ||
+           (d.username && d.username.toUpperCase() === clean)
+    );
+    if (idx !== -1) {
+      const removed = this.drivers.splice(idx, 1)[0];
+      if (removed.vehicleNumber) {
+        const vIdx = this.vehicles.findIndex(v => v.vehicleNumber.toUpperCase() === removed.vehicleNumber?.toUpperCase());
+        if (vIdx !== -1) {
+          this.vehicles[vIdx].driverName = null;
+          this.vehicles[vIdx].driverCode = null;
+          this.vehicles[vIdx].driverMobile = null;
+        }
+      }
+      await this.persistCustomData();
+      this.notify();
+      return true;
+    }
+    return false;
+  }
+
+  async clearAllCustomDrivers(): Promise<void> {
+    await this.init();
+    const initialCodes = new Set(INITIAL_DRIVERS.map(d => d.driverCode.toUpperCase()));
+    this.drivers = this.drivers.filter(d => initialCodes.has(d.driverCode.toUpperCase()));
+    await storage.removeItem(STORAGE_KEY_CUSTOM_DRIVERS);
+    await this.persistCustomData();
+    this.notify();
   }
 
   /**
@@ -1023,6 +1136,246 @@ class AdminFleetStore {
     }
 
     return updatedDriver;
+  }
+
+  // ─── SUPERVISORS ───────────────────────────────────────────────
+  getAllSupervisorsList(): AdminSupervisor[] {
+    return [...this.supervisors];
+  }
+
+  async getSupervisors(search?: string, status?: string): Promise<AdminSupervisor[]> {
+    await this.init();
+
+    try {
+      const remote = await Promise.race([
+        adminService.getSupervisors(search, status),
+        new Promise<never>((_, reject) => setTimeout(() => reject(new Error('timeout')), 2000)),
+      ]);
+      if (Array.isArray(remote) && remote.length > 0) {
+        for (const r of remote) {
+          const rEmp = (r.employeeId || '').toUpperCase();
+          const rUser = (r.username || '').toUpperCase();
+          const existingIdx = this.supervisors.findIndex(
+            s => (rEmp && s.employeeId.toUpperCase() === rEmp) ||
+                 (rUser && s.username.toUpperCase() === rUser) ||
+                 s.id === r.id
+          );
+          if (existingIdx !== -1) {
+            this.supervisors[existingIdx] = {
+              ...this.supervisors[existingIdx],
+              ...r,
+              username: r.username || r.employeeId || this.supervisors[existingIdx].username,
+              employeeId: r.employeeId || this.supervisors[existingIdx].employeeId,
+              fullName: r.fullName || this.supervisors[existingIdx].fullName,
+              status: r.status || this.supervisors[existingIdx].status,
+              mobileNumber: r.mobileNumber || this.supervisors[existingIdx].mobileNumber,
+              email: r.email || this.supervisors[existingIdx].email,
+              nic: r.nic || this.supervisors[existingIdx].nic,
+              assignedTerminal: 'ALL TERMINALS',
+              assignedTerminalName: 'Colombo Port Terminals (JCT, CICT, SAGT, ECT, CWIT, UCT)',
+            };
+          } else {
+            this.supervisors.push({
+              id: r.id || `sup-${r.employeeId || Date.now()}`,
+              employeeId: r.employeeId || 'SUP001',
+              username: r.username || r.employeeId || 'SUP001',
+              fullName: r.fullName || 'Port Supervisor',
+              email: r.email || `${(r.employeeId || 'sup').toLowerCase()}@smartitt.lk`,
+              mobileNumber: r.mobileNumber || '',
+              nic: r.nic || '',
+              status: r.status || 'ACTIVE',
+              assignedTerminal: 'ALL TERMINALS',
+              assignedTerminalName: 'Colombo Port Terminals (JCT, CICT, SAGT, ECT, CWIT, UCT)',
+              supervisorPortPassExpiryDate: r.supervisorPortPassExpiryDate || '2026-11-18',
+              address: r.address || 'Port Operations Complex, Colombo Port',
+              emergencyContactName: r.emergencyContactName || 'Port Operations Lead',
+              emergencyContactNumber: r.emergencyContactNumber || '0112456789',
+              createdAt: r.createdAt || new Date().toISOString(),
+            });
+          }
+        }
+      }
+    } catch {
+      // Spring Boot offline, fallback to local state
+    }
+
+    let filtered = [...this.supervisors];
+    if (status && status !== 'ALL') {
+      filtered = filtered.filter(s => s.status === status);
+    }
+    if (search && search.trim()) {
+      const q = search.trim().toLowerCase();
+      filtered = filtered.filter(s =>
+        s.fullName.toLowerCase().includes(q) ||
+        s.employeeId.toLowerCase().includes(q) ||
+        (s.username && s.username.toLowerCase().includes(q)) ||
+        (s.email && s.email.toLowerCase().includes(q)) ||
+        (s.nic && s.nic.toLowerCase().includes(q)) ||
+        s.mobileNumber.includes(q) ||
+        (s.assignedTerminal && s.assignedTerminal.toLowerCase().includes(q))
+      );
+    }
+    return filtered;
+  }
+
+  getSupervisor(identifier: string): AdminSupervisor | undefined {
+    if (!identifier) return undefined;
+    const clean = identifier.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+    return this.supervisors.find(s => {
+      const sEmp = (s.employeeId || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+      const sUser = (s.username || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+      const sNic = (s.nic || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+      const sId = (s.id || '').toUpperCase();
+      const sPhone = (s.mobileNumber || '').replace(/[^0-9]/g, '');
+      const cleanPhone = identifier.replace(/[^0-9]/g, '');
+
+      return sEmp === clean ||
+             sUser === clean ||
+             sNic === clean ||
+             sId === identifier.toUpperCase() ||
+             (cleanPhone.length >= 7 && sPhone.includes(cleanPhone)) ||
+             (s.email && s.email.toLowerCase() === identifier.toLowerCase());
+    });
+  }
+
+  async registerNewSupervisorAccount(data: {
+    employeeId?: string;
+    supervisorCode?: string;
+    username?: string;
+    fullName: string;
+    nic?: string;
+    mobileNumber?: string;
+    email?: string;
+    address?: string;
+    supervisorPortPassExpiryDate?: string;
+    emergencyContactName?: string;
+    emergencyContactNumber?: string;
+    password?: string;
+    status?: string;
+    profilePhoto?: string;
+  }): Promise<AdminSupervisor> {
+    await this.init();
+
+    // 1. Resolve Employee ID / Code & Login Username
+    let supervisorCode = (data.employeeId || data.supervisorCode || '').trim().toUpperCase();
+    if (!supervisorCode) {
+      const nextIndex = this.supervisors.length + 1;
+      supervisorCode = `SUP${String(nextIndex).padStart(3, '0')}`;
+    }
+    const username = (data.username || supervisorCode).trim();
+
+    // 2. Build Complete Dossier
+    const newSupervisor: AdminSupervisor = {
+      id: `sup-${supervisorCode.toLowerCase().replace(/[^a-z0-9]/g, '')}`,
+      employeeId: supervisorCode,
+      username,
+      fullName: data.fullName.trim(),
+      email: data.email?.trim() || `${supervisorCode.toLowerCase()}@smartitt.lk`,
+      mobileNumber: data.mobileNumber?.trim() || '0711234567',
+      nic: data.nic?.trim().toUpperCase() || '199012345678',
+      status: data.status || 'ACTIVE',
+      assignedTerminal: 'ALL TERMINALS',
+      assignedTerminalName: 'Colombo Port Terminals (JCT, CICT, SAGT, ECT, CWIT, UCT)',
+      supervisorPortPassExpiryDate: data.supervisorPortPassExpiryDate || '2026-11-18',
+      address: data.address?.trim() || 'Port Operations Complex, Colombo Port',
+      emergencyContactName: data.emergencyContactName?.trim() || 'SLPA Port Dispatch Control',
+      emergencyContactNumber: data.emergencyContactNumber?.trim() || '0112456789',
+      createdAt: new Date().toISOString(),
+    };
+
+    // 3. Prepend or update in Authoritative Supervisors State
+    const existingIdx = this.supervisors.findIndex(
+      s => s.employeeId.toUpperCase() === supervisorCode ||
+           s.username.toUpperCase() === username.toUpperCase() ||
+           (newSupervisor.nic && s.nic.toUpperCase() === newSupervisor.nic)
+    );
+    if (existingIdx !== -1) {
+      this.supervisors[existingIdx] = { ...this.supervisors[existingIdx], ...newSupervisor };
+    } else {
+      this.supervisors = [newSupervisor, ...this.supervisors];
+    }
+
+    // 4. Persist to storage & notify UI listeners
+    await this.persistCustomData();
+    this.notify();
+
+    // 5. Sync password to secure credentialStore
+    if (data.password) {
+      try {
+        await credentialStore.recordPasswordChange(username, data.password);
+        await credentialStore.recordPasswordChange(supervisorCode, data.password);
+        if (newSupervisor.email) await credentialStore.recordPasswordChange(newSupervisor.email, data.password);
+      } catch (e) {
+        console.warn('[AdminFleetStore] Supervisor credential recording warning:', e);
+      }
+    }
+
+    // 6. Synchronize with remote backend API (non-blocking)
+    adminService.createSupervisor({
+      fullName: newSupervisor.fullName,
+      employeeId: newSupervisor.employeeId,
+      nic: newSupervisor.nic,
+      mobileNumber: newSupervisor.mobileNumber,
+      email: newSupervisor.email,
+      password: data.password || 'supervisor',
+      assignedTerminal: 'ALL TERMINALS',
+    }).catch(() => {
+      console.log('[AdminFleetStore] Backend offline, new supervisor saved locally');
+    });
+
+    return newSupervisor;
+  }
+
+  async updateSupervisorStatus(supervisorId: string, status: string, reason?: string): Promise<void> {
+    await this.init();
+    const idx = this.supervisors.findIndex(s => s.id === supervisorId || s.employeeId === supervisorId || s.username === supervisorId);
+    if (idx !== -1) {
+      this.supervisors[idx] = { ...this.supervisors[idx], status };
+    }
+    const targetSup = idx !== -1 ? this.supervisors[idx] : undefined;
+
+    await this.persistCustomData();
+    this.notify();
+
+    if (targetSup) {
+      try {
+        if (targetSup.username) await credentialStore.setAccountStatus(targetSup.username, status as any, reason);
+        if (targetSup.employeeId) await credentialStore.setAccountStatus(targetSup.employeeId, status as any, reason);
+        if (targetSup.email) await credentialStore.setAccountStatus(targetSup.email, status as any, reason);
+      } catch (e) {
+        console.warn('[AdminFleetStore] Local credential store supervisor status sync warning:', e);
+      }
+    }
+
+    try {
+      await adminService.updateSupervisorStatus(targetSup?.id || supervisorId, status, reason);
+    } catch {
+      console.log('[AdminFleetStore] Backend offline, updated supervisor status locally');
+    }
+  }
+
+  async resetSupervisorPassword(supervisorId: string, newPassword?: string): Promise<{ success: boolean; password: string }> {
+    const defaultPassword = (newPassword && newPassword.trim()) ? newPassword.trim() : 'supervisor';
+    const sup = this.supervisors.find(s => s.id === supervisorId || s.employeeId === supervisorId || s.username === supervisorId);
+
+    try {
+      if (sup) {
+        if (sup.username) await credentialStore.resetPasswordByAdmin(sup.username, defaultPassword);
+        if (sup.employeeId) await credentialStore.resetPasswordByAdmin(sup.employeeId, defaultPassword);
+        if (sup.email) await credentialStore.resetPasswordByAdmin(sup.email, defaultPassword);
+      }
+      await credentialStore.resetPasswordByAdmin(supervisorId, defaultPassword);
+    } catch (e) {
+      console.warn('[AdminFleetStore] Local credential store supervisor reset error:', e);
+    }
+
+    try {
+      await adminService.resetSupervisorPassword(sup?.employeeId || supervisorId, defaultPassword);
+    } catch {
+      console.log('[AdminFleetStore] Backend offline, reset supervisor password locally');
+    }
+
+    return { success: true, password: defaultPassword };
   }
 }
 

@@ -17,6 +17,7 @@ import API_BASE_URL from '../../../src/config/api';
 import { useAuthStore } from '../../../src/store/authStore';
 import { colors, radius, spacing } from '../../../src/theme';
 import { useMockTripStore } from '../../../src/store/mockTripStore';
+import { securityAuditService } from '../../../src/services/securityAuditService';
 import { useResponsive } from '../../../src/hooks/useResponsive';
 import { getTripTimingDetails } from '../../../src/utils/tripDateUtils';
 import { getTripDischargeTerminal } from '../../../src/utils/tripTerminalUtils';
@@ -103,13 +104,33 @@ export default function DriverJobQueue() {
 
   const handleStartTrip = async (tripId: string) => {
     setUpdatingId(tripId);
+    const targetTrip = trips.find((t) => t.id === tripId);
+    const tripNum = targetTrip?.tripNumber || `TRP-${tripId.slice(0, 6)}`;
+    const driverUser = user?.username || user?.driverCode || user?.employeeId || 'DRIVER';
+
     try {
       await axios.patch(`${API_BASE_URL}/trips/${tripId}/status`, { status: 'IN_PROGRESS' });
       useMockTripStore.getState().updateTripStatus(tripId, 'IN_PROGRESS');
+      await securityAuditService.logEvent(
+        'TRIP_STARTED',
+        driverUser,
+        `Driver ${user?.name || driverUser} started trip ${tripNum} (${targetTrip?.sourceTerminal || 'Gate'} → ${targetTrip?.destTerminal || 'ECT'}) · Truck ${targetTrip?.vehicleNumber || user?.vehicleNumber || 'LY-6439'}`,
+        'INFO',
+        'DRIVER',
+        { tripId, tripNumber: tripNum, role: 'DRIVER', status: 'IN_PROGRESS', vehicleNumber: targetTrip?.vehicleNumber || user?.vehicleNumber }
+      );
       showMessage('Trip Started', 'Gate pass validated. Trip is now IN PROGRESS.');
       fetchTrips();
     } catch {
       useMockTripStore.getState().updateTripStatus(tripId, 'IN_PROGRESS');
+      await securityAuditService.logEvent(
+        'TRIP_STARTED',
+        driverUser,
+        `Driver ${user?.name || driverUser} started trip ${tripNum} (${targetTrip?.sourceTerminal || 'Gate'} → ${targetTrip?.destTerminal || 'ECT'}) · Truck ${targetTrip?.vehicleNumber || user?.vehicleNumber || 'LY-6439'}`,
+        'INFO',
+        'DRIVER',
+        { tripId, tripNumber: tripNum, role: 'DRIVER', status: 'IN_PROGRESS', vehicleNumber: targetTrip?.vehicleNumber || user?.vehicleNumber }
+      );
       showMessage('Trip Started', 'Gate pass validated. Trip is now IN PROGRESS.');
       fetchTrips();
     } finally {
@@ -119,8 +140,11 @@ export default function DriverJobQueue() {
 
   const handleCompleteTrip = async (tripId: string) => {
     setUpdatingId(tripId);
+    const driverUser = user?.username || user?.driverCode || user?.employeeId || 'DRIVER';
+
     try {
       const trip = trips.find((t) => t.id === tripId);
+      const tripNum = trip?.tripNumber || `TRP-${tripId.slice(0, 6)}`;
       const selTerm = (trip?.containers || []).map((c: any) => unloadSelections[c.id]).filter(Boolean)[0] || trip?.destTerminal || 'ECT';
       const dischargeBay = trip?.dischargeBay || 'Bay 04, Crane 02';
       const sealStatus = trip?.sealStatus || 'INTACT (VERIFIED)';
@@ -143,12 +167,24 @@ export default function DriverJobQueue() {
         damageStatus,
         driverNotes,
       });
+
+      await securityAuditService.logEvent(
+        'TRIP_COMPLETED',
+        driverUser,
+        `Driver ${user?.name || driverUser} completed trip ${tripNum} · Discharged at ${selTerm} (${dischargeBay}) · Submitted for supervisor approval`,
+        'INFO',
+        'DRIVER',
+        { tripId, tripNumber: tripNum, dischargeTerminal: selTerm, dischargeBay, role: 'DRIVER', status: 'PENDING_APPROVAL' }
+      );
+
       showMessage(
         'Trip Submitted to Supervisor! 📋',
         'Discharge details & seal status submitted to Port Operations Supervisor to confirm delivery and credit your 300 Containers target (+1)!'
       );
       fetchTrips();
     } catch {
+      const trip = trips.find((t) => t.id === tripId);
+      const tripNum = trip?.tripNumber || `TRP-${tripId.slice(0, 6)}`;
       useMockTripStore.getState().submitCompletedTripToSupervisor(tripId, {
         dischargeTerminal: 'ECT',
         dischargeBay: 'Bay 04, Crane 02',
@@ -156,6 +192,16 @@ export default function DriverJobQueue() {
         damageStatus: 'NONE',
         driverNotes: 'Containers discharged safely. Awaiting supervisor clearance.',
       });
+
+      await securityAuditService.logEvent(
+        'TRIP_COMPLETED',
+        driverUser,
+        `Driver ${user?.name || driverUser} completed trip ${tripNum} · Discharged at ECT (Bay 04, Crane 02) · Submitted for supervisor approval`,
+        'INFO',
+        'DRIVER',
+        { tripId, tripNumber: tripNum, dischargeTerminal: 'ECT', role: 'DRIVER', status: 'PENDING_APPROVAL' }
+      );
+
       showMessage(
         'Trip Submitted to Supervisor! 📋',
         'Discharge details submitted to Port Operations Supervisor for clearance.'
