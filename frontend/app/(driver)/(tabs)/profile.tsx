@@ -720,7 +720,7 @@ export default function DriverProfileScreen() {
                     <Text style={styles.vehicleMetaLabel}>TRACTOR LICENSE & CHE</Text>
                     <Text style={styles.vehicleMetaPlate}>
                       {vehicleNumber}{' '}
-                      <Text style={{ color: '#00e5ff', fontSize: 13, fontWeight: '700' }}>
+                      <Text style={{ color: '#2563EB', fontSize: 13, fontWeight: '700' }}>
                         • {chassisNumber}
                       </Text>
                     </Text>
@@ -1020,7 +1020,7 @@ export default function DriverProfileScreen() {
                   <Text style={styles.cardTitle}>SECURITY & COCKPIT CONTROLS</Text>
                 </View>
                 <TouchableOpacity
-                  style={[styles.editProfileBtn, { borderColor: '#00e5ff' }]}
+                  style={[styles.editProfileBtn, { borderColor: '#2563EB' }]}
                   onPress={handleOpenChangePasswordModal}
                   activeOpacity={0.85}
                 >
@@ -1619,7 +1619,7 @@ const styles = StyleSheet.create({
     top: 20,
   },
   coverFallbackText: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontSize: 10,
     fontWeight: '900',
     letterSpacing: 2,
@@ -1641,7 +1641,7 @@ const styles = StyleSheet.create({
     paddingVertical: 7,
     borderRadius: 20,
     borderWidth: 1.5,
-    borderColor: '#00e5ff',
+    borderColor: '#2563EB',
     zIndex: 25,
     elevation: 6,
     shadowColor: '#00e5ff',
@@ -1650,7 +1650,7 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
   },
   editCoverBtnText: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontSize: 11,
     fontWeight: '800',
     letterSpacing: 0.5,
@@ -1680,7 +1680,7 @@ const styles = StyleSheet.create({
     height: 84,
     borderRadius: 42,
     borderWidth: 3,
-    borderColor: '#00e5ff',
+    borderColor: '#2563EB',
   },
   avatarText: {
     color: colors.onPrimaryContainer,
@@ -1724,15 +1724,15 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   operatorPill: {
-    backgroundColor: 'rgba(0, 229, 255, 0.15)',
+    backgroundColor: '#EFF6FF',
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 4,
     borderWidth: 1,
-    borderColor: 'rgba(0, 229, 255, 0.3)',
+    borderColor: '#2563EB',
   },
   operatorPillText: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontSize: 9,
     fontWeight: '800',
   },
@@ -1768,7 +1768,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   savingNoticeText: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontSize: 10,
     fontWeight: '700',
   },
@@ -1888,7 +1888,7 @@ const styles = StyleSheet.create({
   vehicleMetaPlate: {
     fontSize: 16,
     fontWeight: '900',
-    color: '#dde2f0',
+    color: '#1E293B',
     fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
   },
   vehicleMetaOperator: {
@@ -1908,8 +1908,8 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(245, 158, 11, 0.35)',
   },
   maintenanceBtnInMaint: {
-    backgroundColor: 'rgba(0, 229, 255, 0.08)',
-    borderColor: 'rgba(0, 229, 255, 0.4)',
+    backgroundColor: '#EFF6FF',
+    borderColor: '#2563EB',
   },
   maintenanceIconCircle: {
     width: 36,
@@ -1942,7 +1942,7 @@ const styles = StyleSheet.create({
     width: '94%',
     maxWidth: 500,
     maxHeight: '90%',
-    backgroundColor: '#161c25',
+    backgroundColor: '#FFFFFF',
     borderRadius: radius.lg,
     borderWidth: 1,
     borderColor: '#242a34',
@@ -1959,7 +1959,7 @@ const styles = StyleSheet.create({
     borderBottomColor: '#242a34',
   },
   modalTitle: {
-    color: '#dde2f0',
+    color: '#1E293B',
     fontSize: 13,
     fontWeight: '900',
     letterSpacing: 0.6,
@@ -1988,7 +1988,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   uploadLocalBtnText: {
-    color: '#00363d',
+    color: '#FFFFFF',
     fontWeight: '900',
     fontSize: 12,
     letterSpacing: 0.5,
@@ -2016,17 +2016,17 @@ const styles = StyleSheet.create({
     height: 64,
     borderRadius: 32,
     borderWidth: 2,
-    borderColor: '#00e5ff',
+    borderColor: '#2563EB',
   },
   presetCoverImg: {
     width: 80,
     height: 50,
     borderRadius: 6,
     borderWidth: 1.5,
-    borderColor: '#00e5ff',
+    borderColor: '#2563EB',
   },
   presetName: {
-    color: '#dde2f0',
+    color: '#1E293B',
     fontSize: 9,
     fontWeight: '700',
     textAlign: 'center',
@@ -2040,12 +2040,12 @@ const styles = StyleSheet.create({
   urlInput: {
     flex: 1,
     height: 40,
-    backgroundColor: '#080e17',
+    backgroundColor: '#F8FAFC',
     borderRadius: radius.DEFAULT,
     borderWidth: 1,
     borderColor: '#242a34',
     paddingHorizontal: 12,
-    color: '#dde2f0',
+    color: '#1E293B',
     fontSize: 11,
     ...(Platform.OS === 'web' ? { outlineStyle: 'none' } : {}),
   } as any,
@@ -2058,7 +2058,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   applyUrlBtnText: {
-    color: '#00363d',
+    color: '#FFFFFF',
     fontWeight: '900',
     fontSize: 11,
   },
@@ -2091,10 +2091,10 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     paddingBottom: 6,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.06)',
+    borderBottomColor: '#E2E8F0',
   },
   licenseCardTitle: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontSize: 11,
     fontWeight: '800',
     letterSpacing: 0.8,
@@ -2149,7 +2149,7 @@ const styles = StyleSheet.create({
   licenseDateVal: {
     fontSize: 13,
     fontWeight: '900',
-    color: '#dde2f0',
+    color: '#1E293B',
     fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
   },
   licenseAlertBanner: {
@@ -2198,15 +2198,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    backgroundColor: 'rgba(0, 229, 255, 0.1)',
+    backgroundColor: '#EFF6FF',
     borderWidth: 1,
-    borderColor: 'rgba(0, 229, 255, 0.4)',
+    borderColor: '#2563EB',
     paddingHorizontal: 9,
     paddingVertical: 5,
     borderRadius: radius.md,
   },
   editProfileBtnText: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontSize: 11,
     fontWeight: '800',
     letterSpacing: 0.5,
@@ -2220,11 +2220,11 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   editTextInput: {
-    backgroundColor: '#080e17',
+    backgroundColor: '#F8FAFC',
     borderWidth: 1,
     borderColor: '#242a34',
     borderRadius: radius.md,
-    color: '#dde2f0',
+    color: '#1E293B',
     paddingHorizontal: 12,
     paddingVertical: 10,
     fontSize: 13,
@@ -2256,7 +2256,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   editSaveBtnText: {
-    color: '#00363d',
+    color: '#FFFFFF',
     fontSize: 12,
     fontWeight: '800',
   },
@@ -2289,8 +2289,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(51, 65, 85, 0.3)',
   },
   secToggleBtnActive: {
-    borderColor: '#00e5ff',
-    backgroundColor: 'rgba(0, 229, 255, 0.15)',
+    borderColor: '#2563EB',
+    backgroundColor: '#EFF6FF',
   },
   secToggleText: {
     color: '#94a3b8',
@@ -2298,7 +2298,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   secToggleTextActive: {
-    color: '#00e5ff',
+    color: '#2563EB',
   },
   secLockBtn: {
     flexDirection: 'row',
@@ -2310,7 +2310,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#feb300',
   },
   secLockBtnText: {
-    color: '#070c14',
+    color: '#FFFFFF',
     fontSize: 11,
     fontWeight: '800',
   },

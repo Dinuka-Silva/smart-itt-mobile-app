@@ -469,8 +469,8 @@ export default function DriverJobQueue() {
                             </View>
                             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                               <Text style={styles.isoType}>{c.size || c.isoType || '20FT'}</Text>
-                              <View style={{ backgroundColor: 'rgba(0, 229, 255, 0.15)', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, borderWidth: 1, borderColor: 'rgba(0, 229, 255, 0.3)' }}>
-                                <Text style={{ color: '#00e5ff', fontSize: 10, fontWeight: '800' }}>
+                              <View style={{ backgroundColor: '#EFF6FF', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, borderWidth: 1, borderColor: '#2563EB' }}>
+                                <Text style={{ color: '#2563EB', fontSize: 10, fontWeight: '800' }}>
                                   ➔ {cDest}
                                 </Text>
                               </View>
@@ -513,17 +513,17 @@ export default function DriverJobQueue() {
 
                       {/* Discharge Manifest Summary */}
                       <View style={{
-                        backgroundColor: '#080e17',
+                        backgroundColor: '#F8FAFC',
                         borderRadius: 8,
                         borderWidth: 1,
                         borderColor: 'rgba(254, 179, 0, 0.35)',
                         padding: 10,
                         gap: 8,
                       }}>
-                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingBottom: 4, borderBottomWidth: 1, borderBottomColor: 'rgba(255, 255, 255, 0.06)' }}>
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingBottom: 4, borderBottomWidth: 1, borderBottomColor: '#E2E8F0' }}>
                           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
                             <Ionicons name="shield-checkmark" size={13} color="#00e5ff" />
-                            <Text style={{ fontSize: 9.5, fontWeight: '900', color: '#00e5ff', letterSpacing: 0.4 }}>
+                            <Text style={{ fontSize: 9.5, fontWeight: '900', color: '#2563EB', letterSpacing: 0.4 }}>
                               SLPA PORT CLEARANCE MANIFEST
                             </Text>
                           </View>
@@ -544,7 +544,7 @@ export default function DriverJobQueue() {
                             <Text style={{ fontSize: 8, fontWeight: '800', color: '#849396' }}>BAY / SLOT</Text>
                             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
                               <Ionicons name="location" size={11} color="#feb300" />
-                              <Text style={{ fontSize: 9.5, fontWeight: '800', color: '#00e5ff' }} numberOfLines={1}>
+                              <Text style={{ fontSize: 9.5, fontWeight: '800', color: '#2563EB' }} numberOfLines={1}>
                                 {trip.destTerminal} · {trip.dischargeBay || 'Bay 04, Crane 02'}
                               </Text>
                             </View>
@@ -602,10 +602,10 @@ export default function DriverJobQueue() {
                           paddingHorizontal: 8,
                           paddingVertical: 6,
                         }}>
-                          <Text style={{ fontSize: 7.5, fontWeight: '900', color: '#00e5ff', letterSpacing: 0.4, marginBottom: 2 }}>
+                          <Text style={{ fontSize: 7.5, fontWeight: '900', color: '#2563EB', letterSpacing: 0.4, marginBottom: 2 }}>
                             DRIVER COMPLETION NOTES
                           </Text>
-                          <Text style={{ fontSize: 9.5, color: '#dde2f0', fontStyle: 'italic', lineHeight: 13 }}>
+                          <Text style={{ fontSize: 9.5, color: '#1E293B', fontStyle: 'italic', lineHeight: 13 }}>
                             "{trip.driverCompletionNotes || 'Containers discharged safely at destination terminal berth. Seals inspected and verified intact.'}"
                           </Text>
                         </View>
@@ -688,7 +688,7 @@ export default function DriverJobQueue() {
                         ) : (
                           <>
                             <Ionicons name="paper-plane" size={16} color="#00363d" />
-                            <Text style={[styles.completeBtnText, { color: '#00363d' }]}>
+                            <Text style={[styles.completeBtnText, { color: '#FFFFFF' }]}>
                               DISCHARGE & SUBMIT FOR SUPERVISOR APPROVAL
                             </Text>
                           </>
@@ -724,7 +724,7 @@ export default function DriverJobQueue() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0e141d',
+    backgroundColor: '#F8FAFC',
   },
   header: {
     paddingBottom: 12,
@@ -747,7 +747,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: '900',
-    color: '#dde2f0',
+    color: '#1E293B',
     letterSpacing: 0.8,
   },
   newTripBtn: {
@@ -762,7 +762,7 @@ const styles = StyleSheet.create({
   newTripBtnText: {
     fontSize: 11,
     fontWeight: '900',
-    color: '#00363d',
+    color: '#FFFFFF',
     letterSpacing: 0.8,
   },
   scrollContent: {
@@ -786,13 +786,13 @@ const styles = StyleSheet.create({
   filterTitle: {
     fontSize: 12,
     fontWeight: '900',
-    color: '#dde2f0',
+    color: '#1E293B',
     letterSpacing: 0.8,
   },
   filterCountBadge: {
     fontSize: 10,
     fontWeight: '800',
-    color: '#00e5ff',
+    color: '#2563EB',
       },
   filterPillsScroll: {
     flexDirection: 'row',
@@ -803,13 +803,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 9,
     borderRadius: radius.DEFAULT,
-    backgroundColor: '#161c25',
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
     borderColor: '#242a34',
   },
   filterChipActive: {
     backgroundColor: '#00e5ff',
-    borderColor: '#00e5ff',
+    borderColor: '#2563EB',
   },
   filterChipText: {
     fontSize: 11,
@@ -818,7 +818,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   filterChipTextActive: {
-    color: '#00363d',
+    color: '#FFFFFF',
   },
 
   // Job Cards
@@ -826,14 +826,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     padding: 36,
-    backgroundColor: '#161c25',
+    backgroundColor: '#FFFFFF',
     borderRadius: radius.DEFAULT,
     gap: 8,
   },
   emptyTitle: {
     fontSize: 14,
     fontWeight: '800',
-    color: '#dde2f0',
+    color: '#1E293B',
     letterSpacing: 0.8,
   },
   emptySub: {
@@ -842,7 +842,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   jobCard: {
-    backgroundColor: '#161c25',
+    backgroundColor: '#FFFFFF',
     borderRadius: radius.DEFAULT,
     borderWidth: 1,
     borderColor: '#242a34',
@@ -870,7 +870,7 @@ const styles = StyleSheet.create({
   jobNumText: {
     fontSize: 13,
     fontWeight: '900',
-    color: '#00e5ff',
+    color: '#2563EB',
         letterSpacing: 0.5,
   },
   statusTag: {
@@ -890,14 +890,14 @@ const styles = StyleSheet.create({
   vesselText: {
     fontSize: 14,
     fontWeight: '800',
-    color: '#dde2f0',
+    color: '#1E293B',
     letterSpacing: 0.5,
   },
   routeRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#080e17',
+    backgroundColor: '#F8FAFC',
     padding: 10,
     borderRadius: radius.sm,
   },
@@ -913,7 +913,7 @@ const styles = StyleSheet.create({
   termCode: {
     fontSize: 14,
     fontWeight: '900',
-    color: '#dde2f0',
+    color: '#1E293B',
         marginTop: 2,
   },
   routeArrow: {
@@ -923,13 +923,13 @@ const styles = StyleSheet.create({
   routeDist: {
     fontSize: 8,
     fontWeight: '700',
-    color: '#00e5ff',
+    color: '#2563EB',
       },
   containersBox: {
     gap: 8,
   },
   containerItem: {
-    backgroundColor: '#080e17',
+    backgroundColor: '#F8FAFC',
     padding: 10,
     borderRadius: radius.sm,
     gap: 8,
@@ -937,7 +937,7 @@ const styles = StyleSheet.create({
   containerNumText: {
     fontSize: 12,
     fontWeight: '800',
-    color: '#dde2f0',
+    color: '#1E293B',
       },
   isoType: {
     fontSize: 10,
@@ -960,13 +960,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: radius.sm,
-    backgroundColor: '#161c25',
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
     borderColor: '#242a34',
   },
   termChoiceActive: {
     backgroundColor: '#00e5ff',
-    borderColor: '#00e5ff',
+    borderColor: '#2563EB',
   },
   termChoiceText: {
     fontSize: 10,
@@ -974,7 +974,7 @@ const styles = StyleSheet.create({
     color: '#bac9cc',
       },
   termChoiceTextActive: {
-    color: '#00363d',
+    color: '#FFFFFF',
   },
   completeBtn: {
     height: 48,
@@ -989,7 +989,7 @@ const styles = StyleSheet.create({
   completeBtnText: {
     fontSize: 11,
     fontWeight: '900',
-    color: '#00363d',
+    color: '#FFFFFF',
     letterSpacing: 0.8,
   },
   pendingNoticeBox: {
@@ -1012,16 +1012,16 @@ const styles = StyleSheet.create({
   approvedNoticeBox: {
     flexDirection: 'column',
     gap: 4,
-    backgroundColor: 'rgba(0, 229, 255, 0.08)',
+    backgroundColor: '#EFF6FF',
     borderWidth: 1,
-    borderColor: 'rgba(0, 229, 255, 0.3)',
+    borderColor: '#2563EB',
     borderRadius: radius.sm,
     padding: 10,
   },
   approvedNoticeText: {
     fontSize: 12,
     fontWeight: '800',
-    color: '#00e5ff',
+    color: '#2563EB',
   },
   approvedNoticeSub: {
     fontSize: 11,
@@ -1071,7 +1071,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#070c14',
+    backgroundColor: '#F8FAFC',
     borderRadius: radius.md,
     borderWidth: 1,
     borderColor: '#1e293b',
@@ -1094,18 +1094,18 @@ const styles = StyleSheet.create({
   timingColLabel: {
     fontSize: 9,
     fontWeight: '800',
-    color: '#00e5ff',
+    color: '#2563EB',
     letterSpacing: 0.5,
   },
   timingDateVal: {
     fontSize: 12,
     fontWeight: '800',
-    color: '#dde2f0',
+    color: '#1E293B',
   },
   timingTimeVal: {
     fontSize: 13,
     fontWeight: '900',
-    color: '#00e5ff',
+    color: '#2563EB',
     letterSpacing: 0.3,
   },
   timingDividerCol: {

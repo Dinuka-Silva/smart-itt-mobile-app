@@ -447,7 +447,7 @@ export default function AdminTripsScreen() {
 
                   <View style={styles.infoRow}>
                     <Text style={styles.infoLabel}>Current Status:</Text>
-                    <Text style={[styles.infoVal, { color: '#00e5ff', fontWeight: '800' }]}>
+                    <Text style={[styles.infoVal, { color: '#2563EB', fontWeight: '800' }]}>
                       {selectedTrip?.status}
                     </Text>
                   </View>
@@ -477,7 +477,7 @@ export default function AdminTripsScreen() {
                   </View>
 
                   {/* Containers List with Individual Load & Discharge Log */}
-                  <Text style={[styles.infoLabel, { marginTop: 14, marginBottom: 8, color: '#00e5ff' }]}>
+                  <Text style={[styles.infoLabel, { marginTop: 14, marginBottom: 8, color: '#2563EB' }]}>
                     CONTAINER DISCHARGE & TURNAROUND LOG ({selectedTrip?.containers?.length || 0}):
                   </Text>
                   {selectedTrip?.containers?.map((c: any, i: number) => {
@@ -586,12 +586,12 @@ const styles = StyleSheet.create({
     paddingBottom: 14,
     backgroundColor: '#0a1628',
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.08)',
+    borderBottomColor: '#E2E8F0',
   },
   headerTitle: {
     fontSize: 18,
     fontWeight: '800',
-    color: '#ffffff',
+    color: '#1E293B',
   },
   headerSubtitle: {
     fontSize: 11,
@@ -601,9 +601,9 @@ const styles = StyleSheet.create({
   },
   filterBar: {
     padding: 14,
-    backgroundColor: '#0c1b30',
+    backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.06)',
+    borderBottomColor: '#E2E8F0',
   },
   searchWrap: {
     flexDirection: 'row',
@@ -613,12 +613,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     height: 40,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderColor: '#E2E8F0',
     marginBottom: 8,
   },
   searchInput: {
     flex: 1,
-    color: '#ffffff',
+    color: '#1E293B',
     fontSize: 13,
   },
   filterScroll: {
@@ -646,7 +646,7 @@ const styles = StyleSheet.create({
     paddingVertical: 3,
     paddingHorizontal: 8,
     borderRadius: 6,
-    backgroundColor: 'rgba(0, 229, 255, 0.08)',
+    backgroundColor: '#EFF6FF',
     marginRight: 6,
     borderWidth: 1,
     borderColor: 'rgba(0, 229, 255, 0.2)',
@@ -655,7 +655,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#00e5ff',
   },
   termPillText: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontSize: 10,
     fontWeight: '800',
   },
@@ -676,12 +676,12 @@ const styles = StyleSheet.create({
     paddingTop: 12,
   },
   emptyCard: {
-    backgroundColor: '#0c1b30',
+    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     padding: 32,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.06)',
+    borderColor: '#E2E8F0',
     marginTop: 20,
   },
   emptyCardText: {
@@ -690,12 +690,12 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   tripCard: {
-    backgroundColor: '#0c1b30',
+    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     padding: 14,
     marginBottom: 10,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderColor: '#E2E8F0',
   },
   tripTopRow: {
     flexDirection: 'row',
@@ -706,7 +706,7 @@ const styles = StyleSheet.create({
   tripNumberText: {
     fontSize: 15,
     fontWeight: '800',
-    color: '#ffffff',
+    color: '#1E293B',
   },
   vesselText: {
     fontSize: 11,
@@ -731,7 +731,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 229, 255, 0.2)',
   },
   statusBadgeText: {
-    color: '#ffffff',
+    color: '#1E293B',
     fontSize: 10,
     fontWeight: '800',
   },
@@ -741,13 +741,13 @@ const styles = StyleSheet.create({
     marginVertical: 4,
   },
   terminalBox: {
-    backgroundColor: 'rgba(0, 229, 255, 0.1)',
+    backgroundColor: '#EFF6FF',
     borderRadius: 6,
     paddingHorizontal: 6,
     paddingVertical: 2,
   },
   terminalBoxText: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontSize: 11,
     fontWeight: '800',
   },
@@ -787,7 +787,7 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   modalBox: {
-    backgroundColor: '#0c1b30',
+    backgroundColor: '#FFFFFF',
     borderRadius: 16,
     padding: 20,
     borderWidth: 1,
@@ -802,10 +802,10 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 18,
     fontWeight: '800',
-    color: '#ffffff',
+    color: '#1E293B',
   },
   modalSub: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontSize: 12,
     fontWeight: '600',
     marginTop: 2,
@@ -821,7 +821,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   infoVal: {
-    color: '#ffffff',
+    color: '#1E293B',
     fontSize: 12,
     fontWeight: '700',
   },
@@ -834,12 +834,12 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   containerDetailNum: {
-    color: '#ffffff',
+    color: '#1E293B',
     fontSize: 12,
     fontWeight: '700',
   },
   containerDetailSize: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontSize: 11,
     fontWeight: '800',
   },
@@ -853,10 +853,10 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 10,
     height: 40,
-    color: '#ffffff',
+    color: '#1E293B',
     fontSize: 12,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderColor: '#E2E8F0',
     marginTop: 4,
   },
   actionRow: {
@@ -872,7 +872,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   actionBtnText: {
-    color: '#ffffff',
+    color: '#1E293B',
     fontSize: 12,
     fontWeight: '800',
     letterSpacing: 0.5,
@@ -925,7 +925,7 @@ const styles = StyleSheet.create({
   timingTime: {
     fontSize: 12,
     fontWeight: '800',
-    color: '#ffffff',
+    color: '#1E293B',
   },
   timingTerminal: {
     fontSize: 10,
@@ -955,18 +955,18 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   cNumText: {
-    color: '#ffffff',
+    color: '#1E293B',
     fontSize: 12,
     fontWeight: '800',
   },
   cSizeBadge: {
-    backgroundColor: 'rgba(0, 229, 255, 0.12)',
+    backgroundColor: '#EFF6FF',
     paddingHorizontal: 5,
     paddingVertical: 1,
     borderRadius: 4,
   },
   cSizeText: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontSize: 10,
     fontWeight: '800',
   },
@@ -988,7 +988,7 @@ const styles = StyleSheet.create({
   cStatusText: {
     fontSize: 9,
     fontWeight: '800',
-    color: '#ffffff',
+    color: '#1E293B',
   },
   cTimingDetailsRow: {
     flexDirection: 'row',
@@ -1005,7 +1005,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   cTimeHighlight: {
-    color: '#ffffff',
+    color: '#1E293B',
     fontWeight: '800',
   },
   cTimeArrow: {
@@ -1019,7 +1019,7 @@ const styles = StyleSheet.create({
     marginLeft: 'auto',
   },
   modalTimingBox: {
-    backgroundColor: 'rgba(0, 229, 255, 0.06)',
+    backgroundColor: '#EFF6FF',
     borderRadius: 10,
     borderWidth: 1,
     borderColor: 'rgba(0, 229, 255, 0.25)',
@@ -1035,7 +1035,7 @@ const styles = StyleSheet.create({
   modalTimingTitle: {
     fontSize: 11,
     fontWeight: '800',
-    color: '#00e5ff',
+    color: '#2563EB',
     letterSpacing: 0.6,
   },
   modalTimingGrid: {
@@ -1056,7 +1056,7 @@ const styles = StyleSheet.create({
   modalStatVal: {
     fontSize: 13,
     fontWeight: '800',
-    color: '#ffffff',
+    color: '#1E293B',
     textAlign: 'center',
   },
   modalStatSub: {
@@ -1070,7 +1070,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#070f1e',
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderColor: '#E2E8F0',
     padding: 10,
     marginBottom: 8,
   },
@@ -1097,7 +1097,7 @@ const styles = StyleSheet.create({
   },
   modalContMetricVal: {
     fontSize: 11,
-    color: '#ffffff',
+    color: '#1E293B',
     fontWeight: '700',
     marginTop: 2,
   },

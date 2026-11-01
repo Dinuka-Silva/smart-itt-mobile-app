@@ -631,7 +631,7 @@ export default function DriverHomeDashboard() {
                   PORT PASS RENEWAL WARNING (EXPIRING WITHIN 5 DAYS)
                 </Text>
                 <View style={[styles.vehicleLicenseBadge, { backgroundColor: '#feb300' }]}>
-                  <Text style={[styles.vehicleLicenseBadgeText, { color: '#00363d' }]}>
+                  <Text style={[styles.vehicleLicenseBadgeText, { color: '#FFFFFF' }]}>
                     ACTION REQUIRED
                   </Text>
                 </View>
@@ -641,15 +641,15 @@ export default function DriverHomeDashboard() {
                 {driverPortPassRenewalDue && (
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                     <Ionicons name="person-circle" size={13} color="#00e5ff" />
-                    <Text style={{ fontSize: 12, color: '#dde2f0', fontWeight: '700' }}>
-                      Driver Port Pass: <Text style={{ color: '#00e5ff' }}>{driverPortPassExpiryDate}</Text> ({driverPortPassDaysLeft <= 0 ? 'EXPIRED' : `${driverPortPassDaysLeft} days left - RENEW NOW`})
+                    <Text style={{ fontSize: 12, color: '#1E293B', fontWeight: '700' }}>
+                      Driver Port Pass: <Text style={{ color: '#2563EB' }}>{driverPortPassExpiryDate}</Text> ({driverPortPassDaysLeft <= 0 ? 'EXPIRED' : `${driverPortPassDaysLeft} days left - RENEW NOW`})
                     </Text>
                   </View>
                 )}
                 {vehiclePortPassRenewalDue && (
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                     <Ionicons name="bus" size={13} color="#feb300" />
-                    <Text style={{ fontSize: 12, color: '#dde2f0', fontWeight: '700' }}>
+                    <Text style={{ fontSize: 12, color: '#1E293B', fontWeight: '700' }}>
                       Vehicle Port Pass: <Text style={{ color: '#feb300' }}>{vehiclePortPassExpiryDate}</Text> ({vehiclePortPassDaysLeft <= 0 ? 'EXPIRED' : `${vehiclePortPassDaysLeft} days left - RENEW NOW`})
                     </Text>
                   </View>
@@ -670,7 +670,7 @@ export default function DriverHomeDashboard() {
               <Text style={styles.summaryCardTitle}>ACTIVE TRIPS</Text>
               <Ionicons name="navigate" size={16} color="#00e5ff" />
             </View>
-            <Text style={[styles.summaryCardValue, { color: '#00e5ff' }]}>
+            <Text style={[styles.summaryCardValue, { color: '#2563EB' }]}>
               {dashboardStats.activeTrips}
             </Text>
             <Text style={styles.summaryCardSub}>Live on route</Text>
@@ -751,7 +751,7 @@ export default function DriverHomeDashboard() {
           <View style={styles.missionTripInfoRow}>
             <Ionicons name="git-commit" size={14} color="#00e5ff" />
             <Text style={styles.missionTripInfoText}>
-              Actual Completed: <Text style={{ color: '#00e5ff', fontWeight: '900' }}>{actualTripCount} Trips</Text> ({currentMonthContainers} Containers transported)
+              Actual Completed: <Text style={{ color: '#2563EB', fontWeight: '900' }}>{actualTripCount} Trips</Text> ({currentMonthContainers} Containers transported)
             </Text>
           </View>
 
@@ -934,7 +934,7 @@ export default function DriverHomeDashboard() {
               <View style={styles.chassisRuleBadge}>
                 <Ionicons name="shield-checkmark" size={12} color="#22ef7e" />
                 <Text style={styles.chassisRuleBadgeText}>
-                  Chassis Load: <Text style={{ color: '#00e5ff', fontWeight: '800' }}>{count40Ft > 0 ? '1 × 40FT' : `${count20Ft || activeTrip.containers?.length || 1} × 20FT`}</Text> · Policy: Max 1×40FT or 2×20FT only
+                  Chassis Load: <Text style={{ color: '#2563EB', fontWeight: '800' }}>{count40Ft > 0 ? '1 × 40FT' : `${count20Ft || activeTrip.containers?.length || 1} × 20FT`}</Text> · Policy: Max 1×40FT or 2×20FT only
                 </Text>
               </View>
 
@@ -984,8 +984,8 @@ export default function DriverHomeDashboard() {
                         <Text style={styles.containerItemSub}>
                           {c.size || '20FT'} · {c.damageStatus === 'DAMAGED' ? '⚠️ DAMAGED' : '✓ SOUND'}
                         </Text>
-                        <View style={{ backgroundColor: 'rgba(0, 229, 255, 0.15)', paddingHorizontal: 6, paddingVertical: 1, borderRadius: 4, borderWidth: 1, borderColor: 'rgba(0, 229, 255, 0.3)' }}>
-                          <Text style={{ color: '#00e5ff', fontSize: 10, fontWeight: '800' }}>
+                        <View style={{ backgroundColor: '#EFF6FF', paddingHorizontal: 6, paddingVertical: 1, borderRadius: 4, borderWidth: 1, borderColor: '#2563EB' }}>
+                          <Text style={{ color: '#2563EB', fontSize: 10, fontWeight: '800' }}>
                             Discharge: {cDest}
                           </Text>
                         </View>
@@ -1189,7 +1189,7 @@ export default function DriverHomeDashboard() {
                   ) : (
                     <>
                       <Ionicons name="paper-plane" size={18} color="#00363d" />
-                      <Text style={[styles.completeTripBtnText, { color: '#00363d' }]}>
+                      <Text style={[styles.completeTripBtnText, { color: '#FFFFFF' }]}>
                         DISCHARGE & SUBMIT FOR SUPERVISOR APPROVAL
                       </Text>
                     </>
@@ -1347,7 +1347,7 @@ export default function DriverHomeDashboard() {
           <Text style={styles.sectionHeaderTitle}>DRIVER QUICK ACTIONS</Text>
           <View style={styles.quickActionsGrid}>
             <TouchableOpacity style={styles.quickActionTile} onPress={() => router.push('/(driver)/trips/new')}>
-              <View style={[styles.tileIconCircle, { backgroundColor: 'rgba(0, 229, 255, 0.15)' }]}>
+              <View style={[styles.tileIconCircle, { backgroundColor: '#EFF6FF' }]}>
                 <Ionicons name="add-circle" size={20} color="#00e5ff" />
               </View>
               <Text style={styles.tileTitle}>New Trip</Text>
@@ -1382,7 +1382,7 @@ export default function DriverHomeDashboard() {
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.quickActionTile} onPress={() => setSupervisorModalVisible(true)}>
-              <View style={[styles.tileIconCircle, { backgroundColor: 'rgba(0, 229, 255, 0.15)' }]}>
+              <View style={[styles.tileIconCircle, { backgroundColor: '#EFF6FF' }]}>
                 <Ionicons name="chatbubbles" size={20} color="#00e5ff" />
               </View>
               <Text style={styles.tileTitle}>Supervisor</Text>
@@ -1497,7 +1497,7 @@ export default function DriverHomeDashboard() {
 
             <TouchableOpacity style={[styles.modalSubmitBtn, { backgroundColor: '#ff5252' }]} onPress={handleReportDamage}>
               <Ionicons name="shield-outline" size={18} color="#fff" />
-              <Text style={[styles.modalSubmitBtnText, { color: '#fff' }]}>SUBMIT DAMAGE INCIDENT</Text>
+              <Text style={[styles.modalSubmitBtnText, { color: '#FFFFFF' }]}>SUBMIT DAMAGE INCIDENT</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -1755,7 +1755,7 @@ export default function DriverHomeDashboard() {
               ) : (
                 <>
                   <Ionicons name="paper-plane" size={18} color="#00363d" />
-                  <Text style={[styles.modalSubmitBtnText, { color: '#00363d', fontWeight: '900' }]}>
+                  <Text style={[styles.modalSubmitBtnText, { color: '#FFFFFF', fontWeight: '900' }]}>
                     SUBMIT FOR SUPERVISOR APPROVAL
                   </Text>
                 </>
@@ -1794,23 +1794,23 @@ export default function DriverHomeDashboard() {
             {/* Receipt Details Box */}
             {submissionReceipt && (
               <View style={{
-                backgroundColor: '#080e17',
+                backgroundColor: '#F8FAFC',
                 borderRadius: 10,
                 borderWidth: 1,
-                borderColor: 'rgba(255, 255, 255, 0.08)',
+                borderColor: '#E2E8F0',
                 padding: 12,
                 gap: 8,
               }}>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingBottom: 6, borderBottomWidth: 1, borderBottomColor: 'rgba(255, 255, 255, 0.06)' }}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingBottom: 6, borderBottomWidth: 1, borderBottomColor: '#E2E8F0' }}>
                   <Text style={{ fontSize: 10, color: '#849396', fontWeight: '700' }}>MISSION ID</Text>
-                  <Text style={{ fontSize: 11, color: '#00e5ff', fontWeight: '900', fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace' }}>
+                  <Text style={{ fontSize: 11, color: '#2563EB', fontWeight: '900', fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace' }}>
                     {submissionReceipt.tripNumber}
                   </Text>
                 </View>
 
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
                   <Text style={{ fontSize: 10, color: '#849396', fontWeight: '700' }}>CORRIDOR ROUTE</Text>
-                  <Text style={{ fontSize: 10.5, color: '#dde2f0', fontWeight: '800' }}>
+                  <Text style={{ fontSize: 10.5, color: '#1E293B', fontWeight: '800' }}>
                     {submissionReceipt.route}
                   </Text>
                 </View>
@@ -1868,10 +1868,10 @@ export default function DriverHomeDashboard() {
                   padding: 8,
                   marginTop: 2,
                 }}>
-                  <Text style={{ fontSize: 8.5, color: '#00e5ff', fontWeight: '800', letterSpacing: 0.5, marginBottom: 2 }}>
+                  <Text style={{ fontSize: 8.5, color: '#2563EB', fontWeight: '800', letterSpacing: 0.5, marginBottom: 2 }}>
                     TRANSMITTED DRIVER REMARKS
                   </Text>
-                  <Text style={{ fontSize: 9.5, color: '#dde2f0', fontStyle: 'italic', lineHeight: 14 }}>
+                  <Text style={{ fontSize: 9.5, color: '#1E293B', fontStyle: 'italic', lineHeight: 14 }}>
                     "{submissionReceipt.notes}"
                   </Text>
                 </View>
@@ -1897,7 +1897,7 @@ export default function DriverHomeDashboard() {
               padding: 10,
             }}>
               <Ionicons name="time" size={16} color="#feb300" />
-              <Text style={{ fontSize: 9.5, color: '#dde2f0', flex: 1, lineHeight: 14 }}>
+              <Text style={{ fontSize: 9.5, color: '#1E293B', flex: 1, lineHeight: 14 }}>
                 Your completed delivery is now in the supervisor review queue. As soon as verified, your <Text style={{ color: '#feb300', fontWeight: '800' }}>300 Containers target (+1)</Text> will credit automatically.
               </Text>
             </View>
@@ -1909,7 +1909,7 @@ export default function DriverHomeDashboard() {
               activeOpacity={0.88}
             >
               <Ionicons name="checkmark-done" size={18} color="#00363d" />
-              <Text style={[styles.modalSubmitBtnText, { color: '#00363d', fontWeight: '900' }]}>
+              <Text style={[styles.modalSubmitBtnText, { color: '#FFFFFF', fontWeight: '900' }]}>
                 VIEW IN DASHBOARD
               </Text>
             </TouchableOpacity>
@@ -2016,7 +2016,7 @@ export default function DriverHomeDashboard() {
             <Text style={styles.celebrationMessage}>
               Outstanding operational excellence! You have achieved the{' '}
               <Text style={{ color: '#feb300', fontWeight: '900' }}>50 Containers Milestone</Text>{' '}
-              toward your monthly mission of <Text style={{ color: '#00e5ff', fontWeight: '900' }}>300 Containers</Text>!
+              toward your monthly mission of <Text style={{ color: '#2563EB', fontWeight: '900' }}>300 Containers</Text>!
             </Text>
 
             {/* Achievement Highlights Box */}
@@ -2024,7 +2024,7 @@ export default function DriverHomeDashboard() {
               <View style={styles.achievementRow}>
                 <View style={styles.achievementItem}>
                   <Text style={styles.achievementLabel}>TRIPS</Text>
-                  <Text style={[styles.achievementVal, { color: '#00e5ff' }]}>{actualTripCount}</Text>
+                  <Text style={[styles.achievementVal, { color: '#2563EB' }]}>{actualTripCount}</Text>
                   <Text style={styles.achievementSubText}>Completed</Text>
                 </View>
                 <View style={styles.achievementDivider} />
@@ -2073,7 +2073,7 @@ export default function DriverHomeDashboard() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#070c14',
+    backgroundColor: '#F8FAFC',
   },
   scroll: {
     flexGrow: 1,
@@ -2082,10 +2082,10 @@ const styles = StyleSheet.create({
 
   // ─── HEADER ───
   header: {
-    backgroundColor: '#0c1524',
+    backgroundColor: '#FFFFFF',
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderColor: '#E2E8F0',
     padding: 14,
     flexDirection: 'row',
     alignItems: 'center',
@@ -2113,15 +2113,15 @@ const styles = StyleSheet.create({
     height: 44,
     borderRadius: 22,
     borderWidth: 2,
-    borderColor: '#00e5ff',
+    borderColor: '#2563EB',
   },
   avatarText: {
-    color: '#070c14',
+    color: '#FFFFFF',
     fontWeight: '900',
     fontSize: 16,
   },
   driverNameText: {
-    color: '#ffffff',
+    color: '#1E293B',
     fontWeight: '800',
     fontSize: 16,
   },
@@ -2133,13 +2133,13 @@ const styles = StyleSheet.create({
     marginTop: 3,
   },
   driverCodeBadge: {
-    backgroundColor: '#070e1a',
-    borderColor: 'rgba(0, 229, 255, 0.4)',
+    backgroundColor: '#EFF6FF',
+    borderColor: '#2563EB',
     borderWidth: 1,
     borderRadius: 6,
     paddingHorizontal: 8,
     paddingVertical: 3,
-    color: '#00e5ff',
+    color: '#2563EB',
     fontSize: 11,
     fontWeight: '800',
   },
@@ -2189,16 +2189,16 @@ const styles = StyleSheet.create({
   statusToggleText: {
     fontSize: 10,
     fontWeight: '800',
-    color: '#ffffff',
+    color: '#1E293B',
     letterSpacing: 0.5,
   },
   headerIconBtn: {
     width: 40,
     height: 40,
     borderRadius: 12,
-    backgroundColor: '#070e1a',
+    backgroundColor: '#EFF6FF',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderColor: '#E2E8F0',
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
@@ -2216,7 +2216,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   unreadBadgeText: {
-    color: '#fff',
+    color: '#FFFFFF',
     fontSize: 9,
     fontWeight: '900',
   },
@@ -2239,10 +2239,10 @@ const styles = StyleSheet.create({
   },
   summaryCard: {
     width: '48%',
-    backgroundColor: '#0c1524',
+    backgroundColor: '#FFFFFF',
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderColor: '#E2E8F0',
     padding: 14,
     gap: 4,
   },
@@ -2270,7 +2270,7 @@ const styles = StyleSheet.create({
 
   // ─── MONTHLY CONTAINER MISSION CARD ───
   monthlyMissionCard: {
-    backgroundColor: '#0c1524',
+    backgroundColor: '#FFFFFF',
     borderRadius: 16,
     borderWidth: 1.5,
     borderColor: 'rgba(254, 179, 0, 0.35)',
@@ -2293,7 +2293,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   monthlyMissionHeading: {
-    color: '#dde2f0',
+    color: '#1E293B',
     fontSize: 12,
     fontWeight: '900',
     letterSpacing: 0.5,
@@ -2313,7 +2313,7 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
   celebrationTriggerText: {
-    color: '#00363d',
+    color: '#FFFFFF',
     fontSize: 9,
     fontWeight: '900',
     letterSpacing: 0.5,
@@ -2335,7 +2335,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   missionTargetVal: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontSize: 22,
     fontWeight: '900',
   },
@@ -2346,15 +2346,15 @@ const styles = StyleSheet.create({
     marginLeft: 2,
   },
   missionPercentBadge: {
-    backgroundColor: 'rgba(0, 229, 255, 0.12)',
+    backgroundColor: '#EFF6FF',
     borderWidth: 1,
-    borderColor: 'rgba(0, 229, 255, 0.3)',
+    borderColor: '#2563EB',
     borderRadius: 6,
     paddingHorizontal: 8,
     paddingVertical: 3,
   },
   missionPercentText: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontWeight: '900',
     fontSize: 12,
   },
@@ -2422,7 +2422,7 @@ const styles = StyleSheet.create({
   celebrationCard: {
     width: '100%',
     maxWidth: 400,
-    backgroundColor: '#161c25',
+    backgroundColor: '#FFFFFF',
     borderRadius: 20,
     borderWidth: 2,
     borderColor: '#feb300',
@@ -2475,7 +2475,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   celebrationTagBadgeText: {
-    color: '#00363d',
+    color: '#FFFFFF',
     fontSize: 9,
     fontWeight: '900',
     letterSpacing: 0.8,
@@ -2488,7 +2488,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   celebrationDriverName: {
-    color: '#ffffff',
+    color: '#1E293B',
     fontSize: 14,
     fontWeight: '800',
     letterSpacing: 0.5,
@@ -2505,7 +2505,7 @@ const styles = StyleSheet.create({
   },
   achievementBox: {
     width: '100%',
-    backgroundColor: '#0e141d',
+    backgroundColor: '#F8FAFC',
     borderRadius: 12,
     borderWidth: 1,
     borderColor: '#242a34',
@@ -2561,7 +2561,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   celebrationHonorSub: {
-    color: '#dde2f0',
+    color: '#1E293B',
     fontSize: 10,
     lineHeight: 14,
     marginTop: 2,
@@ -2570,7 +2570,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: 'rgba(0, 229, 255, 0.08)',
+    backgroundColor: '#EFF6FF',
     borderRadius: 6,
     paddingHorizontal: 8,
     paddingVertical: 5,
@@ -2594,7 +2594,7 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   celebrationActionBtnText: {
-    color: '#00363d',
+    color: '#FFFFFF',
     fontSize: 12,
     fontWeight: '900',
     letterSpacing: 0.6,
@@ -2602,10 +2602,10 @@ const styles = StyleSheet.create({
 
   // ─── ACTIVE TRIP CARD ───
   activeTripCard: {
-    backgroundColor: '#0c1524',
+    backgroundColor: '#FFFFFF',
     borderRadius: 16,
     borderWidth: 1.5,
-    borderColor: '#00e5ff',
+    borderColor: '#2563EB',
     padding: 14,
     gap: 12,
   },
@@ -2615,7 +2615,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingBottom: 8,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.08)',
+    borderBottomColor: '#E2E8F0',
   },
   pulseLive: {
     width: 8,
@@ -2624,20 +2624,20 @@ const styles = StyleSheet.create({
     backgroundColor: '#00e5ff',
   },
   activeTripIdText: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontWeight: '900',
     fontSize: 16,
   },
   tripStatusPill: {
-    backgroundColor: 'rgba(0, 229, 255, 0.12)',
+    backgroundColor: '#EFF6FF',
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 4,
     borderWidth: 1,
-    borderColor: '#00e5ff',
+    borderColor: '#2563EB',
   },
   tripStatusPillText: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontSize: 11,
     fontWeight: '800',
   },
@@ -2645,11 +2645,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#070e1a',
+    backgroundColor: '#EFF6FF',
     borderRadius: 12,
     padding: 10,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.06)',
+    borderColor: '#E2E8F0',
   },
   terminalBox: {
     alignItems: 'center',
@@ -2660,7 +2660,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   terminalCode: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontSize: 18,
     fontWeight: '900',
     marginTop: 2,
@@ -2681,7 +2681,7 @@ const styles = StyleSheet.create({
   },
   specItem: {
     width: '48%',
-    backgroundColor: '#070e1a',
+    backgroundColor: '#EFF6FF',
     borderRadius: 8,
     padding: 8,
     gap: 2,
@@ -2692,7 +2692,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   specValue: {
-    color: '#dde2f0',
+    color: '#1E293B',
     fontSize: 12,
     fontWeight: '700',
   },
@@ -2702,7 +2702,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   loadedContainersSection: {
-    backgroundColor: '#070e1a',
+    backgroundColor: '#EFF6FF',
     borderRadius: 8,
     padding: 10,
     gap: 6,
@@ -2719,13 +2719,13 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   loadedCode: {
-    color: '#dde2f0',
+    color: '#1E293B',
     fontSize: 12,
     fontWeight: '700',
     flex: 1,
   },
   loadedSize: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontSize: 11,
     fontWeight: '800',
   },
@@ -2749,7 +2749,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   continueTripBtnText: {
-    color: '#070c14',
+    color: '#FFFFFF',
     fontWeight: '900',
     fontSize: 11,
     letterSpacing: 0.6,
@@ -2757,26 +2757,26 @@ const styles = StyleSheet.create({
   addContBtnSmall: {
     paddingHorizontal: 14,
     height: 44,
-    backgroundColor: '#070e1a',
+    backgroundColor: '#EFF6FF',
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: '#00e5ff',
+    borderColor: '#2563EB',
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
   },
   addContBtnSmallText: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontSize: 10,
     fontWeight: '800',
   },
 
   // ─── NO ACTIVE TRIP CARD ───
   noActiveCard: {
-    backgroundColor: '#0c1524',
+    backgroundColor: '#FFFFFF',
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderColor: '#E2E8F0',
     padding: 20,
     alignItems: 'center',
     gap: 8,
@@ -2805,17 +2805,17 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   startManualBtnText: {
-    color: '#070c14',
+    color: '#FFFFFF',
     fontWeight: '900',
     fontSize: 11,
   },
 
   // ─── PROMINENT ADD CONTAINER ACTION ───
   prominentAddContainerBtn: {
-    backgroundColor: '#0c1524',
+    backgroundColor: '#FFFFFF',
     borderRadius: 16,
     borderWidth: 1.5,
-    borderColor: '#00e5ff',
+    borderColor: '#2563EB',
     padding: 14,
     flexDirection: 'row',
     alignItems: 'center',
@@ -2830,7 +2830,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   prominentAddTitle: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontWeight: '900',
     fontSize: 12,
     letterSpacing: 0.6,
@@ -2844,10 +2844,10 @@ const styles = StyleSheet.create({
 
   // ─── 8-STAGE WORKFLOW TRACKER ───
   progressTrackerCard: {
-    backgroundColor: '#0c1524',
+    backgroundColor: '#FFFFFF',
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderColor: '#E2E8F0',
     padding: 14,
     gap: 10,
   },
@@ -2860,7 +2860,7 @@ const styles = StyleSheet.create({
     borderBottomColor: '#242a34',
   },
   trackerTitle: {
-    color: '#dde2f0',
+    color: '#1E293B',
     fontSize: 11,
     fontWeight: '800',
     letterSpacing: 0.6,
@@ -2877,7 +2877,7 @@ const styles = StyleSheet.create({
     width: 18,
     height: 18,
     borderRadius: 9,
-    backgroundColor: '#080e17',
+    backgroundColor: '#F8FAFC',
     borderWidth: 1,
     borderColor: '#242a34',
     alignItems: 'center',
@@ -2888,7 +2888,7 @@ const styles = StyleSheet.create({
     borderColor: '#22ef7e',
   },
   stageCircleActive: {
-    borderColor: '#00e5ff',
+    borderColor: '#2563EB',
     borderWidth: 2,
   },
   stageItemText: {
@@ -2896,11 +2896,11 @@ const styles = StyleSheet.create({
     color: '#849396',
   },
   stageItemTextDone: {
-    color: '#dde2f0',
+    color: '#1E293B',
     fontWeight: '600',
   },
   stageItemTextActive: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontWeight: '800',
   },
   stageButtonsRow: {
@@ -2919,7 +2919,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   stageActionBtnText: {
-    color: '#00363d',
+    color: '#FFFFFF',
     fontWeight: '900',
     fontSize: 11,
     letterSpacing: 0.8,
@@ -2942,7 +2942,7 @@ const styles = StyleSheet.create({
   },
   quickActionTile: {
     width: '22%',
-    backgroundColor: '#161c25',
+    backgroundColor: '#FFFFFF',
     borderRadius: radius.DEFAULT,
     borderWidth: 1,
     borderColor: '#242a34',
@@ -2958,7 +2958,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   tileTitle: {
-    color: '#dde2f0',
+    color: '#1E293B',
     fontSize: 9,
     fontWeight: '700',
     textAlign: 'center',
@@ -2987,10 +2987,10 @@ const styles = StyleSheet.create({
     paddingVertical: 30,
   },
   modalCard: {
-    backgroundColor: '#161c25',
+    backgroundColor: '#FFFFFF',
     borderRadius: radius.DEFAULT,
     borderWidth: 1.5,
-    borderColor: '#00e5ff',
+    borderColor: '#2563EB',
     padding: 16,
     gap: 12,
   },
@@ -3003,7 +3003,7 @@ const styles = StyleSheet.create({
     borderBottomColor: '#242a34',
   },
   modalTitle: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontWeight: '900',
     fontSize: 12,
     letterSpacing: 0.8,
@@ -3020,7 +3020,7 @@ const styles = StyleSheet.create({
   inputWrap: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#080e17',
+    backgroundColor: '#F8FAFC',
     borderRadius: radius.DEFAULT,
     borderWidth: 1,
     borderColor: '#242a34',
@@ -3029,7 +3029,7 @@ const styles = StyleSheet.create({
   },
   modalInput: {
     flex: 1,
-    color: '#dde2f0',
+    color: '#1E293B',
         fontSize: 13,
     ...(Platform.OS === 'web' ? { outlineStyle: 'none' } : {}),
   } as any,
@@ -3065,7 +3065,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   fixDigitBtnText: {
-    color: '#00363d',
+    color: '#FFFFFF',
     fontSize: 9,
     fontWeight: '900',
   },
@@ -3079,15 +3079,15 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 42,
     borderRadius: radius.DEFAULT,
-    backgroundColor: '#080e17',
+    backgroundColor: '#F8FAFC',
     borderWidth: 1,
     borderColor: '#242a34',
     alignItems: 'center',
     justifyContent: 'center',
   },
   sizeBtnActive: {
-    backgroundColor: 'rgba(0, 229, 255, 0.15)',
-    borderColor: '#00e5ff',
+    backgroundColor: '#EFF6FF',
+    borderColor: '#2563EB',
   },
   sizeBtnText: {
     color: '#849396',
@@ -3095,7 +3095,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   sizeBtnTextActive: {
-    color: '#00e5ff',
+    color: '#2563EB',
   },
 
   // Terminal Chips
@@ -3108,13 +3108,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: radius.sm,
-    backgroundColor: '#080e17',
+    backgroundColor: '#F8FAFC',
     borderWidth: 1,
     borderColor: '#242a34',
   },
   terminalChipActive: {
-    backgroundColor: 'rgba(0, 229, 255, 0.15)',
-    borderColor: '#00e5ff',
+    backgroundColor: '#EFF6FF',
+    borderColor: '#2563EB',
   },
   terminalChipText: {
     color: '#849396',
@@ -3122,14 +3122,14 @@ const styles = StyleSheet.create({
     fontWeight: '800',
       },
   terminalChipTextActive: {
-    color: '#00e5ff',
+    color: '#2563EB',
   },
 
   missionTimingPanel: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#080e17',
+    backgroundColor: '#F8FAFC',
     borderRadius: radius.md,
     borderWidth: 1,
     borderColor: '#1e293b',
@@ -3151,18 +3151,18 @@ const styles = StyleSheet.create({
   missionTimingLabel: {
     fontSize: 8.5,
     fontWeight: '800',
-    color: '#00e5ff',
+    color: '#2563EB',
     letterSpacing: 0.4,
   },
   missionTimingDate: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#dde2f0',
+    color: '#1E293B',
   },
   missionTimingTime: {
     fontSize: 12,
     fontWeight: '900',
-    color: '#00e5ff',
+    color: '#2563EB',
     letterSpacing: 0.2,
   },
   missionTimingDivider: {
@@ -3231,7 +3231,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   modalSubmitBtnText: {
-    color: '#00363d',
+    color: '#FFFFFF',
     fontWeight: '900',
     fontSize: 11,
     letterSpacing: 0.8,
@@ -3239,7 +3239,7 @@ const styles = StyleSheet.create({
 
   // Allowance Card
   allowanceCard: {
-    backgroundColor: '#080e17',
+    backgroundColor: '#F8FAFC',
     borderRadius: radius.DEFAULT,
     borderWidth: 1,
     borderColor: '#22ef7e',
@@ -3272,7 +3272,7 @@ const styles = StyleSheet.create({
   notifItem: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    backgroundColor: '#080e17',
+    backgroundColor: '#F8FAFC',
     borderRadius: radius.sm,
     padding: 10,
     gap: 10,
@@ -3280,7 +3280,7 @@ const styles = StyleSheet.create({
     borderColor: '#242a34',
   },
   notifTitle: {
-    color: '#dde2f0',
+    color: '#1E293B',
     fontSize: 11,
     fontWeight: '800',
   },
@@ -3295,7 +3295,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   hudTelematicsBanner: {
-    backgroundColor: '#161c25',
+    backgroundColor: '#FFFFFF',
     borderRadius: radius.DEFAULT,
     borderWidth: 1,
     borderColor: '#242a34',
@@ -3315,13 +3315,13 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   hudMissionBadgeText: {
-    color: '#00363d',
+    color: '#FFFFFF',
     fontSize: 9,
     fontWeight: '900',
     letterSpacing: 0.6,
   },
   hudMissionIdText: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontSize: 12,
     fontWeight: '900',
     letterSpacing: 0.8,
@@ -3330,7 +3330,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    backgroundColor: '#080e17',
+    backgroundColor: '#F8FAFC',
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 4,
@@ -3355,7 +3355,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   hudContainerId: {
-    color: '#dde2f0',
+    color: '#1E293B',
     fontSize: 22,
     fontWeight: '900',
     letterSpacing: 0.5,
@@ -3371,7 +3371,7 @@ const styles = StyleSheet.create({
   },
   hudSpecChip: {
     flex: 1,
-    backgroundColor: '#080e17',
+    backgroundColor: '#F8FAFC',
     padding: 8,
     borderRadius: radius.sm,
     borderWidth: 1,
@@ -3384,7 +3384,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   hudSpecValCyan: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontSize: 11,
     fontWeight: '900',
     marginTop: 2,
@@ -3409,12 +3409,12 @@ const styles = StyleSheet.create({
     width: 42,
     height: 42,
     borderRadius: radius.sm,
-    backgroundColor: '#080e17',
+    backgroundColor: '#F8FAFC',
     alignItems: 'center',
     justifyContent: 'center',
   },
   hudDistLabel: {
-    color: '#00363d',
+    color: '#FFFFFF',
     fontSize: 9,
     fontWeight: '900',
     letterSpacing: 0.8,
@@ -3426,12 +3426,12 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   routeCodeTagText: {
-    color: '#00363d',
+    color: '#FFFFFF',
     fontSize: 8,
     fontWeight: '900',
   },
   hudTurnInstruction: {
-    color: '#00363d',
+    color: '#FFFFFF',
     fontSize: 12,
     fontWeight: '900',
     letterSpacing: 0.5,
@@ -3440,7 +3440,7 @@ const styles = StyleSheet.create({
 
   // Yard Radar Card
   hudYardRadarCard: {
-    backgroundColor: '#161c25',
+    backgroundColor: '#FFFFFF',
     borderRadius: radius.DEFAULT,
     borderWidth: 1,
     borderColor: '#242a34',
@@ -3448,7 +3448,7 @@ const styles = StyleSheet.create({
   },
   radarSimulationBox: {
     height: 180,
-    backgroundColor: '#080e17',
+    backgroundColor: '#F8FAFC',
     position: 'relative',
     justifyContent: 'center',
     alignItems: 'center',
@@ -3457,7 +3457,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: 20,
     top: 20,
-    backgroundColor: '#161c25',
+    backgroundColor: '#FFFFFF',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 4,
@@ -3466,9 +3466,9 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: 20,
     top: 70,
-    backgroundColor: 'rgba(0, 229, 255, 0.15)',
+    backgroundColor: '#EFF6FF',
     borderWidth: 1,
-    borderColor: '#00e5ff',
+    borderColor: '#2563EB',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 4,
@@ -3477,7 +3477,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: 20,
     top: 120,
-    backgroundColor: '#161c25',
+    backgroundColor: '#FFFFFF',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 4,
@@ -3488,7 +3488,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   radarBayTextActive: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontSize: 9,
     fontWeight: '900',
   },
@@ -3507,11 +3507,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   tractorBeaconTag: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontSize: 9,
     fontWeight: '900',
     marginTop: 2,
-    backgroundColor: '#080e17',
+    backgroundColor: '#F8FAFC',
     paddingHorizontal: 4,
     borderRadius: 2,
   },
@@ -3531,7 +3531,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   radarBadgeText: {
-    color: '#dde2f0',
+    color: '#1E293B',
     fontSize: 8,
     fontWeight: '800',
   },
@@ -3546,7 +3546,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   speedValueText: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontSize: 20,
     fontWeight: '900',
   },
@@ -3579,19 +3579,19 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   radarDestTitle: {
-    color: '#dde2f0',
+    color: '#1E293B',
     fontSize: 10,
     fontWeight: '900',
   },
   radarDestDist: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontSize: 12,
     fontWeight: '900',
   },
 
   // Waypoints Pipeline
   hudWaypointsCard: {
-    backgroundColor: '#161c25',
+    backgroundColor: '#FFFFFF',
     borderRadius: radius.DEFAULT,
     borderWidth: 1,
     borderColor: '#242a34',
@@ -3604,7 +3604,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   hudWaypointsTitle: {
-    color: '#dde2f0',
+    color: '#1E293B',
     fontSize: 11,
     fontWeight: '900',
     letterSpacing: 0.6,
@@ -3621,7 +3621,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: '#080e17',
+    backgroundColor: '#F8FAFC',
     padding: 8,
     borderRadius: radius.sm,
   },
@@ -3634,7 +3634,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   wpTitleDone: {
-    color: '#dde2f0',
+    color: '#1E293B',
     fontSize: 10,
     fontWeight: '800',
   },
@@ -3653,7 +3653,7 @@ const styles = StyleSheet.create({
     gap: 8,
     backgroundColor: '#1f2733',
     borderWidth: 1,
-    borderColor: '#00e5ff',
+    borderColor: '#2563EB',
     padding: 8,
     borderRadius: radius.sm,
   },
@@ -3666,21 +3666,21 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   wpIconActiveText: {
-    color: '#00363d',
+    color: '#FFFFFF',
     fontSize: 11,
     fontWeight: '900',
   },
   wpTitleActive: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontSize: 10,
     fontWeight: '900',
   },
   wpSubActive: {
-    color: '#dde2f0',
+    color: '#1E293B',
     fontSize: 9,
   },
   wpTimeActive: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontSize: 9,
     fontWeight: '900',
   },
@@ -3690,7 +3690,7 @@ const styles = StyleSheet.create({
     borderRadius: 2,
   },
   activeTagMiniText: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontSize: 7,
     fontWeight: '900',
   },
@@ -3698,7 +3698,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: '#080e17',
+    backgroundColor: '#F8FAFC',
     padding: 8,
     borderRadius: radius.sm,
     opacity: 0.7,
@@ -3734,7 +3734,7 @@ const styles = StyleSheet.create({
   },
   hudTelemBox: {
     flex: 1,
-    backgroundColor: '#161c25',
+    backgroundColor: '#FFFFFF',
     padding: 10,
     borderRadius: radius.DEFAULT,
     borderWidth: 1,
@@ -3753,12 +3753,12 @@ const styles = StyleSheet.create({
     fontWeight: '900',
   },
   hudTelemValCyan: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontSize: 11,
     fontWeight: '900',
   },
   hudTelemValWhite: {
-    color: '#dde2f0',
+    color: '#1E293B',
     fontSize: 12,
     fontWeight: '900',
   },
@@ -3773,7 +3773,7 @@ const styles = StyleSheet.create({
   },
   batteryProgressBar: {
     height: 4,
-    backgroundColor: '#080e17',
+    backgroundColor: '#F8FAFC',
     borderRadius: 2,
     marginVertical: 3,
     overflow: 'hidden',
@@ -3795,7 +3795,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   glovePrimaryBtnText: {
-    color: '#00363d',
+    color: '#FFFFFF',
     fontSize: 13,
     fontWeight: '900',
     letterSpacing: 0.8,
@@ -3803,7 +3803,7 @@ const styles = StyleSheet.create({
   gloveSecondaryBtn: {
     flex: 4,
     height: 52,
-    backgroundColor: '#161c25',
+    backgroundColor: '#FFFFFF',
     borderRadius: radius.DEFAULT,
     borderWidth: 1,
     borderColor: '#feb300',
@@ -3836,7 +3836,7 @@ const styles = StyleSheet.create({
 
   // Mission Lifecycle Card & Operations Console
   missionLifecycleCard: {
-    backgroundColor: '#161c25',
+    backgroundColor: '#FFFFFF',
     borderRadius: radius.DEFAULT,
     borderWidth: 1,
     borderColor: 'rgba(0, 229, 255, 0.25)',
@@ -3858,7 +3858,7 @@ const styles = StyleSheet.create({
     borderBottomColor: '#242a34',
   },
   missionIdText: {
-    color: '#dde2f0',
+    color: '#1E293B',
     fontSize: 13,
     fontWeight: '900',
     letterSpacing: 0.6,
@@ -3908,12 +3908,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: 'rgba(0, 229, 255, 0.15)',
+    backgroundColor: '#EFF6FF',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: '#00e5ff',
+    borderColor: '#2563EB',
   },
   livePulseDot: {
     width: 6,
@@ -3922,7 +3922,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#00e5ff',
   },
   statusPillTextProgress: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontSize: 9,
     fontWeight: '900',
     letterSpacing: 0.5,
@@ -3936,10 +3936,10 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: '#00e5ff',
+    borderColor: '#2563EB',
   },
   statusPillTextArrived: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontSize: 9,
     fontWeight: '900',
     letterSpacing: 0.5,
@@ -3983,7 +3983,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   routeTerminal: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontSize: 16,
     fontWeight: '900',
     letterSpacing: 0.6,
@@ -4015,7 +4015,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   containersListTitle: {
-    color: '#dde2f0',
+    color: '#1E293B',
     fontSize: 10,
     fontWeight: '900',
     letterSpacing: 0.5,
@@ -4035,7 +4035,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: 'rgba(0, 229, 255, 0.08)',
+    backgroundColor: '#EFF6FF',
     borderRadius: 6,
     borderWidth: 1,
     borderColor: 'rgba(0, 229, 255, 0.25)',
@@ -4052,7 +4052,7 @@ const styles = StyleSheet.create({
   containerItemRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#161c25',
+    backgroundColor: '#FFFFFF',
     padding: 8,
     borderRadius: radius.sm,
     gap: 8,
@@ -4066,12 +4066,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   containerBadgeText: {
-    color: '#00363d',
+    color: '#FFFFFF',
     fontSize: 10,
     fontWeight: '900',
   },
   containerItemNumber: {
-    color: '#dde2f0',
+    color: '#1E293B',
     fontSize: 11,
     fontWeight: '900',
     fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
@@ -4082,13 +4082,13 @@ const styles = StyleSheet.create({
     marginTop: 1,
   },
   containerStatusTag: {
-    backgroundColor: 'rgba(0, 229, 255, 0.1)',
+    backgroundColor: '#EFF6FF',
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 4,
   },
   containerStatusTagText: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontSize: 8,
     fontWeight: '800',
   },
@@ -4114,7 +4114,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.6,
   },
   notificationBannerMsg: {
-    color: '#dde2f0',
+    color: '#1E293B',
     fontSize: 11,
     lineHeight: 16,
   },
@@ -4145,7 +4145,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.6,
   },
   notificationBannerMsgApproved: {
-    color: '#dde2f0',
+    color: '#1E293B',
     fontSize: 11,
     lineHeight: 16,
   },
@@ -4165,22 +4165,22 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   startTripPrimaryBtnText: {
-    color: '#00363d',
+    color: '#FFFFFF',
     fontSize: 13,
     fontWeight: '900',
     letterSpacing: 0.8,
   },
 
   notificationBannerInProgress: {
-    backgroundColor: 'rgba(0, 229, 255, 0.12)',
+    backgroundColor: '#EFF6FF',
     borderWidth: 1.5,
-    borderColor: '#00e5ff',
+    borderColor: '#2563EB',
     borderRadius: radius.DEFAULT,
     padding: 14,
     gap: 10,
   },
   notificationBannerTitleInProgress: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontSize: 12,
     fontWeight: '900',
     letterSpacing: 0.6,
@@ -4201,7 +4201,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   arriveTerminalBtnText: {
-    color: '#00363d',
+    color: '#FFFFFF',
     fontSize: 12,
     fontWeight: '900',
     letterSpacing: 0.8,
@@ -4237,7 +4237,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   completeTripBtnText: {
-    color: '#00363d',
+    color: '#FFFFFF',
     fontSize: 12,
     fontWeight: '900',
     letterSpacing: 0.8,
@@ -4351,7 +4351,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.6,
   },
   suspendedWarningSubtitle: {
-    color: '#dde2f0',
+    color: '#1E293B',
     fontSize: 10.5,
     lineHeight: 15,
     marginTop: 2,
@@ -4364,7 +4364,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   suspendedContactBtnText: {
-    color: '#ffffff',
+    color: '#1E293B',
     fontSize: 10.5,
     fontWeight: '900',
     letterSpacing: 0.5,
@@ -4372,7 +4372,7 @@ const styles = StyleSheet.create({
 
   // ─── PENDING DETAILS CARD (DISCHARGE & SEAL VERIFICATION) ───
   pendingDetailsCard: {
-    backgroundColor: '#080e17',
+    backgroundColor: '#F8FAFC',
     borderWidth: 1,
     borderColor: 'rgba(254, 179, 0, 0.35)',
     borderRadius: 10,
@@ -4386,12 +4386,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingBottom: 6,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.06)',
+    borderBottomColor: '#E2E8F0',
   },
   pendingCardHeaderTitle: {
     fontSize: 9.5,
     fontWeight: '900',
-    color: '#00e5ff',
+    color: '#2563EB',
     letterSpacing: 0.5,
   },
   pendingAuditedBadge: {
@@ -4437,7 +4437,7 @@ const styles = StyleSheet.create({
   pendingMetricPillValue: {
     fontSize: 10,
     fontWeight: '800',
-    color: '#dde2f0',
+    color: '#1E293B',
   },
   driverRemarksCallout: {
     backgroundColor: '#0c1421',
@@ -4450,12 +4450,12 @@ const styles = StyleSheet.create({
   driverRemarksCalloutLabel: {
     fontSize: 8,
     fontWeight: '900',
-    color: '#00e5ff',
+    color: '#2563EB',
     letterSpacing: 0.4,
   },
   driverRemarksCalloutText: {
     fontSize: 10,
-    color: '#dde2f0',
+    color: '#1E293B',
     fontStyle: 'italic',
     lineHeight: 14,
   },
@@ -4483,12 +4483,12 @@ const styles = StyleSheet.create({
   dischargeTripContextId: {
     fontSize: 10.5,
     fontWeight: '900',
-    color: '#00e5ff',
+    color: '#2563EB',
     fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
   },
   dischargeTripContextSub: {
     fontSize: 9.5,
-    color: '#dde2f0',
+    color: '#1E293B',
     fontWeight: '700',
   },
   slpaSecurityBadge: {
@@ -4514,7 +4514,7 @@ const styles = StyleSheet.create({
     lineHeight: 15,
   },
   termSelectChip: {
-    backgroundColor: '#161c25',
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
     borderColor: '#242a34',
     paddingHorizontal: 10,
@@ -4522,8 +4522,8 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   termSelectChipActive: {
-    backgroundColor: 'rgba(0, 229, 255, 0.15)',
-    borderColor: '#00e5ff',
+    backgroundColor: '#EFF6FF',
+    borderColor: '#2563EB',
   },
   termSelectChipText: {
     color: '#849396',
@@ -4531,11 +4531,11 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   termSelectChipTextActive: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontWeight: '900',
   },
   presetChip: {
-    backgroundColor: '#161c25',
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
     borderColor: 'rgba(0, 229, 255, 0.25)',
     paddingHorizontal: 8,
@@ -4544,7 +4544,7 @@ const styles = StyleSheet.create({
   },
   presetChipActive: {
     backgroundColor: 'rgba(0, 229, 255, 0.2)',
-    borderColor: '#00e5ff',
+    borderColor: '#2563EB',
   },
   presetChipText: {
     color: '#849396',
@@ -4552,13 +4552,13 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   presetChipTextActive: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontWeight: '800',
   },
   toggleOptionBtn: {
     flex: 1,
     height: 38,
-    backgroundColor: '#161c25',
+    backgroundColor: '#FFFFFF',
     borderRadius: 8,
     borderWidth: 1,
     borderColor: '#242a34',
@@ -4579,14 +4579,14 @@ const styles = StyleSheet.create({
   toggleOptionBtnText: {
     fontSize: 9.5,
     fontWeight: '800',
-    color: '#dde2f0',
+    color: '#1E293B',
   },
   toggleOptionBtnTextDark: {
-    color: '#00363d',
+    color: '#FFFFFF',
     fontWeight: '900',
   },
   toggleOptionBtnTextWhite: {
-    color: '#ffffff',
+    color: '#1E293B',
     fontWeight: '900',
   },
 });

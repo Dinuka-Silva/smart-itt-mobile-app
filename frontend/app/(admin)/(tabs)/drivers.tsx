@@ -369,7 +369,7 @@ export default function AdminDriversScreen() {
             <Ionicons name="people" size={13} color="#00e5ff" />
             <Text style={styles.hudLabel}>TOTAL DRIVERS</Text>
           </View>
-          <Text style={[styles.hudValue, { color: '#00e5ff' }]}>{totalDriversCount}</Text>
+          <Text style={[styles.hudValue, { color: '#2563EB' }]}>{totalDriversCount}</Text>
         </View>
 
         <View style={[styles.hudCard, styles.hudCardActive]}>
@@ -502,7 +502,7 @@ export default function AdminDriversScreen() {
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                         <Text style={styles.driverFullName}>{d.fullName}</Text>
                         <View style={[styles.operatorBadge, isSdr ? styles.operatorBadgeAmber : styles.operatorBadgeCyan]}>
-                          <Text style={[styles.operatorBadgeText, isSdr ? { color: '#feb300' } : { color: '#00e5ff' }]}>
+                          <Text style={[styles.operatorBadgeText, isSdr ? { color: '#feb300' } : { color: '#2563EB' }]}>
                             {opName}
                           </Text>
                         </View>
@@ -556,7 +556,7 @@ export default function AdminDriversScreen() {
                         <Ionicons name="hardware-chip" size={10} color="#00e5ff" />
                         <Text style={styles.specKey}>CHE / CHASSIS</Text>
                       </View>
-                      <Text style={[styles.specVal, { color: '#00e5ff' }]}>
+                      <Text style={[styles.specVal, { color: '#2563EB' }]}>
                         {d.cheNumber || d.chassisNumber || 'SCK 100'}
                       </Text>
                     </View>
@@ -666,12 +666,12 @@ export default function AdminDriversScreen() {
           <View style={[styles.modalBox, { maxHeight: '90%' }]}>
             <View style={styles.modalHeader}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(0, 229, 255, 0.15)', borderWidth: 1, borderColor: '#00e5ff', alignItems: 'center', justifyContent: 'center' }}>
+                <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: '#EFF6FF', borderWidth: 1, borderColor: '#2563EB', alignItems: 'center', justifyContent: 'center' }}>
                   <Ionicons name="person" size={22} color="#00e5ff" />
                 </View>
                 <View>
                   <Text style={styles.modalTitle}>{selectedDriver?.fullName}</Text>
-                  <Text style={{ color: '#00e5ff', fontSize: 13, fontWeight: '800' }}>
+                  <Text style={{ color: '#2563EB', fontSize: 13, fontWeight: '800' }}>
                     {selectedDriver?.driverCode} • {selectedDriver?.employeeId}
                   </Text>
                 </View>
@@ -683,7 +683,7 @@ export default function AdminDriversScreen() {
 
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 20 }}>
               {/* Status Badge */}
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#0f1d33', padding: 12, borderRadius: 8, marginVertical: 12, borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.08)' }}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#0f1d33', padding: 12, borderRadius: 8, marginVertical: 12, borderWidth: 1, borderColor: '#E2E8F0' }}>
                 <Text style={{ color: '#90caf9', fontSize: 12, fontWeight: '700' }}>OPERATIONAL STATUS</Text>
                 <View style={[styles.statusBadge, selectedDriver?.status === 'ACTIVE' ? styles.statusActive : selectedDriver?.status === 'SUSPENDED' ? styles.statusSuspended : styles.statusDeactivated]}>
                   <Text style={styles.statusBadgeText}>{selectedDriver?.status || 'ACTIVE'}</Text>
@@ -696,10 +696,10 @@ export default function AdminDriversScreen() {
                 <View style={styles.detailRow}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                     <Ionicons name="key" size={14} color="#00e5ff" />
-                    <Text style={[styles.detailRowLabel, { color: '#00e5ff', fontWeight: '800' }]}>LOGIN USERNAME:</Text>
+                    <Text style={[styles.detailRowLabel, { color: '#2563EB', fontWeight: '800' }]}>LOGIN USERNAME:</Text>
                   </View>
-                  <View style={{ backgroundColor: 'rgba(0, 229, 255, 0.15)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6, borderWidth: 1, borderColor: '#00e5ff' }}>
-                    <Text style={{ color: '#00e5ff', fontSize: 13, fontWeight: '900', letterSpacing: 0.8 }}>
+                  <View style={{ backgroundColor: '#EFF6FF', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6, borderWidth: 1, borderColor: '#2563EB' }}>
+                    <Text style={{ color: '#2563EB', fontSize: 13, fontWeight: '900', letterSpacing: 0.8 }}>
                       {selectedDriver?.username || selectedDriver?.driverCode || selectedDriver?.employeeId}
                     </Text>
                   </View>
@@ -709,7 +709,7 @@ export default function AdminDriversScreen() {
                     <Ionicons name="barcode-outline" size={14} color="#bac9cc" />
                     <Text style={styles.detailRowLabel}>Driver System Code:</Text>
                   </View>
-                  <Text style={[styles.detailRowValue, { color: '#ffffff', fontWeight: '700' }]}>
+                  <Text style={[styles.detailRowValue, { color: '#1E293B', fontWeight: '700' }]}>
                     {selectedDriver?.driverCode || 'N/A'}
                   </Text>
                 </View>
@@ -718,7 +718,7 @@ export default function AdminDriversScreen() {
                     <Ionicons name="card-outline" size={14} color="#bac9cc" />
                     <Text style={styles.detailRowLabel}>Employee ID:</Text>
                   </View>
-                  <Text style={[styles.detailRowValue, { color: '#ffffff', fontWeight: '700' }]}>
+                  <Text style={[styles.detailRowValue, { color: '#1E293B', fontWeight: '700' }]}>
                     {selectedDriver?.employeeId || 'N/A'}
                   </Text>
                 </View>
@@ -742,7 +742,7 @@ export default function AdminDriversScreen() {
                 </View>
                 <View style={styles.detailRow}>
                   <Text style={styles.detailRowLabel}>Chassis / CHE Number:</Text>
-                  <Text style={[styles.detailRowValue, { color: '#00e5ff' }]}>{selectedDriver?.cheNumber || selectedDriver?.chassisNumber || 'CHE 100'}</Text>
+                  <Text style={[styles.detailRowValue, { color: '#2563EB' }]}>{selectedDriver?.cheNumber || selectedDriver?.chassisNumber || 'CHE 100'}</Text>
                 </View>
                 <View style={styles.detailRow}>
                   <Text style={styles.detailRowLabel}>Fleet Operator:</Text>
@@ -813,7 +813,7 @@ export default function AdminDriversScreen() {
               <View style={styles.detailCardBox}>
                 <View style={styles.detailRow}>
                   <Text style={styles.detailRowLabel}>SLPA Port Pass Number:</Text>
-                  <Text style={[styles.detailRowValue, { color: '#00e5ff', fontWeight: '800' }]}>
+                  <Text style={[styles.detailRowValue, { color: '#2563EB', fontWeight: '800' }]}>
                     {selectedDriver?.portPassNumber || 'SLPA-DPP-001'}
                   </Text>
                 </View>
@@ -862,9 +862,9 @@ export default function AdminDriversScreen() {
               {/* Edit Driver Details Action */}
               <TouchableOpacity
                 style={{
-                  backgroundColor: 'rgba(0, 229, 255, 0.15)',
+                  backgroundColor: '#EFF6FF',
                   borderWidth: 1,
-                  borderColor: '#00e5ff',
+                  borderColor: '#2563EB',
                   paddingVertical: 12,
                   borderRadius: 8,
                   alignItems: 'center',
@@ -878,7 +878,7 @@ export default function AdminDriversScreen() {
                 activeOpacity={0.8}
               >
                 <Ionicons name="create-outline" size={18} color="#00e5ff" />
-                <Text style={{ color: '#00e5ff', fontWeight: '800', fontSize: 13 }}>
+                <Text style={{ color: '#2563EB', fontWeight: '800', fontSize: 13 }}>
                   EDIT DRIVER DETAILS & FLEET ASSIGNMENT
                 </Text>
               </TouchableOpacity>
@@ -931,7 +931,7 @@ export default function AdminDriversScreen() {
           <View style={[styles.createModalBox, { maxWidth: 440, width: '92%' }]}>
             <View style={styles.modalHeader}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(0, 229, 255, 0.15)', alignItems: 'center', justifyContent: 'center' }}>
+                <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: '#EFF6FF', alignItems: 'center', justifyContent: 'center' }}>
                   <Ionicons name="key" size={18} color="#00e5ff" />
                 </View>
                 <View>
@@ -945,9 +945,9 @@ export default function AdminDriversScreen() {
             </View>
 
             {/* Target Driver Information Box */}
-            <View style={{ backgroundColor: '#070f1e', padding: 12, borderRadius: 8, marginVertical: 12, borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.08)' }}>
-              <Text style={{ color: '#ffffff', fontSize: 13, fontWeight: '800' }}>{driverToReset?.fullName}</Text>
-              <Text style={{ color: '#00e5ff', fontSize: 11, fontWeight: '700', marginTop: 2 }}>
+            <View style={{ backgroundColor: '#070f1e', padding: 12, borderRadius: 8, marginVertical: 12, borderWidth: 1, borderColor: '#E2E8F0' }}>
+              <Text style={{ color: '#1E293B', fontSize: 13, fontWeight: '800' }}>{driverToReset?.fullName}</Text>
+              <Text style={{ color: '#2563EB', fontSize: 11, fontWeight: '700', marginTop: 2 }}>
                 Code: {driverToReset?.driverCode} · NIC: {driverToReset?.nic}
               </Text>
               <Text style={{ color: '#849396', fontSize: 10, marginTop: 2 }}>
@@ -969,10 +969,10 @@ export default function AdminDriversScreen() {
 
             <View style={{ flexDirection: 'row', gap: 6, marginBottom: 14 }}>
               <TouchableOpacity
-                style={{ flex: 1, paddingVertical: 6, backgroundColor: 'rgba(0, 229, 255, 0.1)', borderRadius: 6, borderWidth: 1, borderColor: 'rgba(0, 229, 255, 0.3)', alignItems: 'center' }}
+                style={{ flex: 1, paddingVertical: 6, backgroundColor: '#EFF6FF', borderRadius: 6, borderWidth: 1, borderColor: '#2563EB', alignItems: 'center' }}
                 onPress={() => setNewTempPassword('driver')}
               >
-                <Text style={{ fontSize: 10.5, color: '#00e5ff', fontWeight: '800' }}>Default: &apos;driver&apos;</Text>
+                <Text style={{ fontSize: 10.5, color: '#2563EB', fontWeight: '800' }}>Default: &apos;driver&apos;</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -1107,7 +1107,7 @@ export default function AdminDriversScreen() {
                       <Text
                         style={[
                           styles.vehiclePickerTriggerText,
-                          selectedVehicleObj ? { color: '#ffffff' } : { color: '#78909c' },
+                          selectedVehicleObj ? { color: '#1E293B' } : { color: '#78909c' },
                         ]}
                         numberOfLines={1}
                       >
@@ -1292,7 +1292,7 @@ export default function AdminDriversScreen() {
             <View style={styles.createModalBox}>
               <View style={styles.modalHeader}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                  <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(0, 229, 255, 0.15)', alignItems: 'center', justifyContent: 'center' }}>
+                  <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: '#EFF6FF', alignItems: 'center', justifyContent: 'center' }}>
                     <Ionicons name="create" size={18} color="#00e5ff" />
                   </View>
                   <View>
@@ -1474,7 +1474,7 @@ export default function AdminDriversScreen() {
                         { flex: 1, paddingVertical: 8, borderRadius: 6, alignItems: 'center', borderWidth: 1 },
                         editStatus === st
                           ? { backgroundColor: st === 'ACTIVE' ? '#4caf50' : st === 'SUSPENDED' ? '#feb300' : '#ff5252', borderColor: 'transparent' }
-                          : { backgroundColor: '#070f1e', borderColor: 'rgba(255, 255, 255, 0.1)' },
+                          : { backgroundColor: '#070f1e', borderColor: '#E2E8F0' },
                       ]}
                       onPress={() => setEditStatus(st)}
                     >
@@ -1538,7 +1538,7 @@ const styles = StyleSheet.create({
     paddingBottom: 14,
     backgroundColor: '#0a1019',
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.08)',
+    borderBottomColor: '#E2E8F0',
   },
   headerDot: {
     width: 8,
@@ -1549,7 +1549,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: '800',
-    color: '#ffffff',
+    color: '#1E293B',
   },
   headerSubtitle: {
     fontSize: 11,
@@ -1566,7 +1566,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   createBtnText: {
-    color: '#070c14',
+    color: '#FFFFFF',
     fontSize: 11,
     fontWeight: '800',
     letterSpacing: 0.5,
@@ -1582,22 +1582,22 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     paddingHorizontal: 14,
     paddingVertical: 10,
-    backgroundColor: '#070c14',
+    backgroundColor: '#F8FAFC',
     gap: 8,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.06)',
+    borderBottomColor: '#E2E8F0',
   },
   hudCard: {
     flex: 1,
-    backgroundColor: '#0c1524',
+    backgroundColor: '#FFFFFF',
     borderRadius: 10,
     paddingVertical: 8,
     paddingHorizontal: 8,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderColor: '#E2E8F0',
   },
   hudCardTotal: {
-    borderColor: 'rgba(0, 229, 255, 0.3)',
+    borderColor: '#2563EB',
   },
   hudCardActive: {
     borderColor: 'rgba(0, 230, 118, 0.3)',
@@ -1640,7 +1640,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   portPassDate: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontWeight: '700',
   },
   renewalTag: {
@@ -1666,22 +1666,22 @@ const styles = StyleSheet.create({
     padding: 14,
     backgroundColor: '#0a1019',
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.06)',
+    borderBottomColor: '#E2E8F0',
   },
   searchWrap: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#070c14',
+    backgroundColor: '#F8FAFC',
     borderRadius: 8,
     paddingHorizontal: 10,
     height: 40,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderColor: '#E2E8F0',
     marginBottom: 10,
   },
   searchInput: {
     flex: 1,
-    color: '#ffffff',
+    color: '#1E293B',
     fontSize: 13,
   },
   filterPillsRow: {
@@ -1719,12 +1719,12 @@ const styles = StyleSheet.create({
     paddingTop: 12,
   },
   emptyCard: {
-    backgroundColor: '#0c1b30',
+    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     padding: 32,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.06)',
+    borderColor: '#E2E8F0',
     marginTop: 20,
   },
   emptyCardText: {
@@ -1733,12 +1733,12 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   driverCard: {
-    backgroundColor: '#0c1524',
+    backgroundColor: '#FFFFFF',
     borderRadius: 14,
     padding: 14,
     marginBottom: 10,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderColor: '#E2E8F0',
   },
   driverCardHeader: {
     flexDirection: 'row',
@@ -1751,27 +1751,27 @@ const styles = StyleSheet.create({
   driverCodeText: {
     fontSize: 10,
     fontWeight: '800',
-    color: '#00e5ff',
+    color: '#2563EB',
     letterSpacing: 0.5,
   },
   driverNameText: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#ffffff',
+    color: '#1E293B',
     marginTop: 2,
   },
   cardEditBtn: {
-    backgroundColor: 'rgba(0, 229, 255, 0.1)',
+    backgroundColor: '#EFF6FF',
     borderRadius: 6,
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderWidth: 1,
-    borderColor: 'rgba(0, 229, 255, 0.4)',
+    borderColor: '#2563EB',
     flexDirection: 'row',
     alignItems: 'center',
   },
   cardEditBtnText: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontSize: 10,
     fontWeight: '800',
   },
@@ -1790,7 +1790,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 82, 82, 0.2)',
   },
   statusBadgeText: {
-    color: '#ffffff',
+    color: '#1E293B',
     fontSize: 10,
     fontWeight: '800',
   },
@@ -1821,7 +1821,7 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   modalBox: {
-    backgroundColor: '#0c1524',
+    backgroundColor: '#FFFFFF',
     borderRadius: 20,
     padding: 20,
     borderWidth: 1,
@@ -1836,10 +1836,10 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 18,
     fontWeight: '800',
-    color: '#ffffff',
+    color: '#1E293B',
   },
   modalSub: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontSize: 12,
     fontWeight: '600',
     marginBottom: 16,
@@ -1865,7 +1865,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   statusBtnText: {
-    color: '#ffffff',
+    color: '#1E293B',
     fontSize: 11,
     fontWeight: '800',
   },
@@ -1873,14 +1873,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(0, 229, 255, 0.08)',
+    backgroundColor: '#EFF6FF',
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: 'rgba(0, 229, 255, 0.3)',
+    borderColor: '#2563EB',
     paddingVertical: 12,
   },
   resetPasswordBtnText: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontSize: 12,
     fontWeight: '700',
   },
@@ -1889,7 +1889,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   createModalBox: {
-    backgroundColor: '#0c1b30',
+    backgroundColor: '#FFFFFF',
     borderRadius: 16,
     padding: 20,
     borderWidth: 1,
@@ -1908,8 +1908,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#070f1e',
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
-    color: '#ffffff',
+    borderColor: '#E2E8F0',
+    color: '#1E293B',
     paddingHorizontal: 12,
     height: 42,
     fontSize: 13,
@@ -1932,7 +1932,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#0a172a',
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderColor: '#E2E8F0',
     padding: 12,
     marginBottom: 16,
     gap: 8,
@@ -1949,7 +1949,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   detailRowValue: {
-    color: '#ffffff',
+    color: '#1E293B',
     fontSize: 12,
     fontWeight: '700',
   },
@@ -1983,11 +1983,11 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderColor: '#E2E8F0',
   },
   pickerSearchInput: {
     flex: 1,
-    color: '#ffffff',
+    color: '#1E293B',
     fontSize: 13,
     marginLeft: 8,
   },
@@ -1999,25 +1999,25 @@ const styles = StyleSheet.create({
     padding: 10,
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderColor: '#E2E8F0',
   },
   vehicleSelectItemActive: {
-    borderColor: '#00e5ff',
-    backgroundColor: 'rgba(0, 229, 255, 0.06)',
+    borderColor: '#2563EB',
+    backgroundColor: '#EFF6FF',
   },
   vehicleSelectPlate: {
     fontSize: 13,
     fontWeight: '800',
-    color: '#ffffff',
+    color: '#1E293B',
   },
   vehicleSelectCheBadge: {
-    backgroundColor: 'rgba(0, 229, 255, 0.15)',
+    backgroundColor: '#EFF6FF',
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 4,
   },
   vehicleSelectCheBadgeText: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontSize: 10,
     fontWeight: '800',
   },
@@ -2037,8 +2037,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#070f1e',
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
-    color: '#ffffff',
+    borderColor: '#E2E8F0',
+    color: '#1E293B',
     paddingHorizontal: 12,
     height: 42,
     fontSize: 13,
@@ -2065,7 +2065,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderColor: '#E2E8F0',
   },
   createCancelBtnText: {
     color: '#90caf9',
@@ -2084,14 +2084,14 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: 'rgba(0, 229, 255, 0.15)',
+    backgroundColor: '#EFF6FF',
     borderWidth: 1.5,
-    borderColor: '#00e5ff',
+    borderColor: '#2563EB',
     alignItems: 'center',
     justifyContent: 'center',
   },
   driverAvatarText: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontSize: 18,
     fontWeight: '900',
   },
@@ -2100,10 +2100,10 @@ const styles = StyleSheet.create({
     height: 44,
     borderRadius: 22,
     borderWidth: 1.5,
-    borderColor: '#00e5ff',
+    borderColor: '#2563EB',
   },
   driverFullName: {
-    color: '#ffffff',
+    color: '#1E293B',
     fontSize: 14,
     fontWeight: '800',
   },
@@ -2114,8 +2114,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   operatorBadgeCyan: {
-    backgroundColor: 'rgba(0, 229, 255, 0.12)',
-    borderColor: 'rgba(0, 229, 255, 0.4)',
+    backgroundColor: '#EFF6FF',
+    borderColor: '#2563EB',
   },
   operatorBadgeAmber: {
     backgroundColor: 'rgba(254, 179, 0, 0.12)',
@@ -2129,7 +2129,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: 'rgba(0, 229, 255, 0.1)',
+    backgroundColor: '#EFF6FF',
     borderWidth: 1,
     borderColor: 'rgba(0, 229, 255, 0.35)',
     borderRadius: 6,
@@ -2137,13 +2137,13 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
   },
   usernamePillLabel: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontSize: 9,
     fontWeight: '800',
     letterSpacing: 0.3,
   },
   usernamePillValue: {
-    color: '#ffffff',
+    color: '#1E293B',
     fontSize: 10,
     fontWeight: '900',
     letterSpacing: 0.5,
@@ -2200,7 +2200,7 @@ const styles = StyleSheet.create({
     padding: 8,
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.05)',
+    borderColor: '#E2E8F0',
   },
   specBox: {
     width: '48%',
@@ -2215,7 +2215,7 @@ const styles = StyleSheet.create({
   specVal: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#dde2f0',
+    color: '#1E293B',
   },
   specValHighlight: {
     fontSize: 11,
@@ -2225,7 +2225,7 @@ const styles = StyleSheet.create({
   specValMono: {
     fontSize: 10.5,
     fontWeight: '700',
-    color: '#dde2f0',
+    color: '#1E293B',
   },
   cardActionRow: {
     flexDirection: 'row',
@@ -2242,14 +2242,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 4,
-    backgroundColor: 'rgba(0, 229, 255, 0.1)',
+    backgroundColor: '#EFF6FF',
     borderWidth: 1,
-    borderColor: 'rgba(0, 229, 255, 0.4)',
+    borderColor: '#2563EB',
     borderRadius: 6,
     paddingVertical: 7,
   },
   cardEditActionText: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontSize: 10.5,
     fontWeight: '800',
   },

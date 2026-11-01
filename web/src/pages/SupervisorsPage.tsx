@@ -153,7 +153,7 @@ export const SupervisorsPage: React.FC = () => {
           <span style={styles.metricChipLabel}>Active Duty</span>
         </div>
         <div className="metric-chip">
-          <span style={{ ...styles.metricChipNum, color: '#00e5ff' }}>
+          <span style={{ ...styles.metricChipNum, color: '#2563EB' }}>
             6 Terminals
           </span>
           <span style={styles.metricChipLabel}>Coverage (100%)</span>
@@ -216,7 +216,7 @@ export const SupervisorsPage: React.FC = () => {
             ) : (
               supervisors.map((s) => (
                 <tr key={s.id || s.employeeId}>
-                  <td style={{ fontWeight: 800, color: '#00e5ff' }}>{s.employeeId}</td>
+                  <td style={{ fontWeight: 800, color: '#2563EB' }}>{s.employeeId}</td>
                   <td style={{ fontWeight: 700, color: '#ffffff' }}>{s.fullName}</td>
                   <td>{s.nic}</td>
                   <td>{s.mobileNumber}</td>
@@ -272,10 +272,10 @@ export const SupervisorsPage: React.FC = () => {
 
             {/* 1. Terminal Jurisdiction */}
             <h4 style={styles.modalSectionTitle}>PORT JURISDICTION & AUTHORITY</h4>
-            <div style={{ background: '#0a172a', padding: '14px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.08)', marginBottom: '16px' }}>
+            <div style={{ background: '#F8FAFC', padding: '14px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.08)', marginBottom: '16px' }}>
               <div style={styles.detailGridRow}>
                 <span style={styles.detailLabel}>Jurisdiction Scope:</span>
-                <span style={{ ...styles.detailValue, color: '#00e5ff', fontWeight: 800 }}>ALL TERMINALS (PORT-WIDE)</span>
+                <span style={{ ...styles.detailValue, color: '#2563EB', fontWeight: 800 }}>ALL TERMINALS (PORT-WIDE)</span>
               </div>
               <div style={styles.detailGridRow}>
                 <span style={styles.detailLabel}>Terminal Gates:</span>
@@ -289,7 +289,7 @@ export const SupervisorsPage: React.FC = () => {
 
             {/* 2. Personal & Contact Details */}
             <h4 style={styles.modalSectionTitle}>SUPERVISOR PROFILE & CONTACT</h4>
-            <div style={{ background: '#0a172a', padding: '14px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.08)', marginBottom: '16px' }}>
+            <div style={{ background: '#F8FAFC', padding: '14px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.08)', marginBottom: '16px' }}>
               <div style={styles.detailGridRow}>
                 <span style={styles.detailLabel}>Employee ID:</span>
                 <span style={styles.detailValue}>{selectedSup.employeeId}</span>
@@ -314,7 +314,7 @@ export const SupervisorsPage: React.FC = () => {
 
             {/* 3. Operational Authorities */}
             <h4 style={styles.modalSectionTitle}>OPERATIONAL AUTHORITIES</h4>
-            <div style={{ background: '#0a172a', padding: '14px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.08)', marginBottom: '16px' }}>
+            <div style={{ background: '#F8FAFC', padding: '14px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.08)', marginBottom: '16px' }}>
               <div style={styles.detailGridRow}>
                 <span style={styles.detailLabel}>System Role:</span>
                 <span style={{ ...styles.detailValue, color: '#feb300', fontWeight: 800 }}>ROLE_SUPERVISOR</span>
@@ -346,7 +346,7 @@ export const SupervisorsPage: React.FC = () => {
               className="btn btn-secondary"
               style={{ width: '100%', marginBottom: '20px' }}
             >
-              <Key size={14} color="#00e5ff" />
+              <Key size={14} color="#2563EB" />
               <span>Reset Password to Default ('supervisor')</span>
             </button>
 
@@ -422,7 +422,7 @@ export const SupervisorsPage: React.FC = () => {
                     type="text"
                     disabled
                     value="ALL TERMINALS (PORT-WIDE)"
-                    style={{ ...styles.input, opacity: 0.85, color: '#00e5ff', fontWeight: 700 }}
+                    style={{ ...styles.input, opacity: 0.85, color: '#2563EB', fontWeight: 700 }}
                   />
                 </div>
               </div>
@@ -471,7 +471,7 @@ const styles: Record<string, React.CSSProperties> = {
     marginBottom: '20px',
   },
   metricChip: {
-    backgroundColor: '#0c1b30',
+    backgroundColor: '#FFFFFF',
     border: '1px solid rgba(255, 255, 255, 0.08)',
     borderRadius: '12px',
     padding: '12px 16px',
@@ -544,7 +544,7 @@ const styles: Record<string, React.CSSProperties> = {
   input: {
     width: '100%',
     boxSizing: 'border-box',
-    backgroundColor: '#070f1e',
+    backgroundColor: '#F8FAFC',
     border: '1px solid rgba(255, 255, 255, 0.1)',
     borderRadius: '8px',
     padding: '10px 12px',

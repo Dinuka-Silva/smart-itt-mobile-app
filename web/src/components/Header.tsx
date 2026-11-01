@@ -25,7 +25,7 @@ export const Header: React.FC<HeaderProps> = ({
       {/* Left: Mobile-Matching Header Badge + Adaptive Titles */}
       <div style={styles.headerLeft}>
         <div style={styles.badgePill}>
-          <ShieldCheck size={11} color="#00e5ff" />
+          <ShieldCheck size={11} color="#2563EB" />
           <span style={styles.badgePillText}>ADMIN CONSOLE</span>
         </div>
         <h1 style={styles.title} title={title}>{title}</h1>
@@ -39,7 +39,7 @@ export const Header: React.FC<HeaderProps> = ({
       {/* Right: Actions matching Mobile Header */}
       <div style={styles.rightActions}>
         <div style={styles.statusPill}>
-          <Server size={12} color="#00e676" />
+          <Server size={12} color="#16A34A" />
           <span style={styles.statusDot}></span>
           <span style={styles.statusText} className="hide-on-tablet">GATEWAY ACTIVE</span>
         </div>
@@ -50,7 +50,7 @@ export const Header: React.FC<HeaderProps> = ({
             style={styles.iconBtn}
             title="Security Audit Trail"
           >
-            <Receipt size={15} color="#90caf9" />
+            <Receipt size={15} color="#2563EB" />
           </button>
         )}
 
@@ -60,7 +60,7 @@ export const Header: React.FC<HeaderProps> = ({
             style={styles.iconBtn}
             title="Field Supervisors"
           >
-            <Users size={15} color="#90caf9" />
+            <Users size={15} color="#2563EB" />
           </button>
         )}
 
@@ -73,7 +73,7 @@ export const Header: React.FC<HeaderProps> = ({
           >
             <RefreshCw
               size={14}
-              color="#00e5ff"
+              color="#2563EB"
               style={{
                 animation: refreshing ? 'spin 1s linear infinite' : 'none',
               }}
@@ -87,7 +87,7 @@ export const Header: React.FC<HeaderProps> = ({
             style={styles.logoutBtn}
             title="Sign Out of Admin Console"
           >
-            <LogOut size={14} color="#ff8a80" />
+            <LogOut size={14} color="#DC2626" />
             <span style={styles.logoutText}>Sign Out</span>
           </button>
         )}
@@ -100,8 +100,8 @@ const styles: Record<string, React.CSSProperties> = {
   header: {
     minHeight: '66px',
     height: 'auto',
-    backgroundColor: '#070f1e',
-    borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+    backgroundColor: '#FFFFFF',
+    borderBottom: '1px solid #E2E8F0',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -110,7 +110,7 @@ const styles: Record<string, React.CSSProperties> = {
     position: 'sticky',
     top: 0,
     zIndex: 100,
-    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.4)',
+    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
     gap: '12px',
   },
   headerLeft: {
@@ -126,15 +126,15 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'inline-flex',
     alignItems: 'center',
     gap: '4px',
-    backgroundColor: 'rgba(0, 229, 255, 0.1)',
-    border: '1px solid rgba(0, 229, 255, 0.3)',
+    backgroundColor: '#EFF6FF',
+    border: '1px solid #DBEAFE',
     borderRadius: '16px',
     padding: '1px 8px',
     width: 'fit-content',
     marginBottom: '2px',
   },
   badgePillText: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontSize: '9px',
     fontWeight: 800,
     letterSpacing: '0.08em',
@@ -142,7 +142,7 @@ const styles: Record<string, React.CSSProperties> = {
   title: {
     fontSize: 'clamp(15px, 1.6vw, 19px)',
     fontWeight: 800,
-    color: '#ffffff',
+    color: '#1E293B',
     margin: 0,
     lineHeight: 1.2,
     letterSpacing: '0.2px',
@@ -152,7 +152,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   subtitle: {
     fontSize: 'clamp(10px, 1vw, 11px)',
-    color: '#78909c',
+    color: '#64748B',
     fontWeight: 500,
     margin: 0,
     lineHeight: 1.2,
@@ -170,23 +170,22 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'flex',
     alignItems: 'center',
     gap: '6px',
-    backgroundColor: 'rgba(0, 230, 118, 0.08)',
+    backgroundColor: '#DCFCE7',
     borderRadius: '16px',
     padding: '4px 8px',
-    border: '1px solid rgba(0, 230, 118, 0.25)',
+    border: '1px solid #BBF7D0',
   },
   statusDot: {
     width: '6px',
     height: '6px',
     borderRadius: '3px',
-    backgroundColor: '#00e676',
-    boxShadow: '0 0 6px #00e676',
+    backgroundColor: '#16A34A',
     flexShrink: 0,
   },
   statusText: {
     fontSize: '10px',
     fontWeight: 700,
-    color: '#00e676',
+    color: '#16A34A',
     letterSpacing: '0.04em',
     whiteSpace: 'nowrap',
   },
@@ -194,8 +193,8 @@ const styles: Record<string, React.CSSProperties> = {
     width: '32px',
     height: '32px',
     borderRadius: '8px',
-    backgroundColor: '#0c1b30',
-    border: '1px solid rgba(255, 255, 255, 0.08)',
+    backgroundColor: '#F8FAFC',
+    border: '1px solid #E2E8F0',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -207,9 +206,9 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'flex',
     alignItems: 'center',
     gap: '5px',
-    backgroundColor: 'rgba(255, 82, 82, 0.1)',
-    border: '1px solid rgba(255, 82, 82, 0.25)',
-    color: '#ff8a80',
+    backgroundColor: '#FEF2F2',
+    border: '1px solid #FECACA',
+    color: '#DC2626',
     padding: '6px 10px',
     borderRadius: '8px',
     fontSize: '11px',
@@ -219,7 +218,7 @@ const styles: Record<string, React.CSSProperties> = {
     transition: 'all 0.2s ease',
   },
   logoutText: {
-    color: '#ff8a80',
+    color: '#DC2626',
     fontWeight: 700,
     fontSize: '11px',
   },

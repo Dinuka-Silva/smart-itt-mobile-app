@@ -378,7 +378,7 @@ export default function AdminDashboardScreen() {
               {/* ITT Operations KPI Grid */}
               <Text style={styles.sectionHeader}>TODAY'S ITT OPERATIONS</Text>
               <View style={styles.kpiGrid}>
-                <View style={[styles.kpiCard, { borderColor: 'rgba(0, 229, 255, 0.3)' }]}>
+                <View style={[styles.kpiCard, { borderColor: '#2563EB' }]}>
                   <View style={styles.kpiHeaderRow}>
                     <Text style={styles.kpiLabel}>TODAY'S TRIPS</Text>
                     <Ionicons name="swap-horizontal" size={16} color="#00e5ff" />
@@ -448,7 +448,7 @@ export default function AdminDashboardScreen() {
                     style={styles.fleetStatItem}
                     onPress={() => setActiveSection('FLEET')}
                   >
-                    <Text style={[styles.fleetStatNum, { color: '#00e5ff' }]}>
+                    <Text style={[styles.fleetStatNum, { color: '#2563EB' }]}>
                       {drivers.filter((d) => d.status === 'ACTIVE').length}
                     </Text>
                     <Text style={styles.fleetStatLabel}>Active Drivers</Text>
@@ -601,7 +601,7 @@ export default function AdminDashboardScreen() {
                     >
                       <View style={{ flex: 1, alignItems: 'center' }}>
                         <Text style={{ fontSize: 9, fontWeight: '800', color: '#78909c' }}>LOADED</Text>
-                        <Text style={{ fontSize: 12, fontWeight: '800', color: '#ffffff', marginTop: 2 }}>
+                        <Text style={{ fontSize: 12, fontWeight: '800', color: '#1E293B', marginTop: 2 }}>
                           {tTiming.loadTime}
                         </Text>
                         <Text style={{ fontSize: 10, fontWeight: '600', color: '#90caf9' }}>
@@ -875,7 +875,7 @@ export default function AdminDashboardScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: '#070c14',
+    backgroundColor: '#F8FAFC',
   },
   header: {
     flexDirection: 'row',
@@ -885,7 +885,7 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
     backgroundColor: '#0a1019',
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.08)',
+    borderBottomColor: '#E2E8F0',
   },
   headerLeft: {
     flex: 1,
@@ -894,7 +894,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     alignSelf: 'flex-start',
-    backgroundColor: 'rgba(0, 229, 255, 0.1)',
+    backgroundColor: '#EFF6FF',
     borderRadius: 12,
     paddingHorizontal: 8,
     paddingVertical: 3,
@@ -903,14 +903,14 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(0, 229, 255, 0.25)',
   },
   badgePillText: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontSize: 10,
     fontWeight: '800',
     marginLeft: 4,
     letterSpacing: 0.5,
   },
   headerTitle: {
-    color: '#ffffff',
+    color: '#1E293B',
     fontSize: 20,
     fontWeight: '800',
     letterSpacing: 0.3,
@@ -933,7 +933,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderColor: '#E2E8F0',
   },
   logoutBtn: {
     backgroundColor: 'rgba(255, 82, 82, 0.15)',
@@ -944,7 +944,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#0a1019',
     padding: 6,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.08)',
+    borderBottomColor: '#E2E8F0',
   },
   switcherTab: {
     flex: 1,
@@ -954,9 +954,9 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   switcherTabActive: {
-    backgroundColor: 'rgba(0, 229, 255, 0.15)',
+    backgroundColor: '#EFF6FF',
     borderWidth: 1,
-    borderColor: 'rgba(0, 229, 255, 0.3)',
+    borderColor: '#2563EB',
   },
   switcherTabText: {
     color: '#78909c',
@@ -964,7 +964,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   switcherTabTextActive: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontWeight: '800',
   },
   scrollContent: {
@@ -977,7 +977,7 @@ const styles = StyleSheet.create({
     padding: 40,
   },
   loadingText: {
-    color: '#00e5ff',
+    color: '#2563EB',
     marginTop: 12,
     fontSize: 13,
     fontWeight: '600',
@@ -993,14 +993,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    backgroundColor: '#0c1524',
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderColor: '#E2E8F0',
     borderRadius: 10,
     paddingVertical: 10,
   },
   actionBtnText: {
-    color: '#ffffff',
+    color: '#1E293B',
     fontSize: 11,
     fontWeight: '700',
   },
@@ -1020,7 +1020,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   seeAllText: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontSize: 11,
     fontWeight: '700',
   },
@@ -1032,7 +1032,7 @@ const styles = StyleSheet.create({
   },
   kpiCard: {
     width: '48%',
-    backgroundColor: '#0c1524',
+    backgroundColor: '#FFFFFF',
     borderRadius: 14,
     padding: 14,
     borderWidth: 1,
@@ -1050,7 +1050,7 @@ const styles = StyleSheet.create({
   kpiValue: {
     fontSize: 24,
     fontWeight: '800',
-    color: '#ffffff',
+    color: '#1E293B',
     marginVertical: 4,
   },
   kpiSub: {
@@ -1059,11 +1059,11 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   fleetSummaryCard: {
-    backgroundColor: '#0c1524',
+    backgroundColor: '#FFFFFF',
     borderRadius: 14,
     padding: 16,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderColor: '#E2E8F0',
     marginBottom: 16,
   },
   fleetStatRow: {
@@ -1078,7 +1078,7 @@ const styles = StyleSheet.create({
   fleetStatNum: {
     fontSize: 20,
     fontWeight: '800',
-    color: '#ffffff',
+    color: '#1E293B',
   },
   fleetStatLabel: {
     fontSize: 11,
@@ -1097,11 +1097,11 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.08)',
   },
   terminalCard: {
-    backgroundColor: '#0c1524',
+    backgroundColor: '#FFFFFF',
     borderRadius: 14,
     padding: 14,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderColor: '#E2E8F0',
     marginBottom: 16,
   },
   terminalRow: {
@@ -1113,11 +1113,11 @@ const styles = StyleSheet.create({
     width: 48,
     paddingVertical: 3,
     borderRadius: 6,
-    backgroundColor: 'rgba(0, 229, 255, 0.1)',
+    backgroundColor: '#EFF6FF',
     alignItems: 'center',
   },
   terminalBadgeText: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontSize: 10,
     fontWeight: '800',
   },
@@ -1142,20 +1142,20 @@ const styles = StyleSheet.create({
     textAlign: 'right',
   },
   tripItemCard: {
-    backgroundColor: '#0c1524',
+    backgroundColor: '#FFFFFF',
     borderRadius: 14,
     padding: 14,
     marginBottom: 10,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderColor: '#E2E8F0',
   },
   fullTripCard: {
-    backgroundColor: '#0c1524',
+    backgroundColor: '#FFFFFF',
     borderRadius: 16,
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderColor: '#E2E8F0',
   },
   tripItemHeader: {
     flexDirection: 'row',
@@ -1164,7 +1164,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   tripItemNumber: {
-    color: '#ffffff',
+    color: '#1E293B',
     fontSize: 14,
     fontWeight: '800',
   },
@@ -1180,7 +1180,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(254, 179, 0, 0.15)',
   },
   statusPillCyan: {
-    backgroundColor: 'rgba(0, 229, 255, 0.15)',
+    backgroundColor: '#EFF6FF',
   },
   statusPillRed: {
     backgroundColor: 'rgba(255, 82, 82, 0.15)',
@@ -1188,7 +1188,7 @@ const styles = StyleSheet.create({
   statusPillText: {
     fontSize: 10,
     fontWeight: '800',
-    color: '#ffffff',
+    color: '#1E293B',
   },
   tripRouteRow: {
     flexDirection: 'row',
@@ -1196,7 +1196,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   tripRouteTerm: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontSize: 12,
     fontWeight: '700',
     marginRight: 6,
@@ -1233,7 +1233,7 @@ const styles = StyleSheet.create({
   terminalPointVal: {
     fontSize: 15,
     fontWeight: '800',
-    color: '#00e5ff',
+    color: '#2563EB',
     marginTop: 2,
   },
   tripDetailsGrid: {
@@ -1253,7 +1253,7 @@ const styles = StyleSheet.create({
   },
   tripDetailVal: {
     fontSize: 11,
-    color: '#ffffff',
+    color: '#1E293B',
     fontWeight: '700',
   },
   tripActionRow: {
@@ -1284,7 +1284,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   btnTextWhite: {
-    color: '#ffffff',
+    color: '#1E293B',
     fontSize: 12,
     fontWeight: '700',
   },
@@ -1294,7 +1294,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   complianceCard: {
-    backgroundColor: '#0c1524',
+    backgroundColor: '#FFFFFF',
     borderRadius: 16,
     padding: 16,
     borderWidth: 1,
@@ -1321,7 +1321,7 @@ const styles = StyleSheet.create({
     borderBottomColor: 'rgba(255, 255, 255, 0.05)',
   },
   compliancePlate: {
-    color: '#ffffff',
+    color: '#1E293B',
     fontSize: 13,
     fontWeight: '700',
   },
@@ -1340,12 +1340,12 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   vehicleRosterCard: {
-    backgroundColor: '#0c1524',
+    backgroundColor: '#FFFFFF',
     borderRadius: 14,
     padding: 14,
     marginBottom: 10,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderColor: '#E2E8F0',
   },
   rosterCardTop: {
     flexDirection: 'row',
@@ -1359,12 +1359,12 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   rosterPlate: {
-    color: '#ffffff',
+    color: '#1E293B',
     fontSize: 15,
     fontWeight: '800',
   },
   rosterChassis: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontSize: 12,
     fontWeight: '700',
   },
@@ -1385,12 +1385,12 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   driverRosterCard: {
-    backgroundColor: '#0c1b30',
+    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     padding: 14,
     marginBottom: 10,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderColor: '#E2E8F0',
   },
   driverCardTop: {
     flexDirection: 'row',
@@ -1399,7 +1399,7 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   driverName: {
-    color: '#ffffff',
+    color: '#1E293B',
     fontSize: 14,
     fontWeight: '800',
   },
@@ -1423,7 +1423,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: 'rgba(0, 229, 255, 0.08)',
+    backgroundColor: '#EFF6FF',
     borderWidth: 1,
     borderColor: 'rgba(0, 229, 255, 0.25)',
     borderRadius: 10,
@@ -1431,18 +1431,18 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   jurisdictionNoticeText: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontSize: 11,
     fontWeight: '600',
     flex: 1,
   },
   supervisorCard: {
-    backgroundColor: '#0c1b30',
+    backgroundColor: '#FFFFFF',
     borderRadius: 14,
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderColor: '#E2E8F0',
   },
   supervisorHeader: {
     flexDirection: 'row',
@@ -1454,19 +1454,19 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(0, 229, 255, 0.15)',
+    backgroundColor: '#EFF6FF',
     borderWidth: 1,
-    borderColor: '#00e5ff',
+    borderColor: '#2563EB',
     alignItems: 'center',
     justifyContent: 'center',
   },
   supervisorAvatarText: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontSize: 16,
     fontWeight: '800',
   },
   supervisorName: {
-    color: '#ffffff',
+    color: '#1E293B',
     fontSize: 15,
     fontWeight: '800',
   },
@@ -1494,7 +1494,7 @@ const styles = StyleSheet.create({
   signOutCard: {
     marginTop: 20,
     marginBottom: 10,
-    backgroundColor: '#0c1b30',
+    backgroundColor: '#FFFFFF',
     borderRadius: 14,
     borderWidth: 1,
     borderColor: 'rgba(255, 82, 82, 0.25)',
@@ -1513,7 +1513,7 @@ const styles = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: 10,
-    backgroundColor: 'rgba(0, 229, 255, 0.1)',
+    backgroundColor: '#EFF6FF',
     borderWidth: 1,
     borderColor: 'rgba(0, 229, 255, 0.25)',
     alignItems: 'center',
@@ -1521,7 +1521,7 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   signOutCardTitle: {
-    color: '#ffffff',
+    color: '#1E293B',
     fontSize: 13,
     fontWeight: '800',
   },
@@ -1539,7 +1539,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   signOutCardBtnText: {
-    color: '#ffffff',
+    color: '#1E293B',
     fontSize: 12,
     fontWeight: '800',
   },

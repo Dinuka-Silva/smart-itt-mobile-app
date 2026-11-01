@@ -210,7 +210,7 @@ export const ReportsPage: React.FC = () => {
       {/* Filter & Export Bar */}
       <div style={styles.filterBar}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Calendar size={16} color="#00e5ff" />
+          <Calendar size={16} color="#2563EB" />
           <span style={{ fontSize: '12px', fontWeight: 700, color: '#90caf9' }}>Date Range:</span>
           <input
             type="date"
@@ -228,7 +228,7 @@ export const ReportsPage: React.FC = () => {
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Filter size={16} color="#00e5ff" />
+          <Filter size={16} color="#2563EB" />
           <select
             value={selectedTerminal}
             onChange={(e) => setSelectedTerminal(e.target.value)}
@@ -255,7 +255,7 @@ export const ReportsPage: React.FC = () => {
         </div>
         <div style={styles.kpiPill}>
           <span style={styles.kpiPillLabel}>TOTAL CONTAINERS</span>
-          <strong style={{ ...styles.kpiPillVal, color: '#00e5ff' }}>{totalContainers}</strong>
+          <strong style={{ ...styles.kpiPillVal, color: '#2563EB' }}>{totalContainers}</strong>
         </div>
         <div style={styles.kpiPill}>
           <span style={styles.kpiPillLabel}>20FT SIZE</span>
@@ -328,7 +328,7 @@ export const ReportsPage: React.FC = () => {
               ) : (
                 driverPerformance.map((dp, i) => (
                   <tr key={i}>
-                    <td style={{ fontWeight: 800, color: '#00e5ff' }}>{dp.code}</td>
+                    <td style={{ fontWeight: 800, color: '#2563EB' }}>{dp.code}</td>
                     <td style={{ fontWeight: 700, color: '#ffffff' }}>{dp.name}</td>
                     <td><strong>{dp.trips}</strong></td>
                     <td><span className="badge badge-cyan">{dp.containers} units</span></td>
@@ -376,7 +376,7 @@ export const ReportsPage: React.FC = () => {
                   <td style={{ fontWeight: 700, color: '#ffffff' }}>20-Foot Loaded ITT Container</td>
                   <td><strong>{twentyFtCount}</strong></td>
                   <td>LKR 18,500.00</td>
-                  <td style={{ fontWeight: 800, color: '#00e5ff' }}>
+                  <td style={{ fontWeight: 800, color: '#2563EB' }}>
                     LKR {(twentyFtCount * 18500).toLocaleString()}.00
                   </td>
                 </tr>
@@ -384,7 +384,7 @@ export const ReportsPage: React.FC = () => {
                   <td style={{ fontWeight: 700, color: '#ffffff' }}>40-Foot Loaded ITT Container</td>
                   <td><strong>{fortyFtCount}</strong></td>
                   <td>LKR 28,000.00</td>
-                  <td style={{ fontWeight: 800, color: '#00e5ff' }}>
+                  <td style={{ fontWeight: 800, color: '#2563EB' }}>
                     LKR {(fortyFtCount * 28000).toLocaleString()}.00
                   </td>
                 </tr>
@@ -425,7 +425,7 @@ export const ReportsPage: React.FC = () => {
               ) : (
                 trips.map((t) => (
                   <tr key={t.id || t.tripNumber}>
-                    <td style={{ fontWeight: 800, color: '#00e5ff' }}>{t.tripNumber}</td>
+                    <td style={{ fontWeight: 800, color: '#2563EB' }}>{t.tripNumber}</td>
                     <td style={{ fontSize: '11px', color: '#90caf9' }}>
                       {t.createdAt ? t.createdAt.split('T')[0] : 'N/A'}
                     </td>
@@ -491,9 +491,9 @@ const styles: Record<string, React.CSSProperties> = {
     whiteSpace: 'nowrap',
   },
   reportTabActive: {
-    background: 'rgba(0, 229, 255, 0.15)',
-    borderColor: '#00e5ff',
-    color: '#00e5ff',
+    background: 'rgba(37, 99, 235, 0.15)',
+    borderColor: '#2563EB',
+    color: '#2563EB',
   },
   filterBar: {
     display: 'flex',
@@ -507,7 +507,7 @@ const styles: Record<string, React.CSSProperties> = {
     flexWrap: 'wrap',
   },
   dateInput: {
-    backgroundColor: '#070f1e',
+    backgroundColor: '#F8FAFC',
     border: '1px solid rgba(255, 255, 255, 0.1)',
     borderRadius: '6px',
     padding: '6px 10px',
@@ -516,7 +516,7 @@ const styles: Record<string, React.CSSProperties> = {
     outline: 'none',
   },
   selectInput: {
-    backgroundColor: '#070f1e',
+    backgroundColor: '#F8FAFC',
     border: '1px solid rgba(255, 255, 255, 0.1)',
     borderRadius: '6px',
     padding: '6px 10px',

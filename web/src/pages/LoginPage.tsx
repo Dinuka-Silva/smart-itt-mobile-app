@@ -98,7 +98,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
       <div style={styles.card}>
         <div style={styles.header}>
           <div style={styles.iconCircle}>
-            <ShieldCheck size={36} color="#00e5ff" />
+            <ShieldCheck size={36} color="#2563EB" />
           </div>
           <h1 style={styles.title}>ADMIN CONSOLE</h1>
           <p style={styles.subtitle}>SMART ITT / SCK LOGISTICS MANAGEMENT</p>
@@ -159,9 +159,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
               width: '100%',
               height: '38px',
               marginTop: '10px',
-              backgroundColor: 'rgba(0, 229, 255, 0.08)',
-              borderColor: 'rgba(0, 229, 255, 0.3)',
-              color: '#00e5ff',
+              backgroundColor: '#EFF6FF',
+              borderColor: '#BFDBFE',
+              color: '#2563EB',
               fontSize: '12px',
               fontWeight: 600,
               letterSpacing: '0.05em',
@@ -185,17 +185,17 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#070d17',
+    backgroundColor: '#F8FAFC',
     padding: '20px',
   },
   card: {
-    backgroundColor: '#0c1b30',
-    border: '1px solid rgba(0, 229, 255, 0.25)',
+    backgroundColor: '#FFFFFF',
+    border: '1px solid #E2E8F0',
     borderRadius: '16px',
     padding: '36px 32px',
     width: '100%',
     maxWidth: '420px',
-    boxShadow: '0 20px 50px rgba(0, 0, 0, 0.7)',
+    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.06)',
   },
   header: {
     textAlign: 'center',
@@ -205,8 +205,8 @@ const styles: Record<string, React.CSSProperties> = {
     width: '64px',
     height: '64px',
     borderRadius: '32px',
-    backgroundColor: 'rgba(0, 229, 255, 0.1)',
-    border: '1.5px solid rgba(0, 229, 255, 0.35)',
+    backgroundColor: '#EFF6FF',
+    border: '1.5px solid #2563EB',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -215,14 +215,14 @@ const styles: Record<string, React.CSSProperties> = {
   title: {
     fontSize: '20px',
     fontWeight: 800,
-    color: '#ffffff',
-    letterSpacing: '1px',
+    color: '#1E293B',
+    letterSpacing: '0.5px',
     margin: 0,
   },
   subtitle: {
     fontSize: '11px',
     fontWeight: 700,
-    color: '#78909c',
+    color: '#64748B',
     letterSpacing: '0.8px',
     margin: '4px 0 0 0',
   },
@@ -230,11 +230,11 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'flex',
     alignItems: 'center',
     gap: '8px',
-    backgroundColor: 'rgba(255, 82, 82, 0.12)',
-    border: '1px solid rgba(255, 82, 82, 0.3)',
+    backgroundColor: '#FEF2F2',
+    border: '1px solid #FECACA',
     borderRadius: '8px',
     padding: '10px 12px',
-    color: '#ff8a80',
+    color: '#DC2626',
     fontSize: '12px',
     marginBottom: '18px',
   },
@@ -245,7 +245,7 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'block',
     fontSize: '10px',
     fontWeight: 800,
-    color: '#90caf9',
+    color: '#1E293B',
     letterSpacing: '0.5px',
     marginBottom: '6px',
   },
@@ -253,8 +253,8 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'flex',
     alignItems: 'center',
     gap: '10px',
-    backgroundColor: '#070f1e',
-    border: '1px solid rgba(255, 255, 255, 0.1)',
+    backgroundColor: '#F8FAFC',
+    border: '1px solid #E2E8F0',
     borderRadius: '8px',
     padding: '0 12px',
     height: '42px',
@@ -262,7 +262,7 @@ const styles: Record<string, React.CSSProperties> = {
   input: {
     background: 'transparent',
     border: 'none',
-    color: '#ffffff',
+    color: '#1E293B',
     fontSize: '13px',
     outline: 'none',
     width: '100%',
@@ -270,9 +270,9 @@ const styles: Record<string, React.CSSProperties> = {
   footerNote: {
     textAlign: 'center',
     fontSize: '11px',
-    color: '#546e7a',
+    color: '#64748B',
     marginTop: '24px',
     paddingTop: '16px',
-    borderTop: '1px solid rgba(255, 255, 255, 0.05)',
+    borderTop: '1px solid #E2E8F0',
   },
 };

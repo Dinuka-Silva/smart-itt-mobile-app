@@ -102,8 +102,8 @@ export const AuditLogsPage: React.FC = () => {
         </div>
 
         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <ShieldCheck size={14} color="#00e5ff" />
-          <span style={{ fontSize: '11px', color: '#00e5ff', fontWeight: 800 }}>
+          <ShieldCheck size={14} color="#2563EB" />
+          <span style={{ fontSize: '11px', color: '#2563EB', fontWeight: 800 }}>
             IMMUTABLE SECURITY LEDGER
           </span>
         </div>
@@ -193,8 +193,8 @@ const styles: Record<string, React.CSSProperties> = {
     cursor: 'pointer',
   },
   filterPillActive: {
-    background: '#00e5ff',
+    background: '#2563EB',
     color: '#001529',
-    borderColor: '#00e5ff',
+    borderColor: '#2563EB',
   },
 };

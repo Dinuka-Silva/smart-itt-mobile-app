@@ -131,7 +131,7 @@ export const DriversPage: React.FC = () => {
           <span className="metric-chip-label">Active Drivers</span>
         </div>
         <div className="metric-chip">
-          <span className="metric-chip-num" style={{ color: '#00e5ff' }}>
+          <span className="metric-chip-num" style={{ color: '#2563EB' }}>
             {drivers.filter((d) => d.vehicleNumber && d.vehicleNumber !== 'UNASSIGNED').length}
           </span>
           <span className="metric-chip-label">Assigned Units</span>
@@ -216,10 +216,10 @@ export const DriversPage: React.FC = () => {
             ) : (
               drivers.map((d) => (
                 <tr key={d.id || d.driverCode}>
-                  <td style={{ fontWeight: 800, color: '#00e5ff' }}>
+                  <td style={{ fontWeight: 800, color: '#2563EB' }}>
                     {d.driverCode || d.employeeId}
                   </td>
-                  <td style={{ fontWeight: 700, color: '#ffffff' }}>{d.fullName}</td>
+                  <td style={{ fontWeight: 700, color: '#1E293B' }}>{d.fullName}</td>
                   <td>{d.employeeId} • {d.nic}</td>
                   <td>{d.mobileNumber}</td>
                   <td>
@@ -274,14 +274,14 @@ export const DriversPage: React.FC = () => {
           <div className="modal-content" style={{ maxWidth: '640px', width: '100%', maxHeight: '90vh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'rgba(0, 229, 255, 0.15)', border: '1px solid #00e5ff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <User size={24} color="#00e5ff" />
+                <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: '#EFF6FF', border: '1px solid #2563EB', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <User size={24} color="#2563EB" />
                 </div>
                 <div>
-                  <h3 style={{ margin: 0, fontSize: '18px', color: '#ffffff' }}>
+                  <h3 style={{ margin: 0, fontSize: '18px', color: '#1E293B' }}>
                     {selectedDriver.fullName}
                   </h3>
-                  <span style={{ color: '#00e5ff', fontSize: '13px', fontWeight: 700 }}>
+                  <span style={{ color: '#2563EB', fontSize: '13px', fontWeight: 700 }}>
                     {selectedDriver.driverCode} • {selectedDriver.employeeId}
                   </span>
                 </div>
@@ -294,14 +294,14 @@ export const DriversPage: React.FC = () => {
 
             {/* Section 1: Assigned Vehicle & Fleet */}
             <h4 style={styles.modalSectionTitle}>ASSIGNED VEHICLE & CHE SPECIFICATIONS</h4>
-            <div style={{ background: '#0a172a', padding: '14px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.08)', marginBottom: '16px' }}>
+            <div style={{ background: '#F8FAFC', padding: '14px', borderRadius: '8px', border: '1px solid #E2E8F0', marginBottom: '16px' }}>
               <div style={styles.detailGridRow}>
                 <span style={styles.detailLabel}>Assigned Truck Plate:</span>
                 <span style={styles.detailValue}>{selectedDriver.vehicleNumber || 'Unassigned'}</span>
               </div>
               <div style={styles.detailGridRow}>
                 <span style={styles.detailLabel}>Chassis / CHE Number:</span>
-                <span style={{ ...styles.detailValue, color: '#00e5ff' }}>{selectedDriver.cheNumber || selectedDriver.chassisNumber || 'CHE 100'}</span>
+                <span style={{ ...styles.detailValue, color: '#2563EB' }}>{selectedDriver.cheNumber || selectedDriver.chassisNumber || 'CHE 100'}</span>
               </div>
               <div style={styles.detailGridRow}>
                 <span style={styles.detailLabel}>Fleet Operator:</span>
@@ -315,7 +315,7 @@ export const DriversPage: React.FC = () => {
 
             {/* Section 2: Personal & Contact */}
             <h4 style={styles.modalSectionTitle}>PERSONAL & EMPLOYMENT DETAILS</h4>
-            <div style={{ background: '#0a172a', padding: '14px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.08)', marginBottom: '16px' }}>
+            <div style={{ background: '#F8FAFC', padding: '14px', borderRadius: '8px', border: '1px solid #E2E8F0', marginBottom: '16px' }}>
               <div style={styles.detailGridRow}>
                 <span style={styles.detailLabel}>Employee ID:</span>
                 <span style={styles.detailValue}>{selectedDriver.employeeId}</span>
@@ -344,7 +344,7 @@ export const DriversPage: React.FC = () => {
 
             {/* Section 3: Driving License */}
             <h4 style={styles.modalSectionTitle}>DRIVING LICENSE & COMPLIANCE</h4>
-            <div style={{ background: '#0a172a', padding: '14px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.08)', marginBottom: '16px' }}>
+            <div style={{ background: '#F8FAFC', padding: '14px', borderRadius: '8px', border: '1px solid #E2E8F0', marginBottom: '16px' }}>
               <div style={styles.detailGridRow}>
                 <span style={styles.detailLabel}>Heavy Vehicle License No:</span>
                 <span style={styles.detailValue}>{selectedDriver.licenseNumber || selectedDriver.drivingLicenceNumber || 'LIC-001234'}</span>
@@ -361,10 +361,10 @@ export const DriversPage: React.FC = () => {
 
             {/* Section 4: SLPA Port Entry Pass & Harbor Gate Clearance */}
             <h4 style={styles.modalSectionTitle}>PORT ENTRY PASS & CLEARANCE (SLPA)</h4>
-            <div style={{ background: '#0a172a', padding: '14px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.08)', marginBottom: '16px' }}>
+            <div style={{ background: '#F8FAFC', padding: '14px', borderRadius: '8px', border: '1px solid #E2E8F0', marginBottom: '16px' }}>
               <div style={styles.detailGridRow}>
                 <span style={styles.detailLabel}>SLPA Port Pass Number:</span>
-                <span style={{ ...styles.detailValue, color: '#00e5ff', fontWeight: 800 }}>
+                <span style={{ ...styles.detailValue, color: '#2563EB', fontWeight: 800 }}>
                   {selectedDriver.portPassNumber || `SLPA-DPP-${selectedDriver.driverCode?.replace('DRV-', '') || '001'}`}
                 </span>
               </div>
@@ -420,7 +420,7 @@ export const DriversPage: React.FC = () => {
               className="btn btn-secondary"
               style={{ width: '100%', marginBottom: '20px' }}
             >
-              <Key size={14} color="#00e5ff" />
+              <Key size={14} color="#2563EB" />
               <span>Reset Password to Default ('driver')</span>
             </button>
 
@@ -518,7 +518,7 @@ export const DriversPage: React.FC = () => {
                   }}
                   style={{
                     ...styles.input,
-                    backgroundColor: '#070f1e',
+                    backgroundColor: '#F8FAFC',
                     border: '1px solid var(--border-color)',
                     color: '#ffffff',
                     cursor: 'pointer',
@@ -533,7 +533,7 @@ export const DriversPage: React.FC = () => {
                   ))}
                 </select>
                 {form.vehicleNumber && (
-                  <div style={{ marginTop: '6px', fontSize: '11px', color: '#00e5ff', fontWeight: 600 }}>
+                  <div style={{ marginTop: '6px', fontSize: '11px', color: '#2563EB', fontWeight: 600 }}>
                     Assigned: {form.chassisNumber || 'CHE'} • Prime Mover Plate: {form.vehicleNumber}
                   </div>
                 )}
@@ -583,25 +583,26 @@ const styles: Record<string, React.CSSProperties> = {
     marginBottom: '20px',
   },
   metricChip: {
-    backgroundColor: '#0c1b30',
-    border: '1px solid rgba(255, 255, 255, 0.08)',
+    backgroundColor: '#FFFFFF',
+    border: '1px solid #E2E8F0',
     borderRadius: '12px',
     padding: '12px 16px',
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
   },
   metricChipNum: {
     fontSize: '22px',
     fontWeight: 800,
-    color: '#ffffff',
+    color: '#1E293B',
     fontFamily: 'var(--font-mono)',
   },
   metricChipLabel: {
     fontSize: '11px',
     fontWeight: 700,
-    color: '#78909c',
+    color: '#64748B',
     marginTop: '2px',
     textTransform: 'uppercase',
   },
@@ -616,8 +617,8 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'flex',
     alignItems: 'center',
     gap: '8px',
-    backgroundColor: 'var(--bg-card)',
-    border: '1px solid var(--border-color)',
+    backgroundColor: '#FFFFFF',
+    border: '1px solid #E2E8F0',
     borderRadius: '8px',
     padding: '0 12px',
     height: '40px',
@@ -627,7 +628,7 @@ const styles: Record<string, React.CSSProperties> = {
   searchInput: {
     background: 'transparent',
     border: 'none',
-    color: '#ffffff',
+    color: '#1E293B',
     fontSize: '13px',
     outline: 'none',
     width: '100%',
@@ -639,22 +640,22 @@ const styles: Record<string, React.CSSProperties> = {
   filterPill: {
     padding: '6px 12px',
     borderRadius: '6px',
-    background: 'rgba(255, 255, 255, 0.05)',
-    border: '1px solid var(--border-color)',
-    color: '#90caf9',
+    background: '#F1F5F9',
+    border: '1px solid #E2E8F0',
+    color: '#64748B',
     fontSize: '11px',
     fontWeight: 700,
     cursor: 'pointer',
   },
   filterPillActive: {
-    background: '#00e5ff',
-    color: '#001529',
-    borderColor: '#00e5ff',
+    background: '#2563EB',
+    color: '#FFFFFF',
+    borderColor: '#2563EB',
   },
   modalSectionTitle: {
     fontSize: '11px',
     fontWeight: 800,
-    color: '#78909c',
+    color: '#64748B',
     letterSpacing: '0.5px',
     marginBottom: '8px',
   },
@@ -670,17 +671,17 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'block',
     fontSize: '11px',
     fontWeight: 700,
-    color: '#90caf9',
+    color: '#1E293B',
     marginBottom: '6px',
   },
   input: {
     width: '100%',
     boxSizing: 'border-box',
-    backgroundColor: '#070f1e',
-    border: '1px solid rgba(255, 255, 255, 0.1)',
+    backgroundColor: '#F8FAFC',
+    border: '1px solid #E2E8F0',
     borderRadius: '8px',
     padding: '10px 12px',
-    color: '#ffffff',
+    color: '#1E293B',
     fontSize: '13px',
     outline: 'none',
   },
@@ -692,12 +693,12 @@ const styles: Record<string, React.CSSProperties> = {
   },
   detailLabel: {
     fontSize: '12px',
-    color: '#90caf9',
+    color: '#64748B',
     fontWeight: 600,
   },
   detailValue: {
     fontSize: '12px',
-    color: '#ffffff',
+    color: '#1E293B',
     fontWeight: 700,
   },
 };

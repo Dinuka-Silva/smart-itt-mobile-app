@@ -36,7 +36,7 @@ import { useResponsive } from '../../src/hooks/useResponsive';
 export const SCK_FLEET_VEHICLES = SCK_FLEET;
 
 export const PORT_TERMINALS = [
-  { code: 'CICT', name: 'Colombo International Container Terminals', color: '#00e5ff' },
+  { code: 'CICT', name: 'Colombo International Container Terminals', color: '#2563EB' },
   { code: 'SAGT', name: 'South Asia Gateway Terminals', color: '#22ef7e' },
   { code: 'JCT', name: 'Jaya Container Terminal', color: '#feb300' },
   { code: 'ECT', name: 'East Container Terminal', color: '#a855f7' },
@@ -692,7 +692,7 @@ export default function DriverRegisterScreen() {
               />
             </View>
             <Text style={{ fontSize: 9, color: '#849396', marginTop: 3 }}>
-              Type <Text style={{ color: '#00e5ff', fontWeight: '800' }}>DRV</Text> with number for Driver details, or <Text style={{ color: '#feb300', fontWeight: '800' }}>SUP</Text> with number for Supervisor details.
+              Type <Text style={{ color: '#2563EB', fontWeight: '800' }}>DRV</Text> with number for Driver details, or <Text style={{ color: '#feb300', fontWeight: '800' }}>SUP</Text> with number for Supervisor details.
             </Text>
           </View>
 
@@ -874,9 +874,9 @@ export default function DriverRegisterScreen() {
             <View style={styles.fieldGroup}>
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
                 <Text style={styles.fieldLabel}>DRIVER PORT PASS EXPIRY DATE (YYYY-MM-DD) *</Text>
-                <View style={[styles.cheLivePill, { backgroundColor: 'rgba(0, 229, 255, 0.12)', borderColor: '#00e5ff' }]}>
+                <View style={[styles.cheLivePill, { backgroundColor: '#EFF6FF', borderColor: '#2563EB' }]}>
                   <Ionicons name="card" size={10} color="#00e5ff" />
-                  <Text style={[styles.cheLivePillText, { color: '#00e5ff' }]}>SLPA GATE PASS</Text>
+                  <Text style={[styles.cheLivePillText, { color: '#2563EB' }]}>SLPA GATE PASS</Text>
                 </View>
               </View>
               <View style={styles.inputWrap}>
@@ -1417,8 +1417,8 @@ export default function DriverRegisterScreen() {
                             <Text style={styles.detailItemValueMono}>{registeredUser?.licenseExpiryDate || licenseExpiryDate || '2030-12-31'}</Text>
                           </View>
                           <View style={styles.detailItem}>
-                            <Text style={[styles.detailItemLabel, { color: '#00e5ff' }]}>DRIVER PORT PASS EXPIRY</Text>
-                            <Text style={[styles.detailItemValueMono, { color: '#00e5ff', fontWeight: '800' }]}>
+                            <Text style={[styles.detailItemLabel, { color: '#2563EB' }]}>DRIVER PORT PASS EXPIRY</Text>
+                            <Text style={[styles.detailItemValueMono, { color: '#2563EB', fontWeight: '800' }]}>
                               {registeredUser?.driverPortPassExpiryDate || driverPortPassExpiryDate || '2026-11-15'}
                             </Text>
                           </View>
@@ -1488,7 +1488,7 @@ export default function DriverRegisterScreen() {
                         </View>
                         <View style={styles.vehicleRow}>
                           <Text style={styles.vehicleProp}>CHE NUMBER (SCK NO):</Text>
-                          <Text style={[styles.vehicleVal, { color: '#00e5ff', fontWeight: '900' }]}>
+                          <Text style={[styles.vehicleVal, { color: '#2563EB', fontWeight: '900' }]}>
                             {registeredUser?.cheNumber || detectedFleet?.cheNumber || 'CHE 100'}
                           </Text>
                         </View>
@@ -1589,7 +1589,7 @@ export default function DriverRegisterScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0e141d',
+    backgroundColor: '#F8FAFC',
   },
   scroll: {
     flexGrow: 1,
@@ -1609,7 +1609,7 @@ const styles = StyleSheet.create({
   backBtnText: {
     fontSize: 10,
     fontWeight: '900',
-    color: '#00e5ff',
+    color: '#2563EB',
     letterSpacing: 0.8,
       },
   hero: {
@@ -1622,16 +1622,16 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: radius.DEFAULT,
-    backgroundColor: '#161c25',
+    backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: '#00e5ff',
+    borderColor: '#2563EB',
   },
   brandTitle: {
     fontSize: 16,
     fontWeight: '900',
-    color: '#00e5ff',
+    color: '#2563EB',
     letterSpacing: 1.2,
     textTransform: 'uppercase',
   },
@@ -1644,10 +1644,10 @@ const styles = StyleSheet.create({
   },
   noticeBox: {
     flexDirection: 'row',
-    backgroundColor: 'rgba(0, 229, 255, 0.08)',
+    backgroundColor: '#EFF6FF',
     borderRadius: radius.DEFAULT,
     borderWidth: 1,
-    borderColor: '#00e5ff',
+    borderColor: '#2563EB',
     padding: 12,
     gap: 10,
     marginBottom: 14,
@@ -1656,20 +1656,20 @@ const styles = StyleSheet.create({
   noticeText: {
     flex: 1,
     fontSize: 11,
-    color: '#dde2f0',
+    color: '#1E293B',
     lineHeight: 16,
   },
   noticeBold: {
     fontWeight: '900',
-    color: '#00e5ff',
+    color: '#2563EB',
   },
 
   card: {
-    backgroundColor: '#161c25',
+    backgroundColor: '#FFFFFF',
     borderRadius: radius.DEFAULT,
     padding: 14,
     borderWidth: 1,
-    borderColor: '#242a34',
+    borderColor: '#E2E8F0',
     marginBottom: 14,
     gap: 10,
   },
@@ -1679,12 +1679,12 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingBottom: 8,
     borderBottomWidth: 1,
-    borderBottomColor: '#242a34',
+    borderBottomColor: '#E2E8F0',
   },
   cardHeaderText: {
     fontSize: 11,
     fontWeight: '900',
-    color: '#00e5ff',
+    color: '#2563EB',
     letterSpacing: 0.8,
   },
   fieldGroup: {
@@ -1699,10 +1699,10 @@ const styles = StyleSheet.create({
   inputWrap: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#080e17',
+    backgroundColor: '#F8FAFC',
     borderRadius: radius.DEFAULT,
     borderWidth: 1,
-    borderColor: '#242a34',
+    borderColor: '#E2E8F0',
     paddingHorizontal: 12,
     height: 48,
   },
@@ -1712,14 +1712,14 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     fontSize: 13,
-    color: '#dde2f0',
+    color: '#1E293B',
         height: 48,
     ...(Platform.OS === 'web' ? { outlineStyle: 'none' } : {}),
   } as any,
   rulesList: {
     marginTop: 6,
     gap: 4,
-    backgroundColor: '#080e17',
+    backgroundColor: '#F8FAFC',
     padding: 10,
     borderRadius: radius.sm,
   },
@@ -1751,7 +1751,7 @@ const styles = StyleSheet.create({
   submitBtnText: {
     fontSize: 11,
     fontWeight: '900',
-    color: '#00363d',
+    color: '#FFFFFF',
     letterSpacing: 0.8,
   },
   backLink: {
@@ -1763,16 +1763,16 @@ const styles = StyleSheet.create({
     color: '#849396',
   },
   backLinkBold: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontWeight: '800',
   },
   autofillBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(0, 229, 255, 0.12)',
+    backgroundColor: '#EFF6FF',
     borderWidth: 1.5,
-    borderColor: '#00e5ff',
+    borderColor: '#2563EB',
     borderRadius: radius.DEFAULT,
     paddingVertical: 12,
     paddingHorizontal: 16,
@@ -1780,7 +1780,7 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
   autofillBtnText: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontSize: 11,
     fontWeight: '900',
     letterSpacing: 0.8,
@@ -1807,7 +1807,7 @@ const styles = StyleSheet.create({
   // ─── SUCCESS MODAL / OFFICIAL OPERATOR BADGE ───
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(8, 14, 23, 0.95)',
+    backgroundColor: 'rgba(15, 23, 42, 0.65)',
     justifyContent: 'center',
     ...(Platform.OS === 'web'
       ? {
@@ -1827,10 +1827,10 @@ const styles = StyleSheet.create({
     paddingVertical: 40,
   },
   idCardContainer: {
-    backgroundColor: '#161c25',
+    backgroundColor: '#FFFFFF',
     borderRadius: radius.DEFAULT,
     borderWidth: 2,
-    borderColor: '#00e5ff',
+    borderColor: '#2563EB',
     overflow: 'hidden',
     shadowColor: '#00e5ff',
     shadowOffset: { width: 0, height: 0 },
@@ -1849,32 +1849,32 @@ const styles = StyleSheet.create({
   stripeTitle: {
     fontSize: 10,
     fontWeight: '900',
-    color: '#00363d',
+    color: '#FFFFFF',
     letterSpacing: 0.8,
   },
   stripePass: {
     fontSize: 9,
     fontWeight: '900',
-    color: '#00363d',
+    color: '#FFFFFF',
       },
   cardHeaderBox: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
     padding: 14,
-    backgroundColor: '#1a2029',
+    backgroundColor: '#EFF6FF',
     borderBottomWidth: 1,
-    borderBottomColor: '#242a34',
+    borderBottomColor: '#E2E8F0',
   },
   operatorAvatarWrap: {
     width: 56,
     height: 56,
     borderRadius: radius.DEFAULT,
-    backgroundColor: '#080e17',
+    backgroundColor: '#F8FAFC',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: '#00e5ff',
+    borderColor: '#2563EB',
     position: 'relative',
   },
   verifiedBadge: {
@@ -1900,7 +1900,7 @@ const styles = StyleSheet.create({
   operatorName: {
     fontSize: 18,
     fontWeight: '900',
-    color: '#dde2f0',
+    color: '#1E293B',
     letterSpacing: 0.5,
     marginTop: 2,
   },
@@ -1926,11 +1926,11 @@ const styles = StyleSheet.create({
   // Big Glowing Box
   operatorIdHighlightBox: {
     margin: 14,
-    backgroundColor: '#080e17',
+    backgroundColor: '#F8FAFC',
     padding: 14,
     borderRadius: radius.DEFAULT,
     borderWidth: 1.5,
-    borderColor: '#00e5ff',
+    borderColor: '#2563EB',
     alignItems: 'center',
     gap: 6,
   },
@@ -1950,24 +1950,24 @@ const styles = StyleSheet.create({
   idCodeText: {
     fontSize: 32,
     fontWeight: '900',
-    color: '#00e5ff',
+    color: '#2563EB',
         letterSpacing: 2,
   },
   copyIdBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#161c25',
+    backgroundColor: '#FFFFFF',
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: radius.sm,
     borderWidth: 1,
-    borderColor: '#00e5ff',
+    borderColor: '#2563EB',
   },
   copyIdBtnText: {
     fontSize: 10,
     fontWeight: '900',
-    color: '#00e5ff',
+    color: '#2563EB',
       },
   idHighlightSub: {
     fontSize: 10,
@@ -1989,18 +1989,18 @@ const styles = StyleSheet.create({
   detailsSectionTitle: {
     fontSize: 9,
     fontWeight: '900',
-    color: '#00e5ff',
+    color: '#2563EB',
     letterSpacing: 0.8,
   },
   detailsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
-    backgroundColor: '#080e17',
+    backgroundColor: '#F8FAFC',
     padding: 10,
     borderRadius: radius.DEFAULT,
     borderWidth: 1,
-    borderColor: '#242a34',
+    borderColor: '#E2E8F0',
   },
   detailItem: {
     width: '48%',
@@ -2014,13 +2014,13 @@ const styles = StyleSheet.create({
   detailItemValue: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#dde2f0',
+    color: '#1E293B',
     marginTop: 1,
   },
   detailItemValueMono: {
     fontSize: 11,
     fontWeight: '900',
-    color: '#dde2f0',
+    color: '#1E293B',
         marginTop: 1,
   },
 
@@ -2030,11 +2030,11 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   vehicleBox: {
-    backgroundColor: '#080e17',
+    backgroundColor: '#F8FAFC',
     padding: 10,
     borderRadius: radius.DEFAULT,
     borderWidth: 1,
-    borderColor: '#242a34',
+    borderColor: '#E2E8F0',
     gap: 6,
   },
   vehicleRow: {
@@ -2049,7 +2049,7 @@ const styles = StyleSheet.create({
   vehicleVal: {
     fontSize: 11,
     fontWeight: '800',
-    color: '#dde2f0',
+    color: '#1E293B',
       },
   vehicleValGreen: {
     fontSize: 10,
@@ -2061,7 +2061,7 @@ const styles = StyleSheet.create({
   loginCredsBox: {
     marginHorizontal: 14,
     marginBottom: 14,
-    backgroundColor: '#1a2029',
+    backgroundColor: '#EFF6FF',
     padding: 12,
     borderRadius: radius.DEFAULT,
     borderWidth: 1,
@@ -2087,11 +2087,11 @@ const styles = StyleSheet.create({
   credValCyan: {
     fontSize: 12,
     fontWeight: '900',
-    color: '#00e5ff',
+    color: '#2563EB',
       },
   credValWhite: {
     fontSize: 10,
-    color: '#dde2f0',
+    color: '#1E293B',
       },
 
   // Modal Actions
@@ -2113,15 +2113,15 @@ const styles = StyleSheet.create({
   directCockpitBtnText: {
     fontSize: 11,
     fontWeight: '900',
-    color: '#00363d',
+    color: '#FFFFFF',
     letterSpacing: 0.8,
   },
   proceedLoginBtn: {
     height: 46,
-    backgroundColor: '#1a2029',
+    backgroundColor: '#EFF6FF',
     borderRadius: radius.DEFAULT,
     borderWidth: 1,
-    borderColor: '#00e5ff',
+    borderColor: '#2563EB',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -2130,7 +2130,7 @@ const styles = StyleSheet.create({
   proceedLoginBtnText: {
     fontSize: 10,
     fontWeight: '900',
-    color: '#00e5ff',
+    color: '#2563EB',
     letterSpacing: 0.8,
   },
 
@@ -2153,11 +2153,11 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   inputWrapDetected: {
-    borderColor: '#00e5ff',
+    borderColor: '#2563EB',
     backgroundColor: 'rgba(0, 229, 255, 0.05)',
   },
   cheAutoCard: {
-    backgroundColor: '#07121e',
+    backgroundColor: '#F8FAFC',
     borderRadius: 10,
     borderWidth: 1,
     borderColor: 'rgba(0, 229, 255, 0.3)',
@@ -2186,7 +2186,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   cheVerifiedText: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontSize: 10,
     fontWeight: '800',
     letterSpacing: 0.5,
@@ -2210,7 +2210,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   cheBlockValue: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontSize: 16,
     fontWeight: '900',
     letterSpacing: 0.8,
@@ -2300,7 +2300,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#0a1420',
+    backgroundColor: '#FFFFFF',
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 14,
@@ -2308,16 +2308,16 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255, 255, 255, 0.08)',
   },
   fleetChipActive: {
-    backgroundColor: 'rgba(0, 229, 255, 0.15)',
-    borderColor: '#00e5ff',
+    backgroundColor: '#EFF6FF',
+    borderColor: '#2563EB',
   },
   fleetChipText: {
-    color: '#dde2f0',
+    color: '#1E293B',
     fontSize: 11,
     fontWeight: '700',
   },
   fleetChipTextActive: {
-    color: '#00e5ff',
+    color: '#2563EB',
   },
   fleetChipCheBadge: {
     backgroundColor: 'rgba(255, 255, 255, 0.08)',
@@ -2363,8 +2363,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   empTypeBadgeCyan: {
-    backgroundColor: 'rgba(0, 229, 255, 0.12)',
-    borderColor: '#00e5ff',
+    backgroundColor: '#EFF6FF',
+    borderColor: '#2563EB',
   },
   empTypeBadgeAmber: {
     backgroundColor: 'rgba(254, 179, 0, 0.12)',
@@ -2390,7 +2390,7 @@ const styles = StyleSheet.create({
   },
   roleDetectionBannerCyan: {
     borderColor: 'rgba(0, 229, 255, 0.45)',
-    backgroundColor: 'rgba(0, 229, 255, 0.08)',
+    backgroundColor: '#EFF6FF',
   },
   roleBadgeCircle: {
     width: 38,
@@ -2417,7 +2417,7 @@ const styles = StyleSheet.create({
   recognizedCode: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#dde2f0',
+    color: '#1E293B',
     marginTop: 2,
   },
   recognizedHint: {
@@ -2435,10 +2435,10 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     minWidth: 80,
     height: 42,
-    backgroundColor: '#080e17',
+    backgroundColor: '#F8FAFC',
     borderRadius: radius.sm,
     borderWidth: 1,
-    borderColor: '#242a34',
+    borderColor: '#E2E8F0',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',

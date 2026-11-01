@@ -186,7 +186,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
     return (
       <div style={styles.centerLoading}>
         <div style={styles.spinner}></div>
-        <p style={{ color: '#00e5ff', marginTop: '14px', fontSize: '13px', fontWeight: 600 }}>
+        <p style={{ color: '#2563EB', marginTop: '14px', fontSize: '13px', fontWeight: 600 }}>
           Loading executive command center telemetry...
         </p>
       </div>
@@ -227,7 +227,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
             className="btn btn-secondary btn-sm"
             style={styles.quickBtn}
           >
-            <Plus size={14} color="#00e5ff" />
+            <Plus size={14} color="#2563EB" />
             <span>+ Vehicle</span>
           </button>
           <button
@@ -259,10 +259,10 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
             <h3 style={styles.sectionHeader}>TODAY'S ITT OPERATIONS</h3>
           </div>
           <div style={styles.kpiGrid}>
-            <div style={{ ...styles.kpiCard, borderColor: 'rgba(0, 229, 255, 0.35)' }}>
+            <div style={{ ...styles.kpiCard, borderColor: 'rgba(37, 99, 235, 0.35)' }}>
               <div style={styles.kpiHeaderRow}>
                 <span style={styles.kpiLabel}>TODAY'S TRIPS</span>
-                <ArrowLeftRight size={18} color="#00e5ff" />
+                <ArrowLeftRight size={18} color="#2563EB" />
               </div>
               <div style={styles.kpiValue}>{stats?.todayTrips || 18}</div>
               <div style={styles.kpiSub}>Active: {stats?.tripsInProgress || 4} in progress</div>
@@ -343,7 +343,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                 role="button"
                 tabIndex={0}
               >
-                <div style={{ ...styles.fleetStatNum, color: '#00e5ff' }}>
+                <div style={{ ...styles.fleetStatNum, color: '#2563EB' }}>
                   {drivers.filter((d) => d.status === 'ACTIVE').length}
                 </div>
                 <div style={styles.fleetStatLabel}>Active Registered Drivers</div>
@@ -408,7 +408,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                     <td><span className="badge badge-cyan">{trip.sourceTerminal}</span></td>
                     <td><span className="badge badge-cyan">{trip.destTerminal}</span></td>
                     <td style={{ color: '#b0bec5' }}>{trip.vesselName || 'ITT Harbor Transfer'}</td>
-                    <td style={{ color: '#00e5ff', fontWeight: 600 }}>{trip.vehicleNumber} ({trip.chassisNumber})</td>
+                    <td style={{ color: '#2563EB', fontWeight: 600 }}>{trip.vehicleNumber} ({trip.chassisNumber})</td>
                     <td style={{ color: '#ffffff', fontWeight: 600 }}>{trip.driverName || 'Authorized Driver'}</td>
                     <td style={{ fontFamily: 'var(--font-mono)' }}>
                       {formatContainerList(trip.containers, trip.containerSize)}
@@ -441,7 +441,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
         <>
           <div style={styles.sectionHeaderRow}>
             <h3 style={styles.sectionHeader}>LIVE ITT MOVEMENTS & DISPATCH CONSOLE</h3>
-            <span style={{ fontSize: '12px', color: '#00e5ff', fontWeight: 700 }}>
+            <span style={{ fontSize: '12px', color: '#2563EB', fontWeight: 700 }}>
               {trips.filter((t) => t.status === 'PENDING_APPROVAL').length} Requiring Admin/Supervisor Signoff
             </span>
           </div>
@@ -453,7 +453,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                 <div key={trip.id || trip.tripNumber} style={styles.fullTripCard}>
                   <div style={styles.tripCardHeader}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <ArrowLeftRight size={20} color="#00e5ff" />
+                      <ArrowLeftRight size={20} color="#2563EB" />
                       <div>
                         <span style={{ fontSize: '16px', fontWeight: 800, color: '#ffffff', fontFamily: 'var(--font-mono)' }}>
                           {trip.tripNumber}
@@ -482,7 +482,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                       <span style={styles.routeStopLabel}>ORIGIN TERMINAL</span>
                       <span style={styles.routeStopName}>{trip.sourceTerminal}</span>
                     </div>
-                    <ArrowLeftRight size={22} color="#00e5ff" />
+                    <ArrowLeftRight size={22} color="#2563EB" />
                     <div style={styles.routeStop}>
                       <span style={styles.routeStopLabel}>DESTINATION TERMINAL</span>
                       <span style={styles.routeStopName}>{trip.destTerminal}</span>
@@ -492,7 +492,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                   <div style={styles.tripGridInfo}>
                     <div>
                       <span style={styles.gridInfoLabel}>Assigned Prime Mover:</span>
-                      <strong style={{ color: '#00e5ff', display: 'block', marginTop: '2px' }}>
+                      <strong style={{ color: '#2563EB', display: 'block', marginTop: '2px' }}>
                         {trip.vehicleNumber} ({trip.chassisNumber})
                       </strong>
                     </div>
@@ -611,7 +611,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                 {vehicles.map((v) => (
                   <tr key={v.id}>
                     <td style={{ fontWeight: 800, color: '#ffffff' }}>{v.vehicleNumber}</td>
-                    <td style={{ color: '#00e5ff', fontWeight: 700 }}>{v.chassisNumber}</td>
+                    <td style={{ color: '#2563EB', fontWeight: 700 }}>{v.chassisNumber}</td>
                     <td>
                       <span className={`badge ${v.operator === 'SCK Logistics' ? 'badge-cyan' : 'badge-amber'}`}>
                         {v.operator}
@@ -656,11 +656,11 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
               <tbody>
                 {drivers.map((d) => (
                   <tr key={d.id}>
-                    <td style={{ fontWeight: 800, color: '#00e5ff' }}>{d.driverCode}</td>
+                    <td style={{ fontWeight: 800, color: '#2563EB' }}>{d.driverCode}</td>
                     <td style={{ fontWeight: 700, color: '#ffffff' }}>{d.fullName}</td>
                     <td>{d.nic}</td>
                     <td style={{ color: '#90caf9' }}>{d.mobileNumber}</td>
-                    <td style={{ fontWeight: 600, color: d.vehicleNumber && d.vehicleNumber !== 'UNASSIGNED' ? '#00e5ff' : '#78909c' }}>
+                    <td style={{ fontWeight: 600, color: d.vehicleNumber && d.vehicleNumber !== 'UNASSIGNED' ? '#2563EB' : '#78909c' }}>
                       {d.vehicleNumber && d.vehicleNumber !== 'UNASSIGNED' ? `${d.vehicleNumber} (${d.chassisNumber || 'CHE'})` : 'Standby Driver'}
                     </td>
                     <td style={{ color: '#cfd8dc' }}>{d.portPassExpiryDate || '2027-10-31'}</td>
@@ -690,9 +690,9 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
           </div>
 
           <div style={styles.jurisdictionBanner}>
-            <Shield size={20} color="#00e5ff" />
+            <Shield size={20} color="#2563EB" />
             <div>
-              <strong style={{ color: '#00e5ff', fontSize: '13px' }}>Port-Wide Supervision Authority</strong>
+              <strong style={{ color: '#2563EB', fontSize: '13px' }}>Port-Wide Supervision Authority</strong>
               <p style={{ margin: '3px 0 0', fontSize: '12px', color: '#90caf9' }}>
                 All 6 field supervisors possess unified authorization covering all Colombo Port Terminals (JCT, CICT, SAGT, ECT, CWIT, UCT).
               </p>
@@ -710,7 +710,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                     <h4 style={{ margin: 0, fontSize: '16px', color: '#ffffff', fontWeight: 800 }}>
                       {sup.name}
                     </h4>
-                    <span style={{ fontSize: '12px', color: '#00e5ff', fontWeight: 700 }}>
+                    <span style={{ fontSize: '12px', color: '#2563EB', fontWeight: 700 }}>
                       {sup.code} • {sup.role}
                     </span>
                   </div>
@@ -721,7 +721,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
 
                 <div style={styles.supDetailsBox}>
                   <div style={styles.supDetailRow}>
-                    <Phone size={14} color="#00e5ff" />
+                    <Phone size={14} color="#2563EB" />
                     <span>{sup.phone}</span>
                   </div>
                   <div style={styles.supDetailRow}>
@@ -735,7 +735,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                 </div>
 
                 <div style={styles.terminalJurisdictionBadge}>
-                  <span style={{ fontSize: '11px', fontWeight: 700, color: '#00e5ff' }}>
+                  <span style={{ fontSize: '11px', fontWeight: 700, color: '#2563EB' }}>
                     JURISDICTION: ALL 6 PORT TERMINALS
                   </span>
                 </div>
@@ -750,7 +750,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
         <div style={styles.signOutCard}>
           <div style={styles.signOutCardLeft}>
             <div style={styles.signOutIconWrap}>
-              <Shield size={20} color="#00e5ff" />
+              <Shield size={20} color="#2563EB" />
             </div>
             <div>
               <div style={styles.signOutCardTitle}>Admin Session Security</div>
@@ -785,8 +785,8 @@ const styles: Record<string, React.CSSProperties> = {
   spinner: {
     width: '36px',
     height: '36px',
-    border: '3px solid rgba(0, 229, 255, 0.2)',
-    borderTopColor: '#00e5ff',
+    border: '3px solid #DBEAFE',
+    borderTopColor: '#2563EB',
     borderRadius: '50%',
     animation: 'spin 0.8s linear infinite',
   },
@@ -794,8 +794,8 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#0c1b30',
-    border: '1px solid rgba(255, 255, 255, 0.08)',
+    backgroundColor: '#FFFFFF',
+    border: '1px solid #E2E8F0',
     borderRadius: '14px',
     padding: '8px 12px',
     marginBottom: '24px',
@@ -813,7 +813,7 @@ const styles: Record<string, React.CSSProperties> = {
     borderRadius: '8px',
     border: 'none',
     backgroundColor: 'transparent',
-    color: '#78909c',
+    color: '#64748B',
     fontSize: 'clamp(11px, 0.85vw, 13px)',
     fontWeight: 700,
     cursor: 'pointer',
@@ -821,9 +821,8 @@ const styles: Record<string, React.CSSProperties> = {
     transition: 'all 0.2s ease',
   },
   switcherBtnActive: {
-    backgroundColor: 'rgba(0, 229, 255, 0.15)',
-    color: '#00e5ff',
-    boxShadow: '0 0 10px rgba(0, 229, 255, 0.2)',
+    backgroundColor: '#EFF6FF',
+    color: '#2563EB',
   },
   quickActionGroup: {
     display: 'flex',
@@ -847,7 +846,7 @@ const styles: Record<string, React.CSSProperties> = {
   sectionHeader: {
     fontSize: '11px',
     fontWeight: 800,
-    color: '#78909c',
+    color: '#64748B',
     letterSpacing: '1px',
     margin: 0,
     textTransform: 'uppercase',
@@ -855,7 +854,7 @@ const styles: Record<string, React.CSSProperties> = {
   seeAllBtn: {
     background: 'none',
     border: 'none',
-    color: '#00e5ff',
+    color: '#2563EB',
     fontSize: '12px',
     fontWeight: 700,
     cursor: 'pointer',
@@ -867,10 +866,11 @@ const styles: Record<string, React.CSSProperties> = {
     marginBottom: '24px',
   },
   kpiCard: {
-    backgroundColor: '#0c1b30',
+    backgroundColor: '#FFFFFF',
     borderRadius: '14px',
     padding: '18px 20px',
-    border: '1px solid rgba(255, 255, 255, 0.08)',
+    border: '1px solid #E2E8F0',
+    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
     transition: 'all 0.2s ease',
   },
   kpiHeaderRow: {
@@ -882,27 +882,28 @@ const styles: Record<string, React.CSSProperties> = {
   kpiLabel: {
     fontSize: '11px',
     fontWeight: 800,
-    color: '#78909c',
+    color: '#64748B',
     letterSpacing: '0.5px',
   },
   kpiValue: {
     fontSize: 'clamp(20px, 2.2vw, 28px)',
     fontWeight: 800,
-    color: '#ffffff',
+    color: '#1E293B',
     fontFamily: 'var(--font-mono)',
     lineHeight: 1.1,
     margin: '4px 0',
   },
   kpiSub: {
     fontSize: '11px',
-    color: '#90caf9',
+    color: '#2563EB',
     fontWeight: 500,
   },
   fleetSummaryCard: {
-    backgroundColor: '#0c1b30',
+    backgroundColor: '#FFFFFF',
     borderRadius: '14px',
     padding: '20px 24px',
-    border: '1px solid rgba(255, 255, 255, 0.08)',
+    border: '1px solid #E2E8F0',
+    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
     marginBottom: '24px',
   },
   fleetStatRow: {
@@ -921,31 +922,32 @@ const styles: Record<string, React.CSSProperties> = {
   fleetStatNum: {
     fontSize: '24px',
     fontWeight: 800,
-    color: '#ffffff',
+    color: '#1E293B',
     fontFamily: 'var(--font-mono)',
   },
   fleetStatLabel: {
     fontSize: '12px',
     fontWeight: 700,
-    color: '#b0bec5',
+    color: '#1E293B',
     marginTop: '4px',
   },
   fleetStatSub: {
     fontSize: '10px',
-    color: '#78909c',
+    color: '#64748B',
     marginTop: '3px',
   },
   dividerVertical: {
     width: '1px',
     height: '48px',
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    backgroundColor: '#E2E8F0',
     margin: '0 12px',
   },
   terminalCard: {
-    backgroundColor: '#0c1b30',
+    backgroundColor: '#FFFFFF',
     borderRadius: '14px',
     padding: '18px 22px',
-    border: '1px solid rgba(255, 255, 255, 0.08)',
+    border: '1px solid #E2E8F0',
+    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
     marginBottom: '24px',
   },
   terminalRow: {
@@ -957,12 +959,12 @@ const styles: Record<string, React.CSSProperties> = {
     width: '54px',
     padding: '4px 0',
     borderRadius: '6px',
-    backgroundColor: 'rgba(0, 229, 255, 0.1)',
+    backgroundColor: '#EFF6FF',
     textAlign: 'center',
     flexShrink: 0,
   },
   terminalBadgeText: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontSize: '11px',
     fontWeight: 800,
     letterSpacing: '0.5px',
@@ -970,19 +972,19 @@ const styles: Record<string, React.CSSProperties> = {
   terminalBarWrap: {
     flex: 1,
     height: '8px',
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: '#F1F5F9',
     borderRadius: '4px',
     margin: '0 14px',
     overflow: 'hidden',
   },
   terminalBarFill: {
     height: '100%',
-    backgroundColor: '#00e5ff',
+    backgroundColor: '#2563EB',
     borderRadius: '4px',
     transition: 'width 0.4s ease',
   },
   terminalCountText: {
-    color: '#cfd8dc',
+    color: '#1E293B',
     fontSize: '12px',
     fontWeight: 600,
     width: '64px',
@@ -990,9 +992,10 @@ const styles: Record<string, React.CSSProperties> = {
     fontFamily: 'var(--font-mono)',
   },
   fullTripCard: {
-    backgroundColor: '#0c1b30',
+    backgroundColor: '#FFFFFF',
     borderRadius: '14px',
-    border: '1px solid rgba(255, 255, 255, 0.08)',
+    border: '1px solid #E2E8F0',
+    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
     padding: '18px 22px',
   },
   tripCardHeader: {
@@ -1005,10 +1008,10 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-around',
-    backgroundColor: '#070f1e',
+    backgroundColor: '#F8FAFC',
     borderRadius: '10px',
     padding: '12px 20px',
-    border: '1px solid rgba(0, 229, 255, 0.15)',
+    border: '1px solid #E2E8F0',
     marginBottom: '14px',
   },
   routeStop: {
@@ -1016,14 +1019,14 @@ const styles: Record<string, React.CSSProperties> = {
   },
   routeStopLabel: {
     fontSize: '10px',
-    color: '#78909c',
+    color: '#64748B',
     fontWeight: 800,
     letterSpacing: '0.5px',
   },
   routeStopName: {
     fontSize: '16px',
     fontWeight: 800,
-    color: '#00e5ff',
+    color: '#2563EB',
     display: 'block',
     marginTop: '2px',
   },
@@ -1031,13 +1034,14 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
     gap: '12px',
-    backgroundColor: 'rgba(255, 255, 255, 0.02)',
+    backgroundColor: '#F8FAFC',
     padding: '12px 16px',
     borderRadius: '10px',
+    border: '1px solid #E2E8F0',
   },
   gridInfoLabel: {
     fontSize: '11px',
-    color: '#78909c',
+    color: '#64748B',
     fontWeight: 600,
   },
   approvalActionRow: {
@@ -1046,14 +1050,15 @@ const styles: Record<string, React.CSSProperties> = {
     alignItems: 'center',
     marginTop: '14px',
     paddingTop: '12px',
-    borderTop: '1px solid rgba(255, 255, 255, 0.06)',
+    borderTop: '1px solid #E2E8F0',
     flexWrap: 'wrap',
     gap: '10px',
   },
   complianceBox: {
-    backgroundColor: '#0c1b30',
+    backgroundColor: '#FFFFFF',
     borderRadius: '14px',
-    border: '1px solid rgba(254, 179, 0, 0.25)',
+    border: '1px solid #E2E8F0',
+    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
     padding: '18px 20px',
     marginBottom: '20px',
   },
@@ -1069,20 +1074,20 @@ const styles: Record<string, React.CSSProperties> = {
     gap: '12px',
   },
   complianceItem: {
-    backgroundColor: '#070f1e',
+    backgroundColor: '#F8FAFC',
     borderRadius: '10px',
     padding: '12px 14px',
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    border: '1px solid rgba(255, 255, 255, 0.05)',
+    border: '1px solid #E2E8F0',
   },
   jurisdictionBanner: {
     display: 'flex',
     alignItems: 'center',
     gap: '12px',
-    backgroundColor: 'rgba(0, 229, 255, 0.08)',
-    border: '1px solid rgba(0, 229, 255, 0.25)',
+    backgroundColor: '#EFF6FF',
+    border: '1px solid #DBEAFE',
     borderRadius: '12px',
     padding: '14px 18px',
     marginBottom: '20px',
@@ -1093,9 +1098,10 @@ const styles: Record<string, React.CSSProperties> = {
     gap: '16px',
   },
   supervisorCard: {
-    backgroundColor: '#0c1b30',
+    backgroundColor: '#FFFFFF',
     borderRadius: '14px',
-    border: '1px solid rgba(255, 255, 255, 0.08)',
+    border: '1px solid #E2E8F0',
+    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
     padding: '18px 20px',
   },
   supervisorTop: {
@@ -1108,43 +1114,45 @@ const styles: Record<string, React.CSSProperties> = {
     width: '42px',
     height: '42px',
     borderRadius: '50%',
-    backgroundColor: 'rgba(0, 229, 255, 0.15)',
-    border: '1.5px solid #00e5ff',
+    backgroundColor: '#EFF6FF',
+    border: '1.5px solid #2563EB',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    color: '#00e5ff',
+    color: '#2563EB',
     fontWeight: 800,
     fontSize: '16px',
   },
   supDetailsBox: {
-    backgroundColor: '#070f1e',
+    backgroundColor: '#F8FAFC',
     borderRadius: '8px',
     padding: '10px 14px',
     display: 'flex',
     flexDirection: 'column',
     gap: '6px',
     marginBottom: '12px',
+    border: '1px solid #E2E8F0',
   },
   supDetailRow: {
     display: 'flex',
     alignItems: 'center',
     gap: '8px',
     fontSize: '12px',
-    color: '#cfd8dc',
+    color: '#1E293B',
   },
   terminalJurisdictionBadge: {
-    backgroundColor: 'rgba(0, 229, 255, 0.06)',
+    backgroundColor: '#EFF6FF',
     borderRadius: '6px',
     padding: '6px 10px',
     textAlign: 'center',
-    border: '1px solid rgba(0, 229, 255, 0.15)',
+    border: '1px solid #DBEAFE',
   },
   signOutCard: {
     marginTop: '32px',
-    backgroundColor: '#0c1b30',
+    backgroundColor: '#FFFFFF',
     borderRadius: '14px',
-    border: '1px solid rgba(255, 82, 82, 0.25)',
+    border: '1px solid #FECACA',
+    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
     padding: '18px 22px',
     display: 'flex',
     alignItems: 'center',
@@ -1159,19 +1167,19 @@ const styles: Record<string, React.CSSProperties> = {
     width: '42px',
     height: '42px',
     borderRadius: '10px',
-    backgroundColor: 'rgba(0, 229, 255, 0.1)',
-    border: '1px solid rgba(0, 229, 255, 0.25)',
+    backgroundColor: '#EFF6FF',
+    border: '1px solid #BFDBFE',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
   },
   signOutCardTitle: {
-    color: '#ffffff',
+    color: '#1E293B',
     fontSize: '14px',
     fontWeight: 800,
   },
   signOutCardSub: {
-    color: '#78909c',
+    color: '#64748B',
     fontSize: '11px',
     marginTop: '2px',
   },
@@ -1179,8 +1187,8 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'flex',
     alignItems: 'center',
     gap: '8px',
-    backgroundColor: 'rgba(255, 82, 82, 0.12)',
-    border: '1px solid rgba(255, 82, 82, 0.3)',
+    backgroundColor: '#FEF2F2',
+    border: '1px solid #FECACA',
     borderRadius: '10px',
     padding: '8px 16px',
     cursor: 'pointer',

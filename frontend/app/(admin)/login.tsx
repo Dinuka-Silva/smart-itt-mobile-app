@@ -365,7 +365,7 @@ export default function AdminLoginScreen() {
           <View style={styles.fieldGroup}>
             <Text style={styles.fieldLabel}>Administrator Username</Text>
             <View style={styles.inputWrap}>
-              <Ionicons name="person-outline" size={18} color="#90caf9" style={styles.inputIcon} />
+              <Ionicons name="person-outline" size={18} color="#2563EB" style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
                 value={username}
@@ -374,7 +374,7 @@ export default function AdminLoginScreen() {
                   if (errorMessage) setErrorMessage(null);
                 }}
                 placeholder="ADMIN"
-                placeholderTextColor="#546e7a"
+                placeholderTextColor="#94A3B8"
                 autoCapitalize="none"
               />
             </View>
@@ -383,7 +383,7 @@ export default function AdminLoginScreen() {
           <View style={styles.fieldGroup}>
             <Text style={styles.fieldLabel}>Master Password</Text>
             <View style={styles.inputWrap}>
-              <Ionicons name="key-outline" size={18} color="#90caf9" style={styles.inputIcon} />
+              <Ionicons name="key-outline" size={18} color="#2563EB" style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
                 value={password}
@@ -392,7 +392,7 @@ export default function AdminLoginScreen() {
                   if (errorMessage) setErrorMessage(null);
                 }}
                 placeholder="••••••••••••"
-                placeholderTextColor="#546e7a"
+                placeholderTextColor="#94A3B8"
                 secureTextEntry={!showPassword}
               />
               <TouchableOpacity
@@ -403,7 +403,7 @@ export default function AdminLoginScreen() {
                 <Ionicons
                   name={showPassword ? 'eye-off-outline' : 'eye-outline'}
                   size={18}
-                  color="#90caf9"
+                  color="#64748B"
                 />
               </TouchableOpacity>
             </View>
@@ -416,10 +416,10 @@ export default function AdminLoginScreen() {
             activeOpacity={0.8}
           >
             {loading ? (
-              <ActivityIndicator color="#001529" size="small" />
+              <ActivityIndicator color="#FFFFFF" size="small" />
             ) : (
               <View style={styles.btnContent}>
-                <Ionicons name="shield-checkmark" size={18} color="#001529" style={{ marginRight: 8 }} />
+                <Ionicons name="shield-checkmark" size={18} color="#FFFFFF" style={{ marginRight: 8 }} />
                 <Text style={styles.submitButtonText}>AUTHENTICATE AS ADMIN</Text>
               </View>
             )}
@@ -436,7 +436,7 @@ export default function AdminLoginScreen() {
               <Ionicons
                 name={biometricStatus.biometricType === 'FACE_ID' ? 'scan' : 'finger-print'}
                 size={18}
-                color="#00e5ff"
+                color="#2563EB"
                 style={{ marginRight: 8 }}
               />
               <Text style={styles.bioButtonText}>
@@ -453,7 +453,7 @@ export default function AdminLoginScreen() {
           >
             <View style={styles.rosterTriggerLeft}>
               <View style={styles.rosterTriggerIconWrap}>
-                <Ionicons name="people-circle" size={24} color="#00e5ff" />
+                <Ionicons name="people-circle" size={24} color="#2563EB" />
               </View>
               <View style={{ flex: 1 }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
@@ -467,24 +467,24 @@ export default function AdminLoginScreen() {
                 </Text>
               </View>
             </View>
-            <Ionicons name="chevron-forward" size={18} color="#00e5ff" />
+            <Ionicons name="chevron-forward" size={18} color="#2563EB" />
           </TouchableOpacity>
 
           {/* System Audit Trail & Operations Ledger (Admin Clearance) */}
           <TouchableOpacity
-            style={[styles.rosterCardTrigger, { borderColor: 'rgba(254, 179, 0, 0.35)', backgroundColor: 'rgba(254, 179, 0, 0.05)' }]}
+            style={[styles.rosterCardTrigger, { borderColor: '#E2E8F0', backgroundColor: '#FFFFFF' }]}
             onPress={() => router.push('/(admin)/audit')}
             activeOpacity={0.85}
           >
             <View style={styles.rosterTriggerLeft}>
-              <View style={[styles.rosterTriggerIconWrap, { backgroundColor: 'rgba(254, 179, 0, 0.15)', borderColor: 'rgba(254, 179, 0, 0.4)' }]}>
-                <Ionicons name="shield-checkmark" size={22} color="#feb300" />
+              <View style={[styles.rosterTriggerIconWrap, { backgroundColor: '#EFF6FF', borderColor: '#2563EB' }]}>
+                <Ionicons name="shield-checkmark" size={22} color="#2563EB" />
               </View>
               <View style={{ flex: 1 }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                  <Text style={[styles.rosterTriggerTitle, { color: '#feb300' }]}>SYSTEM AUDIT & OPERATIONS TRAIL</Text>
-                  <View style={[styles.adminOnlyBadge, { backgroundColor: 'rgba(254, 179, 0, 0.2)', borderColor: 'rgba(254, 179, 0, 0.45)' }]}>
-                    <Text style={[styles.adminOnlyBadgeText, { color: '#feb300' }]}>ALL WORK</Text>
+                  <Text style={[styles.rosterTriggerTitle, { color: '#1E293B' }]}>SYSTEM AUDIT & OPERATIONS TRAIL</Text>
+                  <View style={[styles.adminOnlyBadge, { backgroundColor: '#EFF6FF', borderColor: '#BFDBFE' }]}>
+                    <Text style={[styles.adminOnlyBadgeText, { color: '#2563EB' }]}>ALL WORK</Text>
                   </View>
                 </View>
                 <Text style={styles.rosterTriggerSubtitle}>
@@ -492,11 +492,11 @@ export default function AdminLoginScreen() {
                 </Text>
               </View>
             </View>
-            <Ionicons name="chevron-forward" size={18} color="#feb300" />
+            <Ionicons name="chevron-forward" size={18} color="#2563EB" />
           </TouchableOpacity>
 
           <View style={styles.auditNotice}>
-            <Ionicons name="information-circle-outline" size={14} color="#78909c" />
+            <Ionicons name="information-circle-outline" size={14} color="#64748B" />
             <Text style={styles.auditNoticeText}>
               All administrative access and operations are recorded in the immutable system audit log.
             </Text>
@@ -517,7 +517,7 @@ export default function AdminLoginScreen() {
             <View style={styles.rosterModalHeader}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 }}>
                 <View style={styles.rosterHeaderIconBox}>
-                  <Ionicons name="shield-checkmark" size={20} color="#00e5ff" />
+                  <Ionicons name="shield-checkmark" size={20} color="#2563EB" />
                 </View>
                 <View style={{ flex: 1 }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
@@ -536,7 +536,7 @@ export default function AdminLoginScreen() {
                 style={styles.rosterCloseBtn}
                 hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               >
-                <Ionicons name="close" size={22} color="#ffffff" />
+                <Ionicons name="close" size={22} color="#1E293B" />
               </TouchableOpacity>
             </View>
 
@@ -664,9 +664,9 @@ export default function AdminLoginScreen() {
                           <Ionicons
                             name={isCopied ? 'checkmark' : 'copy-outline'}
                             size={12}
-                            color={isCopied ? '#22ef7e' : '#00e5ff'}
+                            color={isCopied ? '#16A34A' : '#2563EB'}
                           />
-                          <Text style={[styles.rosterQuickCopyText, isCopied && { color: '#22ef7e' }]}>
+                          <Text style={[styles.rosterQuickCopyText, isCopied && { color: '#16A34A' }]}>
                             {isCopied ? 'COPIED' : 'COPY'}
                           </Text>
                         </TouchableOpacity>
@@ -676,13 +676,13 @@ export default function AdminLoginScreen() {
                       <View style={styles.rosterSpecsGrid}>
                         <View style={styles.rosterSpecCol}>
                           <Text style={styles.rosterSpecKey}>TRUCK PLATE</Text>
-                          <Text style={[styles.rosterSpecVal, { color: '#feb300' }]}>
+                          <Text style={[styles.rosterSpecVal, { color: '#D97706' }]}>
                             {d.vehicleNumber || 'UNASSIGNED'}
                           </Text>
                         </View>
                         <View style={styles.rosterSpecCol}>
                           <Text style={styles.rosterSpecKey}>CHE / CHASSIS</Text>
-                          <Text style={[styles.rosterSpecVal, { color: '#00e5ff' }]}>
+                          <Text style={[styles.rosterSpecVal, { color: '#2563EB' }]}>
                             {d.cheNumber || d.chassisNumber || 'SCK 100'}
                           </Text>
                         </View>
@@ -698,7 +698,7 @@ export default function AdminLoginScreen() {
 
                       <View style={styles.rosterCardFooter}>
                         <Text style={styles.rosterCardFooterHint}>Tap to view full driver dossier</Text>
-                        <Ionicons name="chevron-forward" size={13} color="#00e5ff" />
+                        <Ionicons name="chevron-forward" size={13} color="#2563EB" />
                       </View>
                     </TouchableOpacity>
                   );
@@ -721,11 +721,11 @@ export default function AdminLoginScreen() {
             <View style={styles.rosterModalHeader}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 }}>
                 <View style={styles.rosterHeaderIconBox}>
-                  <Ionicons name="person" size={20} color="#00e5ff" />
+                  <Ionicons name="person" size={20} color="#2563EB" />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.rosterModalTitle}>{selectedRosterDriver?.fullName}</Text>
-                  <Text style={{ color: '#00e5ff', fontSize: 12, fontWeight: '800' }}>
+                  <Text style={{ color: '#2563EB', fontSize: 12, fontWeight: '800' }}>
                     {selectedRosterDriver?.username || selectedRosterDriver?.driverCode} • {selectedRosterDriver?.employeeId}
                   </Text>
                 </View>
@@ -734,7 +734,7 @@ export default function AdminLoginScreen() {
                 onPress={() => setSelectedRosterDriver(null)}
                 style={styles.rosterCloseBtn}
               >
-                <Ionicons name="close" size={22} color="#ffffff" />
+                <Ionicons name="close" size={22} color="#1E293B" />
               </TouchableOpacity>
             </View>
 
@@ -866,25 +866,13 @@ export default function AdminLoginScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: '#070d17',
+    backgroundColor: '#F8FAFC',
   },
   glowTop: {
-    position: 'absolute',
-    top: -80,
-    left: '20%',
-    width: 280,
-    height: 280,
-    borderRadius: 140,
-    backgroundColor: 'rgba(0, 229, 255, 0.08)',
+    display: 'none',
   },
   glowBottom: {
-    position: 'absolute',
-    bottom: -100,
-    right: '10%',
-    width: 320,
-    height: 320,
-    borderRadius: 160,
-    backgroundColor: 'rgba(30, 136, 229, 0.08)',
+    display: 'none',
   },
   scroll: {
     flexGrow: 1,
@@ -901,10 +889,12 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     paddingHorizontal: 10,
     borderRadius: 8,
-    backgroundColor: 'rgba(255, 255, 255, 0.04)',
+    backgroundColor: '#EFF6FF',
+    borderWidth: 1,
+    borderColor: '#DBEAFE',
   },
   backButtonText: {
-    color: '#90caf9',
+    color: '#2563EB',
     fontSize: 13,
     fontWeight: '600',
     marginLeft: 6,
@@ -917,16 +907,16 @@ const styles = StyleSheet.create({
     width: 86,
     height: 86,
     borderRadius: 22,
-    backgroundColor: '#070c14',
+    backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: '#dfa837',
-    shadowColor: '#00e5ff',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.35,
-    shadowRadius: 12,
-    elevation: 8,
+    borderWidth: 1.5,
+    borderColor: '#2563EB',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 3,
     marginBottom: 16,
     position: 'relative',
   },
@@ -942,25 +932,25 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: '#00e5ff',
+    backgroundColor: '#2563EB',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
-    borderColor: '#070c14',
+    borderColor: '#FFFFFF',
     elevation: 4,
   },
   brandTitle: {
     fontSize: 20,
     fontWeight: '800',
-    color: '#ffffff',
-    letterSpacing: 1.2,
+    color: '#1E293B',
+    letterSpacing: 0.5,
     textAlign: 'center',
   },
   brandSubtitle: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#78909c',
-    letterSpacing: 0.8,
+    color: '#64748B',
+    letterSpacing: 0.5,
     marginTop: 4,
     textAlign: 'center',
   },
@@ -971,36 +961,41 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     paddingHorizontal: 12,
     borderRadius: 20,
-    backgroundColor: 'rgba(0, 229, 255, 0.08)',
+    backgroundColor: '#EFF6FF',
     borderWidth: 1,
-    borderColor: 'rgba(0, 229, 255, 0.25)',
+    borderColor: '#DBEAFE',
   },
   securityBadgeText: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontSize: 10,
     fontWeight: '700',
     letterSpacing: 0.5,
     marginLeft: 6,
   },
   card: {
-    backgroundColor: 'rgba(13, 27, 42, 0.85)',
+    backgroundColor: '#FFFFFF',
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderColor: '#E2E8F0',
     padding: 24,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 3,
   },
   errorBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 82, 82, 0.12)',
+    backgroundColor: '#FEF2F2',
     borderWidth: 1,
-    borderColor: 'rgba(255, 82, 82, 0.3)',
+    borderColor: '#FECACA',
     borderRadius: 8,
     padding: 10,
     marginBottom: 16,
   },
   errorText: {
-    color: '#ff8a80',
+    color: '#DC2626',
     fontSize: 12,
     marginLeft: 8,
     flex: 1,
@@ -1008,9 +1003,9 @@ const styles = StyleSheet.create({
   credentialBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 229, 255, 0.08)',
+    backgroundColor: '#EFF6FF',
     borderWidth: 1,
-    borderColor: 'rgba(0, 229, 255, 0.25)',
+    borderColor: '#DBEAFE',
     borderRadius: 8,
     paddingVertical: 8,
     paddingHorizontal: 12,
@@ -1018,7 +1013,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   credentialBannerText: {
-    color: '#b0bec5',
+    color: '#1E293B',
     fontSize: 12,
     fontWeight: '600',
     flex: 1,
@@ -1027,9 +1022,9 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   fieldLabel: {
-    color: '#b0bec5',
-    fontSize: 12,
-    fontWeight: '600',
+    color: '#1E293B',
+    fontSize: 11,
+    fontWeight: '700',
     marginBottom: 6,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
@@ -1037,10 +1032,10 @@ const styles = StyleSheet.create({
   inputWrap: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(6, 14, 26, 0.8)',
+    backgroundColor: '#F8FAFC',
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderColor: '#E2E8F0',
     paddingHorizontal: 12,
     height: 48,
   },
@@ -1049,7 +1044,7 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    color: '#ffffff',
+    color: '#1E293B',
     fontSize: 14,
     fontWeight: '500',
   },
@@ -1057,7 +1052,7 @@ const styles = StyleSheet.create({
     padding: 6,
   },
   submitButton: {
-    backgroundColor: '#00e5ff',
+    backgroundColor: '#2563EB',
     borderRadius: 10,
     height: 48,
     alignItems: 'center',
@@ -1072,10 +1067,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   submitButtonText: {
-    color: '#001529',
+    color: '#FFFFFF',
     fontSize: 14,
     fontWeight: '800',
-    letterSpacing: 0.8,
+    letterSpacing: 0.5,
   },
   auditNotice: {
     flexDirection: 'row',
@@ -1083,10 +1078,10 @@ const styles = StyleSheet.create({
     marginTop: 18,
     paddingTop: 14,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(255, 255, 255, 0.06)',
+    borderTopColor: '#E2E8F0',
   },
   auditNoticeText: {
-    color: '#78909c',
+    color: '#64748B',
     fontSize: 11,
     marginLeft: 6,
     flex: 1,
@@ -1096,63 +1091,63 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    backgroundColor: 'rgba(239, 68, 68, 0.12)',
+    backgroundColor: '#FEF2F2',
     borderWidth: 1.5,
-    borderColor: 'rgba(239, 68, 68, 0.4)',
+    borderColor: '#FECACA',
     borderRadius: 12,
     padding: 12,
     marginBottom: 16,
   },
   lockoutTitle: {
-    color: '#ef4444',
+    color: '#DC2626',
     fontSize: 11,
     fontWeight: '900',
     letterSpacing: 0.8,
   },
   lockoutText: {
-    color: '#fca5a5',
+    color: '#DC2626',
     fontSize: 11,
     marginTop: 2,
     lineHeight: 15,
   },
   devFillBtn: {
-    backgroundColor: 'rgba(0, 229, 255, 0.15)',
+    backgroundColor: '#EFF6FF',
     borderWidth: 1,
-    borderColor: 'rgba(0, 229, 255, 0.4)',
+    borderColor: '#DBEAFE',
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 6,
   },
   devFillBtnText: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontSize: 10,
     fontWeight: '800',
   },
   devHelperBox: {
-    backgroundColor: '#091321',
+    backgroundColor: '#F8FAFC',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderColor: '#E2E8F0',
     borderRadius: 8,
     padding: 8,
     marginBottom: 14,
   },
   devHelperText: {
-    color: '#90a4ae',
+    color: '#64748B',
     fontSize: 11,
   },
   bioButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(0, 229, 255, 0.08)',
+    backgroundColor: '#EFF6FF',
     borderWidth: 1.5,
-    borderColor: 'rgba(0, 229, 255, 0.3)',
+    borderColor: '#DBEAFE',
     borderRadius: 10,
     height: 48,
     marginTop: 10,
   },
   bioButtonText: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontSize: 13,
     fontWeight: '800',
     letterSpacing: 0.5,
@@ -1161,9 +1156,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: 'rgba(0, 229, 255, 0.05)',
+    backgroundColor: '#EFF6FF',
     borderWidth: 1.5,
-    borderColor: 'rgba(0, 229, 255, 0.25)',
+    borderColor: '#DBEAFE',
     borderRadius: 12,
     padding: 12,
     marginTop: 14,
@@ -1178,41 +1173,41 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: 'rgba(0, 229, 255, 0.12)',
+    backgroundColor: '#DBEAFE',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(0, 229, 255, 0.3)',
+    borderColor: '#2563EB',
   },
   rosterTriggerTitle: {
-    color: '#ffffff',
+    color: '#1E293B',
     fontSize: 11,
     fontWeight: '900',
     letterSpacing: 0.6,
   },
   adminOnlyBadge: {
-    backgroundColor: 'rgba(254, 179, 0, 0.15)',
+    backgroundColor: '#FEF3C7',
     borderWidth: 1,
-    borderColor: 'rgba(254, 179, 0, 0.5)',
+    borderColor: '#FDE68A',
     paddingHorizontal: 6,
     paddingVertical: 1.5,
     borderRadius: 4,
   },
   adminOnlyBadgeText: {
-    color: '#feb300',
+    color: '#B45309',
     fontSize: 8,
     fontWeight: '900',
     letterSpacing: 0.5,
   },
   rosterTriggerSubtitle: {
-    color: '#90a4ae',
+    color: '#64748B',
     fontSize: 10,
     marginTop: 2,
     lineHeight: 14,
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.85)',
+    backgroundColor: 'rgba(15, 23, 42, 0.6)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 16,
@@ -1221,10 +1216,10 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 620,
     maxHeight: '92%',
-    backgroundColor: '#0a101d',
+    backgroundColor: '#FFFFFF',
     borderRadius: 16,
-    borderWidth: 1.5,
-    borderColor: 'rgba(0, 229, 255, 0.3)',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
     overflow: 'hidden',
   },
   rosterModalHeader: {
@@ -1233,55 +1228,55 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.08)',
-    backgroundColor: '#070c14',
+    borderBottomColor: '#E2E8F0',
+    backgroundColor: '#F8FAFC',
   },
   rosterHeaderIconBox: {
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: 'rgba(0, 229, 255, 0.12)',
+    backgroundColor: '#EFF6FF',
     borderWidth: 1,
-    borderColor: 'rgba(0, 229, 255, 0.4)',
+    borderColor: '#DBEAFE',
     alignItems: 'center',
     justifyContent: 'center',
   },
   rosterModalTitle: {
-    color: '#ffffff',
+    color: '#1E293B',
     fontSize: 15,
     fontWeight: '900',
     letterSpacing: 0.3,
   },
   rosterModalSubtitle: {
-    color: '#78909c',
+    color: '#64748B',
     fontSize: 11,
     marginTop: 2,
   },
   rosterCloseBtn: {
     padding: 6,
     borderRadius: 8,
-    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    backgroundColor: '#F1F5F9',
   },
   rosterMetricsBar: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-around',
-    backgroundColor: '#070d18',
+    backgroundColor: '#FFFFFF',
     paddingVertical: 10,
     paddingHorizontal: 8,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.05)',
+    borderBottomColor: '#E2E8F0',
   },
   rosterMetricItem: {
     alignItems: 'center',
   },
   rosterMetricVal: {
-    color: '#ffffff',
+    color: '#1E293B',
     fontSize: 14,
     fontWeight: '900',
   },
   rosterMetricLabel: {
-    color: '#546e7a',
+    color: '#64748B',
     fontSize: 8,
     fontWeight: '800',
     letterSpacing: 0.5,
@@ -1290,14 +1285,14 @@ const styles = StyleSheet.create({
   rosterMetricDivider: {
     width: 1,
     height: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    backgroundColor: '#E2E8F0',
   },
   rosterSearchWrap: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#070c14',
+    backgroundColor: '#F8FAFC',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderColor: '#E2E8F0',
     borderRadius: 10,
     marginHorizontal: 14,
     marginTop: 12,
@@ -1308,14 +1303,14 @@ const styles = StyleSheet.create({
   },
   rosterSearchInput: {
     flex: 1,
-    color: '#ffffff',
+    color: '#1E293B',
     fontSize: 12,
     padding: 0,
   },
   rosterDriverCard: {
-    backgroundColor: '#0d1524',
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderColor: '#E2E8F0',
     borderRadius: 12,
     padding: 12,
     marginBottom: 10,
@@ -1327,7 +1322,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   rosterDriverName: {
-    color: '#ffffff',
+    color: '#1E293B',
     fontSize: 14,
     fontWeight: '800',
   },
@@ -1338,19 +1333,19 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   rosterOperatorSck: {
-    backgroundColor: 'rgba(0, 229, 255, 0.1)',
-    borderColor: 'rgba(0, 229, 255, 0.3)',
+    backgroundColor: '#EFF6FF',
+    borderColor: '#BFDBFE',
   },
   rosterOperatorSdr: {
-    backgroundColor: 'rgba(254, 179, 0, 0.1)',
-    borderColor: 'rgba(254, 179, 0, 0.3)',
+    backgroundColor: '#FEF3C7',
+    borderColor: '#FDE68A',
   },
   rosterOperatorText: {
     fontSize: 9,
     fontWeight: '800',
   },
   rosterEmpText: {
-    color: '#78909c',
+    color: '#64748B',
     fontSize: 10,
     marginTop: 3,
   },
@@ -1364,12 +1359,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   rosterStatusActive: {
-    backgroundColor: 'rgba(34, 239, 126, 0.12)',
-    borderColor: 'rgba(34, 239, 126, 0.35)',
+    backgroundColor: '#DCFCE7',
+    borderColor: '#BBF7D0',
   },
   rosterStatusSuspended: {
-    backgroundColor: 'rgba(254, 179, 0, 0.12)',
-    borderColor: 'rgba(254, 179, 0, 0.35)',
+    backgroundColor: '#FEF3C7',
+    borderColor: '#FDE68A',
   },
   rosterStatusDot: {
     width: 6,
@@ -1384,9 +1379,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: 'rgba(0, 229, 255, 0.08)',
+    backgroundColor: '#EFF6FF',
     borderWidth: 1,
-    borderColor: 'rgba(0, 229, 255, 0.35)',
+    borderColor: '#DBEAFE',
     borderRadius: 8,
     paddingHorizontal: 10,
     paddingVertical: 6,
@@ -1400,13 +1395,13 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   rosterUsernameTagLabel: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontSize: 10,
     fontWeight: '900',
     letterSpacing: 0.5,
   },
   rosterUsernameTagValue: {
-    color: '#ffffff',
+    color: '#1E293B',
     fontSize: 12,
     fontWeight: '900',
     letterSpacing: 0.8,
@@ -1415,19 +1410,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: 'rgba(0, 229, 255, 0.15)',
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#00e5ff',
+    borderColor: '#2563EB',
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 6,
   },
   rosterQuickCopyBtnCopied: {
-    backgroundColor: 'rgba(34, 239, 126, 0.15)',
-    borderColor: '#22ef7e',
+    backgroundColor: '#DCFCE7',
+    borderColor: '#16A34A',
   },
   rosterQuickCopyText: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontSize: 9,
     fontWeight: '900',
     letterSpacing: 0.5,
@@ -1436,7 +1431,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#070c14',
+    backgroundColor: '#F8FAFC',
     borderRadius: 8,
     padding: 8,
     gap: 6,
@@ -1445,13 +1440,13 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   rosterSpecKey: {
-    color: '#546e7a',
+    color: '#64748B',
     fontSize: 8,
     fontWeight: '800',
     marginBottom: 2,
   },
   rosterSpecVal: {
-    color: '#bac9cc',
+    color: '#1E293B',
     fontSize: 10,
     fontWeight: '700',
   },
@@ -1463,15 +1458,15 @@ const styles = StyleSheet.create({
     marginTop: 8,
     paddingTop: 6,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(255, 255, 255, 0.04)',
+    borderTopColor: '#E2E8F0',
   },
   rosterCardFooterHint: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontSize: 10,
     fontWeight: '700',
   },
   dossierSectionTitle: {
-    color: '#90caf9',
+    color: '#2563EB',
     fontSize: 10,
     fontWeight: '800',
     letterSpacing: 0.8,
@@ -1479,9 +1474,9 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   dossierCard: {
-    backgroundColor: '#0f172a',
+    backgroundColor: '#F8FAFC',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderColor: '#E2E8F0',
     borderRadius: 10,
     padding: 12,
   },
@@ -1491,28 +1486,28 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: 5,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.04)',
+    borderBottomColor: '#E2E8F0',
   },
   dossierLabel: {
-    color: '#78909c',
+    color: '#64748B',
     fontSize: 11,
     fontWeight: '600',
   },
   dossierVal: {
-    color: '#ffffff',
+    color: '#1E293B',
     fontSize: 11,
     fontWeight: '700',
   },
   dossierUsernameBadge: {
-    backgroundColor: 'rgba(0, 229, 255, 0.15)',
+    backgroundColor: '#EFF6FF',
     borderWidth: 1,
-    borderColor: '#00e5ff',
+    borderColor: '#2563EB',
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 6,
   },
   dossierUsernameText: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontSize: 12,
     fontWeight: '900',
     letterSpacing: 0.8,

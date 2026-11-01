@@ -2,36 +2,36 @@ import { Platform } from 'react-native';
 
 export const Colors = {
   dark: {
-    text: '#dde2f0',
-    background: '#0e141d',
-    backgroundElement: '#1a2029',
-    backgroundSelected: '#242a34',
-    backgroundSurfaceLowest: '#080e17',
-    backgroundSurfaceLow: '#161c25',
-    backgroundSurfaceHighest: '#2f353f',
-    textSecondary: '#bac9cc',
-    accent: '#00e5ff', // Primary Electric Cyan
-    accentSoft: '#c3f5ff',
-    success: '#22ef7e', // Terminal Success Lime
-    warning: '#feb300', // Safety Signal Amber
-    danger: '#ff5252', // Critical Emergency Crimson
-    dangerContainer: '#93000a',
+    text: '#1E293B',
+    background: '#F8FAFC',
+    backgroundElement: '#FFFFFF',
+    backgroundSelected: '#EFF6FF',
+    backgroundSurfaceLowest: '#FFFFFF',
+    backgroundSurfaceLow: '#F8FAFC',
+    backgroundSurfaceHighest: '#E2E8F0',
+    textSecondary: '#64748B',
+    accent: '#2563EB', // Primary Blue
+    accentSoft: '#EFF6FF',
+    success: '#16A34A',
+    warning: '#D97706',
+    danger: '#DC2626',
+    dangerContainer: '#FEE2E2',
   },
   light: {
-    text: '#dde2f0',
-    background: '#0e141d',
-    backgroundElement: '#1a2029',
-    backgroundSelected: '#242a34',
-    backgroundSurfaceLowest: '#080e17',
-    backgroundSurfaceLow: '#161c25',
-    backgroundSurfaceHighest: '#2f353f',
-    textSecondary: '#bac9cc',
-    accent: '#00e5ff',
-    accentSoft: '#c3f5ff',
-    success: '#22ef7e',
-    warning: '#feb300',
-    danger: '#ff5252',
-    dangerContainer: '#93000a',
+    text: '#1E293B',
+    background: '#F8FAFC',
+    backgroundElement: '#FFFFFF',
+    backgroundSelected: '#EFF6FF',
+    backgroundSurfaceLowest: '#FFFFFF',
+    backgroundSurfaceLow: '#F8FAFC',
+    backgroundSurfaceHighest: '#E2E8F0',
+    textSecondary: '#64748B',
+    accent: '#2563EB', // Primary Blue
+    accentSoft: '#EFF6FF',
+    success: '#16A34A',
+    warning: '#D97706',
+    danger: '#DC2626',
+    dangerContainer: '#FEE2E2',
   },
 } as const;
 

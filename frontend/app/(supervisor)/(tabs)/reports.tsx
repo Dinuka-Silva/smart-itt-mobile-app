@@ -1172,7 +1172,7 @@ export default function SupervisorReports() {
           </View>
           <View style={styles.summaryDivider} />
           <View style={styles.summaryItem}>
-            <Text style={[styles.summaryNumber, { color: '#00e5ff' }]}>{totalContainers}</Text>
+            <Text style={[styles.summaryNumber, { color: '#2563EB' }]}>{totalContainers}</Text>
             <Text style={styles.summaryLabel}>DISPATCH ROWS</Text>
           </View>
           <View style={styles.summaryDivider} />
@@ -1319,10 +1319,10 @@ export default function SupervisorReports() {
                         <Text style={[styles.tdCell, { width: 40, textAlign: 'center', color: '#849396' }]}>
                           {idx + 1}
                         </Text>
-                        <Text style={[styles.tdCell, { width: 95, fontWeight: '700', color: '#00e5ff' }]}>
+                        <Text style={[styles.tdCell, { width: 95, fontWeight: '700', color: '#2563EB' }]}>
                           {row.date}
                         </Text>
-                        <Text style={[styles.tdCell, { width: 85, color: '#00e5ff', fontWeight: '700' }]}>
+                        <Text style={[styles.tdCell, { width: 85, color: '#2563EB', fontWeight: '700' }]}>
                           {row.startTime || row.time}
                         </Text>
                         <Text style={[styles.tdCell, { width: 105, color: '#feb300', fontWeight: '700' }]}>
@@ -1339,7 +1339,7 @@ export default function SupervisorReports() {
                             <Text style={styles.driverCodeBadgeText}>{row.driverIdentifier}</Text>
                           </View>
                         </View>
-                        <Text style={[styles.tdCell, { width: 130, fontWeight: '700', color: '#dde2f0' }]}>
+                        <Text style={[styles.tdCell, { width: 130, fontWeight: '700', color: '#1E293B' }]}>
                           {row.driverName}
                         </Text>
                         <View style={[styles.tdCellWrap, { width: 110 }]}>
@@ -1377,7 +1377,7 @@ export default function SupervisorReports() {
                               styles.dualBadgePill,
                               row.containerType === 'RETURN'
                                 ? { backgroundColor: 'rgba(254, 179, 0, 0.16)', borderColor: '#feb300' }
-                                : { backgroundColor: 'rgba(0, 229, 255, 0.12)', borderColor: '#00e5ff' },
+                                : { backgroundColor: '#EFF6FF', borderColor: '#2563EB' },
                             ]}
                           >
                             <Ionicons
@@ -1388,7 +1388,7 @@ export default function SupervisorReports() {
                             <Text
                               style={[
                                 styles.dualBadgePillText,
-                                row.containerType === 'RETURN' ? { color: '#feb300' } : { color: '#00e5ff' },
+                                row.containerType === 'RETURN' ? { color: '#feb300' } : { color: '#2563EB' },
                               ]}
                             >
                               {row.containerType === 'RETURN' ? '🔄 RETURN' : '📦 STANDARD'}
@@ -1465,7 +1465,7 @@ export default function SupervisorReports() {
                         styles.dualBadgePill,
                         r.containerType === 'RETURN'
                           ? { backgroundColor: 'rgba(254, 179, 0, 0.16)', borderColor: '#feb300' }
-                          : { backgroundColor: 'rgba(0, 229, 255, 0.12)', borderColor: '#00e5ff' },
+                          : { backgroundColor: '#EFF6FF', borderColor: '#2563EB' },
                       ]}
                     >
                       <Ionicons
@@ -1476,7 +1476,7 @@ export default function SupervisorReports() {
                       <Text
                         style={[
                           styles.dualBadgePillText,
-                          r.containerType === 'RETURN' ? { color: '#feb300' } : { color: '#00e5ff' },
+                          r.containerType === 'RETURN' ? { color: '#feb300' } : { color: '#2563EB' },
                         ]}
                       >
                         {r.containerType === 'RETURN' ? '🔄 RETURN CONTAINER' : '📦 STANDARD FREIGHT'}
@@ -1484,7 +1484,7 @@ export default function SupervisorReports() {
                     </View>
                     <View style={styles.cheBadge}>
                       <Ionicons name="time" size={10} color="#00e5ff" />
-                      <Text style={[styles.cheBadgeText, { color: '#00e5ff' }]}>
+                      <Text style={[styles.cheBadgeText, { color: '#2563EB' }]}>
                         Start: {r.date} {r.startTime || r.time}
                       </Text>
                     </View>
@@ -1661,7 +1661,7 @@ export default function SupervisorReports() {
               markingType={'period'}
               markedDates={calendarMarkedDates}
               theme={{
-                backgroundColor: '#161c25',
+                backgroundColor: '#FFFFFF',
                 calendarBackground: '#161c25',
                 textSectionTitleColor: '#00e5ff',
                 selectedDayBackgroundColor: '#00e5ff',
@@ -1751,7 +1751,7 @@ export default function SupervisorReports() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0e141d',
+    backgroundColor: '#F8FAFC',
   },
   scroll: {
     flexGrow: 1,
@@ -1779,12 +1779,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   avatarText: {
-    color: '#00363d',
+    color: '#FFFFFF',
     fontWeight: '900',
     fontSize: 16,
   },
   supervisorNameText: {
-    color: '#dde2f0',
+    color: '#1E293B',
     fontSize: 15,
     fontWeight: '800',
   },
@@ -1795,13 +1795,13 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   rolePill: {
-    backgroundColor: 'rgba(0, 229, 255, 0.1)',
+    backgroundColor: '#EFF6FF',
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 4,
   },
   rolePillText: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontSize: 8,
     fontWeight: '800',
   },
@@ -1814,15 +1814,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#161c25',
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#242a34',
+    borderColor: '#E2E8F0',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: radius.DEFAULT,
   },
   badgeText: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontSize: 9,
     fontWeight: '800',
     letterSpacing: 0.6,
@@ -1830,10 +1830,10 @@ const styles = StyleSheet.create({
 
   // Filter Card
   filterCard: {
-    backgroundColor: '#161c25',
+    backgroundColor: '#FFFFFF',
     borderRadius: radius.DEFAULT,
     borderWidth: 1,
-    borderColor: '#242a34',
+    borderColor: '#E2E8F0',
     padding: 14,
     gap: 14,
   },
@@ -1842,11 +1842,11 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     borderBottomWidth: 1,
-    borderBottomColor: '#242a34',
+    borderBottomColor: '#E2E8F0',
     paddingBottom: 8,
   },
   filterCardTitle: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontSize: 12,
     fontWeight: '900',
     letterSpacing: 0.8,
@@ -1855,7 +1855,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#1a2029',
+    backgroundColor: '#EFF6FF',
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 4,
@@ -1882,13 +1882,13 @@ const styles = StyleSheet.create({
     letterSpacing: 0.6,
   },
   activeFilterPill: {
-    backgroundColor: 'rgba(0, 229, 255, 0.15)',
+    backgroundColor: '#EFF6FF',
     paddingHorizontal: 6,
     paddingVertical: 1,
     borderRadius: 3,
   },
   activeFilterPillText: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontSize: 9,
     fontWeight: '800',
   },
@@ -1902,9 +1902,9 @@ const styles = StyleSheet.create({
   calendarPickerBtn: {
     flex: 1,
     height: 40,
-    backgroundColor: '#080e17',
+    backgroundColor: '#F8FAFC',
     borderWidth: 1,
-    borderColor: '#242a34',
+    borderColor: '#E2E8F0',
     borderRadius: radius.DEFAULT,
     flexDirection: 'row',
     alignItems: 'center',
@@ -1913,7 +1913,7 @@ const styles = StyleSheet.create({
   },
   calendarPickerBtnActive: {
     backgroundColor: '#00e5ff',
-    borderColor: '#00e5ff',
+    borderColor: '#2563EB',
   },
   calendarPickerBtnText: {
     color: '#849396',
@@ -1921,7 +1921,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   calendarPickerBtnTextActive: {
-    color: '#00363d',
+    color: '#FFFFFF',
     fontWeight: '900',
   },
   clearDateBtn: {
@@ -1950,16 +1950,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    backgroundColor: '#080e17',
+    backgroundColor: '#F8FAFC',
     borderWidth: 1,
-    borderColor: '#242a34',
+    borderColor: '#E2E8F0',
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: radius.DEFAULT,
   },
   terminalChipActive: {
     backgroundColor: '#00e5ff',
-    borderColor: '#00e5ff',
+    borderColor: '#2563EB',
   },
   terminalChipText: {
     color: '#849396',
@@ -1967,16 +1967,16 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   terminalChipTextActive: {
-    color: '#00363d',
+    color: '#FFFFFF',
     fontWeight: '900',
   },
   driverChip: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    backgroundColor: '#080e17',
+    backgroundColor: '#F8FAFC',
     borderWidth: 1,
-    borderColor: '#242a34',
+    borderColor: '#E2E8F0',
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: radius.DEFAULT,
@@ -1998,10 +1998,10 @@ const styles = StyleSheet.create({
   // Summary Metrics Bar
   summaryBar: {
     flexDirection: 'row',
-    backgroundColor: '#161c25',
+    backgroundColor: '#FFFFFF',
     borderRadius: radius.DEFAULT,
     borderWidth: 1,
-    borderColor: '#242a34',
+    borderColor: '#E2E8F0',
     paddingVertical: 12,
     alignItems: 'center',
     justifyContent: 'space-around',
@@ -2012,7 +2012,7 @@ const styles = StyleSheet.create({
   summaryNumber: {
     fontSize: 18,
     fontWeight: '900',
-    color: '#dde2f0',
+    color: '#1E293B',
   },
   summaryLabel: {
     fontSize: 8,
@@ -2058,10 +2058,10 @@ const styles = StyleSheet.create({
   },
   viewToggleRow: {
     flexDirection: 'row',
-    backgroundColor: '#161c25',
+    backgroundColor: '#FFFFFF',
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: '#242a34',
+    borderColor: '#E2E8F0',
     padding: 2,
   },
   toggleBtn: {
@@ -2081,20 +2081,20 @@ const styles = StyleSheet.create({
     color: '#849396',
   },
   toggleBtnTextActive: {
-    color: '#00363d',
+    color: '#FFFFFF',
   },
 
   // Excel Sheet Card
   excelSheetCard: {
-    backgroundColor: '#161c25',
+    backgroundColor: '#FFFFFF',
     borderRadius: radius.DEFAULT,
     borderWidth: 1,
-    borderColor: '#242a34',
+    borderColor: '#E2E8F0',
     overflow: 'hidden',
   },
   tableRowHeader: {
     flexDirection: 'row',
-    backgroundColor: '#080e17',
+    backgroundColor: '#F8FAFC',
     borderBottomWidth: 2,
     borderBottomColor: '#00e5ff',
     paddingVertical: 10,
@@ -2102,7 +2102,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   thCell: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontSize: 10,
     fontWeight: '900',
     letterSpacing: 0.6,
@@ -2114,17 +2114,17 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 6,
     borderBottomWidth: 1,
-    borderBottomColor: '#242a34',
+    borderBottomColor: '#E2E8F0',
   },
   tableRowEven: {
-    backgroundColor: '#161c25',
+    backgroundColor: '#FFFFFF',
   },
   tableRowOdd: {
     backgroundColor: '#111721',
   },
   tdCell: {
     fontSize: 11,
-    color: '#dde2f0',
+    color: '#1E293B',
     paddingHorizontal: 6,
   },
   tdCellWrap: {
@@ -2132,16 +2132,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   driverCodeBadge: {
-    backgroundColor: 'rgba(0, 229, 255, 0.1)',
+    backgroundColor: '#EFF6FF',
     borderWidth: 1,
-    borderColor: 'rgba(0, 229, 255, 0.3)',
+    borderColor: '#2563EB',
     borderRadius: 4,
     paddingHorizontal: 6,
     paddingVertical: 2,
     alignSelf: 'flex-start',
   },
   driverCodeBadgeText: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontSize: 9,
     fontWeight: '800',
   },
@@ -2166,16 +2166,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: 'rgba(0, 229, 255, 0.1)',
+    backgroundColor: '#EFF6FF',
     borderWidth: 1,
-    borderColor: 'rgba(0, 229, 255, 0.3)',
+    borderColor: '#2563EB',
     borderRadius: 4,
     paddingHorizontal: 6,
     paddingVertical: 2,
     alignSelf: 'flex-start',
   },
   cheBadgeText: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontSize: 9,
     fontWeight: '800',
   },
@@ -2185,11 +2185,11 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   dualContainerText: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontWeight: '900',
   },
   dualBadgePill: {
-    backgroundColor: 'rgba(0, 229, 255, 0.15)',
+    backgroundColor: '#EFF6FF',
     borderRadius: 3,
     paddingHorizontal: 4,
     paddingVertical: 1,
@@ -2197,7 +2197,7 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   dualBadgePillText: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontSize: 7.5,
     fontWeight: '900',
   },
@@ -2211,15 +2211,15 @@ const styles = StyleSheet.create({
   sizePillDual: {
     backgroundColor: 'rgba(0, 229, 255, 0.2)',
     borderWidth: 1,
-    borderColor: '#00e5ff',
+    borderColor: '#2563EB',
   },
   sizePillText: {
-    color: '#dde2f0',
+    color: '#1E293B',
     fontSize: 9,
     fontWeight: '800',
   },
   sizePillTextDual: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontWeight: '900',
   },
   damageBadge: {
@@ -2255,7 +2255,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   emptyTitle: {
-    color: '#dde2f0',
+    color: '#1E293B',
     fontSize: 12,
     fontWeight: '800',
   },
@@ -2268,10 +2268,10 @@ const styles = StyleSheet.create({
 
   // Card View Mode
   cardItem: {
-    backgroundColor: '#161c25',
+    backgroundColor: '#FFFFFF',
     borderRadius: radius.DEFAULT,
     borderWidth: 1,
-    borderColor: '#242a34',
+    borderColor: '#E2E8F0',
     padding: 12,
     gap: 8,
   },
@@ -2280,11 +2280,11 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     borderBottomWidth: 1,
-    borderBottomColor: '#242a34',
+    borderBottomColor: '#E2E8F0',
     paddingBottom: 6,
   },
   cardDriverName: {
-    color: '#dde2f0',
+    color: '#1E293B',
     fontSize: 12,
     fontWeight: '800',
   },
@@ -2304,7 +2304,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   cardValCyan: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontSize: 11,
     fontWeight: '800',
   },
@@ -2314,7 +2314,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   cardValWhite: {
-    color: '#dde2f0',
+    color: '#1E293B',
     fontSize: 10,
     fontWeight: '600',
   },
@@ -2347,7 +2347,7 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
   },
   exportExcelBtnText: {
-    color: '#00363d',
+    color: '#FFFFFF',
     fontSize: 12,
     fontWeight: '900',
     letterSpacing: 0.8,
@@ -2368,7 +2368,7 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
   },
   exportPdfBtnText: {
-    color: '#ffffff',
+    color: '#1E293B',
     fontSize: 12,
     fontWeight: '900',
     letterSpacing: 0.8,
@@ -2391,10 +2391,10 @@ const styles = StyleSheet.create({
   modalCard: {
     width: '100%',
     maxWidth: 380,
-    backgroundColor: '#161c25',
+    backgroundColor: '#FFFFFF',
     borderRadius: radius.DEFAULT,
     borderWidth: 1,
-    borderColor: '#00e5ff',
+    borderColor: '#2563EB',
     padding: 16,
     gap: 12,
   },
@@ -2403,11 +2403,11 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     borderBottomWidth: 1,
-    borderBottomColor: '#242a34',
+    borderBottomColor: '#E2E8F0',
     paddingBottom: 10,
   },
   modalTitle: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontSize: 12,
     fontWeight: '900',
     letterSpacing: 0.8,
@@ -2432,22 +2432,22 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   modalTodayBtnText: {
-    color: '#00363d',
+    color: '#FFFFFF',
     fontWeight: '900',
     fontSize: 11,
   },
   modalAllDatesBtn: {
     flex: 1,
     height: 38,
-    backgroundColor: '#1a2029',
+    backgroundColor: '#EFF6FF',
     borderRadius: radius.DEFAULT,
     borderWidth: 1,
-    borderColor: '#242a34',
+    borderColor: '#E2E8F0',
     alignItems: 'center',
     justifyContent: 'center',
   },
   modalAllDatesBtnText: {
-    color: '#dde2f0',
+    color: '#1E293B',
     fontWeight: '800',
     fontSize: 11,
   },
@@ -2455,10 +2455,10 @@ const styles = StyleSheet.create({
   // ─── DATE MODE TABS & PRESETS ───
   dateModeTabRow: {
     flexDirection: 'row',
-    backgroundColor: '#080e17',
+    backgroundColor: '#F8FAFC',
     borderRadius: radius.DEFAULT,
     borderWidth: 1,
-    borderColor: '#242a34',
+    borderColor: '#E2E8F0',
     padding: 3,
     gap: 4,
   },
@@ -2481,7 +2481,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.6,
   },
   dateModeTabTextActive: {
-    color: '#00363d',
+    color: '#FFFFFF',
     fontWeight: '900',
   },
   presetsScroll: {
@@ -2489,16 +2489,16 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
   },
   presetChip: {
-    backgroundColor: '#080e17',
+    backgroundColor: '#F8FAFC',
     borderWidth: 1,
-    borderColor: '#242a34',
+    borderColor: '#E2E8F0',
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: radius.DEFAULT,
   },
   presetChipActive: {
     backgroundColor: 'rgba(0, 229, 255, 0.2)',
-    borderColor: '#00e5ff',
+    borderColor: '#2563EB',
   },
   presetChipText: {
     color: '#849396',
@@ -2506,17 +2506,17 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   presetChipTextActive: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontWeight: '900',
   },
 
   // ─── MODAL EXTENSIONS ───
   modalModeToggleRow: {
     flexDirection: 'row',
-    backgroundColor: '#080e17',
+    backgroundColor: '#F8FAFC',
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: '#242a34',
+    borderColor: '#E2E8F0',
     padding: 2,
     gap: 4,
   },
@@ -2536,14 +2536,14 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   modalModeTabTextActive: {
-    color: '#00363d',
+    color: '#FFFFFF',
     fontWeight: '900',
   },
   modalInstructionBanner: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: 'rgba(0, 229, 255, 0.08)',
+    backgroundColor: '#EFF6FF',
     borderWidth: 1,
     borderColor: 'rgba(0, 229, 255, 0.25)',
     paddingHorizontal: 10,
@@ -2598,7 +2598,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   modalApplyBtnText: {
-    color: '#00363d',
+    color: '#FFFFFF',
     fontWeight: '900',
     fontSize: 12,
     letterSpacing: 0.6,
@@ -2610,21 +2610,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: radius.DEFAULT,
-    backgroundColor: 'rgba(0, 229, 255, 0.08)',
+    backgroundColor: '#EFF6FF',
     borderWidth: 1,
     borderColor: 'rgba(0, 229, 255, 0.25)',
   },
   sortBtnActive: {
     backgroundColor: '#00e5ff',
-    borderColor: '#00e5ff',
+    borderColor: '#2563EB',
   },
   sortBtnText: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontSize: 10,
     fontWeight: '800',
     letterSpacing: 0.5,
   },
   sortBtnTextActive: {
-    color: '#00363d',
+    color: '#FFFFFF',
   },
 });

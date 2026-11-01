@@ -139,7 +139,7 @@ export default function SupervisorMissionDispatcher() {
         selected: true,
         startingDay: true,
         endingDay: true,
-        color: '#00e5ff',
+        color: '#2563EB',
         textColor: '#070c14',
       };
     }
@@ -577,7 +577,7 @@ export default function SupervisorMissionDispatcher() {
               <Text style={styles.metricLabel}>TOTAL TRIPS</Text>
               <Ionicons name="swap-horizontal" size={14} color="#00e5ff" />
             </View>
-            <Text style={[styles.metricValue, { color: '#00e5ff' }]}>{countTotal}</Text>
+            <Text style={[styles.metricValue, { color: '#2563EB' }]}>{countTotal}</Text>
             <Text style={styles.metricSub}>{totalContainersDispatched} Containers Dispatched</Text>
           </View>
 
@@ -604,7 +604,7 @@ export default function SupervisorMissionDispatcher() {
               <Text style={styles.metricLabel}>COMPLETED</Text>
               <Ionicons name="checkmark-done" size={14} color="#bac9cc" />
             </View>
-            <Text style={[styles.metricValue, { color: '#dde2f0' }]}>{countCompleted}</Text>
+            <Text style={[styles.metricValue, { color: '#1E293B' }]}>{countCompleted}</Text>
             <Text style={styles.metricSub}>Delivered</Text>
           </View>
         </View>
@@ -975,10 +975,10 @@ export default function SupervisorMissionDispatcher() {
                               gap: 8,
                               marginTop: 6,
                             }}>
-                              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingBottom: 4, borderBottomWidth: 1, borderBottomColor: 'rgba(255, 255, 255, 0.06)' }}>
+                              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingBottom: 4, borderBottomWidth: 1, borderBottomColor: '#E2E8F0' }}>
                                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
                                   <Ionicons name="shield-checkmark" size={13} color="#00e5ff" />
-                                  <Text style={{ fontSize: 9.5, fontWeight: '900', color: '#00e5ff', letterSpacing: 0.4 }}>
+                                  <Text style={{ fontSize: 9.5, fontWeight: '900', color: '#2563EB', letterSpacing: 0.4 }}>
                                     DRIVER DISCHARGE & SEAL VERIFICATION
                                   </Text>
                                 </View>
@@ -995,11 +995,11 @@ export default function SupervisorMissionDispatcher() {
                               </View>
 
                               <View style={{ flexDirection: 'row', gap: 6 }}>
-                                <View style={{ flex: 1, backgroundColor: '#0f1726', borderRadius: 6, borderWidth: 1, borderColor: '#242a34', padding: 6 }}>
+                                <View style={{ flex: 1, backgroundColor: '#0f1726', borderRadius: 6, borderWidth: 1, borderColor: '#E2E8F0', padding: 6 }}>
                                   <Text style={{ fontSize: 8, fontWeight: '800', color: '#849396' }}>BAY / BERTH</Text>
                                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
                                     <Ionicons name="location" size={11} color="#feb300" />
-                                    <Text style={{ fontSize: 9.5, fontWeight: '800', color: '#00e5ff' }} numberOfLines={1}>
+                                    <Text style={{ fontSize: 9.5, fontWeight: '800', color: '#2563EB' }} numberOfLines={1}>
                                       {getTripDischargeTerminal(t)} · {t.dischargeBay || 'Bay 04, Crane 02'}
                                     </Text>
                                   </View>
@@ -1057,10 +1057,10 @@ export default function SupervisorMissionDispatcher() {
                                 paddingHorizontal: 8,
                                 paddingVertical: 6,
                               }}>
-                                <Text style={{ fontSize: 7.5, fontWeight: '900', color: '#00e5ff', letterSpacing: 0.4, marginBottom: 2 }}>
+                                <Text style={{ fontSize: 7.5, fontWeight: '900', color: '#2563EB', letterSpacing: 0.4, marginBottom: 2 }}>
                                   DRIVER COMPLETION REMARKS
                                 </Text>
-                                <Text style={{ fontSize: 9.5, color: '#dde2f0', fontStyle: 'italic', lineHeight: 13 }}>
+                                <Text style={{ fontSize: 9.5, color: '#1E293B', fontStyle: 'italic', lineHeight: 13 }}>
                                   "{t.driverCompletionNotes || 'Containers discharged safely at destination berth. Seals inspected and verified intact.'}"
                                 </Text>
                               </View>
@@ -1120,7 +1120,7 @@ export default function SupervisorMissionDispatcher() {
 
             <Text style={styles.modalDesc}>
               Please specify the mandatory reason for rejecting Gate Pass for Trip{' '}
-              <Text style={{ color: '#00e5ff', fontWeight: '800' }}>
+              <Text style={{ color: '#2563EB', fontWeight: '800' }}>
                 {tripToReject?.tripNumber || tripToReject?.id}
               </Text>.
             </Text>
@@ -1144,7 +1144,7 @@ export default function SupervisorMissionDispatcher() {
                 {submittingDecision ? (
                   <ActivityIndicator color="#fff" />
                 ) : (
-                  <Text style={[styles.modalSubmitBtnText, { color: '#fff' }]}>
+                  <Text style={[styles.modalSubmitBtnText, { color: '#FFFFFF' }]}>
                     CONFIRM REJECTION
                   </Text>
                 )}
@@ -1219,7 +1219,7 @@ export default function SupervisorMissionDispatcher() {
                 markedDates={calendarMarkedDates}
                 onDayPress={(day) => handleDayPress(day.dateString)}
                 theme={{
-                  backgroundColor: '#0c1524',
+                  backgroundColor: '#FFFFFF',
                   calendarBackground: '#0c1524',
                   textSectionTitleColor: '#849396',
                   selectedDayBackgroundColor: '#00e5ff',
@@ -1276,7 +1276,7 @@ export default function SupervisorMissionDispatcher() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0e141d',
+    backgroundColor: '#F8FAFC',
   },
   scroll: {
     flexGrow: 1,
@@ -1285,10 +1285,10 @@ const styles = StyleSheet.create({
 
   // ─── HEADER ───
   header: {
-    backgroundColor: '#161c25',
+    backgroundColor: '#FFFFFF',
     borderRadius: radius.DEFAULT,
     borderWidth: 1,
-    borderColor: '#242a34',
+    borderColor: '#E2E8F0',
     padding: 14,
     flexDirection: 'row',
     alignItems: 'center',
@@ -1309,12 +1309,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   avatarText: {
-    color: '#00363d',
+    color: '#FFFFFF',
     fontWeight: '900',
     fontSize: 16,
   },
   supervisorNameText: {
-    color: '#dde2f0',
+    color: '#1E293B',
     fontWeight: '800',
     fontSize: 14,
   },
@@ -1344,12 +1344,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    backgroundColor: '#080e17',
+    backgroundColor: '#F8FAFC',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: radius.sm,
     borderWidth: 1,
-    borderColor: '#242a34',
+    borderColor: '#E2E8F0',
   },
   onlineDot: {
     width: 6,
@@ -1360,7 +1360,7 @@ const styles = StyleSheet.create({
   onlineText: {
     fontSize: 9,
     fontWeight: '800',
-    color: '#00e5ff',
+    color: '#2563EB',
     letterSpacing: 0.6,
   },
 
@@ -1372,10 +1372,10 @@ const styles = StyleSheet.create({
   },
   metricCard: {
     width: '48%',
-    backgroundColor: '#161c25',
+    backgroundColor: '#FFFFFF',
     borderRadius: radius.DEFAULT,
     borderWidth: 1,
-    borderColor: '#242a34',
+    borderColor: '#E2E8F0',
     padding: 12,
     gap: 4,
   },
@@ -1402,10 +1402,10 @@ const styles = StyleSheet.create({
 
   // ─── SECTION WRAPS ───
   sectionWrap: {
-    backgroundColor: '#161c25',
+    backgroundColor: '#FFFFFF',
     borderRadius: radius.DEFAULT,
     borderWidth: 1,
-    borderColor: '#242a34',
+    borderColor: '#E2E8F0',
     padding: 14,
     gap: 12,
   },
@@ -1415,10 +1415,10 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingBottom: 6,
     borderBottomWidth: 1,
-    borderBottomColor: '#242a34',
+    borderBottomColor: '#E2E8F0',
   },
   sectionTitle: {
-    color: '#dde2f0',
+    color: '#1E293B',
     fontSize: 11,
     fontWeight: '800',
     letterSpacing: 0.6,
@@ -1428,16 +1428,16 @@ const styles = StyleSheet.create({
   searchBarWrap: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#080e17',
+    backgroundColor: '#F8FAFC',
     borderRadius: radius.DEFAULT,
     borderWidth: 1,
-    borderColor: '#242a34',
+    borderColor: '#E2E8F0',
     paddingHorizontal: 12,
     height: 42,
   },
   searchInput: {
     flex: 1,
-    color: '#dde2f0',
+    color: '#1E293B',
     fontSize: 11,
     ...(Platform.OS === 'web' ? { outlineStyle: 'none' } : {}),
   } as any,
@@ -1455,17 +1455,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: radius.sm,
-    backgroundColor: '#080e17',
+    backgroundColor: '#F8FAFC',
     borderWidth: 1,
-    borderColor: '#242a34',
+    borderColor: '#E2E8F0',
   },
   filterChipActive: {
     backgroundColor: 'rgba(254, 179, 0, 0.15)',
     borderColor: '#feb300',
   },
   filterChipActiveCyan: {
-    backgroundColor: 'rgba(0, 229, 255, 0.15)',
-    borderColor: '#00e5ff',
+    backgroundColor: '#EFF6FF',
+    borderColor: '#2563EB',
   },
   filterChipText: {
     color: '#849396',
@@ -1476,7 +1476,7 @@ const styles = StyleSheet.create({
     color: '#feb300',
   },
   filterChipTextActiveCyan: {
-    color: '#00e5ff',
+    color: '#2563EB',
   },
 
   // ─── DATE-WISE GROUP STYLES ───
@@ -1489,13 +1489,13 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     backgroundColor: '#101721',
     borderWidth: 1,
-    borderColor: '#242a34',
+    borderColor: '#E2E8F0',
     borderRadius: radius.DEFAULT,
     paddingHorizontal: 12,
     paddingVertical: 8,
   },
   dateGroupTitle: {
-    color: '#dde2f0',
+    color: '#1E293B',
     fontSize: 10,
     fontWeight: '900',
     letterSpacing: 0.5,
@@ -1507,7 +1507,7 @@ const styles = StyleSheet.create({
     borderRadius: 3,
   },
   todayPillText: {
-    color: '#00363d',
+    color: '#FFFFFF',
     fontSize: 8,
     fontWeight: '900',
   },
@@ -1525,15 +1525,15 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   dateGroupCountBadge: {
-    backgroundColor: '#080e17',
+    backgroundColor: '#F8FAFC',
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 4,
     borderWidth: 1,
-    borderColor: '#242a34',
+    borderColor: '#E2E8F0',
   },
   dateGroupCountText: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontSize: 9,
     fontWeight: '800',
   },
@@ -1542,7 +1542,7 @@ const styles = StyleSheet.create({
     height: 32,
     borderRadius: 16,
     borderWidth: 1.5,
-    borderColor: '#00e5ff',
+    borderColor: '#2563EB',
   },
   monDriverThumbFallback: {
     width: 32,
@@ -1550,17 +1550,17 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     backgroundColor: '#101d30',
     borderWidth: 1.5,
-    borderColor: '#00e5ff',
+    borderColor: '#2563EB',
     alignItems: 'center',
     justifyContent: 'center',
   },
   monDriverThumbText: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontWeight: '900',
     fontSize: 12,
   },
   monDriverNameSmall: {
-    color: '#dde2f0',
+    color: '#1E293B',
     fontSize: 10,
     fontWeight: '700',
   },
@@ -1569,7 +1569,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   monSpecBoldCyan: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontWeight: '800',
   },
   monSpecBoldGreen: {
@@ -1579,10 +1579,10 @@ const styles = StyleSheet.create({
 
   // ─── MONITORING CARDS ───
   monitoringCard: {
-    backgroundColor: '#080e17',
+    backgroundColor: '#F8FAFC',
     borderRadius: radius.DEFAULT,
     borderWidth: 1,
-    borderColor: '#242a34',
+    borderColor: '#E2E8F0',
     padding: 12,
     gap: 8,
   },
@@ -1598,7 +1598,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#22ef7e',
   },
   monTripId: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontSize: 12,
     fontWeight: '900',
   },
@@ -1608,11 +1608,11 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   badgeGreen: { backgroundColor: 'rgba(34, 239, 126, 0.15)' },
-  badgeCyan: { backgroundColor: 'rgba(0, 229, 255, 0.15)' },
+  badgeCyan: { backgroundColor: '#EFF6FF' },
   badgeAmber: { backgroundColor: 'rgba(254, 179, 0, 0.15)' },
   badgeRed: { backgroundColor: 'rgba(255, 82, 82, 0.15)' },
   monStatusText: {
-    color: '#dde2f0',
+    color: '#1E293B',
     fontSize: 8,
     fontWeight: '800',
   },
@@ -1622,12 +1622,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   monRouteText: {
-    color: '#dde2f0',
+    color: '#1E293B',
     fontSize: 12,
     fontWeight: '800',
   },
   monRouteTag: {
-    backgroundColor: 'rgba(0, 229, 255, 0.1)',
+    backgroundColor: '#EFF6FF',
     borderRadius: 4,
     paddingHorizontal: 6,
     paddingVertical: 2,
@@ -1637,14 +1637,14 @@ const styles = StyleSheet.create({
   monRouteTagText: {
     fontSize: 9,
     fontWeight: '800',
-    color: '#00e5ff',
+    color: '#2563EB',
     letterSpacing: 0.5,
   },
   monTimingPanel: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#070c14',
+    backgroundColor: '#F8FAFC',
     borderRadius: radius.DEFAULT,
     borderWidth: 1,
     borderColor: '#1e293b',
@@ -1666,18 +1666,18 @@ const styles = StyleSheet.create({
   monTimingLabel: {
     fontSize: 8.5,
     fontWeight: '800',
-    color: '#00e5ff',
+    color: '#2563EB',
     letterSpacing: 0.4,
   },
   monTimingDate: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#dde2f0',
+    color: '#1E293B',
   },
   monTimingTime: {
     fontSize: 12,
     fontWeight: '900',
-    color: '#00e5ff',
+    color: '#2563EB',
     letterSpacing: 0.2,
   },
   monTimingDivider: {
@@ -1716,7 +1716,7 @@ const styles = StyleSheet.create({
     fontSize: 9,
   },
   monSpecBold: {
-    color: '#dde2f0',
+    color: '#1E293B',
     fontWeight: '600',
   },
   monContainersRow: {
@@ -1728,18 +1728,18 @@ const styles = StyleSheet.create({
     borderTopColor: '#161c25',
   },
   monContainersText: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontSize: 9,
   },
   emptyPendingCard: {
-    backgroundColor: '#080e17',
+    backgroundColor: '#F8FAFC',
     borderRadius: radius.DEFAULT,
     padding: 20,
     alignItems: 'center',
     gap: 6,
   },
   emptyPendingText: {
-    color: '#dde2f0',
+    color: '#1E293B',
     fontSize: 11,
     fontWeight: '800',
   },
@@ -1769,14 +1769,14 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   approveBtnText: {
-    color: '#00363d',
+    color: '#FFFFFF',
     fontWeight: '900',
     fontSize: 11,
   },
   rejectBtn: {
     paddingHorizontal: 16,
     height: 38,
-    backgroundColor: '#1a2029',
+    backgroundColor: '#EFF6FF',
     borderRadius: radius.DEFAULT,
     borderWidth: 1,
     borderColor: '#ff5252',
@@ -1802,10 +1802,10 @@ const styles = StyleSheet.create({
   modalCard: {
     width: '100%',
     maxWidth: 440,
-    backgroundColor: '#161c25',
+    backgroundColor: '#FFFFFF',
     borderRadius: radius.DEFAULT,
     borderWidth: 1,
-    borderColor: '#242a34',
+    borderColor: '#E2E8F0',
     padding: 16,
     gap: 12,
   },
@@ -1815,7 +1815,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   modalTitle: {
-    color: '#dde2f0',
+    color: '#1E293B',
     fontSize: 13,
     fontWeight: '900',
     letterSpacing: 0.6,
@@ -1826,12 +1826,12 @@ const styles = StyleSheet.create({
     lineHeight: 16,
   },
   rejectionInput: {
-    backgroundColor: '#080e17',
+    backgroundColor: '#F8FAFC',
     borderWidth: 1,
     borderColor: '#ff5252',
     borderRadius: radius.DEFAULT,
     padding: 10,
-    color: '#dde2f0',
+    color: '#1E293B',
     fontSize: 11,
     minHeight: 70,
     textAlignVertical: 'top',
@@ -1856,7 +1856,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   summaryHeaderTitle: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontSize: 12,
     fontWeight: '900',
     letterSpacing: 0.8,
@@ -1865,7 +1865,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    backgroundColor: 'rgba(0, 229, 255, 0.08)',
+    backgroundColor: '#EFF6FF',
     borderWidth: 1,
     borderColor: 'rgba(0, 229, 255, 0.25)',
     paddingHorizontal: 8,
@@ -1873,7 +1873,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   summaryDateBadgeText: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontSize: 11,
     fontWeight: '700',
   },
@@ -1881,16 +1881,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: 'rgba(0, 229, 255, 0.08)',
+    backgroundColor: '#EFF6FF',
     borderWidth: 1,
-    borderColor: 'rgba(0, 229, 255, 0.3)',
+    borderColor: '#2563EB',
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 8,
     marginTop: 8,
   },
   activeRangeBannerText: {
-    color: '#dde2f0',
+    color: '#1E293B',
     fontSize: 11,
     fontWeight: '600',
   },
@@ -1911,7 +1911,7 @@ const styles = StyleSheet.create({
   calendarModalCard: {
     width: '100%',
     maxWidth: 440,
-    backgroundColor: '#0c1524',
+    backgroundColor: '#FFFFFF',
     borderRadius: 16,
     borderWidth: 1,
     borderColor: '#1d2e47',
@@ -1932,7 +1932,7 @@ const styles = StyleSheet.create({
     borderColor: '#1f3452',
   },
   calendarPresetText: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontSize: 11,
     fontWeight: '700',
   },
@@ -1940,7 +1940,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#070c14',
+    backgroundColor: '#F8FAFC',
     borderWidth: 1,
     borderColor: 'rgba(0, 229, 255, 0.25)',
     borderRadius: 10,
@@ -1958,7 +1958,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.6,
   },
   rangeDateVal: {
-    color: '#dde2f0',
+    color: '#1E293B',
     fontSize: 12,
     fontWeight: '700',
   },

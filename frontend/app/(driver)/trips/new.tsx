@@ -120,12 +120,12 @@ const tp = StyleSheet.create({
     paddingHorizontal: 13,
     paddingVertical: 9,
     borderRadius: radius.md,
-    backgroundColor: '#080e17',
+    backgroundColor: '#F8FAFC',
     borderWidth: 1,
     borderColor: '#242a34',
   },
   btnText: { fontSize: 13, fontWeight: '700', color: '#849396' },
-  btnTextActive: { color: '#00363d' },
+  btnTextActive: { color: '#FFFFFF' },
   btnDisabled: { opacity: 0.4 },
   btnTextDisabled: { color: '#849396' },
 });
@@ -395,7 +395,7 @@ const vp = StyleSheet.create({
   fixBtnText: {
     fontSize: 10,
     fontWeight: '800',
-    color: '#00363d',
+    color: '#FFFFFF',
   },
 });
 
@@ -485,7 +485,7 @@ function ContainerCard({
                 <Text style={cc.contBadgeText1}>CONTAINER #1 (20FT)</Text>
               </View>
               <Text style={cc.contSectionDestHint}>
-                Discharge: <Text style={{ color: '#00e5ff', fontWeight: '800' }}>{entry.destTerminal || 'JCT'}</Text>
+                Discharge: <Text style={{ color: '#2563EB', fontWeight: '800' }}>{entry.destTerminal || 'JCT'}</Text>
               </Text>
             </View>
 
@@ -648,7 +648,7 @@ function ContainerCard({
         <TouchableOpacity
           style={[
             cc.damageBtn,
-            !entry.isReturnContainer && { backgroundColor: 'rgba(0, 229, 255, 0.12)', borderColor: '#00e5ff' },
+            !entry.isReturnContainer && { backgroundColor: '#EFF6FF', borderColor: '#2563EB' },
           ]}
           onPress={() => onChange('isReturnContainer', 'false')}
         >
@@ -657,7 +657,7 @@ function ContainerCard({
             size={14}
             color={!entry.isReturnContainer ? '#00e5ff' : '#849396'}
           />
-          <Text style={[cc.damageTxt, !entry.isReturnContainer && { color: '#00e5ff' }]}>
+          <Text style={[cc.damageTxt, !entry.isReturnContainer && { color: '#2563EB' }]}>
             📦 STANDARD FREIGHT
           </Text>
         </TouchableOpacity>
@@ -693,7 +693,7 @@ function ContainerCard({
 
 const cc = StyleSheet.create({
   card: {
-    backgroundColor: '#161c25',
+    backgroundColor: '#FFFFFF',
     borderRadius: radius.lg,
     padding: spacing.md,
     marginBottom: spacing.md,
@@ -703,7 +703,7 @@ const cc = StyleSheet.create({
   containerSectionCard: {
     backgroundColor: '#0a101a',
     borderWidth: 1,
-    borderColor: 'rgba(0, 229, 255, 0.4)',
+    borderColor: '#2563EB',
     borderRadius: radius.md,
     padding: 12,
     marginBottom: 6,
@@ -726,7 +726,7 @@ const cc = StyleSheet.create({
   contBadgeText1: {
     fontSize: 10,
     fontWeight: '900',
-    color: '#00363d',
+    color: '#FFFFFF',
     letterSpacing: 0.5,
   },
   contBadge2: {
@@ -775,9 +775,9 @@ const cc = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: 'rgba(0, 229, 255, 0.1)',
+    backgroundColor: '#EFF6FF',
     borderWidth: 1,
-    borderColor: '#00e5ff',
+    borderColor: '#2563EB',
     borderRadius: radius.md,
     padding: 10,
     marginTop: 4,
@@ -785,7 +785,7 @@ const cc = StyleSheet.create({
   dualDischargeTitle: {
     fontSize: 11,
     fontWeight: '800',
-    color: '#00e5ff',
+    color: '#2563EB',
     letterSpacing: 0.5,
   },
   dualDischargeSub: {
@@ -795,32 +795,32 @@ const cc = StyleSheet.create({
   },
   fieldLabel: { fontSize: 13, fontWeight: '600', color: '#849396', marginBottom: 6 },
   input: {
-    backgroundColor: '#080e17',
+    backgroundColor: '#F8FAFC',
     borderWidth: 1,
     borderColor: '#242a34',
     borderRadius: radius.md,
     paddingHorizontal: 14,
     paddingVertical: 12,
     fontSize: 15,
-    color: '#dde2f0',
+    color: '#1E293B',
     marginBottom: 12,
     ...(Platform.OS === 'web' && { outlineStyle: 'none', cursor: 'text' } as any),
   },
   sizeRow: { flexDirection: 'row', gap: 8, marginBottom: 12 },
   sizeBtn: {
     flex: 1,
-    backgroundColor: '#080e17',
+    backgroundColor: '#F8FAFC',
     paddingVertical: 12,
     borderRadius: radius.md,
     alignItems: 'center',
     borderWidth: 1,
     borderColor: '#242a34',
   },
-  sizeBtnActive: { backgroundColor: 'rgba(0, 229, 255, 0.15)', borderColor: '#00e5ff' },
+  sizeBtnActive: { backgroundColor: '#EFF6FF', borderColor: '#2563EB' },
   sizeTxt: { fontSize: 13, fontWeight: '700', color: '#849396' },
-  sizeTxtActive: { color: '#00e5ff' },
+  sizeTxtActive: { color: '#2563EB' },
   subSizeTxt: { fontSize: 10, fontWeight: '600', color: '#687787', marginTop: 2 },
-  subSizeTxtActive: { color: '#00e5ff' },
+  subSizeTxtActive: { color: '#2563EB' },
   row: { flexDirection: 'row', alignItems: 'flex-start' },
 
   // Damage status
@@ -828,7 +828,7 @@ const cc = StyleSheet.create({
   damageBtn: {
     flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
     gap: 6, paddingVertical: 10, borderRadius: radius.md,
-    backgroundColor: '#080e17', borderWidth: 1, borderColor: '#242a34',
+    backgroundColor: '#F8FAFC', borderWidth: 1, borderColor: '#242a34',
   },
   damageBtnNone: { backgroundColor: 'rgba(34, 239, 126, 0.1)', borderColor: '#22ef7e' },
   damageBtnDamaged: { backgroundColor: 'rgba(255, 82, 82, 0.12)', borderColor: '#ff5252' },
@@ -845,7 +845,7 @@ const cc = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: 'rgba(0, 229, 255, 0.08)',
+    backgroundColor: '#EFF6FF',
     borderWidth: 1,
     borderColor: 'rgba(0, 229, 255, 0.25)',
     borderRadius: radius.md,
@@ -854,7 +854,7 @@ const cc = StyleSheet.create({
     marginBottom: 12,
   },
   capacityGuidanceText: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontSize: 11,
     fontWeight: '700',
     flex: 1,
@@ -1397,9 +1397,9 @@ export default function NewTripScreen() {
                   <Text style={styles.truckLabel}>TRUCK</Text>
                   <Text style={styles.truckValue}>{driverTruck}</Text>
                 </View>
-                <View style={[styles.truckBadge, { backgroundColor: 'rgba(0, 229, 255, 0.12)', borderColor: '#00e5ff' }]}>
-                  <Text style={[styles.truckLabel, { color: '#00e5ff' }]}>CHE NO</Text>
-                  <Text style={[styles.truckValue, { color: '#00e5ff' }]}>{driverChe}</Text>
+                <View style={[styles.truckBadge, { backgroundColor: '#EFF6FF', borderColor: '#2563EB' }]}>
+                  <Text style={[styles.truckLabel, { color: '#2563EB' }]}>CHE NO</Text>
+                  <Text style={[styles.truckValue, { color: '#2563EB' }]}>{driverChe}</Text>
                 </View>
               </View>
             </View>
@@ -1531,7 +1531,7 @@ export default function NewTripScreen() {
           <Text style={styles.summaryTitle}>5. Trip Summary</Text>
           <View style={styles.summaryRow}>
             <Text style={styles.summaryKey}>Chassis Cargo</Text>
-            <Text style={[styles.summaryVal, { color: '#00e5ff', fontWeight: '800' }]}>
+            <Text style={[styles.summaryVal, { color: '#2563EB', fontWeight: '800' }]}>
               {containers[0]?.loadType === '40FT' || containers[0]?.size === '40FT'
                 ? '1 × 40FT Container'
                 : containers[0]?.loadType === '1x20FT'
@@ -1607,7 +1607,7 @@ export default function NewTripScreen() {
         {/* Action Buttons */}
         <View style={{ flexDirection: 'row', gap: 8, marginBottom: 20 }}>
           <TouchableOpacity
-            style={[styles.startBtn, { flex: 1, backgroundColor: '#080e17', borderColor: '#242a34', borderWidth: 1 }]}
+            style={[styles.startBtn, { flex: 1, backgroundColor: '#F8FAFC', borderColor: '#242a34', borderWidth: 1 }]}
             onPress={() => {
               if (router.canGoBack()) {
                 router.back();
@@ -1700,57 +1700,57 @@ export default function NewTripScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0e141d' },
+  container: { flex: 1, backgroundColor: '#F8FAFC' },
   header: {
-    backgroundColor: '#161c25',
+    backgroundColor: '#FFFFFF',
     padding: spacing.lg, paddingTop: 60, paddingBottom: spacing.lg,
     borderBottomLeftRadius: radius.xl, borderBottomRightRadius: radius.xl,
     borderWidth: 1, borderColor: '#242a34', borderTopWidth: 0,
   },
   backBtn: { paddingVertical: 4, marginBottom: spacing.sm, alignSelf: 'flex-start' },
-  backText: { color: '#00e5ff', fontSize: 15, fontWeight: '700' },
-  headerTitle: { color: '#dde2f0', fontSize: 24, fontWeight: '800' },
+  backText: { color: '#2563EB', fontSize: 15, fontWeight: '700' },
+  headerTitle: { color: '#1E293B', fontSize: 24, fontWeight: '800' },
   headerSub: { color: '#849396', fontSize: 13, marginTop: 4 },
 
   content: { padding: spacing.md, paddingBottom: 50 },
 
   infoCard: {
-    backgroundColor: '#161c25', borderRadius: radius.lg, padding: spacing.md,
+    backgroundColor: '#FFFFFF', borderRadius: radius.lg, padding: spacing.md,
     marginBottom: spacing.md, borderWidth: 1, borderColor: '#242a34',
   },
   infoRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   infoLabel: { fontSize: 11, color: '#849396' },
-  infoValue: { fontSize: 17, fontWeight: '800', color: '#dde2f0', marginTop: 2 },
+  infoValue: { fontSize: 17, fontWeight: '800', color: '#1E293B', marginTop: 2 },
   infoSub: { fontSize: 11, color: '#849396', marginTop: 2 },
   truckBadge: {
-    backgroundColor: '#080e17', paddingHorizontal: 14, paddingVertical: 8,
+    backgroundColor: '#F8FAFC', paddingHorizontal: 14, paddingVertical: 8,
     borderRadius: radius.md, alignItems: 'center', borderWidth: 1, borderColor: '#242a34',
   },
-  truckLabel: { fontSize: 10, fontWeight: '800', color: '#00e5ff' },
-  truckValue: { fontSize: 14, fontWeight: '700', color: '#dde2f0', marginTop: 2 },
+  truckLabel: { fontSize: 10, fontWeight: '800', color: '#2563EB' },
+  truckValue: { fontSize: 14, fontWeight: '700', color: '#1E293B', marginTop: 2 },
 
   section: {
-    backgroundColor: '#161c25', borderRadius: radius.lg, padding: spacing.md,
+    backgroundColor: '#FFFFFF', borderRadius: radius.lg, padding: spacing.md,
     marginBottom: spacing.md, borderWidth: 1, borderColor: '#242a34',
   },
-  sectionTitle: { fontSize: 16, fontWeight: '800', color: '#dde2f0', marginBottom: 2 },
+  sectionTitle: { fontSize: 16, fontWeight: '800', color: '#1E293B', marginBottom: 2 },
   sectionSub: { fontSize: 13, color: '#849396', marginBottom: 12 },
   fieldLabel: { fontSize: 13, fontWeight: '600', color: '#849396', marginBottom: 6 },
 
   input: {
-    backgroundColor: '#080e17', borderWidth: 1, borderColor: '#242a34',
+    backgroundColor: '#F8FAFC', borderWidth: 1, borderColor: '#242a34',
     borderRadius: radius.md, paddingHorizontal: 14, paddingVertical: 12,
-    fontSize: 15, color: '#dde2f0', marginBottom: 12,
+    fontSize: 15, color: '#1E293B', marginBottom: 12,
     ...(Platform.OS === 'web' && { outlineStyle: 'none', cursor: 'text' } as any),
   },
   chipsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 4 },
   chip: {
-    backgroundColor: '#080e17', paddingHorizontal: 14, paddingVertical: 8,
+    backgroundColor: '#F8FAFC', paddingHorizontal: 14, paddingVertical: 8,
     borderRadius: radius.pill, borderWidth: 1, borderColor: '#242a34',
   },
-  chipActive: { backgroundColor: 'rgba(0, 229, 255, 0.15)', borderColor: '#00e5ff' },
+  chipActive: { backgroundColor: '#EFF6FF', borderColor: '#2563EB' },
   chipText: { fontSize: 13, color: '#849396', fontWeight: '600' },
-  chipTextActive: { color: '#00e5ff', fontWeight: '800' },
+  chipTextActive: { color: '#2563EB', fontWeight: '800' },
 
   damageNoteAlert: {
     flexDirection: 'row',
@@ -1786,20 +1786,20 @@ const styles = StyleSheet.create({
   },
 
   summaryBox: {
-    backgroundColor: '#161c25', borderRadius: radius.lg, padding: spacing.lg, marginBottom: spacing.md,
-    borderWidth: 1, borderColor: '#00e5ff',
+    backgroundColor: '#FFFFFF', borderRadius: radius.lg, padding: spacing.lg, marginBottom: spacing.md,
+    borderWidth: 1, borderColor: '#2563EB',
   },
-  summaryTitle: { color: '#00e5ff', fontSize: 15, fontWeight: '800', marginBottom: 14, textTransform: 'uppercase', letterSpacing: 1 },
+  summaryTitle: { color: '#2563EB', fontSize: 15, fontWeight: '800', marginBottom: 14, textTransform: 'uppercase', letterSpacing: 1 },
   summaryRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
   summaryKey: { color: '#849396', fontSize: 14 },
-  summaryVal: { color: '#dde2f0', fontSize: 14, fontWeight: '700' },
+  summaryVal: { color: '#1E293B', fontSize: 14, fontWeight: '700' },
 
   startBtn: {
     backgroundColor: '#00e5ff', paddingVertical: 18, borderRadius: radius.lg,
     alignItems: 'center', marginTop: spacing.sm,
   },
   startBtnDisabled: { opacity: 0.5 },
-  startBtnText: { color: '#00363d', fontSize: 16, fontWeight: '900', letterSpacing: 0.5 },
+  startBtnText: { color: '#FFFFFF', fontSize: 16, fontWeight: '900', letterSpacing: 0.5 },
   chassisRulePill: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1822,15 +1822,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: 'rgba(0, 229, 255, 0.1)',
+    backgroundColor: '#EFF6FF',
     borderWidth: 1,
-    borderColor: 'rgba(0, 229, 255, 0.4)',
+    borderColor: '#2563EB',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 6,
   },
   editDriverBtnText: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontSize: 11,
     fontWeight: '800',
   },
@@ -1849,11 +1849,11 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   driverInput: {
-    backgroundColor: '#080e17',
+    backgroundColor: '#F8FAFC',
     borderWidth: 1,
     borderColor: '#242a34',
     borderRadius: radius.md,
-    color: '#dde2f0',
+    color: '#1E293B',
     paddingHorizontal: 12,
     paddingVertical: 9,
     fontSize: 13,
@@ -1885,14 +1885,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   driverSaveBtnText: {
-    color: '#00363d',
+    color: '#FFFFFF',
     fontSize: 11,
     fontWeight: '800',
   },
   autoTimingCard: {
-    backgroundColor: '#080e17',
+    backgroundColor: '#F8FAFC',
     borderWidth: 1,
-    borderColor: 'rgba(0, 229, 255, 0.3)',
+    borderColor: '#2563EB',
     borderRadius: radius.md,
     padding: 12,
     marginTop: 8,
@@ -1907,24 +1907,24 @@ const styles = StyleSheet.create({
   autoTimingTitle: {
     fontSize: 11,
     fontWeight: '800',
-    color: '#00e5ff',
+    color: '#2563EB',
     letterSpacing: 0.5,
   },
   autoBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: 'rgba(0, 229, 255, 0.12)',
+    backgroundColor: '#EFF6FF',
     paddingHorizontal: 7,
     paddingVertical: 2,
     borderRadius: radius.pill,
     borderWidth: 1,
-    borderColor: 'rgba(0, 229, 255, 0.3)',
+    borderColor: '#2563EB',
   },
   autoBadgeText: {
     fontSize: 10,
     fontWeight: '800',
-    color: '#00e5ff',
+    color: '#2563EB',
   },
   autoTimingGrid: {
     flexDirection: 'row',
@@ -1963,7 +1963,7 @@ const styles = StyleSheet.create({
   autoClockText: {
     fontSize: 13,
     fontWeight: '900',
-    color: '#00e5ff',
+    color: '#2563EB',
     letterSpacing: 1,
   },
   autoTodayTag: {

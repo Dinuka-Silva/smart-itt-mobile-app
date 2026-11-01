@@ -178,7 +178,7 @@ export const TripsPage: React.FC = () => {
 
                 return (
                   <tr key={t.id || t.tripNumber}>
-                    <td style={{ fontWeight: 800, color: '#00e5ff' }}>{t.tripNumber}</td>
+                    <td style={{ fontWeight: 800, color: '#2563EB' }}>{t.tripNumber}</td>
                     <td style={{ fontSize: '11px', color: '#90caf9' }}>{dateStr}</td>
                     <td>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -190,7 +190,7 @@ export const TripsPage: React.FC = () => {
                     <td>{t.vesselName || 'ITT Transfer'}</td>
                     <td>
                       <div style={{ fontWeight: 700, color: '#ffffff' }}>{t.vehicleNumber} ({t.chassisNumber || 'CHE'})</div>
-                      <div style={{ fontSize: '11px', color: '#00e5ff', marginTop: '2px' }}>
+                      <div style={{ fontSize: '11px', color: '#2563EB', marginTop: '2px' }}>
                         {t.driverName || 'Driver'} {t.driverCode ? `• ${t.driverCode}` : ''}
                       </div>
                     </td>
@@ -212,7 +212,7 @@ export const TripsPage: React.FC = () => {
                         <div style={{ color: '#22ef7e', fontWeight: 600 }}>
                           📥 Load: <span style={{ color: '#ffffff' }}>{timing.loadTime}</span>
                         </div>
-                        <div style={{ color: timing.isDischarged ? '#00e5ff' : '#feb300', fontWeight: 600 }}>
+                        <div style={{ color: timing.isDischarged ? '#2563EB' : '#feb300', fontWeight: 600 }}>
                           📤 Disch: <span style={{ color: '#ffffff' }}>{timing.dischargeTime}</span>
                         </div>
                         <div style={{ color: '#ffd54f', fontWeight: 700, fontSize: '10px' }}>
@@ -258,13 +258,13 @@ export const TripsPage: React.FC = () => {
             <h3 style={{ margin: '0 0 6px 0', fontSize: '18px', color: '#ffffff' }}>
               Trip Inspection: {selectedTrip.tripNumber}
             </h3>
-            <p style={{ margin: '0 0 16px 0', fontSize: '12px', color: '#00e5ff' }}>
+            <p style={{ margin: '0 0 16px 0', fontSize: '12px', color: '#2563EB' }}>
               {selectedTrip.vesselName} • Route: {selectedTrip.sourceTerminal} → {selectedTrip.destTerminal}
             </p>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '16px', fontSize: '12px' }}>
               <div><span style={{ color: '#78909c' }}>Status:</span> <strong>{selectedTrip.status}</strong></div>
-              <div><span style={{ color: '#78909c' }}>Driver:</span> <strong style={{ color: '#00e5ff' }}>{selectedTrip.driverName || 'Assigned Driver'} ({selectedTrip.driverCode || 'DRV'})</strong></div>
+              <div><span style={{ color: '#78909c' }}>Driver:</span> <strong style={{ color: '#2563EB' }}>{selectedTrip.driverName || 'Assigned Driver'} ({selectedTrip.driverCode || 'DRV'})</strong></div>
               <div><span style={{ color: '#78909c' }}>Vehicle:</span> <strong>{selectedTrip.vehicleNumber}</strong></div>
               <div><span style={{ color: '#78909c' }}>Chassis:</span> <strong>{selectedTrip.chassisNumber || 'N/A'}</strong></div>
               <div><span style={{ color: '#78909c' }}>Operator:</span> <strong>{selectedTrip.operator || 'SCK Logistics'}</strong></div>
@@ -276,15 +276,15 @@ export const TripsPage: React.FC = () => {
               const timing = getWebTripTimingInfo(selectedTrip);
               return (
                 <div style={{
-                  background: 'rgba(0, 229, 255, 0.04)',
-                  border: '1px solid rgba(0, 229, 255, 0.2)',
+                  background: 'rgba(37, 99, 235, 0.04)',
+                  border: '1px solid rgba(37, 99, 235, 0.2)',
                   borderRadius: '10px',
                   padding: '12px 14px',
                   marginBottom: '16px',
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-                    <Clock size={16} color="#00e5ff" />
-                    <span style={{ fontSize: '11px', fontWeight: 800, color: '#00e5ff', letterSpacing: '0.8px' }}>
+                    <Clock size={16} color="#2563EB" />
+                    <span style={{ fontSize: '11px', fontWeight: 800, color: '#2563EB', letterSpacing: '0.8px' }}>
                       OPERATIONAL TIMING & DISCHARGE REPORT
                     </span>
                   </div>
@@ -296,9 +296,9 @@ export const TripsPage: React.FC = () => {
                       <div style={{ fontSize: '10px', color: '#81c784', marginTop: '2px' }}>{selectedTrip.sourceTerminal}</div>
                     </div>
 
-                    <div style={{ background: timing.isDischarged ? 'rgba(0, 229, 255, 0.08)' : 'rgba(254, 179, 0, 0.08)', padding: '10px 8px', borderRadius: '8px', border: `1px solid ${timing.isDischarged ? 'rgba(0, 229, 255, 0.2)' : 'rgba(254, 179, 0, 0.2)'}` }}>
+                    <div style={{ background: timing.isDischarged ? 'rgba(37, 99, 235, 0.08)' : 'rgba(254, 179, 0, 0.08)', padding: '10px 8px', borderRadius: '8px', border: `1px solid ${timing.isDischarged ? 'rgba(37, 99, 235, 0.2)' : 'rgba(254, 179, 0, 0.2)'}` }}>
                       <div style={{ fontSize: '10px', color: timing.isDischarged ? '#80deea' : '#ffe082', fontWeight: 700, textTransform: 'uppercase' }}>📤 Discharge Time</div>
-                      <div style={{ fontSize: '14px', fontWeight: 800, color: timing.isDischarged ? '#00e5ff' : '#feb300', marginTop: '4px' }}>{timing.dischargeTime}</div>
+                      <div style={{ fontSize: '14px', fontWeight: 800, color: timing.isDischarged ? '#2563EB' : '#feb300', marginTop: '4px' }}>{timing.dischargeTime}</div>
                       <div style={{ fontSize: '10px', color: timing.isDischarged ? '#80deea' : '#ffe082', marginTop: '2px' }}>{selectedTrip.destTerminal}</div>
                     </div>
 
@@ -333,7 +333,7 @@ export const TripsPage: React.FC = () => {
                       </span>
                     </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', fontSize: '11px', background: '#070f1e', padding: '8px 10px', borderRadius: '6px' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', fontSize: '11px', background: '#F8FAFC', padding: '8px 10px', borderRadius: '6px' }}>
                       <div>
                         <span style={{ color: '#78909c' }}>Loaded: </span>
                         <strong style={{ color: '#22ef7e' }}>{cTiming.loadTime}</strong>
@@ -341,7 +341,7 @@ export const TripsPage: React.FC = () => {
                       </div>
                       <div>
                         <span style={{ color: '#78909c' }}>Discharged: </span>
-                        <strong style={{ color: cTiming.isDischarged ? '#00e5ff' : '#feb300' }}>{cTiming.dischargeTime}</strong>
+                        <strong style={{ color: cTiming.isDischarged ? '#2563EB' : '#feb300' }}>{cTiming.dischargeTime}</strong>
                         <div style={{ fontSize: '10px', color: '#90a4ae' }}>Dest: {cTiming.destTerminal}</div>
                       </div>
                       <div>
@@ -361,7 +361,7 @@ export const TripsPage: React.FC = () => {
               placeholder="Enter mandatory reason for audit trail..."
               value={actionReason}
               onChange={(e) => setActionReason(e.target.value)}
-              style={{ ...styles.searchInput, width: '100%', marginBottom: '20px', padding: '10px 12px', background: '#070f1e', borderRadius: '8px', border: '1px solid var(--border-color)' }}
+              style={{ ...styles.searchInput, width: '100%', marginBottom: '20px', padding: '10px 12px', background: '#F8FAFC', borderRadius: '8px', border: '1px solid var(--border-color)' }}
             />
 
             <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
@@ -464,9 +464,9 @@ const styles: Record<string, React.CSSProperties> = {
     cursor: 'pointer',
   },
   filterPillActive: {
-    background: '#00e5ff',
+    background: '#2563EB',
     color: '#001529',
-    borderColor: '#00e5ff',
+    borderColor: '#2563EB',
   },
   modalSectionTitle: {
     fontSize: '11px',
@@ -480,7 +480,7 @@ const styles: Record<string, React.CSSProperties> = {
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: '8px 12px',
-    backgroundColor: '#070f1e',
+    backgroundColor: '#F8FAFC',
     borderRadius: '6px',
     border: '1px solid var(--border-color)',
   },

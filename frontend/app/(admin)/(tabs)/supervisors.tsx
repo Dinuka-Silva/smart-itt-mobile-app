@@ -317,7 +317,7 @@ export default function AdminSupervisorsTab() {
 
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 20 }}>
               {/* Status Header */}
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#0f1d33', padding: 12, borderRadius: 8, marginVertical: 12, borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.08)' }}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#0f1d33', padding: 12, borderRadius: 8, marginVertical: 12, borderWidth: 1, borderColor: '#E2E8F0' }}>
                 <Text style={{ color: '#90caf9', fontSize: 12, fontWeight: '700' }}>ACCOUNT STATUS</Text>
                 <View style={[styles.statusPill, selectedSupervisor?.status === 'ACTIVE' ? styles.statusPillActive : styles.statusPillSuspended]}>
                   <Text style={styles.statusPillText}>{selectedSupervisor?.status || 'ACTIVE'}</Text>
@@ -330,10 +330,10 @@ export default function AdminSupervisorsTab() {
                 <View style={styles.detailRow}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                     <Ionicons name="key" size={14} color="#00e5ff" />
-                    <Text style={[styles.detailRowLabel, { color: '#00e5ff', fontWeight: '800' }]}>System Login Username:</Text>
+                    <Text style={[styles.detailRowLabel, { color: '#2563EB', fontWeight: '800' }]}>System Login Username:</Text>
                   </View>
-                  <View style={{ backgroundColor: 'rgba(0, 229, 255, 0.15)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6, borderWidth: 1, borderColor: '#00e5ff' }}>
-                    <Text style={{ color: '#00e5ff', fontSize: 13, fontWeight: '900', letterSpacing: 0.8 }}>
+                  <View style={{ backgroundColor: '#EFF6FF', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6, borderWidth: 1, borderColor: '#2563EB' }}>
+                    <Text style={{ color: '#2563EB', fontSize: 13, fontWeight: '900', letterSpacing: 0.8 }}>
                       {selectedSupervisor?.username || selectedSupervisor?.employeeId}
                     </Text>
                   </View>
@@ -357,7 +357,7 @@ export default function AdminSupervisorsTab() {
               <View style={styles.detailCardBox}>
                 <View style={styles.detailRow}>
                   <Text style={styles.detailRowLabel}>Jurisdiction Scope:</Text>
-                  <Text style={[styles.detailRowValue, { color: '#00e5ff', fontWeight: '800' }]}>ALL TERMINALS (PORT-WIDE)</Text>
+                  <Text style={[styles.detailRowValue, { color: '#2563EB', fontWeight: '800' }]}>ALL TERMINALS (PORT-WIDE)</Text>
                 </View>
                 <View style={styles.detailRow}>
                   <Text style={styles.detailRowLabel}>Terminal Gates:</Text>
@@ -421,17 +421,17 @@ export default function AdminSupervisorsTab() {
                   onPress={() => handleToggleStatus(selectedSupervisor)}
                   activeOpacity={0.8}
                 >
-                  <Text style={{ color: '#ffffff', fontWeight: '800', fontSize: 13 }}>
+                  <Text style={{ color: '#1E293B', fontWeight: '800', fontSize: 13 }}>
                     {selectedSupervisor?.status === 'ACTIVE' ? 'SUSPEND ACCOUNT' : 'ACTIVATE ACCOUNT'}
                   </Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  style={{ flex: 1, backgroundColor: 'rgba(0, 229, 255, 0.15)', borderWidth: 1, borderColor: '#00e5ff', paddingVertical: 12, borderRadius: 8, alignItems: 'center' }}
+                  style={{ flex: 1, backgroundColor: '#EFF6FF', borderWidth: 1, borderColor: '#2563EB', paddingVertical: 12, borderRadius: 8, alignItems: 'center' }}
                   onPress={handleResetPassword}
                   activeOpacity={0.8}
                 >
-                  <Text style={{ color: '#00e5ff', fontWeight: '800', fontSize: 13 }}>RESET PASSWORD</Text>
+                  <Text style={{ color: '#2563EB', fontWeight: '800', fontSize: 13 }}>RESET PASSWORD</Text>
                 </TouchableOpacity>
               </View>
             </ScrollView>
@@ -503,8 +503,8 @@ export default function AdminSupervisorsTab() {
 
             <View style={styles.inputGroup}>
               <Text style={styles.inputLabel}>Jurisdiction Authority</Text>
-              <View style={[styles.modalInput, { justifyContent: 'center', backgroundColor: 'rgba(0, 229, 255, 0.08)', borderColor: 'rgba(0, 229, 255, 0.25)' }]}>
-                <Text style={{ color: '#00e5ff', fontSize: 13, fontWeight: '700' }}>
+              <View style={[styles.modalInput, { justifyContent: 'center', backgroundColor: '#EFF6FF', borderColor: 'rgba(0, 229, 255, 0.25)' }]}>
+                <Text style={{ color: '#2563EB', fontSize: 13, fontWeight: '700' }}>
                   ALL TERMINALS (PORT-WIDE JURISDICTION)
                 </Text>
               </View>
@@ -547,12 +547,12 @@ const styles = StyleSheet.create({
     paddingBottom: 14,
     backgroundColor: '#0a1628',
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.08)',
+    borderBottomColor: '#E2E8F0',
   },
   headerTitle: {
     fontSize: 18,
     fontWeight: '800',
-    color: '#ffffff',
+    color: '#1E293B',
   },
   headerSubtitle: {
     fontSize: 11,
@@ -582,17 +582,17 @@ const styles = StyleSheet.create({
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#0c1b30',
+    backgroundColor: '#FFFFFF',
     margin: 16,
     paddingHorizontal: 12,
     height: 42,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderColor: '#E2E8F0',
   },
   searchInput: {
     flex: 1,
-    color: '#ffffff',
+    color: '#1E293B',
     fontSize: 13,
   },
   centerLoading: {
@@ -605,10 +605,10 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   supCard: {
-    backgroundColor: '#0c1b30',
+    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderColor: '#E2E8F0',
     padding: 14,
   },
   cardTop: {
@@ -627,7 +627,7 @@ const styles = StyleSheet.create({
   supName: {
     fontSize: 14,
     fontWeight: '800',
-    color: '#ffffff',
+    color: '#1E293B',
   },
   supId: {
     fontSize: 11,
@@ -638,7 +638,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     alignSelf: 'flex-start',
-    backgroundColor: 'rgba(0, 229, 255, 0.08)',
+    backgroundColor: '#EFF6FF',
     borderWidth: 1,
     borderColor: 'rgba(0, 229, 255, 0.35)',
     borderRadius: 6,
@@ -649,25 +649,25 @@ const styles = StyleSheet.create({
   usernamePillLabel: {
     fontSize: 10,
     fontWeight: '800',
-    color: '#00e5ff',
+    color: '#2563EB',
     letterSpacing: 0.5,
   },
   usernamePillValue: {
     fontSize: 11,
     fontWeight: '900',
-    color: '#ffffff',
+    color: '#1E293B',
     letterSpacing: 0.5,
   },
   terminalBadge: {
-    backgroundColor: 'rgba(0, 229, 255, 0.1)',
-    borderColor: '#00e5ff',
+    backgroundColor: '#EFF6FF',
+    borderColor: '#2563EB',
     borderWidth: 1,
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 6,
   },
   terminalBadgeText: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontSize: 11,
     fontWeight: '800',
   },
@@ -716,7 +716,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(76, 175, 80, 0.08)',
   },
   toggleBtnText: {
-    color: '#ffffff',
+    color: '#1E293B',
     fontSize: 10,
     fontWeight: '800',
   },
@@ -727,7 +727,7 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   modalBox: {
-    backgroundColor: '#0c1b30',
+    backgroundColor: '#FFFFFF',
     borderRadius: 16,
     padding: 20,
     borderWidth: 1,
@@ -742,7 +742,7 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 16,
     fontWeight: '800',
-    color: '#ffffff',
+    color: '#1E293B',
   },
   modalSectionLabel: {
     color: '#feb300',
@@ -756,7 +756,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#0a172a',
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderColor: '#E2E8F0',
     padding: 12,
     marginBottom: 12,
     gap: 8,
@@ -773,7 +773,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   detailRowValue: {
-    color: '#ffffff',
+    color: '#1E293B',
     fontSize: 12,
     fontWeight: '700',
   },
@@ -790,8 +790,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#070f1e',
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
-    color: '#ffffff',
+    borderColor: '#E2E8F0',
+    color: '#1E293B',
     paddingHorizontal: 12,
     height: 42,
     fontSize: 13,
@@ -808,7 +808,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     backgroundColor: '#070f1e',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderColor: '#E2E8F0',
   },
   termPillActive: {
     backgroundColor: '#feb300',

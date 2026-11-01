@@ -13,20 +13,20 @@ export default function AdminTabsLayout() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: '#070c14',
-          borderTopColor: 'rgba(255, 255, 255, 0.08)',
+          backgroundColor: '#FFFFFF',
+          borderTopColor: '#E2E8F0',
           borderTopWidth: 1,
-          elevation: 12,
+          elevation: 4,
           shadowColor: '#000000',
-          shadowOffset: { width: 0, height: -4 },
-          shadowOpacity: 0.35,
-          shadowRadius: 12,
+          shadowOffset: { width: 0, height: -2 },
+          shadowOpacity: 0.05,
+          shadowRadius: 8,
           height: 64 + bottomInset,
           paddingBottom: bottomInset,
           paddingTop: 8,
         },
-        tabBarActiveTintColor: '#00e5ff',
-        tabBarInactiveTintColor: '#64748b',
+        tabBarActiveTintColor: '#2563EB',
+        tabBarInactiveTintColor: '#64748B',
         tabBarLabelStyle: {
           fontSize: 9.5,
           fontWeight: '700',
@@ -112,6 +112,6 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   iconWrapActive: {
-    backgroundColor: 'rgba(0, 229, 255, 0.12)',
+    backgroundColor: '#EFF6FF',
   },
 });

@@ -205,7 +205,7 @@ export const ContainersPage: React.FC = () => {
             ) : (
               containers.map((c) => (
                 <tr key={c.id || c.containerNumber}>
-                  <td style={{ fontWeight: 800, color: '#00e5ff' }}>{c.containerNumber}</td>
+                  <td style={{ fontWeight: 800, color: '#2563EB' }}>{c.containerNumber}</td>
                   <td>
                     <span className="badge badge-cyan">{c.size}</span>
                   </td>
@@ -285,9 +285,9 @@ const styles: Record<string, React.CSSProperties> = {
     cursor: 'pointer',
   },
   filterPillActive: {
-    background: '#00e5ff',
+    background: '#2563EB',
     color: '#001529',
-    borderColor: '#00e5ff',
+    borderColor: '#2563EB',
   },
   selectInput: {
     backgroundColor: 'var(--bg-card)',

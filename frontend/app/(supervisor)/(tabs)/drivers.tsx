@@ -414,7 +414,7 @@ export default function SupervisorDrivers() {
             )}
             <View style={{ marginLeft: 'auto', flexDirection: 'row', alignItems: 'center', gap: 4 }}>
               <Ionicons name="finger-print" size={13} color="#00e5ff" />
-              <Text style={{ color: '#00e5ff', fontSize: 10, fontWeight: '800' }}>TAP FOR DOSSIER</Text>
+              <Text style={{ color: '#2563EB', fontSize: 10, fontWeight: '800' }}>TAP FOR DOSSIER</Text>
             </View>
           </View>
 
@@ -502,13 +502,13 @@ export default function SupervisorDrivers() {
                               styles.operatorBadge,
                               isSdr
                                 ? { backgroundColor: 'rgba(254, 179, 0, 0.15)', borderColor: '#feb300' }
-                                : { backgroundColor: 'rgba(0, 229, 255, 0.15)', borderColor: '#00e5ff' },
+                                : { backgroundColor: '#EFF6FF', borderColor: '#2563EB' },
                             ]}
                           >
                             <Text
                               style={[
                                 styles.operatorBadgeText,
-                                isSdr ? { color: '#feb300' } : { color: '#00e5ff' },
+                                isSdr ? { color: '#feb300' } : { color: '#2563EB' },
                               ]}
                             >
                               {operatorName}
@@ -517,7 +517,7 @@ export default function SupervisorDrivers() {
                         </View>
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 2 }}>
                           <Text style={styles.driverCode}>
-                            CODE: <Text style={{ color: '#00e5ff', fontWeight: '800' }}>{code}</Text>
+                            CODE: <Text style={{ color: '#2563EB', fontWeight: '800' }}>{code}</Text>
                           </Text>
                           <Text style={styles.driverEmpId}>
                             NIC: <Text style={{ color: '#bac9cc' }}>{drv.nic}</Text>
@@ -564,7 +564,7 @@ export default function SupervisorDrivers() {
                           <Ionicons name="hardware-chip" size={10} color="#00e5ff" />
                           <Text style={styles.specKey}>CHE / CHASSIS</Text>
                         </View>
-                        <Text style={[styles.specVal, { color: '#00e5ff' }]}>
+                        <Text style={[styles.specVal, { color: '#2563EB' }]}>
                           {drv.chassisNumber || drv.cheNumber || 'SCK 100'}
                         </Text>
                       </View>
@@ -611,13 +611,13 @@ export default function SupervisorDrivers() {
                         }}>
                           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                             <Ionicons name="card" size={12} color={isDue ? '#feb300' : '#00e5ff'} />
-                            <Text style={{ fontSize: 11, fontWeight: '700', color: '#dde2f0' }}>
+                            <Text style={{ fontSize: 11, fontWeight: '700', color: '#1E293B' }}>
                               Driver Pass: <Text style={{ color: dDays <= 30 ? '#feb300' : '#00e5ff' }}>{dPass}</Text> ({dDays <= 0 ? 'EXPIRED' : `${dDays}d`})
                             </Text>
                           </View>
                           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                             <Ionicons name="bus" size={12} color={vDays <= 30 ? '#feb300' : '#22ef7e'} />
-                            <Text style={{ fontSize: 11, fontWeight: '700', color: '#dde2f0' }}>
+                            <Text style={{ fontSize: 11, fontWeight: '700', color: '#1E293B' }}>
                               Truck Pass: <Text style={{ color: vDays <= 30 ? '#feb300' : '#22ef7e' }}>{vPass}</Text> ({vDays <= 0 ? 'EXPIRED' : `${vDays}d`})
                             </Text>
                           </View>
@@ -765,7 +765,7 @@ export default function SupervisorDrivers() {
                       <View style={{ flex: 1 }}>
                         <Text style={styles.heroDriverName}>{selectedDriver.fullName}</Text>
                         <Text style={styles.heroDriverCode}>
-                          ID: <Text style={{ color: '#00e5ff', fontWeight: '800' }}>{selectedDriver.driverCode}</Text> • {selectedDriver.operator}
+                          ID: <Text style={{ color: '#2563EB', fontWeight: '800' }}>{selectedDriver.driverCode}</Text> • {selectedDriver.operator}
                         </Text>
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 4 }}>
                           <View
@@ -870,7 +870,7 @@ export default function SupervisorDrivers() {
                     <View style={styles.dossierGrid}>
                       <View style={styles.dossierItemHalf}>
                         <Text style={styles.dossierItemLabel}>HEAVY DRIVING LICENSE NO</Text>
-                        <Text style={[styles.dossierItemValMono, { color: '#00e5ff', fontWeight: '800' }]}>
+                        <Text style={[styles.dossierItemValMono, { color: '#2563EB', fontWeight: '800' }]}>
                           {selectedDriver.licenseNumber || '—'}
                         </Text>
                       </View>
@@ -896,7 +896,7 @@ export default function SupervisorDrivers() {
                       <View style={styles.dossierItemHalf}>
                         <Text style={styles.dossierItemLabel}>DRIVER PORT PASS EXPIRE</Text>
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2 }}>
-                          <Text style={[styles.dossierItemValMono, { color: '#00e5ff', fontWeight: '800' }]}>
+                          <Text style={[styles.dossierItemValMono, { color: '#2563EB', fontWeight: '800' }]}>
                             {selectedDriver.driverPortPassExpiryDate || '2026-11-15'}
                           </Text>
                           <View style={{ backgroundColor: 'rgba(254, 179, 0, 0.2)', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 }}>
@@ -979,7 +979,7 @@ export default function SupervisorDrivers() {
                   <View style={[styles.dossierSection, { borderColor: 'rgba(0,229,255,0.4)' }]}>
                     <View style={styles.dossierSectionHeader}>
                       <Ionicons name="key" size={15} color="#00e5ff" />
-                      <Text style={[styles.dossierSectionTitle, { color: '#00e5ff' }]}>SYSTEM LOGIN CREDENTIALS</Text>
+                      <Text style={[styles.dossierSectionTitle, { color: '#2563EB' }]}>SYSTEM LOGIN CREDENTIALS</Text>
                     </View>
                     {/* Big Username Highlight */}
                     <View style={{
@@ -1006,7 +1006,7 @@ export default function SupervisorDrivers() {
                         <Text style={{ fontSize: 10, fontWeight: '700', color: '#849396', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 2 }}>
                           App Login Username
                         </Text>
-                        <Text style={{ fontSize: 18, fontWeight: '900', color: '#00e5ff', letterSpacing: 1.5, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace' }}>
+                        <Text style={{ fontSize: 18, fontWeight: '900', color: '#2563EB', letterSpacing: 1.5, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace' }}>
                           {selectedDriver.username || selectedDriver.driverCode}
                         </Text>
                       </View>
@@ -1017,7 +1017,7 @@ export default function SupervisorDrivers() {
                     <View style={styles.dossierGrid}>
                       <View style={styles.dossierItemHalf}>
                         <Text style={styles.dossierItemLabel}>DRIVER CODE (ID)</Text>
-                        <Text style={[styles.dossierItemValMono, { color: '#00e5ff', fontWeight: '800' }]}>
+                        <Text style={[styles.dossierItemValMono, { color: '#2563EB', fontWeight: '800' }]}>
                           {selectedDriver.driverCode}
                         </Text>
                       </View>
@@ -1064,17 +1064,17 @@ export default function SupervisorDrivers() {
                     </TouchableOpacity>
 
                     <TouchableOpacity
-                      style={[styles.actionBtn, { backgroundColor: 'rgba(0, 229, 255, 0.15)', borderColor: '#00e5ff' }]}
+                      style={[styles.actionBtn, { backgroundColor: '#EFF6FF', borderColor: '#2563EB' }]}
                       onPress={() => handleOpenEditDriverModal(selectedDriver)}
                     >
                       <Ionicons name="create-outline" size={16} color="#00e5ff" />
-                      <Text style={[styles.actionBtnText, { color: '#00e5ff', fontWeight: '800' }]}>
+                      <Text style={[styles.actionBtnText, { color: '#2563EB', fontWeight: '800' }]}>
                         EDIT DRIVER
                       </Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity
-                      style={[styles.actionBtn, { backgroundColor: '#00e5ff', borderColor: '#00e5ff' }]}
+                      style={[styles.actionBtn, { backgroundColor: '#00e5ff', borderColor: '#2563EB' }]}
                       onPress={() => {
                         Alert.alert(
                           'Direct Dispatch Comms',
@@ -1083,7 +1083,7 @@ export default function SupervisorDrivers() {
                       }}
                     >
                       <Ionicons name="call" size={15} color="#00363d" />
-                      <Text style={[styles.actionBtnText, { color: '#00363d', fontWeight: '900' }]}>
+                      <Text style={[styles.actionBtnText, { color: '#FFFFFF', fontWeight: '900' }]}>
                         CALL
                       </Text>
                     </TouchableOpacity>
@@ -1339,7 +1339,7 @@ export default function SupervisorDrivers() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0e141d',
+    backgroundColor: '#F8FAFC',
   },
   scroll: {
     flexGrow: 1,
@@ -1348,10 +1348,10 @@ const styles = StyleSheet.create({
 
   // ─── HEADER ───
   header: {
-    backgroundColor: '#161c25',
+    backgroundColor: '#FFFFFF',
     borderRadius: radius.DEFAULT,
     borderWidth: 1,
-    borderColor: '#242a34',
+    borderColor: '#E2E8F0',
     padding: 14,
     flexDirection: 'row',
     alignItems: 'center',
@@ -1372,12 +1372,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   avatarText: {
-    color: '#00363d',
+    color: '#FFFFFF',
     fontWeight: '900',
     fontSize: 16,
   },
   supervisorNameText: {
-    color: '#dde2f0',
+    color: '#1E293B',
     fontWeight: '800',
     fontSize: 14,
   },
@@ -1407,26 +1407,26 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#080e17',
+    backgroundColor: '#F8FAFC',
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: radius.sm,
     borderWidth: 1,
-    borderColor: '#242a34',
+    borderColor: '#E2E8F0',
   },
   countPillText: {
     fontSize: 9,
     fontWeight: '800',
-    color: '#00e5ff',
+    color: '#2563EB',
     letterSpacing: 0.6,
   },
 
   // ─── SECTION WRAPS ───
   sectionWrap: {
-    backgroundColor: '#161c25',
+    backgroundColor: '#FFFFFF',
     borderRadius: radius.DEFAULT,
     borderWidth: 1,
-    borderColor: '#242a34',
+    borderColor: '#E2E8F0',
     padding: 14,
     gap: 12,
   },
@@ -1436,10 +1436,10 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingBottom: 6,
     borderBottomWidth: 1,
-    borderBottomColor: '#242a34',
+    borderBottomColor: '#E2E8F0',
   },
   sectionTitle: {
-    color: '#dde2f0',
+    color: '#1E293B',
     fontSize: 11,
     fontWeight: '800',
     letterSpacing: 0.6,
@@ -1449,26 +1449,26 @@ const styles = StyleSheet.create({
   searchBarWrap: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#080e17',
+    backgroundColor: '#F8FAFC',
     borderRadius: radius.DEFAULT,
     borderWidth: 1,
-    borderColor: '#242a34',
+    borderColor: '#E2E8F0',
     paddingHorizontal: 12,
     height: 42,
   },
   searchInput: {
     flex: 1,
-    color: '#dde2f0',
+    color: '#1E293B',
     fontSize: 11,
     ...(Platform.OS === 'web' ? { outlineStyle: 'none' } : {}),
   } as any,
 
   // ─── DRIVER CARD ───
   driverCard: {
-    backgroundColor: '#080e17',
+    backgroundColor: '#F8FAFC',
     borderRadius: radius.DEFAULT,
     borderWidth: 1,
-    borderColor: '#242a34',
+    borderColor: '#E2E8F0',
     padding: 12,
     gap: 10,
   },
@@ -1483,7 +1483,7 @@ const styles = StyleSheet.create({
     borderRadius: 21,
     backgroundColor: '#101d30',
     borderWidth: 1.5,
-    borderColor: '#00e5ff',
+    borderColor: '#2563EB',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -1492,15 +1492,15 @@ const styles = StyleSheet.create({
     height: 42,
     borderRadius: 21,
     borderWidth: 1.5,
-    borderColor: '#00e5ff',
+    borderColor: '#2563EB',
   },
   driverAvatarText: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontWeight: '900',
     fontSize: 16,
   },
   driverFullName: {
-    color: '#dde2f0',
+    color: '#1E293B',
     fontSize: 13,
     fontWeight: '800',
   },
@@ -1552,7 +1552,7 @@ const styles = StyleSheet.create({
 
   driverSpecsGrid: {
     flexDirection: 'row',
-    backgroundColor: '#161c25',
+    backgroundColor: '#FFFFFF',
     padding: 8,
     borderRadius: radius.sm,
     justifyContent: 'space-between',
@@ -1567,7 +1567,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   specVal: {
-    color: '#dde2f0',
+    color: '#1E293B',
     fontSize: 10,
     fontWeight: '700',
   },
@@ -1601,7 +1601,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   monthlyMissionStat: {
-    color: '#dde2f0',
+    color: '#1E293B',
     fontSize: 10,
     fontWeight: '700',
   },
@@ -1642,7 +1642,7 @@ const styles = StyleSheet.create({
     paddingVertical: 1,
   },
   milestonePillText: {
-    color: '#00363d',
+    color: '#FFFFFF',
     fontSize: 8,
     fontWeight: '900',
     letterSpacing: 0.3,
@@ -1665,29 +1665,29 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: 'rgba(0, 229, 255, 0.08)',
+    backgroundColor: '#EFF6FF',
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 4,
     borderWidth: 1,
-    borderColor: 'rgba(0, 229, 255, 0.3)',
+    borderColor: '#2563EB',
   },
   viewDossierText: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontSize: 9,
     fontWeight: '800',
     letterSpacing: 0.4,
   },
 
   emptyCard: {
-    backgroundColor: '#080e17',
+    backgroundColor: '#F8FAFC',
     borderRadius: radius.DEFAULT,
     padding: 20,
     alignItems: 'center',
     gap: 6,
   },
   emptyTitle: {
-    color: '#dde2f0',
+    color: '#1E293B',
     fontSize: 11,
     fontWeight: '800',
   },
@@ -1708,10 +1708,10 @@ const styles = StyleSheet.create({
     width: '95%',
     maxWidth: 620,
     maxHeight: '92%',
-    backgroundColor: '#161c25',
+    backgroundColor: '#FFFFFF',
     borderRadius: radius.lg,
     borderWidth: 1,
-    borderColor: '#242a34',
+    borderColor: '#E2E8F0',
     overflow: 'hidden',
   },
   modalHeader: {
@@ -1722,10 +1722,10 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     backgroundColor: '#101721',
     borderBottomWidth: 1,
-    borderBottomColor: '#242a34',
+    borderBottomColor: '#E2E8F0',
   },
   modalHeaderTitle: {
-    color: '#dde2f0',
+    color: '#1E293B',
     fontSize: 13,
     fontWeight: '900',
     letterSpacing: 0.6,
@@ -1748,10 +1748,10 @@ const styles = StyleSheet.create({
   },
 
   heroBannerWrap: {
-    backgroundColor: '#080e17',
+    backgroundColor: '#F8FAFC',
     borderRadius: radius.DEFAULT,
     borderWidth: 1,
-    borderColor: '#242a34',
+    borderColor: '#E2E8F0',
     overflow: 'hidden',
     marginBottom: 14,
   },
@@ -1774,7 +1774,7 @@ const styles = StyleSheet.create({
     top: 10,
   },
   heroBannerWatermark: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontWeight: '900',
     fontSize: 11,
     letterSpacing: 2,
@@ -1793,7 +1793,7 @@ const styles = StyleSheet.create({
     borderRadius: 28,
     backgroundColor: '#00363d',
     borderWidth: 2,
-    borderColor: '#00e5ff',
+    borderColor: '#2563EB',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -1802,15 +1802,15 @@ const styles = StyleSheet.create({
     height: 56,
     borderRadius: 28,
     borderWidth: 2,
-    borderColor: '#00e5ff',
+    borderColor: '#2563EB',
   },
   heroAvatarText: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontWeight: '900',
     fontSize: 22,
   },
   heroDriverName: {
-    color: '#dde2f0',
+    color: '#1E293B',
     fontSize: 16,
     fontWeight: '900',
   },
@@ -1821,10 +1821,10 @@ const styles = StyleSheet.create({
   },
 
   dossierSection: {
-    backgroundColor: '#080e17',
+    backgroundColor: '#F8FAFC',
     borderRadius: radius.DEFAULT,
     borderWidth: 1,
-    borderColor: '#242a34',
+    borderColor: '#E2E8F0',
     padding: 12,
     marginBottom: 12,
     gap: 10,
@@ -1838,7 +1838,7 @@ const styles = StyleSheet.create({
     borderBottomColor: '#1a222f',
   },
   dossierSectionTitle: {
-    color: '#dde2f0',
+    color: '#1E293B',
     fontSize: 10,
     fontWeight: '800',
     letterSpacing: 0.6,
@@ -1861,7 +1861,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   dossierItemVal: {
-    color: '#dde2f0',
+    color: '#1E293B',
     fontSize: 11,
     fontWeight: '700',
   },
@@ -1891,16 +1891,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: 'rgba(0, 229, 255, 0.1)',
+    backgroundColor: '#EFF6FF',
     borderWidth: 1,
-    borderColor: 'rgba(0, 229, 255, 0.3)',
+    borderColor: '#2563EB',
     borderRadius: 4,
     paddingHorizontal: 8,
     paddingVertical: 3,
     alignSelf: 'flex-start',
   },
   badgeHighlightCyanText: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontSize: 11,
     fontWeight: '900',
   },
@@ -1936,7 +1936,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   dossierRowVal: {
-    color: '#dde2f0',
+    color: '#1E293B',
     fontSize: 10,
     fontWeight: '700',
   },
@@ -1968,15 +1968,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: 'rgba(0, 229, 255, 0.12)',
+    backgroundColor: '#EFF6FF',
     borderWidth: 1,
-    borderColor: 'rgba(0, 229, 255, 0.4)',
+    borderColor: '#2563EB',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 6,
   },
   headerEditBtnText: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontSize: 11,
     fontWeight: '800',
   },
@@ -1989,11 +1989,11 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   editTextInput: {
-    backgroundColor: '#080e17',
+    backgroundColor: '#F8FAFC',
     borderWidth: 1,
-    borderColor: '#242a34',
+    borderColor: '#E2E8F0',
     borderRadius: radius.DEFAULT,
-    color: '#dde2f0',
+    color: '#1E293B',
     paddingHorizontal: 12,
     paddingVertical: 10,
     fontSize: 13,
@@ -2025,7 +2025,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   editSaveBtnText: {
-    color: '#00363d',
+    color: '#FFFFFF',
     fontSize: 12,
     fontWeight: '800',
   },
@@ -2033,7 +2033,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: 'rgba(0, 229, 255, 0.1)',
+    backgroundColor: '#EFF6FF',
     borderWidth: 1,
     borderColor: 'rgba(0, 229, 255, 0.35)',
     borderRadius: 6,
@@ -2043,13 +2043,13 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   usernamePillLabel: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontSize: 9,
     fontWeight: '800',
     letterSpacing: 0.3,
   },
   usernamePillValue: {
-    color: '#ffffff',
+    color: '#1E293B',
     fontSize: 10,
     fontWeight: '900',
     letterSpacing: 0.5,
@@ -2075,7 +2075,7 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: 'rgba(0, 229, 255, 0.08)',
+    backgroundColor: '#EFF6FF',
     borderWidth: 1,
     borderColor: 'rgba(0, 229, 255, 0.25)',
     alignItems: 'center',

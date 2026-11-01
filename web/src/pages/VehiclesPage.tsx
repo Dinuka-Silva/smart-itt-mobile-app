@@ -118,7 +118,7 @@ export const VehiclesPage: React.FC = () => {
           <span className="metric-chip-label">Total Fleet</span>
         </div>
         <div className="metric-chip">
-          <span className="metric-chip-num" style={{ color: '#00e5ff' }}>
+          <span className="metric-chip-num" style={{ color: '#2563EB' }}>
             {vehicles.filter((v) => v.operator === 'SCK Logistics').length}
           </span>
           <span className="metric-chip-label">SCK Logistics</span>
@@ -246,7 +246,7 @@ export const VehiclesPage: React.FC = () => {
                   <td>
                     {v.driverName ? (
                       <span style={{ fontWeight: 600, color: '#cfd8dc' }}>
-                        {v.driverName} <span style={{ color: '#00e5ff' }}>({v.driverCode})</span>
+                        {v.driverName} <span style={{ color: '#2563EB' }}>({v.driverCode})</span>
                       </span>
                     ) : (
                       <span style={{ color: '#78909c', fontStyle: 'italic' }}>Unassigned</span>
@@ -284,7 +284,7 @@ export const VehiclesPage: React.FC = () => {
                       <button
                         onClick={() => setSelectedVehicle(v)}
                         className="btn btn-sm"
-                        style={{ background: 'rgba(0, 229, 255, 0.15)', color: '#00e5ff', border: '1px solid rgba(0, 229, 255, 0.3)' }}
+                        style={{ background: 'rgba(37, 99, 235, 0.15)', color: '#2563EB', border: '1px solid rgba(37, 99, 235, 0.3)' }}
                       >
                         Details
                       </button>
@@ -316,7 +316,7 @@ export const VehiclesPage: React.FC = () => {
             <h3 style={{ margin: '0 0 6px 0', fontSize: '18px', color: '#ffffff' }}>
               Assign Driver to {assignModal.vehicleNumber}
             </h3>
-            <p style={{ margin: '0 0 16px 0', fontSize: '12px', color: '#00e5ff' }}>
+            <p style={{ margin: '0 0 16px 0', fontSize: '12px', color: '#2563EB' }}>
               Chassis: {assignModal.chassisNumber} • Operator: {assignModal.operator}
             </p>
 
@@ -344,7 +344,7 @@ export const VehiclesPage: React.FC = () => {
                       {d.driverCode} • Phone: {d.mobileNumber}
                     </div>
                   </div>
-                  <UserCheck size={16} color="#00e5ff" />
+                  <UserCheck size={16} color="#2563EB" />
                 </div>
               ))}
             </div>
@@ -364,14 +364,14 @@ export const VehiclesPage: React.FC = () => {
           <div className="modal-content" style={{ maxWidth: '640px', width: '100%', maxHeight: '90vh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'rgba(0, 229, 255, 0.15)', border: '1px solid #00e5ff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <Truck size={24} color="#00e5ff" />
+                <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'rgba(37, 99, 235, 0.15)', border: '1px solid #2563EB', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Truck size={24} color="#2563EB" />
                 </div>
                 <div>
                   <h3 style={{ margin: 0, fontSize: '18px', color: '#ffffff' }}>
                     {selectedVehicle.vehicleNumber}
                   </h3>
-                  <span style={{ color: '#00e5ff', fontSize: '13px', fontWeight: 700 }}>
+                  <span style={{ color: '#2563EB', fontSize: '13px', fontWeight: 700 }}>
                     {selectedVehicle.chassisNumber || selectedVehicle.cheNumber} • {selectedVehicle.operator}
                   </span>
                 </div>
@@ -384,10 +384,10 @@ export const VehiclesPage: React.FC = () => {
 
             {/* 1. Fleet & Specifications */}
             <h4 style={styles.modalSectionTitle}>VEHICLE SPECIFICATIONS & OPERATOR</h4>
-            <div style={{ background: '#0a172a', padding: '14px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.08)', marginBottom: '16px' }}>
+            <div style={{ background: '#F8FAFC', padding: '14px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.08)', marginBottom: '16px' }}>
               <div style={styles.detailGridRow}>
                 <span style={styles.detailLabel}>Registration Plate:</span>
-                <span style={{ ...styles.detailValue, color: '#00e5ff' }}>{selectedVehicle.vehicleNumber}</span>
+                <span style={{ ...styles.detailValue, color: '#2563EB' }}>{selectedVehicle.vehicleNumber}</span>
               </div>
               <div style={styles.detailGridRow}>
                 <span style={styles.detailLabel}>Chassis / CHE Number:</span>
@@ -409,7 +409,7 @@ export const VehiclesPage: React.FC = () => {
 
             {/* 2. Assigned Driver */}
             <h4 style={styles.modalSectionTitle}>ASSIGNED DRIVER & OPERATOR</h4>
-            <div style={{ background: '#0a172a', padding: '14px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.08)', marginBottom: '16px' }}>
+            <div style={{ background: '#F8FAFC', padding: '14px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.08)', marginBottom: '16px' }}>
               <div style={styles.detailGridRow}>
                 <span style={styles.detailLabel}>Driver Name:</span>
                 <span style={{ ...styles.detailValue, color: selectedVehicle.driverName ? '#4caf50' : '#ffb74d' }}>
@@ -428,7 +428,7 @@ export const VehiclesPage: React.FC = () => {
 
             {/* 3. Revenue License & Compliance */}
             <h4 style={styles.modalSectionTitle}>REVENUE LICENSE & COMPLIANCE</h4>
-            <div style={{ background: '#0a172a', padding: '14px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.08)', marginBottom: '16px' }}>
+            <div style={{ background: '#F8FAFC', padding: '14px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.08)', marginBottom: '16px' }}>
               <div style={styles.detailGridRow}>
                 <span style={styles.detailLabel}>License Issued Date:</span>
                 <span style={styles.detailValue}>{selectedVehicle.licenseIssuedDate || '2025-11-15'}</span>
@@ -451,10 +451,10 @@ export const VehiclesPage: React.FC = () => {
 
             {/* 4. SLPA Port Entry Pass & Clearance */}
             <h4 style={styles.modalSectionTitle}>PORT ENTRY PASS & CLEARANCE (SLPA)</h4>
-            <div style={{ background: '#0a172a', padding: '14px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.08)', marginBottom: '16px' }}>
+            <div style={{ background: '#F8FAFC', padding: '14px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.08)', marginBottom: '16px' }}>
               <div style={styles.detailGridRow}>
                 <span style={styles.detailLabel}>SLPA Port Pass Number:</span>
-                <span style={{ ...styles.detailValue, color: '#00e5ff', fontWeight: 800 }}>
+                <span style={{ ...styles.detailValue, color: '#2563EB', fontWeight: 800 }}>
                   {selectedVehicle.portPassNumber || `SLPA-VPP-${selectedVehicle.chassisNumber?.replace('CHE ', '') || '100'}`}
                 </span>
               </div>
@@ -514,8 +514,8 @@ export const VehiclesPage: React.FC = () => {
           <div className="modal-content" style={{ maxWidth: '520px' }} onClick={(e) => e.stopPropagation()}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <div style={{ width: '38px', height: '38px', borderRadius: '8px', background: 'rgba(0, 229, 255, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <Truck size={20} color="#00e5ff" />
+                <div style={{ width: '38px', height: '38px', borderRadius: '8px', background: 'rgba(37, 99, 235, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Truck size={20} color="#2563EB" />
                 </div>
                 <div>
                   <h3 style={{ margin: 0, fontSize: '17px', fontWeight: 800, color: '#ffffff' }}>Add New Fleet Vehicle</h3>
@@ -648,7 +648,7 @@ const styles: Record<string, React.CSSProperties> = {
     marginBottom: '20px',
   },
   metricChip: {
-    backgroundColor: '#0c1b30',
+    backgroundColor: '#FFFFFF',
     border: '1px solid rgba(255, 255, 255, 0.08)',
     borderRadius: '12px',
     padding: '12px 16px',
@@ -712,13 +712,13 @@ const styles: Record<string, React.CSSProperties> = {
     cursor: 'pointer',
   },
   filterPillActive: {
-    background: '#00e5ff',
+    background: '#2563EB',
     color: '#001529',
-    borderColor: '#00e5ff',
+    borderColor: '#2563EB',
   },
   driverOption: {
     padding: '12px 14px',
-    backgroundColor: '#070f1e',
+    backgroundColor: '#F8FAFC',
     borderRadius: '8px',
     border: '1px solid var(--border-color)',
     cursor: 'pointer',

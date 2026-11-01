@@ -176,7 +176,7 @@ export default function DriverContainers() {
       {!loading && (
         <View style={[styles.summaryRow, { paddingHorizontal: containerPaddingHorizontal }]}>
           <View style={[styles.summaryCard, { borderLeftColor: '#00e5ff' }]}>
-            <Text style={[styles.summaryValue, { color: '#00e5ff', fontSize: isSmallMobile ? 20 : 26 }]}>{ft20}</Text>
+            <Text style={[styles.summaryValue, { color: '#2563EB', fontSize: isSmallMobile ? 20 : 26 }]}>{ft20}</Text>
             <Text style={styles.summaryLabel}>20FT</Text>
           </View>
           <View style={[styles.summaryCard, { borderLeftColor: '#feb300' }]}>
@@ -209,7 +209,7 @@ export default function DriverContainers() {
             </Text>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
               <Ionicons name="swap-vertical" size={11} color="#00e5ff" />
-              <Text style={{ fontSize: 9, fontWeight: '800', color: '#00e5ff' }}>SORTED: DISCHARGE TERMINAL</Text>
+              <Text style={{ fontSize: 9, fontWeight: '800', color: '#2563EB' }}>SORTED: DISCHARGE TERMINAL</Text>
             </View>
           </View>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingBottom: 4 }}>
@@ -418,16 +418,16 @@ function getFallbackContainers() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0e141d' },
+  container: { flex: 1, backgroundColor: '#F8FAFC' },
   header: {
     paddingBottom: 12,
     backgroundColor: 'rgba(14, 20, 29, 0.96)', borderBottomWidth: 1, borderBottomColor: '#1a2029',
   },
-  headerTitle: { fontSize: 18, fontWeight: '900', color: '#dde2f0', letterSpacing: 0.8 },
+  headerTitle: { fontSize: 18, fontWeight: '900', color: '#1E293B', letterSpacing: 0.8 },
   headerSub: { color: '#849396', fontSize: 13, marginTop: 4 },
   summaryRow: { flexDirection: 'row', marginTop: 14, gap: 8 },
   summaryCard: {
-    flex: 1, backgroundColor: '#161c25', borderRadius: 8, padding: 10,
+    flex: 1, backgroundColor: '#FFFFFF', borderRadius: 8, padding: 10,
     borderLeftWidth: 4, borderWidth: 1, borderColor: '#242a34',
   },
   summaryValue: { fontSize: 24, fontWeight: '900' },
@@ -436,7 +436,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: 'rgba(0, 229, 255, 0.08)',
+    backgroundColor: '#EFF6FF',
     borderRadius: 8,
     borderWidth: 1,
     borderColor: 'rgba(0, 229, 255, 0.25)',
@@ -446,64 +446,64 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   policyNoticeText: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontSize: 11,
     fontWeight: '700',
     flex: 1,
   },
   emptyBox: {
     alignItems: 'center', justifyContent: 'center', padding: 36,
-    backgroundColor: '#161c25', borderRadius: 8, margin: 16, borderWidth: 1, borderColor: '#242a34',
+    backgroundColor: '#FFFFFF', borderRadius: 8, margin: 16, borderWidth: 1, borderColor: '#242a34',
   },
   emptyIcon: { fontSize: 36, marginBottom: 12 },
-  emptyTitle: { fontSize: 14, fontWeight: '800', color: '#dde2f0', letterSpacing: 0.8 },
+  emptyTitle: { fontSize: 14, fontWeight: '800', color: '#1E293B', letterSpacing: 0.8 },
   emptySubtitle: { fontSize: 11, color: '#849396', textAlign: 'center', marginTop: 6 },
   card: {
-    backgroundColor: '#161c25', marginHorizontal: 16, borderRadius: 8,
+    backgroundColor: '#FFFFFF', marginHorizontal: 16, borderRadius: 8,
     padding: 16, marginBottom: 12, marginTop: 12, borderWidth: 1, borderColor: '#242a34',
   },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  containerNum: { fontSize: 16, fontWeight: '900', color: '#00e5ff', letterSpacing: 0.5 },
+  containerNum: { fontSize: 16, fontWeight: '900', color: '#2563EB', letterSpacing: 0.5 },
   sizeBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 4 },
   sizeText: { fontSize: 11, fontWeight: '800' },
-  tripName: { fontSize: 13, color: '#dde2f0', marginTop: 8, fontWeight: '800' },
+  tripName: { fontSize: 13, color: '#1E293B', marginTop: 8, fontWeight: '800' },
   routeRow: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    backgroundColor: '#080e17', padding: 10, borderRadius: 6, marginTop: 10,
+    backgroundColor: '#F8FAFC', padding: 10, borderRadius: 6, marginTop: 10,
   },
   termBox: { alignItems: 'center', flex: 1 },
   termLabel: { fontSize: 8, color: '#849396', fontWeight: '700', letterSpacing: 0.5 },
-  termValue: { fontSize: 14, fontWeight: '900', color: '#dde2f0', marginTop: 2 },
-  arrow: { fontSize: 18, color: '#00e5ff', fontWeight: '900' },
+  termValue: { fontSize: 14, fontWeight: '900', color: '#1E293B', marginTop: 2 },
+  arrow: { fontSize: 18, color: '#2563EB', fontWeight: '900' },
   statusBadge: { alignSelf: 'flex-start', paddingHorizontal: 12, paddingVertical: 4, borderRadius: 4, marginTop: 10 },
   statusText: { fontSize: 11, fontWeight: '900', letterSpacing: 0.6 },
   weightText: { fontSize: 12, color: '#849396', marginTop: 8, fontWeight: '700' },
 
   dateFilterBtn: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
-    backgroundColor: '#161c25', paddingHorizontal: 12, paddingVertical: 8,
+    backgroundColor: '#FFFFFF', paddingHorizontal: 12, paddingVertical: 8,
     borderRadius: 8, borderWidth: 1, borderColor: '#242a34',
   },
-  dateFilterText: { color: '#00e5ff', fontSize: 11, fontWeight: '800' },
+  dateFilterText: { color: '#2563EB', fontSize: 11, fontWeight: '800' },
   modalOverlay: {
     flex: 1, backgroundColor: 'rgba(8, 14, 23, 0.8)',
     justifyContent: 'center', alignItems: 'center', padding: 20,
   },
   modalContent: {
-    backgroundColor: '#161c25', borderRadius: 12, padding: 16,
+    backgroundColor: '#FFFFFF', borderRadius: 12, padding: 16,
     width: '92%', maxWidth: 360, borderWidth: 1, borderColor: '#242a34',
   },
-  modalTitle: { color: '#dde2f0', fontSize: 16, fontWeight: '900', marginBottom: 16, textAlign: 'center' },
+  modalTitle: { color: '#1E293B', fontSize: 16, fontWeight: '900', marginBottom: 16, textAlign: 'center' },
   dateOption: {
     paddingVertical: 12, paddingHorizontal: 16, borderRadius: 8,
-    marginBottom: 8, backgroundColor: '#080e17', borderWidth: 1, borderColor: '#242a34',
+    marginBottom: 8, backgroundColor: '#F8FAFC', borderWidth: 1, borderColor: '#242a34',
   },
-  dateOptionActive: { backgroundColor: 'rgba(0, 229, 255, 0.15)', borderColor: '#00e5ff' },
+  dateOptionActive: { backgroundColor: '#EFF6FF', borderColor: '#2563EB' },
   dateOptionText: { color: '#849396', fontSize: 14, fontWeight: '700', textAlign: 'center' },
-  dateOptionTextActive: { color: '#00e5ff' },
+  dateOptionTextActive: { color: '#2563EB' },
   modalCloseBtn: {
     marginTop: 16, backgroundColor: '#242a34', paddingVertical: 12,
     borderRadius: 8, alignItems: 'center',
   },
-  modalCloseText: { color: '#dde2f0', fontSize: 13, fontWeight: '900' },
+  modalCloseText: { color: '#1E293B', fontSize: 13, fontWeight: '900' },
 });

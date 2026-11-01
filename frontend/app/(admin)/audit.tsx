@@ -212,7 +212,7 @@ export default function AdminAuditScreen() {
   const getRoleBadgeStyle = (role: string) => {
     switch (role) {
       case 'DRIVER':
-        return { bg: 'rgba(0, 229, 255, 0.12)', border: 'rgba(0, 229, 255, 0.35)', color: '#00e5ff', icon: 'car-sport-outline' as const };
+        return { bg: 'rgba(0, 229, 255, 0.12)', border: 'rgba(0, 229, 255, 0.35)', color: '#2563EB', icon: 'car-sport-outline' as const };
       case 'SUPERVISOR':
         return { bg: 'rgba(254, 179, 0, 0.12)', border: 'rgba(254, 179, 0, 0.35)', color: '#feb300', icon: 'shield-outline' as const };
       case 'ADMIN':
@@ -243,7 +243,7 @@ export default function AdminAuditScreen() {
       return { bg: 'rgba(144, 202, 249, 0.1)', border: 'rgba(144, 202, 249, 0.3)', color: '#90caf9', label: 'SESSION LOGOUT', icon: 'log-out-outline' as const };
     }
     if (act === 'DRIVER_REGISTERED') {
-      return { bg: 'rgba(0, 229, 255, 0.14)', border: 'rgba(0, 229, 255, 0.45)', color: '#00e5ff', label: 'DRIVER REGISTERED', icon: 'person-add' as const };
+      return { bg: 'rgba(0, 229, 255, 0.14)', border: 'rgba(0, 229, 255, 0.45)', color: '#2563EB', label: 'DRIVER REGISTERED', icon: 'person-add' as const };
     }
     if (act === 'SUPERVISOR_REGISTERED') {
       return { bg: 'rgba(254, 179, 0, 0.15)', border: 'rgba(254, 179, 0, 0.45)', color: '#feb300', label: 'SUPERVISOR REGISTERED', icon: 'shield-checkmark' as const };
@@ -263,7 +263,7 @@ export default function AdminAuditScreen() {
     if (act === 'DRIVER_STATUS_UPDATED' || act === 'SUPERVISOR_STATUS_UPDATED') {
       return { bg: 'rgba(255, 179, 0, 0.15)', border: 'rgba(255, 179, 0, 0.45)', color: '#ffb300', label: act.replace(/_/g, ' '), icon: 'swap-horizontal' as const };
     }
-    return { bg: 'rgba(0, 229, 255, 0.08)', border: 'rgba(0, 229, 255, 0.25)', color: '#00e5ff', label: action.replace(/_/g, ' '), icon: 'ellipse' as const };
+    return { bg: 'rgba(0, 229, 255, 0.08)', border: 'rgba(0, 229, 255, 0.25)', color: '#2563EB', label: action.replace(/_/g, ' '), icon: 'ellipse' as const };
   };
 
   return (
@@ -290,13 +290,13 @@ export default function AdminAuditScreen() {
       <View style={styles.kpiRow}>
         <View style={styles.kpiCard}>
           <Text style={styles.kpiLabel}>TOTAL EVENTS</Text>
-          <Text style={[styles.kpiValue, { color: '#00e5ff' }]}>{totalLogsCount}</Text>
+          <Text style={[styles.kpiValue, { color: '#2563EB' }]}>{totalLogsCount}</Text>
           <Text style={styles.kpiSub}>System Ledger</Text>
         </View>
 
         <View style={styles.kpiCard}>
           <Text style={styles.kpiLabel}>DRIVER OPS</Text>
-          <Text style={[styles.kpiValue, { color: '#00e5ff' }]}>{driverEventsCount}</Text>
+          <Text style={[styles.kpiValue, { color: '#2563EB' }]}>{driverEventsCount}</Text>
           <Text style={styles.kpiSub}>Trips & Regs</Text>
         </View>
 
@@ -432,7 +432,7 @@ export default function AdminAuditScreen() {
                       <Ionicons name="person-circle-outline" size={13} color="#849396" />
                       <Text style={styles.actorText}>
                         User:{' '}
-                        <Text style={{ color: '#dde2f0', fontWeight: '700' }}>
+                        <Text style={{ color: '#1E293B', fontWeight: '700' }}>
                           {log.performedBy || log.actorRole || 'System'}
                         </Text>
                       </Text>
@@ -462,7 +462,7 @@ export default function AdminAuditScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: '#070c14',
+    backgroundColor: '#F8FAFC',
   },
   header: {
     flexDirection: 'row',
@@ -470,13 +470,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingBottom: 14,
-    backgroundColor: '#0c1524',
+    backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
     borderBottomColor: '#1d2e47',
   },
   backBtn: {
     padding: 7,
-    backgroundColor: 'rgba(0, 229, 255, 0.08)',
+    backgroundColor: '#EFF6FF',
     borderRadius: 8,
     borderWidth: 1,
     borderColor: 'rgba(0, 229, 255, 0.25)',
@@ -484,7 +484,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 17,
     fontWeight: '900',
-    color: '#dde2f0',
+    color: '#1E293B',
     letterSpacing: 0.4,
   },
   headerSubtitle: {
@@ -513,7 +513,7 @@ const styles = StyleSheet.create({
   // KPI Summary Bar
   kpiRow: {
     flexDirection: 'row',
-    backgroundColor: '#0c1524',
+    backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
     borderBottomColor: '#1d2e47',
     paddingVertical: 10,
@@ -522,7 +522,7 @@ const styles = StyleSheet.create({
   },
   kpiCard: {
     flex: 1,
-    backgroundColor: '#070c14',
+    backgroundColor: '#F8FAFC',
     borderWidth: 1,
     borderColor: '#192b45',
     borderRadius: 8,
@@ -551,7 +551,7 @@ const styles = StyleSheet.create({
   searchBarWrap: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#0c1524',
+    backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
     borderBottomColor: '#192b45',
     paddingHorizontal: 14,
@@ -559,7 +559,7 @@ const styles = StyleSheet.create({
   },
   searchInput: {
     flex: 1,
-    color: '#dde2f0',
+    color: '#1E293B',
     fontSize: 12,
     height: 34,
     ...(Platform.OS === 'web' ? { outlineStyle: 'none' } : {}),
@@ -582,7 +582,7 @@ const styles = StyleSheet.create({
   },
   filterPillActive: {
     backgroundColor: '#00e5ff',
-    borderColor: '#00e5ff',
+    borderColor: '#2563EB',
   },
   filterPillText: {
     color: '#849396',
@@ -591,7 +591,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.4,
   },
   filterPillTextActive: {
-    color: '#070c14',
+    color: '#FFFFFF',
     fontWeight: '900',
   },
 
@@ -603,7 +603,7 @@ const styles = StyleSheet.create({
     padding: 30,
   },
   loadingText: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontSize: 12,
     marginTop: 12,
     fontWeight: '700',
@@ -613,7 +613,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   emptyCard: {
-    backgroundColor: '#0c1524',
+    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     padding: 36,
     alignItems: 'center',
@@ -622,7 +622,7 @@ const styles = StyleSheet.create({
     marginTop: 30,
   },
   emptyCardTitle: {
-    color: '#dde2f0',
+    color: '#1E293B',
     fontSize: 14,
     fontWeight: '800',
     marginTop: 10,
@@ -637,7 +637,7 @@ const styles = StyleSheet.create({
 
   // Log Card
   logCard: {
-    backgroundColor: '#0c1524',
+    backgroundColor: '#FFFFFF',
     borderRadius: 10,
     padding: 12,
     borderWidth: 1,
@@ -682,7 +682,7 @@ const styles = StyleSheet.create({
   },
   descText: {
     fontSize: 12,
-    color: '#dde2f0',
+    color: '#1E293B',
     lineHeight: 17,
     fontWeight: '500',
     marginVertical: 4,

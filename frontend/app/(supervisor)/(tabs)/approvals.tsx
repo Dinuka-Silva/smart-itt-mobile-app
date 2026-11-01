@@ -202,7 +202,7 @@ export default function SupervisorApprovals() {
                   <View style={styles.cardHeader}>
                     <View style={{ gap: 2 }}>
                       <Text style={styles.cardTripId}>{tripNum}</Text>
-                      <Text style={styles.driverSubText}>Driver: <Text style={{ color: '#dde2f0', fontWeight: '800' }}>{driverName}</Text></Text>
+                      <Text style={styles.driverSubText}>Driver: <Text style={{ color: '#1E293B', fontWeight: '800' }}>{driverName}</Text></Text>
                     </View>
 
                     <View style={styles.awaitingBadge}>
@@ -218,8 +218,8 @@ export default function SupervisorApprovals() {
                       <Text style={styles.routeTermText}>{to}</Text>
                     </View>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                      <Text style={styles.specsSubText}>Truck: <Text style={{ color: '#00e5ff', fontWeight: '800' }}>{vehicle}</Text></Text>
-                      <Text style={styles.specsSubText}>CHE: <Text style={{ color: '#00e5ff', fontWeight: '800' }}>{cheNumber}</Text></Text>
+                      <Text style={styles.specsSubText}>Truck: <Text style={{ color: '#2563EB', fontWeight: '800' }}>{vehicle}</Text></Text>
+                      <Text style={styles.specsSubText}>CHE: <Text style={{ color: '#2563EB', fontWeight: '800' }}>{cheNumber}</Text></Text>
                     </View>
                   </View>
 
@@ -430,7 +430,7 @@ export default function SupervisorApprovals() {
 
             <Text style={styles.modalDesc}>
               Please provide the mandatory rejection reason for Trip{' '}
-              <Text style={{ color: '#00e5ff', fontWeight: '800' }}>
+              <Text style={{ color: '#2563EB', fontWeight: '800' }}>
                 {tripToReject?.tripNumber || tripToReject?.id}
               </Text>:
             </Text>
@@ -463,7 +463,7 @@ export default function SupervisorApprovals() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#070c14',
+    backgroundColor: '#F8FAFC',
   },
   scroll: {
     gap: 14,
@@ -471,10 +471,10 @@ const styles = StyleSheet.create({
 
   // ─── HEADER ───
   header: {
-    backgroundColor: '#0c1524',
+    backgroundColor: '#FFFFFF',
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderColor: '#E2E8F0',
     padding: 14,
     flexDirection: 'row',
     alignItems: 'center',
@@ -498,12 +498,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   avatarText: {
-    color: '#070c14',
+    color: '#FFFFFF',
     fontWeight: '900',
     fontSize: 16,
   },
   supervisorNameText: {
-    color: '#ffffff',
+    color: '#1E293B',
     fontWeight: '800',
     fontSize: 15,
   },
@@ -534,7 +534,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#070e1a',
+    backgroundColor: '#EFF6FF',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 8,
@@ -550,10 +550,10 @@ const styles = StyleSheet.create({
 
   // ─── SECTION WRAPS ───
   sectionWrap: {
-    backgroundColor: '#161c25',
+    backgroundColor: '#FFFFFF',
     borderRadius: radius.DEFAULT,
     borderWidth: 1,
-    borderColor: '#242a34',
+    borderColor: '#E2E8F0',
     padding: 14,
     gap: 12,
   },
@@ -563,26 +563,26 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingBottom: 6,
     borderBottomWidth: 1,
-    borderBottomColor: '#242a34',
+    borderBottomColor: '#E2E8F0',
   },
   sectionTitle: {
-    color: '#dde2f0',
+    color: '#1E293B',
     fontSize: 11,
     fontWeight: '800',
     letterSpacing: 0.6,
   },
 
   emptyCard: {
-    backgroundColor: '#0c1524',
+    backgroundColor: '#FFFFFF',
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderColor: '#E2E8F0',
     padding: 32,
     alignItems: 'center',
     gap: 8,
   },
   emptyTitle: {
-    color: '#ffffff',
+    color: '#1E293B',
     fontSize: 13,
     fontWeight: '800',
   },
@@ -594,7 +594,7 @@ const styles = StyleSheet.create({
 
   // ─── PENDING CARD ───
   pendingCard: {
-    backgroundColor: '#0c1524',
+    backgroundColor: '#FFFFFF',
     borderRadius: 16,
     borderWidth: 1.5,
     borderColor: 'rgba(254, 179, 0, 0.35)',
@@ -634,14 +634,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#070e1a',
+    backgroundColor: '#EFF6FF',
     padding: 10,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.06)',
+    borderColor: '#E2E8F0',
   },
   routeTermText: {
-    color: '#ffffff',
+    color: '#1E293B',
     fontSize: 13,
     fontWeight: '800',
   },
@@ -660,7 +660,7 @@ const styles = StyleSheet.create({
     fontSize: 9,
   },
   specBold: {
-    color: '#dde2f0',
+    color: '#1E293B',
     fontWeight: '700',
   },
 
@@ -668,7 +668,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#080e17',
+    backgroundColor: '#F8FAFC',
     borderRadius: radius.sm,
     borderWidth: 1,
     borderColor: '#1e293b',
@@ -690,18 +690,18 @@ const styles = StyleSheet.create({
   timingLabel: {
     fontSize: 8.5,
     fontWeight: '800',
-    color: '#00e5ff',
+    color: '#2563EB',
     letterSpacing: 0.4,
   },
   timingDate: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#dde2f0',
+    color: '#1E293B',
   },
   timingTime: {
     fontSize: 12,
     fontWeight: '900',
-    color: '#00e5ff',
+    color: '#2563EB',
     letterSpacing: 0.2,
   },
   timingDivider: {
@@ -734,12 +734,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: '#161c25',
+    backgroundColor: '#FFFFFF',
     padding: 8,
     borderRadius: radius.sm,
   },
   containerNumberText: {
-    color: '#00e5ff',
+    color: '#2563EB',
         fontSize: 11,
     fontWeight: '800',
   },
@@ -769,7 +769,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   approveBtnText: {
-    color: '#070c14',
+    color: '#FFFFFF',
     fontWeight: '900',
     fontSize: 12,
     letterSpacing: 0.5,
@@ -803,7 +803,7 @@ const styles = StyleSheet.create({
   modalCard: {
     width: '100%',
     maxWidth: 440,
-    backgroundColor: '#0c1524',
+    backgroundColor: '#FFFFFF',
     borderRadius: 20,
     borderWidth: 1,
     borderColor: 'rgba(255, 82, 82, 0.35)',
@@ -816,7 +816,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   modalTitle: {
-    color: '#dde2f0',
+    color: '#1E293B',
     fontSize: 13,
     fontWeight: '900',
     letterSpacing: 0.6,
@@ -827,12 +827,12 @@ const styles = StyleSheet.create({
     lineHeight: 16,
   },
   rejectionInput: {
-    backgroundColor: '#080e17',
+    backgroundColor: '#F8FAFC',
     borderWidth: 1,
     borderColor: '#ff5252',
     borderRadius: radius.DEFAULT,
     padding: 10,
-    color: '#dde2f0',
+    color: '#1E293B',
     fontSize: 11,
     minHeight: 70,
     textAlignVertical: 'top',
@@ -849,7 +849,7 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '900',
     letterSpacing: 0.6,
-    color: '#fff',
+    color: '#FFFFFF',
   },
 
   // ─── DRIVER DISCHARGE & SEAL VERIFICATION MANIFEST ───
@@ -868,12 +868,12 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingBottom: 6,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.06)',
+    borderBottomColor: '#E2E8F0',
   },
   dischargeVerificationTitle: {
     fontSize: 9.5,
     fontWeight: '900',
-    color: '#00e5ff',
+    color: '#2563EB',
     letterSpacing: 0.5,
   },
   supervisorDriverRemarksAuditedBadge: {
@@ -902,7 +902,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#0f1726',
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: '#242a34',
+    borderColor: '#E2E8F0',
     padding: 7,
   },
   boxGreenBorder: {
@@ -922,7 +922,7 @@ const styles = StyleSheet.create({
   dischargeGridValue: {
     fontSize: 10,
     fontWeight: '800',
-    color: '#dde2f0',
+    color: '#1E293B',
   },
   supervisorDriverRemarksBox: {
     backgroundColor: '#0c1421',
@@ -935,12 +935,12 @@ const styles = StyleSheet.create({
   supervisorDriverRemarksLabel: {
     fontSize: 8.5,
     fontWeight: '900',
-    color: '#00e5ff',
+    color: '#2563EB',
     letterSpacing: 0.4,
   },
   supervisorDriverRemarksText: {
     fontSize: 10,
-    color: '#dde2f0',
+    color: '#1E293B',
     fontStyle: 'italic',
     lineHeight: 14,
   },

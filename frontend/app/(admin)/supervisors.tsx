@@ -318,7 +318,7 @@ const styles = StyleSheet.create({
     paddingBottom: 14,
     backgroundColor: '#0a1628',
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.08)',
+    borderBottomColor: '#E2E8F0',
   },
   backBtn: {
     padding: 6,
@@ -328,7 +328,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: '800',
-    color: '#ffffff',
+    color: '#1E293B',
   },
   headerSubtitle: {
     fontSize: 11,
@@ -352,17 +352,17 @@ const styles = StyleSheet.create({
   searchBarWrap: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#0c1b30',
+    backgroundColor: '#FFFFFF',
     borderRadius: 8,
     margin: 14,
     paddingHorizontal: 10,
     height: 40,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderColor: '#E2E8F0',
   },
   searchInput: {
     flex: 1,
-    color: '#ffffff',
+    color: '#1E293B',
     fontSize: 13,
   },
   centerLoading: {
@@ -374,12 +374,12 @@ const styles = StyleSheet.create({
     paddingTop: 6,
   },
   supCard: {
-    backgroundColor: '#0c1b30',
+    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     padding: 14,
     marginBottom: 10,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderColor: '#E2E8F0',
   },
   cardTop: {
     flexDirection: 'row',
@@ -390,7 +390,7 @@ const styles = StyleSheet.create({
   supName: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#ffffff',
+    color: '#1E293B',
   },
   supId: {
     fontSize: 12,
@@ -398,15 +398,15 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   terminalBadge: {
-    backgroundColor: 'rgba(0, 229, 255, 0.1)',
+    backgroundColor: '#EFF6FF',
     borderRadius: 6,
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderWidth: 1,
-    borderColor: 'rgba(0, 229, 255, 0.3)',
+    borderColor: '#2563EB',
   },
   terminalBadgeText: {
-    color: '#00e5ff',
+    color: '#2563EB',
     fontSize: 11,
     fontWeight: '800',
   },
@@ -430,7 +430,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(254, 179, 0, 0.15)',
   },
   statusPillText: {
-    color: '#ffffff',
+    color: '#1E293B',
     fontSize: 10,
     fontWeight: '800',
   },
@@ -452,7 +452,7 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   modalBox: {
-    backgroundColor: '#0c1b30',
+    backgroundColor: '#FFFFFF',
     borderRadius: 16,
     padding: 20,
     borderWidth: 1,
@@ -467,7 +467,7 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 18,
     fontWeight: '800',
-    color: '#ffffff',
+    color: '#1E293B',
   },
   inputGroup: {
     marginBottom: 10,
@@ -482,8 +482,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#070f1e',
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
-    color: '#ffffff',
+    borderColor: '#E2E8F0',
+    color: '#1E293B',
     paddingHorizontal: 12,
     height: 40,
     fontSize: 13,
@@ -500,11 +500,11 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     backgroundColor: '#070f1e',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderColor: '#E2E8F0',
   },
   choicePillActive: {
     backgroundColor: '#00e5ff',
-    borderColor: '#00e5ff',
+    borderColor: '#2563EB',
   },
   choicePillText: {
     color: '#90caf9',

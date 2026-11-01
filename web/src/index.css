@@ -1,18 +1,18 @@
 :root {
-  --bg-main: #070d17;
-  --bg-card: #0c1b30;
-  --bg-card-hover: #10233f;
-  --bg-surface: #0a1628;
-  --border-color: rgba(255, 255, 255, 0.08);
-  --border-active: rgba(0, 229, 255, 0.35);
-  --primary-cyan: #00e5ff;
-  --primary-blue: #1e88e5;
-  --text-main: #ffffff;
-  --text-muted: #78909c;
-  --text-sub: #90caf9;
-  --status-active: #4caf50;
-  --status-pending: #feb300;
-  --status-danger: #ff5252;
+  --bg-main: #F8FAFC;
+  --bg-card: #FFFFFF;
+  --bg-card-hover: #EFF6FF;
+  --bg-surface: #FFFFFF;
+  --border-color: #E2E8F0;
+  --border-active: #2563EB;
+  --primary-cyan: #2563EB;
+  --primary-blue: #2563EB;
+  --text-main: #1E293B;
+  --text-muted: #64748B;
+  --text-sub: #2563EB;
+  --status-active: #16A34A;
+  --status-pending: #D97706;
+  --status-danger: #DC2626;
   --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
 }
@@ -45,11 +45,11 @@ input, button, select, textarea {
   background: var(--bg-main);
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
+  background: #CBD5E1;
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--primary-cyan);
+  background: var(--primary-blue);
 }
 
 /* Adaptive Table Styling */
@@ -60,19 +60,19 @@ input, button, select, textarea {
   border-radius: 12px;
   border: 1px solid var(--border-color);
   background: var(--bg-card);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 table {
   width: 100%;
-  min-width: 860px; /* Guarantees table columns never collapse, wrap awkwardly, or collide */
+  min-width: 860px;
   border-collapse: collapse;
   text-align: left;
   font-size: clamp(12px, 0.9vw, 13px);
 }
 
 th {
-  background: rgba(255, 255, 255, 0.03);
+  background: #F8FAFC;
   color: var(--text-muted);
   font-weight: 700;
   padding: 11px 14px;
@@ -85,21 +85,21 @@ th {
 
 td {
   padding: 12px 14px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-  color: #cfd8dc;
-  white-space: nowrap; /* Crucial: Prevents code breaks like DRV- from 00001, LY- from 6439 */
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-main);
+  white-space: nowrap;
   vertical-align: middle;
 }
 
 tr:hover td {
-  background: rgba(0, 229, 255, 0.03);
+  background: #F1F5F9;
 }
 
 /* Adaptive Metric Cards Bar */
 .metrics-bar {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 10px;
+  gap: 12px;
   margin-bottom: 18px;
 }
 
@@ -113,28 +113,29 @@ tr:hover td {
   background-color: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: 12px;
-  padding: 10px 12px;
+  padding: 12px 14px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   min-width: 0;
   transition: all 0.2s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
 .metric-chip-num {
-  font-size: clamp(18px, 1.8vw, 24px);
+  font-size: clamp(20px, 2vw, 26px);
   font-weight: 800;
-  color: #ffffff;
+  color: #1E293B;
   font-family: var(--font-mono);
   line-height: 1.1;
 }
 
 .metric-chip-label {
-  font-size: clamp(9px, 0.8vw, 10px);
+  font-size: clamp(10px, 0.8vw, 11px);
   font-weight: 700;
   color: var(--text-muted);
-  margin-top: 3px;
+  margin-top: 4px;
   text-transform: uppercase;
   white-space: nowrap;
   overflow: hidden;
@@ -155,27 +156,27 @@ tr:hover td {
 }
 
 .badge-green {
-  background: rgba(76, 175, 80, 0.15);
-  color: #4caf50;
-  border: 1px solid rgba(76, 175, 80, 0.3);
+  background: #DCFCE7;
+  color: #15803D;
+  border: 1px solid #BBF7D0;
 }
 
 .badge-amber {
-  background: rgba(254, 179, 0, 0.15);
-  color: #feb300;
-  border: 1px solid rgba(254, 179, 0, 0.3);
+  background: #FEF3C7;
+  color: #B45309;
+  border: 1px solid #FDE68A;
 }
 
 .badge-red {
-  background: rgba(255, 82, 82, 0.15);
-  color: #ff5252;
-  border: 1px solid rgba(255, 82, 82, 0.3);
+  background: #FEE2E2;
+  color: #B91C1C;
+  border: 1px solid #FECACA;
 }
 
 .badge-cyan {
-  background: rgba(0, 229, 255, 0.12);
-  color: #00e5ff;
-  border: 1px solid rgba(0, 229, 255, 0.3);
+  background: #EFF6FF;
+  color: #2563EB;
+  border: 1px solid #BFDBFE;
 }
 
 /* Buttons */
@@ -183,9 +184,9 @@ tr:hover td {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 7px 14px;
+  padding: 8px 16px;
   border-radius: 8px;
-  font-size: clamp(11px, 0.85vw, 13px);
+  font-size: clamp(12px, 0.85vw, 13px);
   font-weight: 700;
   cursor: pointer;
   border: none;
@@ -195,43 +196,43 @@ tr:hover td {
 }
 
 .btn-primary {
-  background: var(--primary-cyan);
-  color: #001529;
+  background: var(--primary-blue);
+  color: #FFFFFF;
 }
 .btn-primary:hover {
-  filter: brightness(1.1);
-  box-shadow: 0 0 15px rgba(0, 229, 255, 0.4);
+  filter: brightness(1.08);
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
 }
 
 .btn-secondary {
-  background: rgba(255, 255, 255, 0.06);
-  color: #ffffff;
+  background: #FFFFFF;
+  color: var(--text-main);
   border: 1px solid var(--border-color);
 }
 .btn-secondary:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: #F8FAFC;
 }
 
 .btn-danger {
-  background: rgba(255, 82, 82, 0.15);
-  color: #ff5252;
-  border: 1px solid rgba(255, 82, 82, 0.3);
+  background: #FEE2E2;
+  color: #DC2626;
+  border: 1px solid #FECACA;
 }
 .btn-danger:hover {
-  background: rgba(255, 82, 82, 0.25);
+  background: #FCA5A5;
 }
 
 .btn-success {
-  background: rgba(76, 175, 80, 0.15);
-  color: #4caf50;
-  border: 1px solid rgba(76, 175, 80, 0.3);
+  background: #DCFCE7;
+  color: #16A34A;
+  border: 1px solid #BBF7D0;
 }
 .btn-success:hover {
-  background: rgba(76, 175, 80, 0.25);
+  background: #86EFAC;
 }
 
 .btn-sm {
-  padding: 4px 8px;
+  padding: 5px 10px;
   font-size: 11px;
 }
 
@@ -239,8 +240,8 @@ tr:hover td {
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.75);
-  backdrop-filter: blur(4px);
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(2px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -250,13 +251,13 @@ tr:hover td {
 
 .modal-content {
   background: var(--bg-card);
-  border: 1px solid var(--border-active);
+  border: 1px solid var(--border-color);
   border-radius: 16px;
   width: 100%;
   max-width: 540px;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
   padding: 24px;
 }
 

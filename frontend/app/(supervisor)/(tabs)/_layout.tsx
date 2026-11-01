@@ -12,17 +12,17 @@ export default function SupervisorTabsLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: '#feb300',
-        tabBarInactiveTintColor: '#64748b',
+        tabBarActiveTintColor: '#2563EB',
+        tabBarInactiveTintColor: '#64748B',
         tabBarStyle: {
-          backgroundColor: '#070c14',
+          backgroundColor: '#FFFFFF',
           borderTopWidth: 1,
-          borderTopColor: 'rgba(255, 255, 255, 0.08)',
-          elevation: 12,
+          borderTopColor: '#E2E8F0',
+          elevation: 4,
           shadowColor: '#000000',
-          shadowOffset: { width: 0, height: -4 },
-          shadowOpacity: 0.3,
-          shadowRadius: 12,
+          shadowOffset: { width: 0, height: -2 },
+          shadowOpacity: 0.05,
+          shadowRadius: 8,
           height: 64 + bottomInset,
           paddingBottom: bottomInset,
           paddingTop: 8,
@@ -38,7 +38,7 @@ export default function SupervisorTabsLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Command',
+          title: 'Dashboard',
           tabBarIcon: ({ color, focused }) => (
             <View style={[styles.iconWrap, focused && styles.iconWrapActive]}>
               <Ionicons name={focused ? 'speedometer' : 'speedometer-outline'} size={22} color={color as any} />
@@ -101,6 +101,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   iconWrapActive: {
-    backgroundColor: 'rgba(254, 179, 0, 0.12)',
+    backgroundColor: '#EFF6FF',
   },
 });
