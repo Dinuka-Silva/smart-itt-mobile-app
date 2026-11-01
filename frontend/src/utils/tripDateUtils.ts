@@ -86,26 +86,26 @@ export function getTripTimingDetails(trip: any): TripTimingInfo {
   let endTime = '';
   let endFull = '';
   let statusBadge = '';
-  let statusColor = '#00e5ff';
+  let statusColor = '#2563EB';
 
   if (isCompleted) {
     endDate = formatTripDate(endRaw, startDate);
     endTime = formatTripTime(endRaw || trip.operationTime);
     endFull = `${endDate} · ${endTime}`;
     statusBadge = 'COMPLETED';
-    statusColor = '#22ef7e';
+    statusColor = '#16A34A';
   } else if (isPending) {
     endDate = formatTripDate(endRaw, startDate);
     endTime = endRaw ? formatTripTime(endRaw) : 'Awaiting Sign-off';
     endFull = `${endDate} · ${endTime}`;
     statusBadge = 'DELIVERED (PENDING SIGN-OFF)';
-    statusColor = '#feb300';
+    statusColor = '#D97706';
   } else {
     endDate = 'IN TRANSIT';
     endTime = 'Live Transit';
     endFull = 'In Progress (Active Transit)';
     statusBadge = 'LIVE TRANSIT';
-    statusColor = '#00e5ff';
+    statusColor = '#2563EB';
   }
 
   // 3. Duration

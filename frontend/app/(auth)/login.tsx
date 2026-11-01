@@ -651,7 +651,7 @@ export default function LoginScreen() {
               </View>
             ) : isDriverIdentified ? (
               <View style={[styles.roleMiniTag, styles.roleMiniTagCyan]}>
-                <View style={[styles.statusDot, { backgroundColor: '#00e5ff' }]} />
+                <View style={[styles.statusDot, { backgroundColor: '#2563EB' }]} />
                 <Text style={styles.roleMiniTagCyanText}>DRIVER</Text>
               </View>
             ) : null}

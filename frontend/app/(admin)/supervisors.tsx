@@ -128,7 +128,7 @@ export default function AdminSupervisorsScreen() {
           onPress={() => setCreateModalVisible(true)}
           activeOpacity={0.8}
         >
-          <Ionicons name="person-add" size={14} color="#001529" style={{ marginRight: 4 }} />
+          <Ionicons name="person-add" size={14} color="#FFFFFF" style={{ marginRight: 4 }} />
           <Text style={styles.createBtnText}>ADD SUPERVISOR</Text>
         </TouchableOpacity>
       </View>
@@ -148,7 +148,7 @@ export default function AdminSupervisorsScreen() {
       {/* List */}
       {loading && !refreshing ? (
         <View style={styles.centerLoading}>
-          <ActivityIndicator size="large" color="#00e5ff" />
+          <ActivityIndicator size="large" color="#2563EB" />
         </View>
       ) : (
         <ScrollView
@@ -160,7 +160,7 @@ export default function AdminSupervisorsScreen() {
             },
           ]}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#00e5ff" />
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#2563EB" />
           }
         >
           {supervisors.map((s) => (
@@ -293,7 +293,7 @@ export default function AdminSupervisorsScreen() {
               disabled={creating}
             >
               {creating ? (
-                <ActivityIndicator color="#001529" size="small" />
+                <ActivityIndicator color="#FFFFFF" size="small" />
               ) : (
                 <Text style={styles.saveBtnText}>CREATE SUPERVISOR</Text>
               )}
@@ -308,7 +308,7 @@ export default function AdminSupervisorsScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: '#070f1e',
+    backgroundColor: '#FFFFFF',
   },
   header: {
     flexDirection: 'row',
@@ -339,13 +339,13 @@ const styles = StyleSheet.create({
   createBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#00e5ff',
+    backgroundColor: '#2563EB',
     paddingHorizontal: 10,
     paddingVertical: 7,
     borderRadius: 8,
   },
   createBtnText: {
-    color: '#001529',
+    color: '#FFFFFF',
     fontSize: 11,
     fontWeight: '800',
   },
@@ -456,7 +456,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 20,
     borderWidth: 1,
-    borderColor: 'rgba(0, 229, 255, 0.25)',
+    borderColor: '#EFF6FF',
   },
   modalHeader: {
     flexDirection: 'row',
@@ -479,7 +479,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   modalInput: {
-    backgroundColor: '#070f1e',
+    backgroundColor: '#FFFFFF',
     borderRadius: 8,
     borderWidth: 1,
     borderColor: '#E2E8F0',
@@ -498,12 +498,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 6,
-    backgroundColor: '#070f1e',
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
     borderColor: '#E2E8F0',
   },
   choicePillActive: {
-    backgroundColor: '#00e5ff',
+    backgroundColor: '#2563EB',
     borderColor: '#2563EB',
   },
   choicePillText: {
@@ -512,10 +512,10 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   choicePillTextActive: {
-    color: '#001529',
+    color: '#FFFFFF',
   },
   saveBtn: {
-    backgroundColor: '#00e5ff',
+    backgroundColor: '#2563EB',
     borderRadius: 8,
     height: 44,
     alignItems: 'center',
@@ -523,7 +523,7 @@ const styles = StyleSheet.create({
     marginTop: 14,
   },
   saveBtnText: {
-    color: '#001529',
+    color: '#FFFFFF',
     fontSize: 13,
     fontWeight: '800',
   },

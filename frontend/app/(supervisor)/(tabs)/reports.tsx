@@ -140,8 +140,8 @@ export default function SupervisorReports() {
       if (selectedDate) {
         marks[selectedDate] = {
           selected: true,
-          selectedColor: '#00e5ff',
-          selectedTextColor: '#00363d',
+          selectedColor: '#2563EB',
+          selectedTextColor: '#FFFFFF',
         };
       }
       return marks;
@@ -161,8 +161,8 @@ export default function SupervisorReports() {
           selected: true,
           startingDay: isStart,
           endingDay: isEnd,
-          color: isStart || isEnd ? '#00e5ff' : 'rgba(0, 229, 255, 0.22)',
-          textColor: isStart || isEnd ? '#00363d' : '#00e5ff',
+          color: isStart || isEnd ? '#2563EB' : '#EFF6FF',
+          textColor: isStart || isEnd ? '#FFFFFF' : '#2563EB',
         };
         cur.setDate(cur.getDate() + 1);
       }
@@ -172,7 +172,7 @@ export default function SupervisorReports() {
         startingDay: true,
         endingDay: true,
         color: '#feb300',
-        textColor: '#00363d',
+        textColor: '#FFFFFF',
       };
     }
 
@@ -816,7 +816,7 @@ export default function SupervisorReports() {
           },
         ]}
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#00e5ff" />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#2563EB" />}
         keyboardShouldPersistTaps="handled"
       >
         {/* ─── 1. SUPERVISOR HEADER ─── */}
@@ -837,7 +837,7 @@ export default function SupervisorReports() {
           </View>
 
           <View style={styles.badgeWrap}>
-            <Ionicons name="shield-checkmark" size={13} color="#00e5ff" />
+            <Ionicons name="shield-checkmark" size={13} color="#2563EB" />
             <Text style={styles.badgeText}>AUDIT ENGINE</Text>
           </View>
         </View>
@@ -846,7 +846,7 @@ export default function SupervisorReports() {
         <View style={styles.filterCard}>
           <View style={styles.filterCardHeader}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <Ionicons name="filter" size={16} color="#00e5ff" />
+              <Ionicons name="filter" size={16} color="#2563EB" />
               <Text style={styles.filterCardTitle}>SUPERVISOR AUDIT FILTERS</Text>
             </View>
             {(selectedDate || dateRangeStart || selectedTerminal !== 'ALL' || selectedDriver !== 'ALL') && (
@@ -867,7 +867,7 @@ export default function SupervisorReports() {
           {/* ── A. CALENDAR DATE, WEEK & MONTH SELECTOR ── */}
           <View style={styles.filterBlock}>
             <View style={styles.filterLabelRow}>
-              <Ionicons name="calendar" size={14} color="#00e5ff" />
+              <Ionicons name="calendar" size={14} color="#2563EB" />
               <Text style={styles.filterLabel}>SELECT DATE / WEEK / MONTH (CALENDAR)</Text>
               {activeDateFilterLabel && (
                 <View style={styles.activeFilterPill}>
@@ -883,7 +883,7 @@ export default function SupervisorReports() {
                 onPress={() => setDateFilterMode('SINGLE')}
                 activeOpacity={0.8}
               >
-                <Ionicons name="today" size={12} color={dateFilterMode === 'SINGLE' ? '#00363d' : '#849396'} />
+                <Ionicons name="today" size={12} color={dateFilterMode === 'SINGLE' ? '#FFFFFF' : '#849396'} />
                 <Text style={[styles.dateModeTabText, dateFilterMode === 'SINGLE' && styles.dateModeTabTextActive]}>
                   DAY
                 </Text>
@@ -894,7 +894,7 @@ export default function SupervisorReports() {
                 onPress={() => setDateFilterMode('WEEK')}
                 activeOpacity={0.8}
               >
-                <Ionicons name="time" size={12} color={dateFilterMode === 'WEEK' ? '#00363d' : '#849396'} />
+                <Ionicons name="time" size={12} color={dateFilterMode === 'WEEK' ? '#FFFFFF' : '#849396'} />
                 <Text style={[styles.dateModeTabText, dateFilterMode === 'WEEK' && styles.dateModeTabTextActive]}>
                   WEEK
                 </Text>
@@ -905,7 +905,7 @@ export default function SupervisorReports() {
                 onPress={() => setDateFilterMode('MONTH')}
                 activeOpacity={0.8}
               >
-                <Ionicons name="calendar-number" size={12} color={dateFilterMode === 'MONTH' ? '#00363d' : '#849396'} />
+                <Ionicons name="calendar-number" size={12} color={dateFilterMode === 'MONTH' ? '#FFFFFF' : '#849396'} />
                 <Text style={[styles.dateModeTabText, dateFilterMode === 'MONTH' && styles.dateModeTabTextActive]}>
                   MONTH
                 </Text>
@@ -916,7 +916,7 @@ export default function SupervisorReports() {
                 onPress={() => setDateFilterMode('RANGE')}
                 activeOpacity={0.8}
               >
-                <Ionicons name="git-commit" size={12} color={dateFilterMode === 'RANGE' ? '#00363d' : '#849396'} />
+                <Ionicons name="git-commit" size={12} color={dateFilterMode === 'RANGE' ? '#FFFFFF' : '#849396'} />
                 <Text style={[styles.dateModeTabText, dateFilterMode === 'RANGE' && styles.dateModeTabTextActive]}>
                   CUSTOM RANGE
                 </Text>
@@ -1072,7 +1072,7 @@ export default function SupervisorReports() {
                   <Ionicons
                     name="calendar-outline"
                     size={18}
-                    color={(selectedDate || dateRangeStart) ? '#00363d' : '#00e5ff'}
+                    color={(selectedDate || dateRangeStart) ? '#FFFFFF' : '#2563EB'}
                   />
                   <Text
                     style={[styles.calendarPickerBtnText, (selectedDate || dateRangeStart) ? styles.calendarPickerBtnTextActive : null]}
@@ -1081,7 +1081,7 @@ export default function SupervisorReports() {
                     {activeDateFilterLabel || 'Open Interactive Calendar (Pick Day / Week / Month)'}
                   </Text>
                 </View>
-                <Ionicons name="chevron-down" size={16} color={(selectedDate || dateRangeStart) ? '#00363d' : '#849396'} />
+                <Ionicons name="chevron-down" size={16} color={(selectedDate || dateRangeStart) ? '#FFFFFF' : '#849396'} />
               </TouchableOpacity>
 
               {(selectedDate || dateRangeStart) && (
@@ -1096,7 +1096,7 @@ export default function SupervisorReports() {
           {/* ── B. DISCHARGE TERMINAL SELECTOR ── */}
           <View style={styles.filterBlock}>
             <View style={styles.filterLabelRow}>
-              <Ionicons name="boat" size={14} color="#00e5ff" />
+              <Ionicons name="boat" size={14} color="#2563EB" />
               <Text style={styles.filterLabel}>SELECT DISCHARGE TERMINAL (DESTINATION)</Text>
               {selectedTerminal !== 'ALL' && (
                 <View style={styles.activeFilterPill}>
@@ -1117,7 +1117,7 @@ export default function SupervisorReports() {
                     <Ionicons
                       name={term === 'ALL' ? 'layers' : 'boat'}
                       size={13}
-                      color={isActive ? '#00363d' : '#849396'}
+                      color={isActive ? '#FFFFFF' : '#849396'}
                     />
                     <Text style={[styles.terminalChipText, isActive && styles.terminalChipTextActive]}>
                       {term === 'ALL' ? 'ALL DISCHARGE TERMINALS' : term}
@@ -1131,7 +1131,7 @@ export default function SupervisorReports() {
           {/* ── C. DRIVER SELECTOR ── */}
           <View style={styles.filterBlock}>
             <View style={styles.filterLabelRow}>
-              <Ionicons name="person" size={14} color="#00e5ff" />
+              <Ionicons name="person" size={14} color="#2563EB" />
               <Text style={styles.filterLabel}>SELECT DRIVER (OPERATOR CODE)</Text>
               {selectedDriver !== 'ALL' && (
                 <View style={styles.activeFilterPill}>
@@ -1218,7 +1218,7 @@ export default function SupervisorReports() {
               <Ionicons
                 name="swap-vertical"
                 size={13}
-                color={sortField === 'DISCHARGE_TERMINAL' ? '#00363d' : '#00e5ff'}
+                color={sortField === 'DISCHARGE_TERMINAL' ? '#FFFFFF' : '#2563EB'}
               />
               <Text
                 style={[
@@ -1235,7 +1235,7 @@ export default function SupervisorReports() {
                 style={[styles.toggleBtn, viewMode === 'EXCEL' && styles.toggleBtnActive]}
                 onPress={() => setViewMode('EXCEL')}
               >
-                <Ionicons name="grid-outline" size={14} color={viewMode === 'EXCEL' ? '#00363d' : '#849396'} />
+                <Ionicons name="grid-outline" size={14} color={viewMode === 'EXCEL' ? '#FFFFFF' : '#849396'} />
                 <Text style={[styles.toggleBtnText, viewMode === 'EXCEL' && styles.toggleBtnTextActive]}>
                   EXCEL
                 </Text>
@@ -1245,7 +1245,7 @@ export default function SupervisorReports() {
                 style={[styles.toggleBtn, viewMode === 'CARDS' && styles.toggleBtnActive]}
                 onPress={() => setViewMode('CARDS')}
               >
-                <Ionicons name="albums-outline" size={14} color={viewMode === 'CARDS' ? '#00363d' : '#849396'} />
+                <Ionicons name="albums-outline" size={14} color={viewMode === 'CARDS' ? '#FFFFFF' : '#849396'} />
                 <Text style={[styles.toggleBtnText, viewMode === 'CARDS' && styles.toggleBtnTextActive]}>
                   CARDS
                 </Text>
@@ -1276,7 +1276,7 @@ export default function SupervisorReports() {
                       onPress={() => setSortField('DATE_TIME')}
                       activeOpacity={0.7}
                     >
-                      <Text style={[styles.thCell, { width: 95, color: sortField === 'DATE_TIME' ? '#00e5ff' : '#bac9cc' }]}>
+                      <Text style={[styles.thCell, { width: 95, color: sortField === 'DATE_TIME' ? '#2563EB' : '#bac9cc' }]}>
                         START DATE {sortField === 'DATE_TIME' ? '▼' : ''}
                       </Text>
                     </TouchableOpacity>
@@ -1298,7 +1298,7 @@ export default function SupervisorReports() {
                       onPress={() => setSortField('DISCHARGE_TERMINAL')}
                       activeOpacity={0.7}
                     >
-                      <Text style={[styles.thCell, { width: 130, color: sortField === 'DISCHARGE_TERMINAL' ? '#00e5ff' : '#bac9cc' }]}>
+                      <Text style={[styles.thCell, { width: 130, color: sortField === 'DISCHARGE_TERMINAL' ? '#2563EB' : '#bac9cc' }]}>
                         DISCHARGE TERMINAL {sortField === 'DISCHARGE_TERMINAL' ? '▲' : ''}
                       </Text>
                     </TouchableOpacity>
@@ -1350,7 +1350,7 @@ export default function SupervisorReports() {
                         </View>
                         <View style={[styles.tdCellWrap, { width: 100 }]}>
                           <View style={styles.cheBadge}>
-                            <Ionicons name="hardware-chip" size={10} color="#00e5ff" />
+                            <Ionicons name="hardware-chip" size={10} color="#2563EB" />
                             <Text style={styles.cheBadgeText}>{row.cheNo}</Text>
                           </View>
                         </View>
@@ -1383,7 +1383,7 @@ export default function SupervisorReports() {
                             <Ionicons
                               name={row.containerType === 'RETURN' ? 'return-down-back' : 'cube-outline'}
                               size={11}
-                              color={row.containerType === 'RETURN' ? '#feb300' : '#00e5ff'}
+                              color={row.containerType === 'RETURN' ? '#feb300' : '#2563EB'}
                             />
                             <Text
                               style={[
@@ -1454,7 +1454,7 @@ export default function SupervisorReports() {
                       <Text style={styles.vehicleBadgeText}>Vehicle: {r.vehicleNo}</Text>
                     </View>
                     <View style={styles.cheBadge}>
-                      <Ionicons name="hardware-chip" size={10} color="#00e5ff" />
+                      <Ionicons name="hardware-chip" size={10} color="#2563EB" />
                       <Text style={styles.cheBadgeText}>CHE: {r.cheNo}</Text>
                     </View>
                   </View>
@@ -1471,7 +1471,7 @@ export default function SupervisorReports() {
                       <Ionicons
                         name={r.containerType === 'RETURN' ? 'return-down-back' : 'cube-outline'}
                         size={11}
-                        color={r.containerType === 'RETURN' ? '#feb300' : '#00e5ff'}
+                        color={r.containerType === 'RETURN' ? '#feb300' : '#2563EB'}
                       />
                       <Text
                         style={[
@@ -1483,7 +1483,7 @@ export default function SupervisorReports() {
                       </Text>
                     </View>
                     <View style={styles.cheBadge}>
-                      <Ionicons name="time" size={10} color="#00e5ff" />
+                      <Ionicons name="time" size={10} color="#2563EB" />
                       <Text style={[styles.cheBadgeText, { color: '#2563EB' }]}>
                         Start: {r.date} {r.startTime || r.time}
                       </Text>
@@ -1512,7 +1512,7 @@ export default function SupervisorReports() {
                   <View style={styles.cardRow}>
                     <Text style={styles.cardLabel}>TERMINAL ROUTE:</Text>
                     <Text style={styles.cardValRoute}>
-                      {r.loadTerminal} <Ionicons name="arrow-forward" size={10} color="#00e5ff" /> {r.dischargeTerminal}
+                      {r.loadTerminal} <Ionicons name="arrow-forward" size={10} color="#2563EB" /> {r.dischargeTerminal}
                     </Text>
                   </View>
 
@@ -1543,7 +1543,7 @@ export default function SupervisorReports() {
           <View style={styles.exportButtonsRow}>
             {/* EXCEL SPREADSHEET BUTTON */}
             <TouchableOpacity style={styles.exportExcelBtn} onPress={handleExportExcel} activeOpacity={0.88}>
-              <Ionicons name="document-text" size={18} color="#00363d" />
+              <Ionicons name="document-text" size={18} color="#FFFFFF" />
               <Text style={styles.exportExcelBtnText}>EXPORT AS EXCEL (.XLS)</Text>
             </TouchableOpacity>
 
@@ -1574,7 +1574,7 @@ export default function SupervisorReports() {
             {/* Modal Header */}
             <View style={styles.modalHeader}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <Ionicons name="calendar" size={18} color="#00e5ff" />
+                <Ionicons name="calendar" size={18} color="#2563EB" />
                 <Text style={styles.modalTitle}>
                   {dateFilterMode === 'SINGLE' && 'SELECT SINGLE DATE'}
                   {dateFilterMode === 'WEEK' && 'SELECT 7-DAY WEEK PERIOD'}
@@ -1608,7 +1608,7 @@ export default function SupervisorReports() {
 
             {/* Instruction prompt for the active mode */}
             <View style={styles.modalInstructionBanner}>
-              <Ionicons name="information-circle" size={14} color="#00e5ff" />
+              <Ionicons name="information-circle" size={14} color="#2563EB" />
               <Text style={styles.modalInstructionText}>
                 {dateFilterMode === 'SINGLE' && 'Tap any date to audit trips on that exact day.'}
                 {dateFilterMode === 'WEEK' && 'Tap start date; 7 days will be automatically selected.'}
@@ -1663,15 +1663,15 @@ export default function SupervisorReports() {
               theme={{
                 backgroundColor: '#FFFFFF',
                 calendarBackground: '#161c25',
-                textSectionTitleColor: '#00e5ff',
-                selectedDayBackgroundColor: '#00e5ff',
-                selectedDayTextColor: '#00363d',
+                textSectionTitleColor: '#2563EB',
+                selectedDayBackgroundColor: '#2563EB',
+                selectedDayTextColor: '#FFFFFF',
                 todayTextColor: '#feb300',
                 dayTextColor: '#dde2f0',
                 textDisabledColor: '#3b494c',
-                arrowColor: '#00e5ff',
-                monthTextColor: '#00e5ff',
-                indicatorColor: '#00e5ff',
+                arrowColor: '#2563EB',
+                monthTextColor: '#2563EB',
+                indicatorColor: '#2563EB',
                 textDayFontWeight: '700',
                 textMonthFontWeight: '900',
                 textDayHeaderFontWeight: '800',
@@ -1737,7 +1737,7 @@ export default function SupervisorReports() {
                 style={styles.modalApplyBtn}
                 onPress={() => setCalendarModalVisible(false)}
               >
-                <Ionicons name="checkmark-circle" size={16} color="#00363d" />
+                <Ionicons name="checkmark-circle" size={16} color="#FFFFFF" />
                 <Text style={styles.modalApplyBtnText}>APPLY SELECTED RANGE</Text>
               </TouchableOpacity>
             )}
@@ -1774,7 +1774,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: '#00e5ff',
+    backgroundColor: '#2563EB',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -1912,7 +1912,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
   },
   calendarPickerBtnActive: {
-    backgroundColor: '#00e5ff',
+    backgroundColor: '#2563EB',
     borderColor: '#2563EB',
   },
   calendarPickerBtnText: {
@@ -1958,7 +1958,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.DEFAULT,
   },
   terminalChipActive: {
-    backgroundColor: '#00e5ff',
+    backgroundColor: '#2563EB',
     borderColor: '#2563EB',
   },
   terminalChipText: {
@@ -2073,7 +2073,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   toggleBtnActive: {
-    backgroundColor: '#00e5ff',
+    backgroundColor: '#2563EB',
   },
   toggleBtnText: {
     fontSize: 9,
@@ -2096,7 +2096,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     backgroundColor: '#F8FAFC',
     borderBottomWidth: 2,
-    borderBottomColor: '#00e5ff',
+    borderBottomColor: '#2563EB',
     paddingVertical: 10,
     paddingHorizontal: 6,
     alignItems: 'center',
@@ -2209,7 +2209,7 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   sizePillDual: {
-    backgroundColor: 'rgba(0, 229, 255, 0.2)',
+    backgroundColor: '#EFF6FF',
     borderWidth: 1,
     borderColor: '#2563EB',
   },
@@ -2362,7 +2362,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
     elevation: 4,
-    shadowColor: '#00e5ff',
+    shadowColor: '#2563EB',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 6,
@@ -2426,7 +2426,7 @@ const styles = StyleSheet.create({
   modalTodayBtn: {
     flex: 1,
     height: 38,
-    backgroundColor: '#00e5ff',
+    backgroundColor: '#2563EB',
     borderRadius: radius.DEFAULT,
     alignItems: 'center',
     justifyContent: 'center',
@@ -2472,7 +2472,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   dateModeTabActive: {
-    backgroundColor: '#00e5ff',
+    backgroundColor: '#2563EB',
   },
   dateModeTabText: {
     color: '#849396',
@@ -2497,7 +2497,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.DEFAULT,
   },
   presetChipActive: {
-    backgroundColor: 'rgba(0, 229, 255, 0.2)',
+    backgroundColor: '#EFF6FF',
     borderColor: '#2563EB',
   },
   presetChipText: {
@@ -2528,7 +2528,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   modalModeTabActive: {
-    backgroundColor: '#00e5ff',
+    backgroundColor: '#2563EB',
   },
   modalModeTabText: {
     color: '#849396',
@@ -2545,7 +2545,7 @@ const styles = StyleSheet.create({
     gap: 6,
     backgroundColor: '#EFF6FF',
     borderWidth: 1,
-    borderColor: 'rgba(0, 229, 255, 0.25)',
+    borderColor: '#EFF6FF',
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 6,
@@ -2589,7 +2589,7 @@ const styles = StyleSheet.create({
   },
   modalApplyBtn: {
     height: 42,
-    backgroundColor: '#00e5ff',
+    backgroundColor: '#2563EB',
     borderRadius: radius.DEFAULT,
     flexDirection: 'row',
     alignItems: 'center',
@@ -2612,10 +2612,10 @@ const styles = StyleSheet.create({
     borderRadius: radius.DEFAULT,
     backgroundColor: '#EFF6FF',
     borderWidth: 1,
-    borderColor: 'rgba(0, 229, 255, 0.25)',
+    borderColor: '#EFF6FF',
   },
   sortBtnActive: {
-    backgroundColor: '#00e5ff',
+    backgroundColor: '#2563EB',
     borderColor: '#2563EB',
   },
   sortBtnText: {

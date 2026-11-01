@@ -227,7 +227,7 @@ export default function AdminVehiclesScreen() {
             onPress={() => setCreateModalVisible(true)}
             activeOpacity={0.8}
           >
-            <Ionicons name="add" size={16} color="#070c14" />
+            <Ionicons name="add" size={16} color="#F8FAFC" />
             <Text style={styles.addVehicleBtnText}>ADD UNIT</Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -244,7 +244,7 @@ export default function AdminVehiclesScreen() {
       <View style={styles.hudContainer}>
         <View style={[styles.hudCard, styles.hudCardTotal]}>
           <View style={styles.hudIconRow}>
-            <Ionicons name="car-sport" size={13} color="#00e5ff" />
+            <Ionicons name="car-sport" size={13} color="#2563EB" />
             <Text style={styles.hudLabel}>TOTAL FLEET</Text>
           </View>
           <Text style={[styles.hudValue, { color: '#2563EB' }]}>{totalFleetCount}</Text>
@@ -337,7 +337,7 @@ export default function AdminVehiclesScreen() {
       {/* Vehicle List */}
       {loading && !refreshing ? (
         <View style={styles.centerLoading}>
-          <ActivityIndicator size="large" color="#00e5ff" />
+          <ActivityIndicator size="large" color="#2563EB" />
           <Text style={styles.loadingText}>Fetching authoritative vehicle fleet...</Text>
         </View>
       ) : (
@@ -350,7 +350,7 @@ export default function AdminVehiclesScreen() {
             },
           ]}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#00e5ff" />
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#2563EB" />
           }
           showsVerticalScrollIndicator={false}
         >
@@ -373,7 +373,7 @@ export default function AdminVehiclesScreen() {
                 <View style={styles.cardTopRow}>
                   <View style={styles.vehicleNumberWrap}>
                     <View style={styles.plateBadge}>
-                      <Ionicons name="car-outline" size={14} color="#00e5ff" style={{ marginRight: 6 }} />
+                      <Ionicons name="car-outline" size={14} color="#2563EB" style={{ marginRight: 6 }} />
                       <Text style={styles.vehicleNumberText}>{v.vehicleNumber}</Text>
                     </View>
                     <View style={styles.cheBadge}>
@@ -439,7 +439,7 @@ export default function AdminVehiclesScreen() {
                       onPress={() => openEditVehicle(v)}
                       activeOpacity={0.8}
                     >
-                      <Ionicons name="create-outline" size={13} color="#00e5ff" style={{ marginRight: 3 }} />
+                      <Ionicons name="create-outline" size={13} color="#2563EB" style={{ marginRight: 3 }} />
                       <Text style={styles.editBtnText}>EDIT</Text>
                     </TouchableOpacity>
 
@@ -451,7 +451,7 @@ export default function AdminVehiclesScreen() {
                       }}
                       activeOpacity={0.8}
                     >
-                      <Ionicons name="person-add-outline" size={13} color="#00e5ff" style={{ marginRight: 3 }} />
+                      <Ionicons name="person-add-outline" size={13} color="#2563EB" style={{ marginRight: 3 }} />
                       <Text style={styles.assignBtnText}>ASSIGN</Text>
                     </TouchableOpacity>
 
@@ -495,7 +495,7 @@ export default function AdminVehiclesScreen() {
             <View style={styles.modalHeader}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
                 <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: '#EFF6FF', borderWidth: 1, borderColor: '#2563EB', alignItems: 'center', justifyContent: 'center' }}>
-                  <Ionicons name="car-sport" size={22} color="#00e5ff" />
+                  <Ionicons name="car-sport" size={22} color="#2563EB" />
                 </View>
                 <View>
                   <Text style={styles.modalTitle}>{selectedVehicle?.vehicleNumber}</Text>
@@ -511,7 +511,7 @@ export default function AdminVehiclesScreen() {
 
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 20 }}>
               {/* Status Header */}
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#0f1d33', padding: 12, borderRadius: 8, marginVertical: 12, borderWidth: 1, borderColor: '#E2E8F0' }}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#EFF6FF', padding: 12, borderRadius: 8, marginVertical: 12, borderWidth: 1, borderColor: '#E2E8F0' }}>
                 <Text style={{ color: '#90caf9', fontSize: 12, fontWeight: '700' }}>FLEET STATUS</Text>
                 <View style={[styles.statusBadge, selectedVehicle?.status === 'ACTIVE' ? styles.statusActive : styles.statusMaint]}>
                   <Text style={styles.statusBadgeText}>{selectedVehicle?.status || 'ACTIVE'}</Text>
@@ -640,20 +640,20 @@ export default function AdminVehiclesScreen() {
                   }}
                   activeOpacity={0.8}
                 >
-                  <Ionicons name="create-outline" size={16} color="#00e5ff" />
+                  <Ionicons name="create-outline" size={16} color="#2563EB" />
                   <Text style={{ color: '#2563EB', fontWeight: '800', fontSize: 13 }}>EDIT VEHICLE DETAILS</Text>
                 </TouchableOpacity>
 
                 <View style={{ flexDirection: 'row', gap: 10 }}>
                   <TouchableOpacity
-                    style={{ flex: 1, backgroundColor: '#00e5ff', paddingVertical: 12, borderRadius: 8, alignItems: 'center' }}
+                    style={{ flex: 1, backgroundColor: '#2563EB', paddingVertical: 12, borderRadius: 8, alignItems: 'center' }}
                     onPress={() => {
                       setDetailsModalVisible(false);
                       setAssignModalVisible(true);
                     }}
                     activeOpacity={0.8}
                   >
-                    <Text style={{ color: '#001529', fontWeight: '800', fontSize: 13 }}>REASSIGN DRIVER</Text>
+                    <Text style={{ color: '#FFFFFF', fontWeight: '800', fontSize: 13 }}>REASSIGN DRIVER</Text>
                   </TouchableOpacity>
 
                   <TouchableOpacity
@@ -710,7 +710,7 @@ export default function AdminVehiclesScreen() {
                   style={styles.driverSelectItem}
                   onPress={() => handleAssignDriver(d.id || d.driverCode)}
                 >
-                  <Ionicons name="person-circle-outline" size={20} color="#00e5ff" />
+                  <Ionicons name="person-circle-outline" size={20} color="#2563EB" />
                   <View style={{ marginLeft: 10, flex: 1 }}>
                     <Text style={styles.driverSelectName}>{d.fullName}</Text>
                     <Text style={styles.driverSelectCode}>
@@ -736,7 +736,7 @@ export default function AdminVehiclesScreen() {
             <View style={styles.modalHeader}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                 <View style={styles.modalHeaderIconWrap}>
-                  <Ionicons name="car-sport" size={20} color="#00e5ff" />
+                  <Ionicons name="car-sport" size={20} color="#2563EB" />
                 </View>
                 <View>
                   <Text style={styles.modalTitle}>Add New Fleet Vehicle</Text>
@@ -904,10 +904,10 @@ export default function AdminVehiclesScreen() {
                   activeOpacity={0.8}
                 >
                   {submittingVehicle ? (
-                    <ActivityIndicator size="small" color="#070f1e" />
+                    <ActivityIndicator size="small" color="#FFFFFF" />
                   ) : (
                     <>
-                      <Ionicons name="checkmark-circle" size={18} color="#070f1e" />
+                      <Ionicons name="checkmark-circle" size={18} color="#FFFFFF" />
                       <Text style={styles.submitBtnText}>REGISTER NEW VEHICLE</Text>
                     </>
                   )}
@@ -937,7 +937,7 @@ export default function AdminVehiclesScreen() {
             <View style={styles.modalHeader}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                 <View style={styles.modalHeaderIconWrap}>
-                  <Ionicons name="create" size={20} color="#00e5ff" />
+                  <Ionicons name="create" size={20} color="#2563EB" />
                 </View>
                 <View>
                   <Text style={styles.modalTitle}>Edit Vehicle Details</Text>
@@ -1120,10 +1120,10 @@ export default function AdminVehiclesScreen() {
                   activeOpacity={0.8}
                 >
                   {savingEditVehicle ? (
-                    <ActivityIndicator size="small" color="#070f1e" />
+                    <ActivityIndicator size="small" color="#FFFFFF" />
                   ) : (
                     <>
-                      <Ionicons name="save-outline" size={18} color="#070f1e" />
+                      <Ionicons name="save-outline" size={18} color="#FFFFFF" />
                       <Text style={styles.submitBtnText}>SAVE VEHICLE CHANGES</Text>
                     </>
                   )}
@@ -1153,7 +1153,7 @@ export default function AdminVehiclesScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: '#070f1e',
+    backgroundColor: '#FFFFFF',
   },
   headerLogoutBtn: {
     width: 36,
@@ -1171,7 +1171,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingBottom: 14,
-    backgroundColor: '#0a1019',
+    backgroundColor: '#F8FAFC',
     borderBottomWidth: 1,
     borderBottomColor: '#E2E8F0',
   },
@@ -1179,7 +1179,7 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#00e5ff',
+    backgroundColor: '#2563EB',
   },
   headerTitle: {
     fontSize: 18,
@@ -1257,7 +1257,7 @@ const styles = StyleSheet.create({
   },
   filterBar: {
     padding: 14,
-    backgroundColor: '#0a1019',
+    backgroundColor: '#F8FAFC',
     borderBottomWidth: 1,
     borderBottomColor: '#E2E8F0',
   },
@@ -1288,7 +1288,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.05)',
   },
   opTabActive: {
-    backgroundColor: '#00e5ff',
+    backgroundColor: '#2563EB',
   },
   opTabText: {
     color: '#90caf9',
@@ -1296,7 +1296,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   opTabTextActive: {
-    color: '#001529',
+    color: '#FFFFFF',
   },
   statusFilterTab: {
     paddingVertical: 5,
@@ -1367,7 +1367,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#F8FAFC',
     borderWidth: 1,
-    borderColor: 'rgba(0, 229, 255, 0.35)',
+    borderColor: '#EFF6FF',
     borderRadius: 8,
     paddingHorizontal: 8,
     paddingVertical: 4,
@@ -1481,7 +1481,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 9,
     paddingVertical: 6,
     borderWidth: 1,
-    borderColor: 'rgba(0, 229, 255, 0.35)',
+    borderColor: '#EFF6FF',
     flexDirection: 'row',
     alignItems: 'center',
   },
@@ -1538,7 +1538,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 20,
     borderWidth: 1,
-    borderColor: 'rgba(0, 229, 255, 0.25)',
+    borderColor: '#EFF6FF',
   },
   modalHeader: {
     flexDirection: 'row',
@@ -1560,7 +1560,7 @@ const styles = StyleSheet.create({
   driverSelectItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#070f1e',
+    backgroundColor: '#FFFFFF',
     borderRadius: 8,
     padding: 10,
     marginBottom: 8,
@@ -1578,7 +1578,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   detailCardBox: {
-    backgroundColor: '#0a172a',
+    backgroundColor: '#F8FAFC',
     borderRadius: 10,
     borderWidth: 1,
     borderColor: '#E2E8F0',
@@ -1605,14 +1605,14 @@ const styles = StyleSheet.create({
   addVehicleBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#00e5ff',
+    backgroundColor: '#2563EB',
     paddingHorizontal: 10,
     paddingVertical: 7,
     borderRadius: 8,
     gap: 4,
   },
   addVehicleBtnText: {
-    color: '#070f1e',
+    color: '#FFFFFF',
     fontSize: 11,
     fontWeight: '800',
   },
@@ -1633,7 +1633,7 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   formInput: {
-    backgroundColor: '#070f1e',
+    backgroundColor: '#FFFFFF',
     borderRadius: 8,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.12)',
@@ -1645,7 +1645,7 @@ const styles = StyleSheet.create({
   },
   formSegmentWrap: {
     flexDirection: 'row',
-    backgroundColor: '#070f1e',
+    backgroundColor: '#FFFFFF',
     borderRadius: 8,
     borderWidth: 1,
     borderColor: '#E2E8F0',
@@ -1661,7 +1661,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   formSegmentBtnActive: {
-    backgroundColor: '#00e5ff',
+    backgroundColor: '#2563EB',
   },
   formSegmentText: {
     color: '#78909c',
@@ -1669,24 +1669,24 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   formSegmentTextActive: {
-    color: '#070f1e',
+    color: '#FFFFFF',
     fontWeight: '800',
   },
   submitBtn: {
-    backgroundColor: '#00e5ff',
+    backgroundColor: '#2563EB',
     borderRadius: 10,
     paddingVertical: 13,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    shadowColor: '#00e5ff',
+    shadowColor: '#2563EB',
     shadowOpacity: 0.3,
     shadowRadius: 6,
     elevation: 3,
   },
   submitBtnText: {
-    color: '#070f1e',
+    color: '#FFFFFF',
     fontSize: 13,
     fontWeight: '900',
     letterSpacing: 0.5,

@@ -128,39 +128,39 @@ export const shadow = {
     elevation: 8,
   },
   button: {
-    shadowColor: '#00e5ff',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  glow: {
-    shadowColor: '#00e5ff',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.35,
-    shadowRadius: 14,
-    elevation: 6,
-  },
-  warningGlow: {
-    shadowColor: '#feb300',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 14,
-    elevation: 5,
-  },
-  successGlow: {
-    shadowColor: '#10b981',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 14,
-    elevation: 5,
-  },
-  subtle: {
-    shadowColor: '#000000',
+    shadowColor: '#2563EB',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.15,
     shadowRadius: 6,
     elevation: 2,
+  },
+  glow: {
+    shadowColor: '#2563EB',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  warningGlow: {
+    shadowColor: '#D97706',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  successGlow: {
+    shadowColor: '#16A34A',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  subtle: {
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 1,
   },
 };
 
@@ -168,16 +168,16 @@ export function statusColor(status: string): string {
   switch (status) {
     case 'COMPLETED':
     case 'APPROVED':
-      return '#10b981';
+      return '#16A34A';
     case 'IN_PROGRESS':
-      return '#00e5ff';
+      return '#2563EB';
     case 'PENDING_APPROVAL':
     case 'NOT_STARTED':
-      return '#feb300';
+      return '#D97706';
     case 'REJECTED':
-      return '#f43f5e';
+      return '#DC2626';
     default:
-      return '#94a3b8';
+      return '#64748B';
   }
 }
 

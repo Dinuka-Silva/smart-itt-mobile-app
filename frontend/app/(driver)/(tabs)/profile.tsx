@@ -586,7 +586,7 @@ export default function DriverProfileScreen() {
               <Image source={{ uri: coverImage }} style={styles.coverImage} />
             ) : (
               <View style={styles.coverFallback}>
-                <Ionicons name="boat" size={60} color="rgba(0, 229, 255, 0.12)" style={styles.coverBgIcon} />
+                <Ionicons name="boat" size={60} color="#EFF6FF" style={styles.coverBgIcon} />
                 <Text style={styles.coverFallbackText}>SCK LOGISTICS • INTER TERMINAL FLEET</Text>
               </View>
             )}
@@ -600,7 +600,7 @@ export default function DriverProfileScreen() {
               activeOpacity={0.8}
               onPress={() => handleOpenPhotoPicker('cover')}
             >
-              <Ionicons name="camera" size={14} color="#00e5ff" />
+              <Ionicons name="camera" size={14} color="#2563EB" />
               <Text style={styles.editCoverBtnText}>Change Background</Text>
             </TouchableOpacity>
           </View>
@@ -623,7 +623,7 @@ export default function DriverProfileScreen() {
                 activeOpacity={0.85}
                 onPress={() => handleOpenPhotoPicker('avatar')}
               >
-                <Ionicons name="camera" size={14} color="#00363d" />
+                <Ionicons name="camera" size={14} color="#FFFFFF" />
               </TouchableOpacity>
             </View>
           </View>
@@ -654,7 +654,7 @@ export default function DriverProfileScreen() {
 
           {savingPhotos && (
             <View style={styles.savingNotice}>
-              <ActivityIndicator size="small" color="#00e5ff" />
+              <ActivityIndicator size="small" color="#2563EB" />
               <Text style={styles.savingNoticeText}>Updating driver photos...</Text>
             </View>
           )}
@@ -667,7 +667,7 @@ export default function DriverProfileScreen() {
             {/* ─── Assigned Prime Mover & Fleet Status / Maintenance Control ─── */}
             <View style={styles.card}>
               <View style={styles.cardHead}>
-                <Ionicons name="bus-outline" size={18} color="#00e5ff" />
+                <Ionicons name="bus-outline" size={18} color="#2563EB" />
                 <Text style={styles.cardTitle}>ASSIGNED PRIME MOVER & STATUS</Text>
                 <View
                   style={[
@@ -735,7 +735,7 @@ export default function DriverProfileScreen() {
                 <View style={styles.licenseCard}>
                   <View style={styles.licenseCardHeader}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                      <Ionicons name="document-text" size={15} color="#00e5ff" />
+                      <Ionicons name="document-text" size={15} color="#2563EB" />
                       <Text style={styles.licenseCardTitle}>VEHICLE REVENUE LICENSE</Text>
                     </View>
                     <View
@@ -908,7 +908,7 @@ export default function DriverProfileScreen() {
                   {updatingVehicle ? (
                     <ActivityIndicator
                       size="small"
-                      color={vehicleStatus === 'MAINTENANCE' ? '#00e5ff' : '#f59e0b'}
+                      color={vehicleStatus === 'MAINTENANCE' ? '#2563EB' : '#f59e0b'}
                     />
                   ) : (
                     <>
@@ -917,14 +917,14 @@ export default function DriverProfileScreen() {
                           styles.maintenanceIconCircle,
                           {
                             backgroundColor:
-                              vehicleStatus === 'MAINTENANCE' ? '#00e5ff' : '#f59e0b',
+                              vehicleStatus === 'MAINTENANCE' ? '#2563EB' : '#f59e0b',
                           },
                         ]}
                       >
                         <Ionicons
                           name={vehicleStatus === 'MAINTENANCE' ? 'checkmark-circle' : 'construct'}
                           size={18}
-                          color="#00363d"
+                          color="#FFFFFF"
                         />
                       </View>
                       <View style={{ flex: 1, marginLeft: 10 }}>
@@ -933,7 +933,7 @@ export default function DriverProfileScreen() {
                             styles.maintenanceBtnTitle,
                             {
                               color:
-                                vehicleStatus === 'MAINTENANCE' ? '#00e5ff' : '#f59e0b',
+                                vehicleStatus === 'MAINTENANCE' ? '#2563EB' : '#f59e0b',
                             },
                           ]}
                         >
@@ -950,7 +950,7 @@ export default function DriverProfileScreen() {
                       <Ionicons
                         name="chevron-forward"
                         size={18}
-                        color={vehicleStatus === 'MAINTENANCE' ? '#00e5ff' : '#f59e0b'}
+                        color={vehicleStatus === 'MAINTENANCE' ? '#2563EB' : '#f59e0b'}
                       />
                     </>
                   )}
@@ -970,7 +970,7 @@ export default function DriverProfileScreen() {
                   onPress={handleOpenEditModal}
                   activeOpacity={0.85}
                 >
-                  <Ionicons name="create-outline" size={14} color="#00e5ff" />
+                  <Ionicons name="create-outline" size={14} color="#2563EB" />
                   <Text style={styles.editProfileBtnText}>EDIT DETAILS</Text>
                 </TouchableOpacity>
               </View>
@@ -1016,7 +1016,7 @@ export default function DriverProfileScreen() {
             <View style={styles.card}>
               <View style={styles.cardHead}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
-                  <Ionicons name="shield-checkmark" size={18} color="#00e5ff" />
+                  <Ionicons name="shield-checkmark" size={18} color="#2563EB" />
                   <Text style={styles.cardTitle}>SECURITY & COCKPIT CONTROLS</Text>
                 </View>
                 <TouchableOpacity
@@ -1024,7 +1024,7 @@ export default function DriverProfileScreen() {
                   onPress={handleOpenChangePasswordModal}
                   activeOpacity={0.85}
                 >
-                  <Ionicons name="key-outline" size={14} color="#00e5ff" />
+                  <Ionicons name="key-outline" size={14} color="#2563EB" />
                   <Text style={styles.editProfileBtnText}>CHANGE PASSWORD</Text>
                 </TouchableOpacity>
               </View>
@@ -1037,7 +1037,7 @@ export default function DriverProfileScreen() {
                       <Ionicons
                         name={biometricStatus.biometricType === 'FACE_ID' ? 'scan' : 'finger-print'}
                         size={16}
-                        color="#00e5ff"
+                        color="#2563EB"
                       />
                       <Text style={styles.secRowTitle}>{biometricStatus.label} Login</Text>
                     </View>
@@ -1075,7 +1075,7 @@ export default function DriverProfileScreen() {
                   onPress={() => lockSession()}
                   activeOpacity={0.8}
                 >
-                  <Ionicons name="lock-closed" size={12} color="#070c14" />
+                  <Ionicons name="lock-closed" size={12} color="#F8FAFC" />
                   <Text style={styles.secLockBtnText}>LOCK NOW</Text>
                 </TouchableOpacity>
               </View>
@@ -1115,7 +1115,7 @@ export default function DriverProfileScreen() {
                 <Ionicons
                   name={pickerType === 'avatar' ? 'person-circle-outline' : 'image-outline'}
                   size={20}
-                  color="#00e5ff"
+                  color="#2563EB"
                 />
                 <Text style={styles.modalTitle}>
                   {pickerType === 'avatar' ? 'UPDATE DRIVER PHOTO' : 'UPDATE BACKGROUND IMAGE'}
@@ -1135,7 +1135,7 @@ export default function DriverProfileScreen() {
 
               {/* Upload Local File Action */}
               <TouchableOpacity style={styles.uploadLocalBtn} onPress={handlePickLocalFile} activeOpacity={0.85}>
-                <Ionicons name="cloud-upload" size={18} color="#00363d" />
+                <Ionicons name="cloud-upload" size={18} color="#FFFFFF" />
                 <Text style={styles.uploadLocalBtnText}>Upload from Device / Computer</Text>
               </TouchableOpacity>
 
@@ -1203,7 +1203,7 @@ export default function DriverProfileScreen() {
             {/* Modal Header */}
             <View style={styles.modalHeader}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <Ionicons name="create-outline" size={20} color="#00e5ff" />
+                <Ionicons name="create-outline" size={20} color="#2563EB" />
                 <View>
                   <Text style={styles.modalTitle}>EDIT DRIVER CREDENTIALS</Text>
                   <Text style={{ fontSize: 11, color: '#849396' }}>Update your official driver and vehicle data</Text>
@@ -1413,10 +1413,10 @@ export default function DriverProfileScreen() {
                   activeOpacity={0.88}
                 >
                   {savingDetails ? (
-                    <ActivityIndicator size="small" color="#00363d" />
+                    <ActivityIndicator size="small" color="#FFFFFF" />
                   ) : (
                     <>
-                      <Ionicons name="checkmark-done" size={16} color="#00363d" />
+                      <Ionicons name="checkmark-done" size={16} color="#FFFFFF" />
                       <Text style={styles.editSaveBtnText}>SAVE CREDENTIALS</Text>
                     </>
                   )}
@@ -1439,7 +1439,7 @@ export default function DriverProfileScreen() {
             {/* Modal Header */}
             <View style={styles.modalHeader}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <Ionicons name="key" size={20} color="#00e5ff" />
+                <Ionicons name="key" size={20} color="#2563EB" />
                 <Text style={styles.modalTitle}>CHANGE TERMINAL PASSWORD</Text>
               </View>
               <TouchableOpacity onPress={() => setPasswordModalVisible(false)} style={styles.modalCloseBtn}>
@@ -1559,10 +1559,10 @@ export default function DriverProfileScreen() {
                   activeOpacity={0.88}
                 >
                   {changingPassword ? (
-                    <ActivityIndicator size="small" color="#00363d" />
+                    <ActivityIndicator size="small" color="#FFFFFF" />
                   ) : (
                     <>
-                      <Ionicons name="key" size={16} color="#00363d" />
+                      <Ionicons name="key" size={16} color="#FFFFFF" />
                       <Text style={styles.editSaveBtnText}>UPDATE PASSWORD</Text>
                     </>
                   )}
@@ -1644,7 +1644,7 @@ const styles = StyleSheet.create({
     borderColor: '#2563EB',
     zIndex: 25,
     elevation: 6,
-    shadowColor: '#00e5ff',
+    shadowColor: '#2563EB',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.4,
     shadowRadius: 6,
@@ -1704,7 +1704,7 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: '#00e5ff',
+    backgroundColor: '#2563EB',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
@@ -1982,7 +1982,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: '#00e5ff',
+    backgroundColor: '#2563EB',
     paddingVertical: 12,
     borderRadius: radius.DEFAULT,
     marginBottom: 16,
@@ -2080,7 +2080,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#0c131d',
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: 'rgba(0, 229, 255, 0.2)',
+    borderColor: '#EFF6FF',
     padding: 12,
     marginBottom: 14,
   },
@@ -2252,7 +2252,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 18,
     borderRadius: radius.md,
-    backgroundColor: '#00e5ff',
+    backgroundColor: '#2563EB',
     justifyContent: 'center',
   },
   editSaveBtnText: {

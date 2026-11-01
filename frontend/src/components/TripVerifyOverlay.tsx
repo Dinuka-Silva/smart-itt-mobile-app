@@ -102,7 +102,7 @@ function VerifyBody(props: VerifyProps) {
           disabled={props.submitting}
         >
           {props.submitting ? (
-            <ActivityIndicator color="#00363d" />
+            <ActivityIndicator color="#ffffff" />
           ) : (
             <Text style={styles.primaryText}>Start Trip & Begin Transport</Text>
           )}
@@ -122,9 +122,9 @@ function SentBody(props: SentProps) {
       <Text style={styles.subtitle}>
         Trip {props.tripNumber} with {props.containerCount} container(s) on {props.vesselName} is now active. Proceed safely to destination terminal.
       </Text>
-      <View style={[styles.pendingChip, { backgroundColor: 'rgba(0, 229, 255, 0.15)', borderColor: '#00e5ff' }]}>
-        <View style={[styles.pendingDot, { backgroundColor: '#00e5ff' }]} />
-        <Text style={[styles.pendingChipText, { color: '#00e5ff' }]}>IN PROGRESS · LIVE TRANSIT</Text>
+      <View style={[styles.pendingChip, { backgroundColor: '#EFF6FF', borderColor: '#2563EB', borderWidth: 1 }]}>
+        <View style={[styles.pendingDot, { backgroundColor: '#2563EB' }]} />
+        <Text style={[styles.pendingChipText, { color: '#2563EB' }]}>IN PROGRESS · LIVE TRANSIT</Text>
       </View>
       <Text style={styles.hint}>
         When you arrive and discharge at the destination, tap "Complete & Send to Supervisor" to update your completed trip count and earnings!
@@ -148,16 +148,22 @@ function Row({ label, value }: { label: string; value: string }) {
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: 'rgba(10, 16, 32, 0.62)',
+    backgroundColor: 'rgba(15, 23, 42, 0.45)',
     justifyContent: 'center',
     padding: spacing.lg,
   },
   card: {
-    backgroundColor: colors.background,
-    borderRadius: radius.xl,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
     padding: spacing.lg,
     maxHeight: '88%',
-    ...shadow.glow,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 5,
   },
   iconWrap: {
     width: 64,

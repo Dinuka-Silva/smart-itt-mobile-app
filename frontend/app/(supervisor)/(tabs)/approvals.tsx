@@ -140,7 +140,7 @@ export default function SupervisorApprovals() {
             width: '100%',
           },
         ]}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#00e5ff" />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#2563EB" />}
         keyboardShouldPersistTaps="handled"
       >
         {/* ─── HEADER ─── */}
@@ -176,7 +176,7 @@ export default function SupervisorApprovals() {
           </View>
 
           {loading ? (
-            <ActivityIndicator size="large" color="#00e5ff" style={{ marginVertical: 30 }} />
+            <ActivityIndicator size="large" color="#2563EB" style={{ marginVertical: 30 }} />
           ) : trips.length === 0 ? (
             <View style={styles.emptyCard}>
               <Ionicons name="checkmark-done-circle" size={36} color="#22ef7e" />
@@ -214,7 +214,7 @@ export default function SupervisorApprovals() {
                   <View style={styles.routeBox}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                       <Text style={styles.routeTermText}>{from}</Text>
-                      <Ionicons name="arrow-forward" size={14} color="#00e5ff" />
+                      <Ionicons name="arrow-forward" size={14} color="#2563EB" />
                       <Text style={styles.routeTermText}>{to}</Text>
                     </View>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
@@ -246,7 +246,7 @@ export default function SupervisorApprovals() {
                       <View style={styles.timingCard}>
                         <View style={styles.timingCol}>
                           <View style={styles.timingHeader}>
-                            <Ionicons name="play-circle" size={12} color="#00e5ff" />
+                            <Ionicons name="play-circle" size={12} color="#2563EB" />
                             <Text style={styles.timingLabel}>STARTED DATE & TIME</Text>
                           </View>
                           <Text style={styles.timingDate}>{timing.startDate}</Text>
@@ -289,7 +289,7 @@ export default function SupervisorApprovals() {
                   <View style={styles.containersList}>
                     {containers.map((c: any, i: number) => (
                       <View key={c.id || i} style={styles.containerItem}>
-                        <Ionicons name="cube-outline" size={14} color="#00e5ff" />
+                        <Ionicons name="cube-outline" size={14} color="#2563EB" />
                         <Text style={styles.containerNumberText}>{c.containerNumber}</Text>
                         <Text style={styles.containerSizeText}>{c.size || '40FT'}</Text>
                         <Text style={styles.containerDischargeText}>➔ {c.destTerminal || to}</Text>
@@ -301,7 +301,7 @@ export default function SupervisorApprovals() {
                   <View style={styles.dischargeVerificationCard}>
                     <View style={styles.dischargeVerificationHeader}>
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                        <Ionicons name="shield-checkmark" size={14} color="#00e5ff" />
+                        <Ionicons name="shield-checkmark" size={14} color="#2563EB" />
                         <Text style={styles.dischargeVerificationTitle}>
                           DRIVER DISCHARGE & SEAL VERIFICATION MANIFEST
                         </Text>
@@ -362,7 +362,7 @@ export default function SupervisorApprovals() {
                     {/* Row 2: Full-Width Driver Submission Remarks Box */}
                     <View style={styles.supervisorDriverRemarksBox}>
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 3 }}>
-                        <Ionicons name="chatbubble-ellipses" size={12} color="#00e5ff" />
+                        <Ionicons name="chatbubble-ellipses" size={12} color="#2563EB" />
                         <Text style={styles.supervisorDriverRemarksLabel}>DRIVER COMPLETION & HANDOVER REMARKS</Text>
                       </View>
                       <Text style={styles.supervisorDriverRemarksText}>
@@ -387,10 +387,10 @@ export default function SupervisorApprovals() {
                       onPress={() => handleApprove(trip.id)}
                     >
                       {isProcessing ? (
-                        <ActivityIndicator color="#00363d" size="small" />
+                        <ActivityIndicator color="#FFFFFF" size="small" />
                       ) : (
                         <>
-                          <Ionicons name="checkmark-done-circle" size={17} color="#00363d" />
+                          <Ionicons name="checkmark-done-circle" size={17} color="#FFFFFF" />
                           <Text style={styles.approveBtnText}>CONFIRM & APPROVE TRIP</Text>
                         </>
                       )}
@@ -857,7 +857,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#0a101d',
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: 'rgba(0, 229, 255, 0.25)',
+    borderColor: '#EFF6FF',
     padding: 11,
     gap: 8,
     marginTop: 4,
@@ -925,10 +925,10 @@ const styles = StyleSheet.create({
     color: '#1E293B',
   },
   supervisorDriverRemarksBox: {
-    backgroundColor: '#0c1421',
+    backgroundColor: '#F8FAFC',
     borderRadius: 6,
     borderLeftWidth: 3,
-    borderLeftColor: '#00e5ff',
+    borderLeftColor: '#2563EB',
     paddingHorizontal: 10,
     paddingVertical: 8,
   },

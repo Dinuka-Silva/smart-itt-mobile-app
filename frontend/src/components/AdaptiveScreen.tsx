@@ -56,7 +56,7 @@ export function AdaptiveScreen({
 
   const containerStyle: ViewStyle = {
     flex: 1,
-    backgroundColor: '#0e141d',
+    backgroundColor: '#F8FAFC',
     paddingTop: useSafeArea ? topInset : 0,
     paddingBottom: useSafeArea ? bottomInset : 0,
   };

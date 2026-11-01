@@ -39,7 +39,7 @@ export const AdminSignOutModal: React.FC<AdminSignOutModalProps> = ({ visible, o
       <View style={styles.overlay}>
         <View style={styles.card}>
           <View style={styles.iconCircle}>
-            <Ionicons name="shield-outline" size={30} color="#00e5ff" />
+            <Ionicons name="shield-outline" size={30} color="#2563EB" />
           </View>
           <Text style={styles.title}>Admin Session Actions</Text>
           <Text style={styles.message}>
@@ -54,14 +54,14 @@ export const AdminSignOutModal: React.FC<AdminSignOutModalProps> = ({ visible, o
               disabled={loading}
               activeOpacity={0.8}
             >
-              <View style={styles.btnIconWrapCyan}>
-                <Ionicons name="swap-horizontal" size={18} color="#00e5ff" />
+              <View style={styles.btnIconWrapBlue}>
+                <Ionicons name="swap-horizontal" size={18} color="#2563EB" />
               </View>
               <View style={styles.btnTextWrap}>
                 <Text style={styles.switchAccountTitle}>Switch Account</Text>
                 <Text style={styles.switchAccountSubtitle}>Go to Operator Login (Drivers / Supervisors)</Text>
               </View>
-              <Ionicons name="chevron-forward" size={16} color="#00e5ff" />
+              <Ionicons name="chevron-forward" size={16} color="#2563EB" />
             </TouchableOpacity>
 
             {/* Sign Out to Admin Login */}
@@ -72,13 +72,13 @@ export const AdminSignOutModal: React.FC<AdminSignOutModalProps> = ({ visible, o
               activeOpacity={0.8}
             >
               <View style={styles.btnIconWrapRed}>
-                <Ionicons name="log-out-outline" size={18} color="#f43f5e" />
+                <Ionicons name="log-out-outline" size={18} color="#DC2626" />
               </View>
               <View style={styles.btnTextWrap}>
                 <Text style={styles.signOutTitle}>Sign Out</Text>
                 <Text style={styles.signOutSubtitle}>End session & return to Admin Login</Text>
               </View>
-              <Ionicons name="chevron-forward" size={16} color="#f43f5e" />
+              <Ionicons name="chevron-forward" size={16} color="#DC2626" />
             </TouchableOpacity>
 
             {/* Cancel Button */}
@@ -89,7 +89,7 @@ export const AdminSignOutModal: React.FC<AdminSignOutModalProps> = ({ visible, o
               activeOpacity={0.7}
             >
               {loading ? (
-                <ActivityIndicator size="small" color="#90caf9" />
+                <ActivityIndicator size="small" color="#2563EB" />
               ) : (
                 <Text style={styles.cancelText}>Cancel</Text>
               )}
@@ -104,7 +104,7 @@ export const AdminSignOutModal: React.FC<AdminSignOutModalProps> = ({ visible, o
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(2, 6, 17, 0.88)',
+    backgroundColor: 'rgba(15, 23, 42, 0.45)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 24,
@@ -112,25 +112,25 @@ const styles = StyleSheet.create({
   card: {
     width: '100%',
     maxWidth: 380,
-    backgroundColor: '#0c192c',
-    borderRadius: 22,
-    borderWidth: 1.5,
-    borderColor: 'rgba(255, 255, 255, 0.12)',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
     padding: 24,
     alignItems: 'center',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.6,
-    shadowRadius: 24,
-    elevation: 12,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 5,
   },
   iconCircle: {
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: 'rgba(0, 229, 255, 0.12)',
-    borderWidth: 1.5,
-    borderColor: 'rgba(0, 229, 255, 0.35)',
+    backgroundColor: '#EFF6FF',
+    borderWidth: 1,
+    borderColor: '#2563EB',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 16,
@@ -138,14 +138,14 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: '800',
-    color: '#ffffff',
+    color: '#1E293B',
     textAlign: 'center',
     marginBottom: 8,
     letterSpacing: 0.3,
   },
   message: {
     fontSize: 13,
-    color: '#90a4ae',
+    color: '#64748B',
     textAlign: 'center',
     lineHeight: 19,
     marginBottom: 20,
@@ -159,26 +159,26 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 12,
     paddingHorizontal: 14,
-    borderRadius: 14,
-    backgroundColor: 'rgba(0, 229, 255, 0.08)',
-    borderWidth: 1.5,
-    borderColor: 'rgba(0, 229, 255, 0.35)',
+    borderRadius: 10,
+    backgroundColor: '#EFF6FF',
+    borderWidth: 1,
+    borderColor: '#2563EB',
   },
   signOutBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 12,
     paddingHorizontal: 14,
-    borderRadius: 14,
-    backgroundColor: 'rgba(244, 63, 94, 0.08)',
-    borderWidth: 1.5,
-    borderColor: 'rgba(244, 63, 94, 0.35)',
+    borderRadius: 10,
+    backgroundColor: '#FEE2E2',
+    borderWidth: 1,
+    borderColor: '#DC2626',
   },
-  btnIconWrapCyan: {
+  btnIconWrapBlue: {
     width: 34,
     height: 34,
     borderRadius: 17,
-    backgroundColor: 'rgba(0, 229, 255, 0.15)',
+    backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
@@ -187,7 +187,7 @@ const styles = StyleSheet.create({
     width: 34,
     height: 34,
     borderRadius: 17,
-    backgroundColor: 'rgba(244, 63, 94, 0.15)',
+    backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
@@ -196,39 +196,39 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   switchAccountTitle: {
-    color: '#ffffff',
+    color: '#2563EB',
     fontSize: 14,
     fontWeight: '800',
     letterSpacing: 0.2,
   },
   switchAccountSubtitle: {
-    color: '#80deea',
+    color: '#64748B',
     fontSize: 11,
     marginTop: 2,
   },
   signOutTitle: {
-    color: '#ffffff',
+    color: '#DC2626',
     fontSize: 14,
     fontWeight: '800',
     letterSpacing: 0.2,
   },
   signOutSubtitle: {
-    color: '#fda4af',
+    color: '#64748B',
     fontSize: 11,
     marginTop: 2,
   },
   cancelBtn: {
     paddingVertical: 12,
-    borderRadius: 12,
-    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    borderRadius: 10,
+    backgroundColor: '#F8FAFC',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.12)',
+    borderColor: '#E2E8F0',
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 4,
   },
   cancelText: {
-    color: '#b0bec5',
+    color: '#64748B',
     fontWeight: '700',
     fontSize: 13,
   },

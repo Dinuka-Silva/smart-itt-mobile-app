@@ -31,7 +31,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     zIndex: 0,
     overflow: 'hidden',
-    backgroundColor: '#070c14',
+    backgroundColor: '#F8FAFC',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -45,6 +45,6 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(7, 12, 20, 0.45)',
+    backgroundColor: 'rgba(248, 250, 252, 0.85)',
   },
 });

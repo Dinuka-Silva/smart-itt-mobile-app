@@ -302,14 +302,14 @@ export default function AdminLoginScreen() {
               resizeMode="cover"
             />
             <View style={styles.adminMiniShield}>
-              <Ionicons name="shield-checkmark" size={13} color="#070f1e" />
+              <Ionicons name="shield-checkmark" size={13} color="#FFFFFF" />
             </View>
           </View>
           <Text style={styles.brandTitle}>ADMIN CONTROL CONSOLE</Text>
           <Text style={styles.brandSubtitle}>SCK LOGISTICS — INTER TERMINAL OPERATIONS</Text>
 
           <View style={styles.securityBadge}>
-            <Ionicons name="lock-closed" size={12} color="#00e5ff" />
+            <Ionicons name="lock-closed" size={12} color="#2563EB" />
             <Text style={styles.securityBadgeText}>ENCRYPTED ADMINISTRATIVE CHANNEL</Text>
           </View>
         </View>
@@ -339,7 +339,7 @@ export default function AdminLoginScreen() {
 
           {/* Admin Clearance Info Badge */}
           <View style={styles.credentialBanner}>
-            <Ionicons name="shield-checkmark" size={14} color="#00e5ff" />
+            <Ionicons name="shield-checkmark" size={14} color="#2563EB" />
             <Text style={styles.credentialBannerText}>
               LEVEL 4 PRIVILEGED ACCESS · 256-BIT ENCLAVE
             </Text>
@@ -357,7 +357,7 @@ export default function AdminLoginScreen() {
           {showDevCredentials && (
             <View style={styles.devHelperBox}>
               <Text style={styles.devHelperText}>
-                Dev Credentials: User <Text style={{ color: '#00e5ff', fontWeight: '800' }}>ADMIN</Text> / Pass <Text style={{ color: '#feb300', fontWeight: '800' }}>Admin@123</Text>
+                Dev Credentials: User <Text style={{ color: '#2563EB', fontWeight: '800' }}>ADMIN</Text> / Pass <Text style={{ color: '#feb300', fontWeight: '800' }}>Admin@123</Text>
               </Text>
             </View>
           )}
@@ -555,7 +555,7 @@ export default function AdminLoginScreen() {
               </View>
               <View style={styles.rosterMetricDivider} />
               <View style={styles.rosterMetricItem}>
-                <Text style={[styles.rosterMetricVal, { color: '#00e5ff' }]}>
+                <Text style={[styles.rosterMetricVal, { color: '#2563EB' }]}>
                   {rosterDrivers.filter(d => (d.operator || '').includes('SCK') || !d.operator).length}
                 </Text>
                 <Text style={styles.rosterMetricLabel}>SCK LOGISTICS</Text>
@@ -590,7 +590,7 @@ export default function AdminLoginScreen() {
             {/* Roster List */}
             {rosterLoading ? (
               <View style={{ padding: 40, alignItems: 'center' }}>
-                <ActivityIndicator size="large" color="#00e5ff" />
+                <ActivityIndicator size="large" color="#2563EB" />
                 <Text style={{ color: '#90caf9', fontSize: 13, marginTop: 12 }}>
                   Loading registered driver accounts...
                 </Text>
@@ -630,7 +630,7 @@ export default function AdminLoginScreen() {
                           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                             <Text style={styles.rosterDriverName}>{d.fullName}</Text>
                             <View style={[styles.rosterOperatorBadge, isSdr ? styles.rosterOperatorSdr : styles.rosterOperatorSck]}>
-                              <Text style={[styles.rosterOperatorText, isSdr ? { color: '#feb300' } : { color: '#00e5ff' }]}>
+                              <Text style={[styles.rosterOperatorText, isSdr ? { color: '#feb300' } : { color: '#2563EB' }]}>
                                 {d.operator || (isSdr ? 'SDR LINK' : 'SCK Logistics')}
                               </Text>
                             </View>
@@ -651,7 +651,7 @@ export default function AdminLoginScreen() {
                       {/* Prominent Login Username Row */}
                       <View style={styles.rosterUsernameRow}>
                         <View style={styles.rosterUsernameTag}>
-                          <Ionicons name="key" size={12} color="#00e5ff" />
+                          <Ionicons name="key" size={12} color="#2563EB" />
                           <Text style={styles.rosterUsernameTagLabel}>LOGIN USERNAME:</Text>
                           <Text style={styles.rosterUsernameTagValue}>{uname}</Text>
                         </View>
@@ -744,8 +744,8 @@ export default function AdminLoginScreen() {
               <View style={styles.dossierCard}>
                 <View style={styles.dossierRow}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                    <Ionicons name="key" size={14} color="#00e5ff" />
-                    <Text style={[styles.dossierLabel, { color: '#00e5ff', fontWeight: '800' }]}>LOGIN USERNAME:</Text>
+                    <Ionicons name="key" size={14} color="#2563EB" />
+                    <Text style={[styles.dossierLabel, { color: '#2563EB', fontWeight: '800' }]}>LOGIN USERNAME:</Text>
                   </View>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                     <View style={styles.dossierUsernameBadge}>
@@ -761,7 +761,7 @@ export default function AdminLoginScreen() {
                       <Ionicons
                         name={copiedUsername === (selectedRosterDriver?.username || selectedRosterDriver?.driverCode) ? 'checkmark' : 'copy-outline'}
                         size={12}
-                        color={copiedUsername === (selectedRosterDriver?.username || selectedRosterDriver?.driverCode) ? '#22ef7e' : '#00e5ff'}
+                        color={copiedUsername === (selectedRosterDriver?.username || selectedRosterDriver?.driverCode) ? '#22ef7e' : '#2563EB'}
                       />
                       <Text style={[styles.rosterQuickCopyText, copiedUsername === (selectedRosterDriver?.username || selectedRosterDriver?.driverCode) && { color: '#22ef7e' }]}>
                         {copiedUsername === (selectedRosterDriver?.username || selectedRosterDriver?.driverCode) ? 'COPIED' : 'COPY'}
@@ -799,7 +799,7 @@ export default function AdminLoginScreen() {
                 </View>
                 <View style={styles.dossierRow}>
                   <Text style={styles.dossierLabel}>CHE / Chassis Number:</Text>
-                  <Text style={[styles.dossierVal, { color: '#00e5ff' }]}>
+                  <Text style={[styles.dossierVal, { color: '#2563EB' }]}>
                     {selectedRosterDriver?.cheNumber || selectedRosterDriver?.chassisNumber || 'SCK 100'}
                   </Text>
                 </View>
@@ -830,7 +830,7 @@ export default function AdminLoginScreen() {
                 </View>
                 <View style={styles.dossierRow}>
                   <Text style={styles.dossierLabel}>Port Pass Number:</Text>
-                  <Text style={[styles.dossierVal, { color: '#00e5ff' }]}>{selectedRosterDriver?.portPassNumber || 'SLPA-DPP-001'}</Text>
+                  <Text style={[styles.dossierVal, { color: '#2563EB' }]}>{selectedRosterDriver?.portPassNumber || 'SLPA-DPP-001'}</Text>
                 </View>
                 <View style={styles.dossierRow}>
                   <Text style={styles.dossierLabel}>Port Pass Expiry:</Text>

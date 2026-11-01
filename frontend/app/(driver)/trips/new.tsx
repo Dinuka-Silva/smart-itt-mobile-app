@@ -282,7 +282,7 @@ function ContainerValidationPill({
           <Text style={[vp.msg, { color: valResult.valid ? '#22ef7e' : '#ff5252' }]}>
             {valResult.message}
           </Text>
-          {checking && <ActivityIndicator size="small" color="#00e5ff" style={{ marginLeft: 4 }} />}
+          {checking && <ActivityIndicator size="small" color="#2563EB" style={{ marginLeft: 4 }} />}
 
           {hasSyms && (
             <TouchableOpacity
@@ -387,7 +387,7 @@ const vp = StyleSheet.create({
     flex: 1,
   },
   fixBtn: {
-    backgroundColor: '#00e5ff',
+    backgroundColor: '#2563EB',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 4,
@@ -464,7 +464,7 @@ function ContainerCard({
 
       {/* Chassis Capacity Guidance */}
       <View style={cc.capacityGuidanceBox}>
-        <Ionicons name="information-circle" size={14} color="#00e5ff" />
+        <Ionicons name="information-circle" size={14} color="#2563EB" />
         <Text style={cc.capacityGuidanceText}>
           {isSingle20
             ? '1 × 20FT Mode: Driver loaded 1 × 20ft container (1 TEU / ~14.0T).'
@@ -481,7 +481,7 @@ function ContainerCard({
           <View style={cc.containerSectionCard}>
             <View style={cc.containerSectionHeader}>
               <View style={cc.contBadge1}>
-                <Ionicons name="cube" size={13} color="#00363d" />
+                <Ionicons name="cube" size={13} color="#FFFFFF" />
                 <Text style={cc.contBadgeText1}>CONTAINER #1 (20FT)</Text>
               </View>
               <Text style={cc.contSectionDestHint}>
@@ -508,7 +508,7 @@ function ContainerCard({
               label="Container #1 Discharge Terminal *"
               selected={entry.destTerminal}
               onSelect={(t) => onChange('destTerminal', t)}
-              accentColor="#00e5ff"
+              accentColor="#2563EB"
               exclude={loadingTerminal}
             />
           </View>
@@ -562,7 +562,7 @@ function ContainerCard({
             </View>
           ) : (
             <View style={cc.dualDischargeBanner}>
-              <Ionicons name="swap-horizontal" size={16} color="#00e5ff" />
+              <Ionicons name="swap-horizontal" size={16} color="#2563EB" />
               <View style={{ flex: 1 }}>
                 <Text style={cc.dualDischargeTitle}>
                   DUAL TERMINAL DISCHARGE: {entry.destTerminal} & {entry.destTerminal2 || entry.destTerminal}
@@ -600,7 +600,7 @@ function ContainerCard({
               onChange('destTerminal', t);
               onChange('destTerminal2', t);
             }}
-            accentColor="#00e5ff"
+            accentColor="#2563EB"
             exclude={loadingTerminal}
           />
         </>
@@ -655,7 +655,7 @@ function ContainerCard({
           <Ionicons
             name="cube-outline"
             size={14}
-            color={!entry.isReturnContainer ? '#00e5ff' : '#849396'}
+            color={!entry.isReturnContainer ? '#2563EB' : '#849396'}
           />
           <Text style={[cc.damageTxt, !entry.isReturnContainer && { color: '#2563EB' }]}>
             📦 STANDARD FREIGHT
@@ -718,7 +718,7 @@ const cc = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    backgroundColor: '#00e5ff',
+    backgroundColor: '#2563EB',
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 4,
@@ -847,7 +847,7 @@ const cc = StyleSheet.create({
     gap: 6,
     backgroundColor: '#EFF6FF',
     borderWidth: 1,
-    borderColor: 'rgba(0, 229, 255, 0.25)',
+    borderColor: '#EFF6FF',
     borderRadius: radius.md,
     paddingHorizontal: 10,
     paddingVertical: 7,
@@ -1302,7 +1302,7 @@ export default function NewTripScreen() {
               }}
               activeOpacity={0.8}
             >
-              <Ionicons name={isEditingDriver ? "checkmark-circle" : "create-outline"} size={14} color="#00e5ff" />
+              <Ionicons name={isEditingDriver ? "checkmark-circle" : "create-outline"} size={14} color="#2563EB" />
               <Text style={styles.editDriverBtnText}>
                 {isEditingDriver ? (savingDriver ? "SAVING..." : "SAVE DETAILS") : "EDIT DETAILS"}
               </Text>
@@ -1374,10 +1374,10 @@ export default function NewTripScreen() {
                   disabled={savingDriver}
                 >
                   {savingDriver ? (
-                    <ActivityIndicator size="small" color="#00363d" />
+                    <ActivityIndicator size="small" color="#FFFFFF" />
                   ) : (
                     <>
-                      <Ionicons name="checkmark" size={14} color="#00363d" />
+                      <Ionicons name="checkmark" size={14} color="#FFFFFF" />
                       <Text style={styles.driverSaveBtnText}>SAVE DETAILS</Text>
                     </>
                   )}
@@ -1438,7 +1438,7 @@ export default function NewTripScreen() {
                 prev.map((c) => (c.destTerminal === t ? { ...c, destTerminal: '' } : c))
               );
             }}
-            accentColor="#00e5ff"
+            accentColor="#2563EB"
           />
 
           {/* Automatic Operation Date & Live Counting Time */}
@@ -1449,7 +1449,7 @@ export default function NewTripScreen() {
                 <Text style={styles.autoTimingTitle}>AUTOMATIC OPERATION DATE & LIVE START TIME</Text>
               </View>
               <View style={styles.autoBadge}>
-                <Ionicons name="sparkles" size={11} color="#00e5ff" />
+                <Ionicons name="sparkles" size={11} color="#2563EB" />
                 <Text style={styles.autoBadgeText}>AUTO LIVE</Text>
               </View>
             </View>
@@ -1471,7 +1471,7 @@ export default function NewTripScreen() {
               <View style={styles.autoTimingCol}>
                 <Text style={styles.autoTimingLabel}>START TIME (COUNTING LIVE)</Text>
                 <View style={styles.autoTimingBox}>
-                  <Ionicons name="time" size={16} color="#00e5ff" />
+                  <Ionicons name="time" size={16} color="#2563EB" />
                   <Text style={styles.autoClockText}>{liveClock}</Text>
                   <View style={styles.liveTag}>
                     <View style={styles.liveBlinkDot} />
@@ -1629,10 +1629,10 @@ export default function NewTripScreen() {
           disabled={loading}
         >
           {loading ? (
-            <ActivityIndicator color="#00363d" />
+            <ActivityIndicator color="#FFFFFF" />
           ) : (
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-              <Ionicons name="play-circle" size={20} color="#00363d" />
+              <Ionicons name="play-circle" size={20} color="#FFFFFF" />
               <Text style={styles.startBtnText}>Start Trip & Begin Transport</Text>
             </View>
           )}
@@ -1795,7 +1795,7 @@ const styles = StyleSheet.create({
   summaryVal: { color: '#1E293B', fontSize: 14, fontWeight: '700' },
 
   startBtn: {
-    backgroundColor: '#00e5ff', paddingVertical: 18, borderRadius: radius.lg,
+    backgroundColor: '#2563EB', paddingVertical: 18, borderRadius: radius.lg,
     alignItems: 'center', marginTop: spacing.sm,
   },
   startBtnDisabled: { opacity: 0.5 },
@@ -1881,7 +1881,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 14,
     borderRadius: radius.md,
-    backgroundColor: '#00e5ff',
+    backgroundColor: '#2563EB',
     justifyContent: 'center',
   },
   driverSaveBtnText: {

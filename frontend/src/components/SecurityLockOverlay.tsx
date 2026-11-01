@@ -54,7 +54,7 @@ export function SecurityLockOverlay() {
   }
 
   const roleColor =
-    user.role === 'ADMIN' ? '#f43f5e' : user.role === 'SUPERVISOR' ? '#feb300' : '#00e5ff';
+    user.role === 'ADMIN' ? '#DC2626' : user.role === 'SUPERVISOR' ? '#D97706' : '#2563EB';
 
   const handleBiometricUnlock = async () => {
     setErrorMessage(null);
@@ -225,7 +225,7 @@ export function SecurityLockOverlay() {
           disabled={loading || actionLoading || !password.trim()}
         >
           {loading ? (
-            <ActivityIndicator color="#070c14" />
+            <ActivityIndicator color="#FFFFFF" />
           ) : (
             <Text style={styles.unlockButtonText}>Resume Session</Text>
           )}
@@ -239,8 +239,8 @@ export function SecurityLockOverlay() {
             disabled={loading || actionLoading}
             activeOpacity={0.75}
           >
-            <Ionicons name="swap-horizontal" size={15} color="#00e5ff" style={{ marginRight: 6 }} />
-            <Text style={[styles.actionPillText, { color: '#00e5ff' }]}>Switch Account</Text>
+            <Ionicons name="swap-horizontal" size={15} color="#2563EB" style={{ marginRight: 6 }} />
+            <Text style={[styles.actionPillText, { color: '#2563EB' }]}>Switch Account</Text>
           </TouchableOpacity>
 
           <View style={styles.actionPillDivider} />
@@ -251,8 +251,8 @@ export function SecurityLockOverlay() {
             disabled={loading || actionLoading}
             activeOpacity={0.75}
           >
-            <Ionicons name="log-out-outline" size={15} color="#f43f5e" style={{ marginRight: 6 }} />
-            <Text style={[styles.actionPillText, { color: '#f43f5e' }]}>Sign Out</Text>
+            <Ionicons name="log-out-outline" size={15} color="#DC2626" style={{ marginRight: 6 }} />
+            <Text style={[styles.actionPillText, { color: '#DC2626' }]}>Sign Out</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -279,7 +279,7 @@ export function SecurityLockOverlay() {
               <Ionicons
                 name={confirmAction === 'SWITCH' ? 'swap-horizontal' : 'log-out-outline'}
                 size={28}
-                color={confirmAction === 'SWITCH' ? '#00e5ff' : '#f43f5e'}
+                color={confirmAction === 'SWITCH' ? '#2563EB' : '#DC2626'}
               />
             </View>
 
@@ -345,21 +345,26 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(7, 12, 20, 0.98)',
+    backgroundColor: 'rgba(15, 23, 42, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 999998,
     padding: 20,
   },
   card: {
-    backgroundColor: '#0c1626',
-    borderWidth: 1.5,
-    borderColor: 'rgba(255, 255, 255, 0.12)',
-    borderRadius: 24,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    borderRadius: 16,
     padding: 28,
     width: '100%',
     maxWidth: 400,
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 6,
   },
   header: {
     alignItems: 'center',
@@ -369,31 +374,32 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-    borderWidth: 1.5,
+    backgroundColor: '#EFF6FF',
+    borderWidth: 1,
+    borderColor: '#2563EB',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 12,
   },
   title: {
-    color: '#ffffff',
+    color: '#1E293B',
     fontSize: 18,
     fontWeight: '800',
     letterSpacing: 0.5,
   },
   subtitle: {
-    color: '#64748b',
+    color: '#64748B',
     fontSize: 12,
     marginTop: 4,
   },
   userBadge: {
     alignItems: 'center',
-    backgroundColor: 'rgba(15, 23, 42, 0.6)',
+    backgroundColor: '#F8FAFC',
     paddingVertical: 12,
     paddingHorizontal: 20,
-    borderRadius: 14,
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.06)',
+    borderColor: '#E2E8F0',
     width: '100%',
     marginBottom: 16,
   },
@@ -410,12 +416,12 @@ const styles = StyleSheet.create({
     letterSpacing: 0.8,
   },
   userName: {
-    color: '#f8fafc',
+    color: '#1E293B',
     fontSize: 15,
     fontWeight: '700',
   },
   userCode: {
-    color: '#94a3b8',
+    color: '#64748B',
     fontSize: 12,
     marginTop: 2,
     fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
@@ -424,16 +430,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+    backgroundColor: '#FEE2E2',
     borderWidth: 1,
-    borderColor: 'rgba(239, 68, 68, 0.3)',
+    borderColor: '#DC2626',
     borderRadius: 10,
     padding: 10,
     width: '100%',
     marginBottom: 14,
   },
   errorText: {
-    color: '#fca5a5',
+    color: '#DC2626',
     fontSize: 12,
     flex: 1,
   },
@@ -442,9 +448,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 10,
-    backgroundColor: 'rgba(255, 255, 255, 0.04)',
-    borderWidth: 1.5,
-    borderRadius: 12,
+    backgroundColor: '#EFF6FF',
+    borderWidth: 1,
+    borderRadius: 10,
     paddingVertical: 14,
     width: '100%',
     marginBottom: 14,
@@ -456,10 +462,10 @@ const styles = StyleSheet.create({
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#070c14',
+    backgroundColor: '#F8FAFC',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.12)',
-    borderRadius: 12,
+    borderColor: '#E2E8F0',
+    borderRadius: 10,
     paddingHorizontal: 12,
     width: '100%',
     height: 48,
@@ -470,7 +476,7 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    color: '#ffffff',
+    color: '#1E293B',
     fontSize: 14,
     paddingVertical: 0,
   },
@@ -478,14 +484,14 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   unlockButton: {
-    borderRadius: 12,
+    borderRadius: 10,
     paddingVertical: 14,
     width: '100%',
     alignItems: 'center',
     marginBottom: 16,
   },
   unlockButtonText: {
-    color: '#070c14',
+    color: '#FFFFFF',
     fontSize: 14,
     fontWeight: '800',
     letterSpacing: 0.5,
@@ -497,7 +503,7 @@ const styles = StyleSheet.create({
     width: '100%',
     paddingTop: 14,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(255, 255, 255, 0.08)',
+    borderTopColor: '#E2E8F0',
   },
   actionPillBtn: {
     flex: 1,
@@ -507,7 +513,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 8,
     borderRadius: 10,
-    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+    backgroundColor: '#F8FAFC',
   },
   actionPillText: {
     fontSize: 12,
@@ -517,12 +523,12 @@ const styles = StyleSheet.create({
   actionPillDivider: {
     width: 1,
     height: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: '#E2E8F0',
     marginHorizontal: 8,
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(2, 6, 17, 0.88)',
+    backgroundColor: 'rgba(15, 23, 42, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 24,
@@ -530,17 +536,17 @@ const styles = StyleSheet.create({
   modalCard: {
     width: '100%',
     maxWidth: 380,
-    backgroundColor: '#0c192c',
-    borderRadius: 20,
-    borderWidth: 1.5,
-    borderColor: 'rgba(255, 255, 255, 0.12)',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
     padding: 24,
     alignItems: 'center',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.6,
-    shadowRadius: 24,
-    elevation: 12,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 6,
   },
   modalIconCircle: {
     width: 60,
@@ -549,27 +555,27 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 16,
-    borderWidth: 1.5,
+    borderWidth: 1,
   },
   modalIconCircleSwitch: {
-    backgroundColor: 'rgba(0, 229, 255, 0.12)',
-    borderColor: 'rgba(0, 229, 255, 0.35)',
+    backgroundColor: '#EFF6FF',
+    borderColor: '#2563EB',
   },
   modalIconCircleSignout: {
-    backgroundColor: 'rgba(244, 63, 94, 0.12)',
-    borderColor: 'rgba(244, 63, 94, 0.35)',
+    backgroundColor: '#FEE2E2',
+    borderColor: '#DC2626',
   },
   modalTitle: {
     fontSize: 18,
     fontWeight: '800',
-    color: '#ffffff',
+    color: '#1E293B',
     textAlign: 'center',
     marginBottom: 8,
     letterSpacing: 0.3,
   },
   modalMessage: {
     fontSize: 13,
-    color: '#94a3b8',
+    color: '#64748B',
     textAlign: 'center',
     lineHeight: 19,
     marginBottom: 24,
@@ -582,15 +588,15 @@ const styles = StyleSheet.create({
   modalCancelBtn: {
     flex: 1,
     paddingVertical: 12,
-    borderRadius: 12,
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    borderRadius: 10,
+    backgroundColor: '#F8FAFC',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.12)',
+    borderColor: '#E2E8F0',
     alignItems: 'center',
     justifyContent: 'center',
   },
   modalCancelBtnText: {
-    color: '#b0bec5',
+    color: '#64748B',
     fontWeight: '700',
     fontSize: 13,
   },
@@ -598,24 +604,18 @@ const styles = StyleSheet.create({
     flex: 1.3,
     flexDirection: 'row',
     paddingVertical: 12,
-    borderRadius: 12,
+    borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 8,
-    elevation: 4,
   },
   modalConfirmBtnSwitch: {
-    backgroundColor: '#0891b2',
-    shadowColor: '#0891b2',
+    backgroundColor: '#2563EB',
   },
   modalConfirmBtnSignout: {
-    backgroundColor: '#e11d48',
-    shadowColor: '#e11d48',
+    backgroundColor: '#DC2626',
   },
   modalConfirmBtnText: {
-    color: '#ffffff',
+    color: '#FFFFFF',
     fontWeight: '800',
     fontSize: 13,
     letterSpacing: 0.3,

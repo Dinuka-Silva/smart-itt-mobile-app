@@ -221,7 +221,7 @@ export default function AdminTripsScreen() {
       {/* Trips List */}
       {loading && !refreshing ? (
         <View style={styles.centerLoading}>
-          <ActivityIndicator size="large" color="#00e5ff" />
+          <ActivityIndicator size="large" color="#2563EB" />
           <Text style={styles.loadingText}>Fetching ITT trip operational data...</Text>
         </View>
       ) : (
@@ -234,7 +234,7 @@ export default function AdminTripsScreen() {
             },
           ]}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#00e5ff" />
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#2563EB" />
           }
           showsVerticalScrollIndicator={false}
         >
@@ -283,7 +283,7 @@ export default function AdminTripsScreen() {
                     <View style={styles.terminalBox}>
                       <Text style={styles.terminalBoxText}>{trip.sourceTerminal}</Text>
                     </View>
-                    <Ionicons name="arrow-forward" size={16} color="#00e5ff" style={{ marginHorizontal: 8 }} />
+                    <Ionicons name="arrow-forward" size={16} color="#2563EB" style={{ marginHorizontal: 8 }} />
                     <View style={styles.terminalBox}>
                       <Text style={styles.terminalBoxText}>{getTripDischargeTerminal(trip)}</Text>
                     </View>
@@ -317,10 +317,10 @@ export default function AdminTripsScreen() {
 
                     <View style={styles.timingCol}>
                       <View style={styles.timingLabelRow}>
-                        <Ionicons name="flag" size={11} color={timing.isDischarged ? "#00e5ff" : "#feb300"} />
+                        <Ionicons name="flag" size={11} color={timing.isDischarged ? "#2563EB" : "#feb300"} />
                         <Text style={styles.timingLabel}>DISCHARGED</Text>
                       </View>
-                      <Text style={[styles.timingTime, { color: timing.isDischarged ? '#00e5ff' : '#feb300' }]}>
+                      <Text style={[styles.timingTime, { color: timing.isDischarged ? '#2563EB' : '#feb300' }]}>
                         {timing.dischargeTime}
                       </Text>
                       <Text style={styles.timingTerminal}>{getTripDischargeTerminal(trip)}</Text>
@@ -349,7 +349,7 @@ export default function AdminTripsScreen() {
                           <View key={idx} style={styles.containerTagEnhanced}>
                             <View style={styles.cTopRow}>
                               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                                <Ionicons name="cube" size={12} color="#00e5ff" />
+                                <Ionicons name="cube" size={12} color="#2563EB" />
                                 <Text style={styles.cNumText}>{cTiming.containerNumber}</Text>
                                 <View style={styles.cSizeBadge}>
                                   <Text style={styles.cSizeText}>{cTiming.size}</Text>
@@ -374,7 +374,7 @@ export default function AdminTripsScreen() {
                               <Text style={styles.cTimeArrow}>➔</Text>
                               <Text style={styles.cTimeText}>
                                 📤 Disch:{' '}
-                                <Text style={[styles.cTimeHighlight, { color: cTiming.isDischarged ? '#00e5ff' : '#feb300' }]}>
+                                <Text style={[styles.cTimeHighlight, { color: cTiming.isDischarged ? '#2563EB' : '#feb300' }]}>
                                   {cTiming.dischargeTime} ({cTiming.destTerminal})
                                 </Text>
                               </Text>
@@ -418,7 +418,7 @@ export default function AdminTripsScreen() {
                   {/* ⏱️ Top Operational Timing & Turnaround Report Banner */}
                   <View style={styles.modalTimingBox}>
                     <View style={styles.modalTimingHeader}>
-                      <Ionicons name="timer-outline" size={15} color="#00e5ff" />
+                      <Ionicons name="timer-outline" size={15} color="#2563EB" />
                       <Text style={styles.modalTimingTitle}>ITT OPERATIONAL TIMING & DISCHARGE REPORT</Text>
                     </View>
 
@@ -431,7 +431,7 @@ export default function AdminTripsScreen() {
 
                       <View style={styles.modalTimingStat}>
                         <Text style={styles.modalStatLabel}>DISCHARGE TIME</Text>
-                        <Text style={[styles.modalStatVal, { color: selTiming.isDischarged ? '#00e5ff' : '#feb300' }]}>
+                        <Text style={[styles.modalStatVal, { color: selTiming.isDischarged ? '#2563EB' : '#feb300' }]}>
                           {selTiming.dischargeTime}
                         </Text>
                         <Text style={styles.modalStatSub}>{getTripDischargeTerminal(selectedTrip)}</Text>
@@ -486,7 +486,7 @@ export default function AdminTripsScreen() {
                       <View key={i} style={styles.modalContainerCard}>
                         <View style={styles.modalContHeader}>
                           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                            <Ionicons name="cube" size={14} color="#00e5ff" />
+                            <Ionicons name="cube" size={14} color="#2563EB" />
                             <Text style={styles.containerDetailNum}>{cInfo.containerNumber}</Text>
                             <View style={styles.cSizeBadge}>
                               <Text style={styles.cSizeText}>{cInfo.size}</Text>
@@ -513,7 +513,7 @@ export default function AdminTripsScreen() {
                           </View>
                           <View style={styles.modalContMetric}>
                             <Text style={styles.modalContMetricLabel}>Discharged At:</Text>
-                            <Text style={[styles.modalContMetricVal, { color: cInfo.isDischarged ? '#00e5ff' : '#feb300' }]}>
+                            <Text style={[styles.modalContMetricVal, { color: cInfo.isDischarged ? '#2563EB' : '#feb300' }]}>
                               {cInfo.dischargeTime} ({cInfo.destTerminal})
                             </Text>
                           </View>
@@ -579,7 +579,7 @@ export default function AdminTripsScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: '#070f1e',
+    backgroundColor: '#FFFFFF',
   },
   header: {
     paddingHorizontal: 16,
@@ -608,7 +608,7 @@ const styles = StyleSheet.create({
   searchWrap: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#070f1e',
+    backgroundColor: '#FFFFFF',
     borderRadius: 8,
     paddingHorizontal: 10,
     height: 40,
@@ -632,7 +632,7 @@ const styles = StyleSheet.create({
     marginRight: 6,
   },
   pillActive: {
-    backgroundColor: '#00e5ff',
+    backgroundColor: '#2563EB',
   },
   pillText: {
     color: '#90caf9',
@@ -640,7 +640,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   pillTextActive: {
-    color: '#001529',
+    color: '#FFFFFF',
   },
   termPill: {
     paddingVertical: 3,
@@ -649,10 +649,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#EFF6FF',
     marginRight: 6,
     borderWidth: 1,
-    borderColor: 'rgba(0, 229, 255, 0.2)',
+    borderColor: '#EFF6FF',
   },
   termPillActive: {
-    backgroundColor: '#00e5ff',
+    backgroundColor: '#2563EB',
   },
   termPillText: {
     color: '#2563EB',
@@ -660,7 +660,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   termPillTextActive: {
-    color: '#001529',
+    color: '#FFFFFF',
   },
   centerLoading: {
     flex: 1,
@@ -728,7 +728,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 82, 82, 0.2)',
   },
   statusInProgress: {
-    backgroundColor: 'rgba(0, 229, 255, 0.2)',
+    backgroundColor: '#EFF6FF',
   },
   statusBadgeText: {
     color: '#1E293B',
@@ -768,12 +768,12 @@ const styles = StyleSheet.create({
   containerTag: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#070f1e',
+    backgroundColor: '#FFFFFF',
     borderRadius: 6,
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderWidth: 1,
-    borderColor: 'rgba(0, 229, 255, 0.2)',
+    borderColor: '#EFF6FF',
   },
   containerTagText: {
     color: '#cfd8dc',
@@ -791,7 +791,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 20,
     borderWidth: 1,
-    borderColor: 'rgba(0, 229, 255, 0.25)',
+    borderColor: '#EFF6FF',
   },
   modalHeader: {
     flexDirection: 'row',
@@ -828,7 +828,7 @@ const styles = StyleSheet.create({
   containerDetailItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    backgroundColor: '#070f1e',
+    backgroundColor: '#FFFFFF',
     padding: 8,
     borderRadius: 6,
     marginBottom: 4,
@@ -849,7 +849,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   reasonInput: {
-    backgroundColor: '#070f1e',
+    backgroundColor: '#FFFFFF',
     borderRadius: 8,
     paddingHorizontal: 10,
     height: 40,
@@ -900,7 +900,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(7, 15, 30, 0.95)',
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: 'rgba(0, 229, 255, 0.18)',
+    borderColor: '#EFF6FF',
     paddingVertical: 8,
     paddingHorizontal: 10,
     marginTop: 4,
@@ -941,11 +941,11 @@ const styles = StyleSheet.create({
   },
   containerTagEnhanced: {
     width: '100%',
-    backgroundColor: '#070f1e',
+    backgroundColor: '#FFFFFF',
     borderRadius: 8,
     padding: 8,
     borderWidth: 1,
-    borderColor: 'rgba(0, 229, 255, 0.15)',
+    borderColor: '#EFF6FF',
     marginBottom: 4,
   },
   cTopRow: {
@@ -1022,7 +1022,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#EFF6FF',
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: 'rgba(0, 229, 255, 0.25)',
+    borderColor: '#EFF6FF',
     padding: 12,
     marginBottom: 12,
   },
@@ -1067,7 +1067,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   modalContainerCard: {
-    backgroundColor: '#070f1e',
+    backgroundColor: '#FFFFFF',
     borderRadius: 8,
     borderWidth: 1,
     borderColor: '#E2E8F0',

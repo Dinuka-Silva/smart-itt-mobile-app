@@ -252,7 +252,7 @@ export default function DriverJobQueue() {
             style={styles.newTripBtn}
             onPress={() => router.push('/(driver)/trips/new')}
           >
-            <Ionicons name="add" size={16} color="#00363d" />
+            <Ionicons name="add" size={16} color="#FFFFFF" />
             <Text style={styles.newTripBtnText}>DISPATCH</Text>
           </TouchableOpacity>
         </View>
@@ -330,9 +330,9 @@ export default function DriverJobQueue() {
             const statusColor = isDone
               ? '#22ef7e'
               : isProgress
-              ? '#00e5ff'
+              ? '#2563EB'
               : isApproved
-              ? '#00e5ff'
+              ? '#2563EB'
               : '#feb300';
 
             return (
@@ -383,7 +383,7 @@ export default function DriverJobQueue() {
                         {/* Started Date & Time */}
                         <View style={styles.timingCol}>
                           <View style={styles.timingColHeader}>
-                            <Ionicons name="play-circle" size={13} color="#00e5ff" />
+                            <Ionicons name="play-circle" size={13} color="#2563EB" />
                             <Text style={styles.timingColLabel}>TRIP STARTED</Text>
                           </View>
                           <Text style={styles.timingDateVal}>{timing.startDate}</Text>
@@ -436,9 +436,9 @@ export default function DriverJobQueue() {
                             flexDirection: 'row',
                             alignItems: 'center',
                             gap: 6,
-                            backgroundColor: isDual ? 'rgba(0, 229, 255, 0.1)' : 'rgba(34, 239, 126, 0.08)',
+                            backgroundColor: isDual ? '#EFF6FF' : 'rgba(34, 239, 126, 0.08)',
                             borderWidth: 1,
-                            borderColor: isDual ? 'rgba(0, 229, 255, 0.3)' : 'rgba(34, 239, 126, 0.25)',
+                            borderColor: isDual ? '#EFF6FF' : 'rgba(34, 239, 126, 0.25)',
                             borderRadius: 6,
                             paddingHorizontal: 8,
                             paddingVertical: 4,
@@ -448,9 +448,9 @@ export default function DriverJobQueue() {
                           <Ionicons
                             name={isDual ? 'swap-horizontal' : 'checkmark-circle'}
                             size={12}
-                            color={isDual ? '#00e5ff' : '#22ef7e'}
+                            color={isDual ? '#2563EB' : '#22ef7e'}
                           />
-                          <Text style={{ fontSize: 10, fontWeight: '700', color: isDual ? '#00e5ff' : '#22ef7e', flex: 1 }}>
+                          <Text style={{ fontSize: 10, fontWeight: '700', color: isDual ? '#2563EB' : '#22ef7e', flex: 1 }}>
                             {isDual ? `DUAL DISCHARGE TERMINALS: ${termStr}` : `DISCHARGE TERMINAL: ${termStr}`}
                           </Text>
                         </View>
@@ -522,7 +522,7 @@ export default function DriverJobQueue() {
                       }}>
                         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingBottom: 4, borderBottomWidth: 1, borderBottomColor: '#E2E8F0' }}>
                           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
-                            <Ionicons name="shield-checkmark" size={13} color="#00e5ff" />
+                            <Ionicons name="shield-checkmark" size={13} color="#2563EB" />
                             <Text style={{ fontSize: 9.5, fontWeight: '900', color: '#2563EB', letterSpacing: 0.4 }}>
                               SLPA PORT CLEARANCE MANIFEST
                             </Text>
@@ -595,10 +595,10 @@ export default function DriverJobQueue() {
 
                         {/* Full width remarks */}
                         <View style={{
-                          backgroundColor: '#0c1421',
+                          backgroundColor: '#F8FAFC',
                           borderRadius: 6,
                           borderLeftWidth: 3,
-                          borderLeftColor: '#00e5ff',
+                          borderLeftColor: '#2563EB',
                           paddingHorizontal: 8,
                           paddingVertical: 6,
                         }}>
@@ -631,21 +631,21 @@ export default function DriverJobQueue() {
                   {isApproved && (
                     <View style={{ gap: 8 }}>
                       <View style={styles.approvedNoticeBox}>
-                        <Ionicons name="shield-checkmark" size={16} color="#00e5ff" />
+                        <Ionicons name="shield-checkmark" size={16} color="#2563EB" />
                         <Text style={styles.approvedNoticeText}>
                           Gate Pass Cleared. You are authorized to depart {trip.sourceTerminal || 'Origin'}.
                         </Text>
                       </View>
                       <TouchableOpacity
-                        style={[styles.completeBtn, { backgroundColor: '#00e5ff' }]}
+                        style={[styles.completeBtn, { backgroundColor: '#2563EB' }]}
                         onPress={() => handleStartTrip(trip.id)}
                         disabled={updatingId === trip.id}
                       >
                         {updatingId === trip.id ? (
-                          <ActivityIndicator size="small" color="#00363d" />
+                          <ActivityIndicator size="small" color="#FFFFFF" />
                         ) : (
                           <>
-                            <Ionicons name="navigate" size={18} color="#00363d" />
+                            <Ionicons name="navigate" size={18} color="#FFFFFF" />
                             <Text style={styles.completeBtnText}>START TRIP / DEPART TERMINAL</Text>
                           </>
                         )}
@@ -663,7 +663,7 @@ export default function DriverJobQueue() {
                         setArrivedTrips(next);
                       }}
                     >
-                      <Ionicons name="location" size={18} color="#00363d" />
+                      <Ionicons name="location" size={18} color="#FFFFFF" />
                       <Text style={styles.completeBtnText}>ARRIVED AT DESTINATION TERMINAL ({getTripDischargeTerminal(trip)})</Text>
                     </TouchableOpacity>
                   )}
@@ -679,15 +679,15 @@ export default function DriverJobQueue() {
                       </View>
 
                       <TouchableOpacity
-                        style={[styles.completeBtn, { backgroundColor: '#00e5ff' }]}
+                        style={[styles.completeBtn, { backgroundColor: '#2563EB' }]}
                         onPress={() => handleCompleteTrip(trip.id)}
                         disabled={updatingId === trip.id}
                       >
                         {updatingId === trip.id ? (
-                          <ActivityIndicator size="small" color="#00363d" />
+                          <ActivityIndicator size="small" color="#FFFFFF" />
                         ) : (
                           <>
-                            <Ionicons name="paper-plane" size={16} color="#00363d" />
+                            <Ionicons name="paper-plane" size={16} color="#FFFFFF" />
                             <Text style={[styles.completeBtnText, { color: '#FFFFFF' }]}>
                               DISCHARGE & SUBMIT FOR SUPERVISOR APPROVAL
                             </Text>
@@ -754,7 +754,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#00e5ff',
+    backgroundColor: '#2563EB',
     paddingHorizontal: 12,
     paddingVertical: 7,
     borderRadius: radius.DEFAULT,
@@ -808,7 +808,7 @@ const styles = StyleSheet.create({
     borderColor: '#242a34',
   },
   filterChipActive: {
-    backgroundColor: '#00e5ff',
+    backgroundColor: '#2563EB',
     borderColor: '#2563EB',
   },
   filterChipText: {
@@ -965,7 +965,7 @@ const styles = StyleSheet.create({
     borderColor: '#242a34',
   },
   termChoiceActive: {
-    backgroundColor: '#00e5ff',
+    backgroundColor: '#2563EB',
     borderColor: '#2563EB',
   },
   termChoiceText: {
@@ -978,7 +978,7 @@ const styles = StyleSheet.create({
   },
   completeBtn: {
     height: 48,
-    backgroundColor: '#00e5ff',
+    backgroundColor: '#2563EB',
     borderRadius: radius.DEFAULT,
     flexDirection: 'row',
     alignItems: 'center',

@@ -127,7 +127,7 @@ export default function DriverContainers() {
 
   const getStatusColor = (label: string) => {
     if (label === 'DELIVERED') return { bg: 'rgba(34, 239, 126, 0.15)', text: '#22ef7e' };
-    if (label === 'IN TRANSIT') return { bg: 'rgba(0, 229, 255, 0.15)', text: '#00e5ff' };
+    if (label === 'IN TRANSIT') return { bg: '#EFF6FF', text: '#2563EB' };
     if (label === 'DISCHARGED') return { bg: 'rgba(254, 179, 0, 0.15)', text: '#feb300' };
     return { bg: 'rgba(254, 179, 0, 0.15)', text: '#feb300' };
   };
@@ -142,7 +142,7 @@ export default function DriverContainers() {
         paddingBottom: Math.max(bottomInset + 24, 40),
       }}
       showsVerticalScrollIndicator={false}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#00e5ff" />}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#2563EB" />}
     >
       <View
         style={[
@@ -164,7 +164,7 @@ export default function DriverContainers() {
             style={styles.dateFilterBtn}
             onPress={() => setShowDatePicker(true)}
           >
-            <Ionicons name="calendar" size={16} color="#00e5ff" />
+            <Ionicons name="calendar" size={16} color="#2563EB" />
             <Text style={styles.dateFilterText}>
               {selectedDate === 'All' ? 'ALL DATES' : selectedDate}
             </Text>
@@ -175,7 +175,7 @@ export default function DriverContainers() {
       {/* Summary Cards */}
       {!loading && (
         <View style={[styles.summaryRow, { paddingHorizontal: containerPaddingHorizontal }]}>
-          <View style={[styles.summaryCard, { borderLeftColor: '#00e5ff' }]}>
+          <View style={[styles.summaryCard, { borderLeftColor: '#2563EB' }]}>
             <Text style={[styles.summaryValue, { color: '#2563EB', fontSize: isSmallMobile ? 20 : 26 }]}>{ft20}</Text>
             <Text style={styles.summaryLabel}>20FT</Text>
           </View>
@@ -193,7 +193,7 @@ export default function DriverContainers() {
       {/* ITT Haulage Capacity Rule Banner */}
       {!loading && (
         <View style={[styles.policyNoticeBox, { marginHorizontal: containerPaddingHorizontal }]}>
-          <Ionicons name="information-circle" size={15} color="#00e5ff" />
+          <Ionicons name="information-circle" size={15} color="#2563EB" />
           <Text style={styles.policyNoticeText}>
             ITT Haulage Rule: 1 Trip can transport only 1 × 40FT container OR up to 2 × 20FT containers.
           </Text>
@@ -208,7 +208,7 @@ export default function DriverContainers() {
               DISCHARGE TERMINAL FILTER & SORT
             </Text>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-              <Ionicons name="swap-vertical" size={11} color="#00e5ff" />
+              <Ionicons name="swap-vertical" size={11} color="#2563EB" />
               <Text style={{ fontSize: 9, fontWeight: '800', color: '#2563EB' }}>SORTED: DISCHARGE TERMINAL</Text>
             </View>
           </View>
@@ -225,9 +225,9 @@ export default function DriverContainers() {
                     paddingHorizontal: 12,
                     paddingVertical: 6,
                     borderRadius: 6,
-                    backgroundColor: isActive ? '#00e5ff' : '#161c25',
+                    backgroundColor: isActive ? '#2563EB' : '#161c25',
                     borderWidth: 1,
-                    borderColor: isActive ? '#00e5ff' : '#242a34',
+                    borderColor: isActive ? '#2563EB' : '#242a34',
                   }}
                   onPress={() => setSelectedTerminal(term)}
                   activeOpacity={0.8}
@@ -235,13 +235,13 @@ export default function DriverContainers() {
                   <Ionicons
                     name={term === 'All' ? 'layers' : 'boat'}
                     size={12}
-                    color={isActive ? '#00363d' : '#849396'}
+                    color={isActive ? '#FFFFFF' : '#849396'}
                   />
                   <Text
                     style={{
                       fontSize: 11,
                       fontWeight: '800',
-                      color: isActive ? '#00363d' : '#dde2f0',
+                      color: isActive ? '#FFFFFF' : '#dde2f0',
                     }}
                   >
                     {term === 'All' ? 'ALL TERMINALS' : term}
@@ -254,7 +254,7 @@ export default function DriverContainers() {
       )}
 
       {loading ? (
-        <ActivityIndicator size="large" color="#00e5ff" style={{ marginTop: 30 }} />
+        <ActivityIndicator size="large" color="#2563EB" style={{ marginTop: 30 }} />
       ) : filteredContainers.length === 0 ? (
         <View style={[styles.emptyBox, { marginHorizontal: containerPaddingHorizontal }]}>
           <Ionicons name="cube-outline" size={42} color="#849396" style={{ marginBottom: 12 }} />
@@ -281,18 +281,18 @@ export default function DriverContainers() {
               {/* Container Number + Size */}
               <View style={[styles.cardHeader, { flexWrap: 'wrap', gap: 8 }]}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexShrink: 1 }}>
-                  <Ionicons name="cube" size={16} color="#00e5ff" />
+                  <Ionicons name="cube" size={16} color="#2563EB" />
                   <Text style={[styles.containerNum, { fontSize: isSmallMobile ? 14 : 16 }]}>
                     {(c.containerNumber || '').replace(/[^A-Za-z0-9]/g, '').toUpperCase()}
                   </Text>
                 </View>
                 <View style={[
                   styles.sizeBadge,
-                  { backgroundColor: sizeLabel.startsWith('20') ? 'rgba(0, 229, 255, 0.15)' : 'rgba(254, 179, 0, 0.15)' }
+                  { backgroundColor: sizeLabel.startsWith('20') ? '#EFF6FF' : 'rgba(254, 179, 0, 0.15)' }
                 ]}>
                   <Text style={[
                     styles.sizeText,
-                    { color: sizeLabel.startsWith('20') ? '#00e5ff' : '#feb300' }
+                    { color: sizeLabel.startsWith('20') ? '#2563EB' : '#feb300' }
                   ]}>
                     {sizeLabel}
                   </Text>
@@ -313,7 +313,7 @@ export default function DriverContainers() {
                   <Text style={styles.termLabel}>ORIGIN</Text>
                   <Text style={styles.termValue}>{c.sourceTerminal || 'ECT'}</Text>
                 </View>
-                <Ionicons name="arrow-forward" size={16} color="#00e5ff" />
+                <Ionicons name="arrow-forward" size={16} color="#2563EB" />
                 <View style={styles.termBox}>
                   <Text style={styles.termLabel}>DESTINATION</Text>
                   <Text style={styles.termValue}>{c.destTerminal || 'JCT'}</Text>
@@ -439,7 +439,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#EFF6FF',
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: 'rgba(0, 229, 255, 0.25)',
+    borderColor: '#EFF6FF',
     marginHorizontal: 16,
     marginTop: 12,
     paddingHorizontal: 12,

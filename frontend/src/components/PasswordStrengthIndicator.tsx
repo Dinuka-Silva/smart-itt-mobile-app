@@ -65,10 +65,10 @@ const styles = StyleSheet.create({
     marginTop: 8,
     marginBottom: 12,
     padding: 12,
-    backgroundColor: 'rgba(15, 23, 42, 0.6)',
-    borderRadius: 12,
+    backgroundColor: '#F8FAFC',
+    borderRadius: 10,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderColor: '#E2E8F0',
   },
   headerRow: {
     flexDirection: 'row',
@@ -77,7 +77,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   headerLabel: {
-    color: '#94a3b8',
+    color: '#64748B',
     fontSize: 12,
     fontWeight: '600',
   },
@@ -94,7 +94,7 @@ const styles = StyleSheet.create({
   },
   barTrack: {
     height: 5,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: '#E2E8F0',
     borderRadius: 3,
     overflow: 'hidden',
     marginBottom: 10,
@@ -112,11 +112,12 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   ruleText: {
-    color: '#64748b',
+    color: '#64748B',
     fontSize: 11,
     fontWeight: '500',
   },
   ruleTextPassed: {
-    color: '#cbd5e1',
+    color: '#1E293B',
+    fontWeight: '600',
   },
 });

@@ -351,7 +351,7 @@ export default function SupervisorHomeDashboard() {
           },
         ]}
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); loadDashboardData(); }} tintColor="#00e5ff" />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); loadDashboardData(); }} tintColor="#2563EB" />}
         keyboardShouldPersistTaps="handled"
       >
         {/* ─── A. SUPERVISOR HEADER ─── */}
@@ -393,7 +393,7 @@ export default function SupervisorHomeDashboard() {
 
           <View style={styles.headerRight}>
             <TouchableOpacity style={styles.headerIconBtn} onPress={() => setNotificationsModalVisible(true)}>
-              <Ionicons name="notifications" size={18} color="#00e5ff" />
+              <Ionicons name="notifications" size={18} color="#2563EB" />
               <View style={styles.unreadDot} />
             </TouchableOpacity>
 
@@ -479,7 +479,7 @@ export default function SupervisorHomeDashboard() {
             </View>
             <View style={[styles.supervisorPermitCol, { minWidth: isSmallMobile ? '48%' : '23%' }]}>
               <Text style={styles.supervisorPermitLabel}>TIME REMAINING</Text>
-              <Text style={[styles.supervisorPermitVal, { color: isSupervisorPassRenewalDue ? '#feb300' : '#00e5ff' }]}>
+              <Text style={[styles.supervisorPermitVal, { color: isSupervisorPassRenewalDue ? '#feb300' : '#2563EB' }]}>
                 {isSupervisorPassExpired ? 'Expired' : `${supervisorPassDaysLeft} Days Left`}
               </Text>
             </View>
@@ -597,7 +597,7 @@ export default function SupervisorHomeDashboard() {
                       return (
                         <View key={d.vehicleNumber || d.id} style={styles.complianceItemRow}>
                           <View style={styles.vehiclePlateBadge}>
-                            <Ionicons name="bus" size={12} color="#00e5ff" style={{ marginRight: 4 }} />
+                            <Ionicons name="bus" size={12} color="#2563EB" style={{ marginRight: 4 }} />
                             <Text style={styles.vehiclePlateBadgeText}>{d.vehicleNumber || 'LY-6439'}</Text>
                           </View>
 
@@ -676,9 +676,9 @@ export default function SupervisorHomeDashboard() {
                 activeOpacity={0.85}
                 onPress={() => router.push('/(supervisor)/(tabs)/drivers')}
               >
-                <Ionicons name="people" size={15} color="#00363d" />
+                <Ionicons name="people" size={15} color="#FFFFFF" />
                 <Text style={styles.complianceFleetBtnText}>VIEW ALL IN DRIVER FLEET DIRECTORY</Text>
-                <Ionicons name="arrow-forward" size={14} color="#00363d" />
+                <Ionicons name="arrow-forward" size={14} color="#FFFFFF" />
               </TouchableOpacity>
             </View>
           );
@@ -689,7 +689,7 @@ export default function SupervisorHomeDashboard() {
           <View style={[styles.metricCard, { width: metricCardWidth }]}>
             <View style={styles.metricCardHeader}>
               <Text style={styles.metricLabel}>TOTAL TRIPS TODAY</Text>
-              <Ionicons name="layers" size={16} color="#00e5ff" />
+              <Ionicons name="layers" size={16} color="#2563EB" />
             </View>
             <Text style={[styles.metricValue, { color: '#2563EB' }]}>{stats.totalTripsToday}</Text>
             <Text style={styles.metricSub}>Port Movements</Text>
@@ -725,7 +725,7 @@ export default function SupervisorHomeDashboard() {
           <View style={[styles.metricCard, { width: metricCardWidth }]}>
             <View style={styles.metricCardHeader}>
               <Text style={styles.metricLabel}>CONTAINERS</Text>
-              <Ionicons name="cube" size={16} color="#00e5ff" />
+              <Ionicons name="cube" size={16} color="#2563EB" />
             </View>
             <Text style={[styles.metricValue, { color: '#2563EB' }]}>{stats.totalContainersTransportedToday}</Text>
             <Text style={styles.metricSub}>Loaded/Handed</Text>
@@ -800,7 +800,7 @@ export default function SupervisorHomeDashboard() {
                       <View style={styles.pendingTimingPanel}>
                         <View style={styles.pendingTimingCol}>
                           <View style={styles.pendingTimingHeader}>
-                            <Ionicons name="play-circle" size={12} color="#00e5ff" />
+                            <Ionicons name="play-circle" size={12} color="#2563EB" />
                             <Text style={styles.pendingTimingLabel}>STARTED DATE & TIME</Text>
                           </View>
                           <Text style={styles.pendingTimingDate}>{timing.startDate}</Text>
@@ -844,7 +844,7 @@ export default function SupervisorHomeDashboard() {
                     <View style={styles.pendingContainersList}>
                       {trip.containers.map((c: any, idx: number) => (
                         <View key={c.id || idx} style={styles.pendingContainerPill}>
-                          <Ionicons name="cube" size={12} color="#00e5ff" />
+                          <Ionicons name="cube" size={12} color="#2563EB" />
                           <Text style={styles.pendingContNum}>{c.containerNumber}</Text>
                           <Text style={styles.pendingContSize}>({c.size || '20FT'} ➔ {c.destTerminal || getTripDischargeTerminal(trip)})</Text>
                           <Text style={styles.pendingContStatus}>Status: {c.status}</Text>
@@ -857,7 +857,7 @@ export default function SupervisorHomeDashboard() {
                   <View style={styles.pendingDischargeVerificationCard}>
                     <View style={styles.pendingDischargeVerificationHeader}>
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                        <Ionicons name="shield-checkmark" size={14} color="#00e5ff" />
+                        <Ionicons name="shield-checkmark" size={14} color="#2563EB" />
                         <Text style={styles.pendingDischargeVerificationTitle}>
                           DRIVER DISCHARGE & SEAL VERIFICATION MANIFEST
                         </Text>
@@ -918,7 +918,7 @@ export default function SupervisorHomeDashboard() {
                     {/* Row 2: Full-Width Driver Submission Remarks Box */}
                     <View style={styles.pendingRemarksCallout}>
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 3 }}>
-                        <Ionicons name="chatbubble-ellipses" size={12} color="#00e5ff" />
+                        <Ionicons name="chatbubble-ellipses" size={12} color="#2563EB" />
                         <Text style={styles.pendingRemarksCalloutLabel}>DRIVER COMPLETION & HANDOVER REMARKS</Text>
                       </View>
                       <Text style={styles.pendingRemarksCalloutText}>
@@ -941,7 +941,7 @@ export default function SupervisorHomeDashboard() {
                       style={styles.approveBtn}
                       onPress={() => handleApproveTrip(trip)}
                     >
-                      <Ionicons name="checkmark-circle" size={16} color="#00363d" />
+                      <Ionicons name="checkmark-circle" size={16} color="#FFFFFF" />
                       <Text style={styles.approveBtnText}>CONFIRM & APPROVE TRIP</Text>
                     </TouchableOpacity>
 
@@ -965,7 +965,7 @@ export default function SupervisorHomeDashboard() {
           >
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 }}>
               <View style={styles.viewAllTripsIconBox}>
-                <Ionicons name="list-circle" size={24} color="#00e5ff" />
+                <Ionicons name="list-circle" size={24} color="#2563EB" />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.viewAllTripsTitle}>VIEW COMPLETE TRIP DETAILS</Text>
@@ -974,7 +974,7 @@ export default function SupervisorHomeDashboard() {
                 </Text>
               </View>
             </View>
-            <Ionicons name="chevron-forward" size={18} color="#00e5ff" />
+            <Ionicons name="chevron-forward" size={18} color="#2563EB" />
           </TouchableOpacity>
         </View>
 
@@ -996,7 +996,7 @@ export default function SupervisorHomeDashboard() {
             return (
               <>
                 <View style={styles.sectionTitleRow}>
-                  <Ionicons name="people" size={18} color="#00e5ff" />
+                  <Ionicons name="people" size={18} color="#2563EB" />
                   <Text style={styles.sectionTitle}>
                     REGISTERED OPERATORS ({filteredOps.length} of {drivers.length})
                   </Text>
@@ -1005,13 +1005,13 @@ export default function SupervisorHomeDashboard() {
                     onPress={() => router.push('/(supervisor)/(tabs)/drivers')}
                   >
                     <Text style={{ color: '#2563EB', fontSize: 11, fontWeight: '800' }}>VIEW FULL FLEET</Text>
-                    <Ionicons name="chevron-forward" size={14} color="#00e5ff" />
+                    <Ionicons name="chevron-forward" size={14} color="#2563EB" />
                   </TouchableOpacity>
                 </View>
 
                 {/* Supervisor Dashboard Driver Search Bar */}
                 <View style={styles.supervisorSearchWrap}>
-                  <Ionicons name="search" size={16} color="#00e5ff" style={{ marginRight: 8 }} />
+                  <Ionicons name="search" size={16} color="#2563EB" style={{ marginRight: 8 }} />
                   <TextInput
                     style={styles.supervisorSearchInput}
                     placeholder="Search by driver name, code (DRV), vehicle plate (LY), CHE..."
@@ -1082,7 +1082,7 @@ export default function SupervisorHomeDashboard() {
         <View style={styles.sectionWrap}>
           <View style={styles.sectionTitleRow}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-              <Ionicons name="business" size={18} color="#00e5ff" />
+              <Ionicons name="business" size={18} color="#2563EB" />
               <Text style={styles.sectionTitle}>SLPA 6-TERMINAL CONSOLIDATED TOTALS</Text>
             </View>
             <View style={styles.panelActivePeriodBadge}>
@@ -1181,7 +1181,7 @@ export default function SupervisorHomeDashboard() {
           </View>
 
           <TouchableOpacity style={styles.exportReportBtn} onPress={() => setReportModalVisible(true)}>
-            <Ionicons name="document-text" size={18} color="#00363d" />
+            <Ionicons name="document-text" size={18} color="#FFFFFF" />
             <Text style={styles.exportReportBtnText}>GENERATE OFFICIAL TERMINAL REPORT</Text>
           </TouchableOpacity>
         </View>
@@ -1196,7 +1196,7 @@ export default function SupervisorHomeDashboard() {
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.quickTile} onPress={() => router.push('/(supervisor)/(tabs)/trips')}>
-              <Ionicons name="layers" size={22} color="#00e5ff" />
+              <Ionicons name="layers" size={22} color="#2563EB" />
               <Text style={styles.quickTileText}>Dispatcher Hub</Text>
             </TouchableOpacity>
 
@@ -1206,7 +1206,7 @@ export default function SupervisorHomeDashboard() {
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.quickTile} onPress={() => setReportModalVisible(true)}>
-              <Ionicons name="bar-chart" size={22} color="#00e5ff" />
+              <Ionicons name="bar-chart" size={22} color="#2563EB" />
               <Text style={styles.quickTileText}>Daily Report</Text>
             </TouchableOpacity>
 
@@ -1279,7 +1279,7 @@ export default function SupervisorHomeDashboard() {
           <View style={styles.modalCard}>
             <View style={styles.modalHeader}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <Ionicons name="document-text" size={20} color="#00e5ff" />
+                <Ionicons name="document-text" size={20} color="#2563EB" />
                 <Text style={styles.modalTitle}>OFFICIAL TERMINAL CONSOLIDATED REPORT</Text>
               </View>
               <TouchableOpacity onPress={() => setReportModalVisible(false)}>
@@ -1303,7 +1303,7 @@ export default function SupervisorHomeDashboard() {
                 setReportModalVisible(false);
               }}
             >
-              <Ionicons name="download" size={18} color="#00363d" />
+              <Ionicons name="download" size={18} color="#FFFFFF" />
               <Text style={styles.modalSubmitBtnText}>EXPORT CSV REPORT</Text>
             </TouchableOpacity>
           </View>
@@ -1316,7 +1316,7 @@ export default function SupervisorHomeDashboard() {
           <View style={styles.modalCard}>
             <View style={styles.modalHeader}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <Ionicons name="notifications" size={20} color="#00e5ff" />
+                <Ionicons name="notifications" size={20} color="#2563EB" />
                 <Text style={styles.modalTitle}>SUPERVISOR OPERATIONS ALERTS</Text>
               </View>
               <TouchableOpacity onPress={() => setNotificationsModalVisible(false)}>
@@ -1476,7 +1476,7 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#00e5ff',
+    backgroundColor: '#2563EB',
   },
   headerLogoutBtn: {
     width: 38,
@@ -1845,7 +1845,7 @@ const styles = StyleSheet.create({
   approveBtn: {
     flex: 1,
     height: 40,
-    backgroundColor: '#00e5ff',
+    backgroundColor: '#2563EB',
     borderRadius: radius.DEFAULT,
     flexDirection: 'row',
     alignItems: 'center',
@@ -1877,10 +1877,10 @@ const styles = StyleSheet.create({
 
   // ─── VIEW ALL TRIPS LINK ───
   viewAllTripsLink: {
-    backgroundColor: 'rgba(0, 229, 255, 0.05)',
+    backgroundColor: '#EFF6FF',
     borderRadius: radius.DEFAULT,
     borderWidth: 1,
-    borderColor: 'rgba(0, 229, 255, 0.25)',
+    borderColor: '#EFF6FF',
     padding: 12,
     flexDirection: 'row',
     alignItems: 'center',
@@ -2056,7 +2056,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   filterChipActiveDate: {
-    backgroundColor: '#00e5ff',
+    backgroundColor: '#2563EB',
     borderColor: '#2563EB',
   },
   filterChipTextActiveDate: {
@@ -2084,7 +2084,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   todayPill: {
-    backgroundColor: '#00e5ff',
+    backgroundColor: '#2563EB',
     paddingHorizontal: 5,
     paddingVertical: 1,
     borderRadius: 3,
@@ -2182,7 +2182,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#00e5ff',
+    backgroundColor: '#2563EB',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -2291,9 +2291,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   periodTabBtnActive: {
-    backgroundColor: '#00e5ff',
+    backgroundColor: '#2563EB',
     borderColor: '#2563EB',
-    shadowColor: '#00e5ff',
+    shadowColor: '#2563EB',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 4,
@@ -2402,7 +2402,7 @@ const styles = StyleSheet.create({
   },
   exportReportBtn: {
     height: 44,
-    backgroundColor: '#00e5ff',
+    backgroundColor: '#2563EB',
     borderRadius: radius.DEFAULT,
     flexDirection: 'row',
     alignItems: 'center',
@@ -2498,7 +2498,7 @@ const styles = StyleSheet.create({
   } as any,
   modalSubmitBtn: {
     height: 44,
-    backgroundColor: '#00e5ff',
+    backgroundColor: '#2563EB',
     borderRadius: radius.DEFAULT,
     flexDirection: 'row',
     alignItems: 'center',
@@ -2599,7 +2599,7 @@ const styles = StyleSheet.create({
     gap: 4,
     backgroundColor: '#EFF6FF',
     borderWidth: 1,
-    borderColor: 'rgba(0, 229, 255, 0.25)',
+    borderColor: '#EFF6FF',
     borderRadius: 4,
     paddingHorizontal: 6,
     paddingVertical: 2,
@@ -2608,7 +2608,7 @@ const styles = StyleSheet.create({
     width: 4,
     height: 4,
     borderRadius: 2,
-    backgroundColor: '#00e5ff',
+    backgroundColor: '#2563EB',
   },
   terminalAuthText: {
     color: '#2563EB',
@@ -2676,7 +2676,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 6,
-    backgroundColor: '#070f1e',
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
     borderColor: '#E2E8F0',
   },
@@ -2694,7 +2694,7 @@ const styles = StyleSheet.create({
     fontWeight: '900',
   },
   complianceSectionBox: {
-    backgroundColor: '#070f1e',
+    backgroundColor: '#FFFFFF',
     borderRadius: 8,
     padding: 10,
     borderWidth: 1,
@@ -2795,7 +2795,7 @@ const styles = StyleSheet.create({
   passBadgeWrap: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#070f1e',
+    backgroundColor: '#FFFFFF',
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 4,
@@ -2821,7 +2821,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    backgroundColor: '#00e5ff',
+    backgroundColor: '#2563EB',
     borderRadius: 6,
     paddingVertical: 8,
     marginTop: 4,
@@ -2837,7 +2837,7 @@ const styles = StyleSheet.create({
   supervisorSearchWrap: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#070f1e',
+    backgroundColor: '#FFFFFF',
     borderRadius: 8,
     borderWidth: 1,
     borderColor: '#2563EB',
@@ -2880,7 +2880,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#0a101d',
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: 'rgba(0, 229, 255, 0.25)',
+    borderColor: '#EFF6FF',
     padding: 11,
     gap: 8,
     marginTop: 4,
@@ -2948,10 +2948,10 @@ const styles = StyleSheet.create({
     color: '#1E293B',
   },
   pendingRemarksCallout: {
-    backgroundColor: '#0c1421',
+    backgroundColor: '#F8FAFC',
     borderRadius: 6,
     borderLeftWidth: 3,
-    borderLeftColor: '#00e5ff',
+    borderLeftColor: '#2563EB',
     paddingHorizontal: 10,
     paddingVertical: 8,
   },

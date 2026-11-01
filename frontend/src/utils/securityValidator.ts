@@ -92,16 +92,16 @@ export const securityValidator = {
 
     if (score >= 90) {
       level = 'STRONG';
-      color = '#10b981'; // Green
+      color = '#16A34A'; // Green
     } else if (score >= 70) {
       level = 'GOOD';
-      color = '#00e5ff'; // Cyan
+      color = '#2563EB'; // Blue
     } else if (score >= 50) {
       level = 'FAIR';
-      color = '#f59e0b'; // Amber
+      color = '#D97706'; // Amber
     } else if (score >= 30) {
       level = 'WEAK';
-      color = '#f97316'; // Orange
+      color = '#EA580C'; // Orange
     }
 
     const isValid = passedCount >= 4 && hasMinLength && !isForbidden;

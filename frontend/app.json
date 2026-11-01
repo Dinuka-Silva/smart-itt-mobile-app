@@ -5,7 +5,7 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "automatic",
+    "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.smartitt.app",
@@ -27,7 +27,7 @@
     },
     "web": {
       "favicon": "./assets/favicon.png",
-      "backgroundColor": "#070c14"
+      "backgroundColor": "#F8FAFC"
     },
     "plugins": [
       "expo-router",
@@ -46,7 +46,7 @@
         {
           "image": "./assets/splash-icon.png",
           "resizeMode": "contain",
-          "backgroundColor": "#070c14"
+          "backgroundColor": "#FFFFFF"
         }
       ]
     ],

@@ -498,7 +498,7 @@ export default function DriverHomeDashboard() {
             alignSelf: 'center',
           },
         ]}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); loadData(); }} tintColor="#00e5ff" />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); loadData(); }} tintColor="#2563EB" />}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
@@ -640,7 +640,7 @@ export default function DriverHomeDashboard() {
               <View style={{ gap: 4 }}>
                 {driverPortPassRenewalDue && (
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                    <Ionicons name="person-circle" size={13} color="#00e5ff" />
+                    <Ionicons name="person-circle" size={13} color="#2563EB" />
                     <Text style={{ fontSize: 12, color: '#1E293B', fontWeight: '700' }}>
                       Driver Port Pass: <Text style={{ color: '#2563EB' }}>{driverPortPassExpiryDate}</Text> ({driverPortPassDaysLeft <= 0 ? 'EXPIRED' : `${driverPortPassDaysLeft} days left - RENEW NOW`})
                     </Text>
@@ -668,7 +668,7 @@ export default function DriverHomeDashboard() {
           <View style={[styles.summaryCard, { width: summaryCardWidth }]}>
             <View style={styles.summaryCardHeader}>
               <Text style={styles.summaryCardTitle}>ACTIVE TRIPS</Text>
-              <Ionicons name="navigate" size={16} color="#00e5ff" />
+              <Ionicons name="navigate" size={16} color="#2563EB" />
             </View>
             <Text style={[styles.summaryCardValue, { color: '#2563EB' }]}>
               {dashboardStats.activeTrips}
@@ -727,7 +727,7 @@ export default function DriverHomeDashboard() {
               activeOpacity={0.8}
               onPress={triggerCelebrationAnimation}
             >
-              <Ionicons name="sparkles" size={12} color="#00363d" />
+              <Ionicons name="sparkles" size={12} color="#FFFFFF" />
               <Text style={styles.celebrationTriggerText}>50 TARGET</Text>
             </TouchableOpacity>
           </View>
@@ -749,7 +749,7 @@ export default function DriverHomeDashboard() {
 
           {/* Actual Trip Count Indicator in front */}
           <View style={styles.missionTripInfoRow}>
-            <Ionicons name="git-commit" size={14} color="#00e5ff" />
+            <Ionicons name="git-commit" size={14} color="#2563EB" />
             <Text style={styles.missionTripInfoText}>
               Actual Completed: <Text style={{ color: '#2563EB', fontWeight: '900' }}>{actualTripCount} Trips</Text> ({currentMonthContainers} Containers transported)
             </Text>
@@ -774,7 +774,7 @@ export default function DriverHomeDashboard() {
             >
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
                 <View style={styles.milestoneStarCircle}>
-                  <Ionicons name="star" size={14} color="#00363d" />
+                  <Ionicons name="star" size={14} color="#FFFFFF" />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.milestoneNoticeTitle}>🎉 50 CONTAINERS MILESTONE REACHED!</Text>
@@ -791,7 +791,7 @@ export default function DriverHomeDashboard() {
             >
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
                 <View style={[styles.milestoneStarCircle, { backgroundColor: '#feb300' }]}>
-                  <Ionicons name="trophy" size={14} color="#00363d" />
+                  <Ionicons name="trophy" size={14} color="#FFFFFF" />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={[styles.milestoneNoticeTitle, { color: '#feb300' }]}>🎯 50 CONTAINERS TARGET MILESTONE</Text>
@@ -809,7 +809,7 @@ export default function DriverHomeDashboard() {
             {/* 1. Trip Header Bar with Live Status */}
             <View style={styles.missionCardHeader}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <Ionicons name="git-network" size={20} color="#00e5ff" />
+                <Ionicons name="git-network" size={20} color="#2563EB" />
                 <View>
                   <Text style={styles.missionIdText}>
                     TRIP #{activeTrip.tripNumber || activeTrip.id?.slice(0, 8)}
@@ -841,7 +841,7 @@ export default function DriverHomeDashboard() {
               )}
               {activeTrip.status === 'ARRIVED' && (
                 <View style={styles.statusPillArrived}>
-                  <Ionicons name="flag" size={13} color="#00e5ff" />
+                  <Ionicons name="flag" size={13} color="#2563EB" />
                   <Text style={styles.statusPillTextArrived}>ARRIVED AT TERMINAL</Text>
                 </View>
               )}
@@ -860,7 +860,7 @@ export default function DriverHomeDashboard() {
                 <View style={styles.missionTimingPanel}>
                   <View style={styles.missionTimingCol}>
                     <View style={styles.missionTimingHeader}>
-                      <Ionicons name="play-circle" size={12} color="#00e5ff" />
+                      <Ionicons name="play-circle" size={12} color="#2563EB" />
                       <Text style={styles.missionTimingLabel}>STARTED DATE & TIME</Text>
                     </View>
                     <Text style={styles.missionTimingDate}>{timing.startDate}</Text>
@@ -908,7 +908,7 @@ export default function DriverHomeDashboard() {
               </View>
 
               <View style={styles.routeArrowBox}>
-                <Ionicons name="arrow-forward" size={20} color="#00e5ff" />
+                <Ionicons name="arrow-forward" size={20} color="#2563EB" />
                 <Text style={styles.routeDistanceText}>ITT ROUTE</Text>
               </View>
 
@@ -924,7 +924,7 @@ export default function DriverHomeDashboard() {
             {/* 3. Containers on Chassis */}
             <View style={styles.containersListBox}>
               <View style={styles.containersListHeader}>
-                <Ionicons name="cube" size={14} color="#00e5ff" />
+                <Ionicons name="cube" size={14} color="#2563EB" />
                 <Text style={styles.containersListTitle}>
                   LOADED CONTAINERS ({activeTrip.containers?.length || 1})
                 </Text>
@@ -948,9 +948,9 @@ export default function DriverHomeDashboard() {
                       flexDirection: 'row',
                       alignItems: 'center',
                       gap: 6,
-                      backgroundColor: isDual ? 'rgba(0, 229, 255, 0.1)' : 'rgba(34, 239, 126, 0.1)',
+                      backgroundColor: isDual ? '#EFF6FF' : 'rgba(34, 239, 126, 0.1)',
                       borderWidth: 1,
-                      borderColor: isDual ? 'rgba(0, 229, 255, 0.35)' : 'rgba(34, 239, 126, 0.35)',
+                      borderColor: isDual ? '#EFF6FF' : 'rgba(34, 239, 126, 0.35)',
                       borderRadius: 6,
                       paddingHorizontal: 8,
                       paddingVertical: 5,
@@ -960,9 +960,9 @@ export default function DriverHomeDashboard() {
                     <Ionicons
                       name={isDual ? "swap-horizontal" : "checkmark-circle"}
                       size={13}
-                      color={isDual ? "#00e5ff" : "#22ef7e"}
+                      color={isDual ? "#2563EB" : "#22ef7e"}
                     />
-                    <Text style={{ fontSize: 11, fontWeight: '700', color: isDual ? '#00e5ff' : '#22ef7e', flex: 1 }}>
+                    <Text style={{ fontSize: 11, fontWeight: '700', color: isDual ? '#2563EB' : '#22ef7e', flex: 1 }}>
                       {isDual
                         ? `DUAL DISCHARGE TERMINALS: ${termStr}`
                         : `DISCHARGE TERMINAL: ${termStr}`}
@@ -1019,7 +1019,7 @@ export default function DriverHomeDashboard() {
                   {/* Card Header Strip */}
                   <View style={styles.pendingCardHeaderStrip}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                      <Ionicons name="shield-checkmark" size={13} color="#00e5ff" />
+                      <Ionicons name="shield-checkmark" size={13} color="#2563EB" />
                       <Text style={styles.pendingCardHeaderTitle}>
                         SLPA PORT CLEARANCE MANIFEST
                       </Text>
@@ -1082,7 +1082,7 @@ export default function DriverHomeDashboard() {
                   {/* Full-Width Driver Remarks Box */}
                   <View style={styles.driverRemarksCallout}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 3 }}>
-                      <Ionicons name="chatbubble-ellipses" size={12} color="#00e5ff" />
+                      <Ionicons name="chatbubble-ellipses" size={12} color="#2563EB" />
                       <Text style={styles.driverRemarksCalloutLabel}>DRIVER COMPLETION NOTES</Text>
                     </View>
                     <Text style={styles.driverRemarksCalloutText}>
@@ -1126,7 +1126,7 @@ export default function DriverHomeDashboard() {
                   onPress={() => router.push('/(driver)/trips/new')}
                   activeOpacity={0.88}
                 >
-                  <Ionicons name="add-circle" size={22} color="#00363d" />
+                  <Ionicons name="add-circle" size={22} color="#FFFFFF" />
                   <Text style={styles.startTripPrimaryBtnText}>START NEXT TRIP</Text>
                 </TouchableOpacity>
               </View>
@@ -1136,7 +1136,7 @@ export default function DriverHomeDashboard() {
             {activeTrip.status === 'IN_PROGRESS' && (
               <View style={styles.notificationBannerInProgress}>
                 <View style={styles.notificationBannerHeader}>
-                  <Ionicons name="navigate-circle" size={22} color="#00e5ff" />
+                  <Ionicons name="navigate-circle" size={22} color="#2563EB" />
                   <Text style={styles.notificationBannerTitleInProgress}>
                     TRIP IN TRANSIT TO {getTripDischargeTerminal(activeTrip)}
                   </Text>
@@ -1152,10 +1152,10 @@ export default function DriverHomeDashboard() {
                   activeOpacity={0.88}
                 >
                   {actionInProgress ? (
-                    <ActivityIndicator color="#00363d" size="small" />
+                    <ActivityIndicator color="#FFFFFF" size="small" />
                   ) : (
                     <>
-                      <Ionicons name="location" size={24} color="#00363d" />
+                      <Ionicons name="location" size={24} color="#FFFFFF" />
                       <Text style={styles.arriveTerminalBtnText}>
                         ARRIVED AT TERMINAL ({getTripDischargeTerminal(activeTrip)})
                       </Text>
@@ -1179,16 +1179,16 @@ export default function DriverHomeDashboard() {
                 </Text>
 
                 <TouchableOpacity
-                  style={[styles.completeTripBtn, { backgroundColor: '#00e5ff', marginTop: 10 }]}
+                  style={[styles.completeTripBtn, { backgroundColor: '#2563EB', marginTop: 10 }]}
                   onPress={() => handleOpenDischargeModal(activeTrip)}
                   disabled={actionInProgress}
                   activeOpacity={0.88}
                 >
                   {actionInProgress ? (
-                    <ActivityIndicator color="#00363d" size="small" />
+                    <ActivityIndicator color="#FFFFFF" size="small" />
                   ) : (
                     <>
-                      <Ionicons name="paper-plane" size={18} color="#00363d" />
+                      <Ionicons name="paper-plane" size={18} color="#FFFFFF" />
                       <Text style={[styles.completeTripBtnText, { color: '#FFFFFF' }]}>
                         DISCHARGE & SUBMIT FOR SUPERVISOR APPROVAL
                       </Text>
@@ -1216,7 +1216,7 @@ export default function DriverHomeDashboard() {
                   onPress={() => router.push('/(driver)/trips/new')}
                   activeOpacity={0.88}
                 >
-                  <Ionicons name="add-circle" size={22} color="#00363d" />
+                  <Ionicons name="add-circle" size={22} color="#FFFFFF" />
                   <Text style={styles.startTripPrimaryBtnText}>START NEXT TRIP</Text>
                 </TouchableOpacity>
               </View>
@@ -1230,7 +1230,7 @@ export default function DriverHomeDashboard() {
               You currently have no mission in progress. Tap below to enter trip details and container numbers to begin.
             </Text>
             <TouchableOpacity style={styles.startManualBtn} onPress={() => router.push('/(driver)/trips/new')}>
-              <Ionicons name="add-circle" size={18} color="#00363d" />
+              <Ionicons name="add-circle" size={18} color="#FFFFFF" />
               <Text style={styles.startManualBtnText}>CREATE NEW TRIP</Text>
             </TouchableOpacity>
           </View>
@@ -1243,7 +1243,7 @@ export default function DriverHomeDashboard() {
           activeOpacity={0.88}
         >
           <View style={styles.prominentAddIconCircle}>
-            <Ionicons name="trail-sign" size={20} color="#00363d" />
+            <Ionicons name="trail-sign" size={20} color="#FFFFFF" />
           </View>
           <View style={{ flex: 1 }}>
             <Text style={styles.prominentAddTitle}>CREATE NEW TRIP</Text>
@@ -1251,13 +1251,13 @@ export default function DriverHomeDashboard() {
               Enter vessel, origin, destination and container numbers with ISO 6346 verification
             </Text>
           </View>
-          <Ionicons name="chevron-forward" size={20} color="#00e5ff" />
+          <Ionicons name="chevron-forward" size={20} color="#2563EB" />
         </TouchableOpacity>
 
         {/* ─── E. 8-STAGE WORKFLOW PROGRESS TRACKER ─── */}
         <View style={styles.progressTrackerCard}>
           <View style={styles.trackerHeader}>
-            <Ionicons name="git-commit" size={16} color="#00e5ff" />
+            <Ionicons name="git-commit" size={16} color="#2563EB" />
             <Text style={styles.trackerTitle}>8-STAGE INTER-TERMINAL WORKFLOW</Text>
           </View>
 
@@ -1283,7 +1283,7 @@ export default function DriverHomeDashboard() {
                   <Ionicons
                     name={stage.done ? 'checkmark' : 'ellipse'}
                     size={10}
-                    color={stage.done ? '#00363d' : '#849396'}
+                    color={stage.done ? '#FFFFFF' : '#849396'}
                   />
                 </View>
                 <Text
@@ -1307,7 +1307,7 @@ export default function DriverHomeDashboard() {
                   style={styles.stageActionBtn}
                   onPress={() => handleTransitionTripStage('IN_PROGRESS', 'Trip Started')}
                 >
-                  <Ionicons name="play" size={14} color="#00363d" />
+                  <Ionicons name="play" size={14} color="#FFFFFF" />
                   <Text style={styles.stageActionBtnText}>START TRIP</Text>
                 </TouchableOpacity>
               )}
@@ -1316,7 +1316,7 @@ export default function DriverHomeDashboard() {
                   style={styles.stageActionBtn}
                   onPress={() => handleTransitionTripStage('ARRIVED', 'Arrived at Destination')}
                 >
-                  <Ionicons name="flag" size={14} color="#00363d" />
+                  <Ionicons name="flag" size={14} color="#FFFFFF" />
                   <Text style={styles.stageActionBtnText}>MARK ARRIVAL</Text>
                 </TouchableOpacity>
               )}
@@ -1325,7 +1325,7 @@ export default function DriverHomeDashboard() {
                   style={styles.stageActionBtn}
                   onPress={() => handleTransitionTripStage('HANDOVER_CONFIRMED', 'Handover Confirmed')}
                 >
-                  <Ionicons name="checkmark-done" size={14} color="#00363d" />
+                  <Ionicons name="checkmark-done" size={14} color="#FFFFFF" />
                   <Text style={styles.stageActionBtnText}>CONFIRM HANDOVER</Text>
                 </TouchableOpacity>
               )}
@@ -1334,7 +1334,7 @@ export default function DriverHomeDashboard() {
                   style={styles.stageActionBtn}
                   onPress={() => handleTransitionTripStage('PENDING_APPROVAL', 'Submitted for Approval')}
                 >
-                  <Ionicons name="send" size={14} color="#00363d" />
+                  <Ionicons name="send" size={14} color="#FFFFFF" />
                   <Text style={styles.stageActionBtnText}>SUBMIT FOR APPROVAL</Text>
                 </TouchableOpacity>
               )}
@@ -1348,7 +1348,7 @@ export default function DriverHomeDashboard() {
           <View style={styles.quickActionsGrid}>
             <TouchableOpacity style={styles.quickActionTile} onPress={() => router.push('/(driver)/trips/new')}>
               <View style={[styles.tileIconCircle, { backgroundColor: '#EFF6FF' }]}>
-                <Ionicons name="add-circle" size={20} color="#00e5ff" />
+                <Ionicons name="add-circle" size={20} color="#2563EB" />
               </View>
               <Text style={styles.tileTitle}>New Trip</Text>
             </TouchableOpacity>
@@ -1383,7 +1383,7 @@ export default function DriverHomeDashboard() {
 
             <TouchableOpacity style={styles.quickActionTile} onPress={() => setSupervisorModalVisible(true)}>
               <View style={[styles.tileIconCircle, { backgroundColor: '#EFF6FF' }]}>
-                <Ionicons name="chatbubbles" size={20} color="#00e5ff" />
+                <Ionicons name="chatbubbles" size={20} color="#2563EB" />
               </View>
               <Text style={styles.tileTitle}>Supervisor</Text>
             </TouchableOpacity>
@@ -1509,7 +1509,7 @@ export default function DriverHomeDashboard() {
           <View style={styles.modalCard}>
             <View style={styles.modalHeader}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <Ionicons name="chatbubbles" size={20} color="#00e5ff" />
+                <Ionicons name="chatbubbles" size={20} color="#2563EB" />
                 <Text style={styles.modalTitle}>PORT SUPERVISOR DISPATCH</Text>
               </View>
               <TouchableOpacity onPress={() => setSupervisorModalVisible(false)}>
@@ -1518,7 +1518,7 @@ export default function DriverHomeDashboard() {
             </View>
 
             <View style={styles.notifItem}>
-              <Ionicons name="person-circle" size={28} color="#00e5ff" />
+              <Ionicons name="person-circle" size={28} color="#2563EB" />
               <View style={{ flex: 1 }}>
                 <Text style={styles.notifTitle}>Nimal Silva (Duty Supervisor)</Text>
                 <Text style={styles.notifSub}>Terminal Control Tower · Extension 402</Text>
@@ -1542,7 +1542,7 @@ export default function DriverHomeDashboard() {
           <View style={[styles.modalCard, { maxWidth: 460 }]}>
             <View style={styles.modalHeader}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <Ionicons name="document-text" size={20} color="#00e5ff" />
+                <Ionicons name="document-text" size={20} color="#2563EB" />
                 <Text style={styles.modalTitle}>DISCHARGE & SUPERVISOR CLEARANCE</Text>
               </View>
               <TouchableOpacity onPress={() => setDischargeModalVisible(false)}>
@@ -1558,7 +1558,7 @@ export default function DriverHomeDashboard() {
             <View style={styles.dischargeTripContextStrip}>
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                  <Ionicons name="git-network" size={13} color="#00e5ff" />
+                  <Ionicons name="git-network" size={13} color="#2563EB" />
                   <Text style={styles.dischargeTripContextId}>
                     TRIP #{activeTrip?.tripNumber || activeTrip?.id?.slice(0, 8)}
                   </Text>
@@ -1599,7 +1599,7 @@ export default function DriverHomeDashboard() {
             <View style={{ gap: 4 }}>
               <Text style={styles.modalLabel}>DISCHARGE BAY / CRANE SLOT</Text>
               <View style={styles.inputWrap}>
-                <Ionicons name="location-outline" size={16} color="#00e5ff" />
+                <Ionicons name="location-outline" size={16} color="#2563EB" />
                 <TextInput
                   style={styles.modalInput}
                   placeholder="e.g. Bay 04, Crane 02 / Block C-14"
@@ -1639,7 +1639,7 @@ export default function DriverHomeDashboard() {
                   <Ionicons
                     name="shield-checkmark"
                     size={15}
-                    color={sealStatus === 'INTACT (VERIFIED)' ? '#00363d' : '#22ef7e'}
+                    color={sealStatus === 'INTACT (VERIFIED)' ? '#FFFFFF' : '#22ef7e'}
                   />
                   <Text
                     style={[
@@ -1691,7 +1691,7 @@ export default function DriverHomeDashboard() {
                   <Ionicons
                     name="checkmark-circle"
                     size={15}
-                    color={cargoDamageStatus === 'NONE' ? '#00363d' : '#22ef7e'}
+                    color={cargoDamageStatus === 'NONE' ? '#FFFFFF' : '#22ef7e'}
                   />
                   <Text
                     style={[
@@ -1745,16 +1745,16 @@ export default function DriverHomeDashboard() {
 
             {/* Submit Action */}
             <TouchableOpacity
-              style={[styles.modalSubmitBtn, { backgroundColor: '#00e5ff', marginTop: 4 }]}
+              style={[styles.modalSubmitBtn, { backgroundColor: '#2563EB', marginTop: 4 }]}
               onPress={() => activeTrip && handleSubmitDischargeToSupervisor(activeTrip.id)}
               disabled={actionInProgress}
               activeOpacity={0.88}
             >
               {actionInProgress ? (
-                <ActivityIndicator color="#00363d" size="small" />
+                <ActivityIndicator color="#FFFFFF" size="small" />
               ) : (
                 <>
-                  <Ionicons name="paper-plane" size={18} color="#00363d" />
+                  <Ionicons name="paper-plane" size={18} color="#FFFFFF" />
                   <Text style={[styles.modalSubmitBtnText, { color: '#FFFFFF', fontWeight: '900' }]}>
                     SUBMIT FOR SUPERVISOR APPROVAL
                   </Text>
@@ -1864,7 +1864,7 @@ export default function DriverHomeDashboard() {
                   backgroundColor: '#0d1625',
                   borderRadius: 6,
                   borderLeftWidth: 3,
-                  borderLeftColor: '#00e5ff',
+                  borderLeftColor: '#2563EB',
                   padding: 8,
                   marginTop: 2,
                 }}>
@@ -1908,7 +1908,7 @@ export default function DriverHomeDashboard() {
               onPress={() => setSubmissionReceiptVisible(false)}
               activeOpacity={0.88}
             >
-              <Ionicons name="checkmark-done" size={18} color="#00363d" />
+              <Ionicons name="checkmark-done" size={18} color="#FFFFFF" />
               <Text style={[styles.modalSubmitBtnText, { color: '#FFFFFF', fontWeight: '900' }]}>
                 VIEW IN DASHBOARD
               </Text>
@@ -1923,7 +1923,7 @@ export default function DriverHomeDashboard() {
           {/* Animated Confetti Particles */}
           <View style={styles.confettiContainer} pointerEvents="none">
             {Array.from({ length: 20 }).map((_, i) => {
-              const confColors = ['#feb300', '#00e5ff', '#22ef7e', '#ff4081', '#e040fb', '#ffffff'];
+              const confColors = ['#feb300', '#2563EB', '#22ef7e', '#ff4081', '#e040fb', '#ffffff'];
               const confColor = confColors[i % confColors.length];
               const leftPercent = `${(i * 5) + 2}%`;
               const translateY = confettiAnim.interpolate({
@@ -2006,7 +2006,7 @@ export default function DriverHomeDashboard() {
 
             {/* Congratulatory Tag */}
             <View style={styles.celebrationTagBadge}>
-              <Ionicons name="sparkles" size={12} color="#00363d" />
+              <Ionicons name="sparkles" size={12} color="#FFFFFF" />
               <Text style={styles.celebrationTagBadgeText}>MILESTONE UNLOCKED</Text>
             </View>
 
@@ -2060,7 +2060,7 @@ export default function DriverHomeDashboard() {
               activeOpacity={0.85}
               onPress={() => setCelebrationModalVisible(false)}
             >
-              <Ionicons name="rocket" size={18} color="#00363d" />
+              <Ionicons name="rocket" size={18} color="#FFFFFF" />
               <Text style={styles.celebrationActionBtnText}>CONTINUE MISSIONS</Text>
             </TouchableOpacity>
           </Animated.View>
@@ -2104,7 +2104,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: '#00e5ff',
+    backgroundColor: '#2563EB',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -2575,7 +2575,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 5,
     borderWidth: 1,
-    borderColor: 'rgba(0, 229, 255, 0.2)',
+    borderColor: '#EFF6FF',
   },
   missionTripInfoText: {
     color: '#849396',
@@ -2621,7 +2621,7 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#00e5ff',
+    backgroundColor: '#2563EB',
   },
   activeTripIdText: {
     color: '#2563EB',
@@ -2741,7 +2741,7 @@ const styles = StyleSheet.create({
   continueTripBtn: {
     flex: 1,
     height: 44,
-    backgroundColor: '#00e5ff',
+    backgroundColor: '#2563EB',
     borderRadius: 10,
     flexDirection: 'row',
     alignItems: 'center',
@@ -2798,7 +2798,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: '#00e5ff',
+    backgroundColor: '#2563EB',
     borderRadius: 10,
     paddingHorizontal: 16,
     paddingVertical: 10,
@@ -2825,7 +2825,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 12,
-    backgroundColor: '#00e5ff',
+    backgroundColor: '#2563EB',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -2911,7 +2911,7 @@ const styles = StyleSheet.create({
   },
   stageActionBtn: {
     height: 40,
-    backgroundColor: '#00e5ff',
+    backgroundColor: '#2563EB',
     borderRadius: radius.DEFAULT,
     flexDirection: 'row',
     alignItems: 'center',
@@ -3059,7 +3059,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   fixDigitBtn: {
-    backgroundColor: '#00e5ff',
+    backgroundColor: '#2563EB',
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 4,
@@ -3222,7 +3222,7 @@ const styles = StyleSheet.create({
   },
   modalSubmitBtn: {
     height: 48,
-    backgroundColor: '#00e5ff',
+    backgroundColor: '#2563EB',
     borderRadius: radius.DEFAULT,
     flexDirection: 'row',
     alignItems: 'center',
@@ -3309,7 +3309,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   hudMissionBadge: {
-    backgroundColor: '#00e5ff',
+    backgroundColor: '#2563EB',
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 4,
@@ -3400,7 +3400,7 @@ const styles = StyleSheet.create({
   hudTurnGuidanceBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#00e5ff',
+    backgroundColor: '#2563EB',
     borderRadius: radius.DEFAULT,
     padding: 12,
     gap: 12,
@@ -3502,7 +3502,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#00e5ff',
+    backgroundColor: '#2563EB',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -3661,7 +3661,7 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 4,
-    backgroundColor: '#00e5ff',
+    backgroundColor: '#2563EB',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -3685,7 +3685,7 @@ const styles = StyleSheet.create({
     fontWeight: '900',
   },
   activeTagMini: {
-    backgroundColor: 'rgba(0, 229, 255, 0.2)',
+    backgroundColor: '#EFF6FF',
     paddingHorizontal: 4,
     borderRadius: 2,
   },
@@ -3780,13 +3780,13 @@ const styles = StyleSheet.create({
   },
   batteryProgressFill: {
     height: '100%',
-    backgroundColor: '#00e5ff',
+    backgroundColor: '#2563EB',
   },
 
   // Glove-Optimized Controls
   glovePrimaryBtn: {
     height: 56,
-    backgroundColor: '#00e5ff',
+    backgroundColor: '#2563EB',
     borderRadius: radius.DEFAULT,
     flexDirection: 'row',
     alignItems: 'center',
@@ -3839,11 +3839,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: radius.DEFAULT,
     borderWidth: 1,
-    borderColor: 'rgba(0, 229, 255, 0.25)',
+    borderColor: '#EFF6FF',
     padding: 16,
     gap: 14,
     marginBottom: 16,
-    shadowColor: '#00e5ff',
+    shadowColor: '#2563EB',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
     shadowRadius: 10,
@@ -3919,7 +3919,7 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: '#00e5ff',
+    backgroundColor: '#2563EB',
   },
   statusPillTextProgress: {
     color: '#2563EB',
@@ -3931,7 +3931,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    backgroundColor: 'rgba(0, 229, 255, 0.2)',
+    backgroundColor: '#EFF6FF',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 6,
@@ -4038,7 +4038,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#EFF6FF',
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: 'rgba(0, 229, 255, 0.25)',
+    borderColor: '#EFF6FF',
     paddingHorizontal: 8,
     paddingVertical: 5,
     marginBottom: 4,
@@ -4061,7 +4061,7 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
     borderRadius: 4,
-    backgroundColor: '#00e5ff',
+    backgroundColor: '#2563EB',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -4186,7 +4186,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.6,
   },
   arriveTerminalBtn: {
-    backgroundColor: '#00e5ff',
+    backgroundColor: '#2563EB',
     height: 52,
     borderRadius: radius.DEFAULT,
     flexDirection: 'row',
@@ -4194,7 +4194,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 10,
     elevation: 4,
-    shadowColor: '#00e5ff',
+    shadowColor: '#2563EB',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.35,
     shadowRadius: 6,
@@ -4440,10 +4440,10 @@ const styles = StyleSheet.create({
     color: '#1E293B',
   },
   driverRemarksCallout: {
-    backgroundColor: '#0c1421',
+    backgroundColor: '#F8FAFC',
     borderRadius: 6,
     borderLeftWidth: 3,
-    borderLeftColor: '#00e5ff',
+    borderLeftColor: '#2563EB',
     paddingHorizontal: 10,
     paddingVertical: 7,
   },
@@ -4476,7 +4476,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#09101c',
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: 'rgba(0, 229, 255, 0.25)',
+    borderColor: '#EFF6FF',
     padding: 8,
     gap: 3,
   },
@@ -4537,13 +4537,13 @@ const styles = StyleSheet.create({
   presetChip: {
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: 'rgba(0, 229, 255, 0.25)',
+    borderColor: '#EFF6FF',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 6,
   },
   presetChipActive: {
-    backgroundColor: 'rgba(0, 229, 255, 0.2)',
+    backgroundColor: '#EFF6FF',
     borderColor: '#2563EB',
   },
   presetChipText: {

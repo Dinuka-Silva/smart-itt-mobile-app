@@ -129,8 +129,8 @@ export default function SupervisorMissionDispatcher() {
           selected: true,
           startingDay: isStart,
           endingDay: isEnd,
-          color: isStart || isEnd ? '#00e5ff' : 'rgba(0, 229, 255, 0.22)',
-          textColor: isStart || isEnd ? '#070c14' : '#00e5ff',
+          color: isStart || isEnd ? '#2563EB' : '#EFF6FF',
+          textColor: isStart || isEnd ? '#F8FAFC' : '#2563EB',
         };
         curDate.setDate(curDate.getDate() + 1);
       }
@@ -140,7 +140,7 @@ export default function SupervisorMissionDispatcher() {
         startingDay: true,
         endingDay: true,
         color: '#2563EB',
-        textColor: '#070c14',
+        textColor: '#F8FAFC',
       };
     }
     return marks;
@@ -528,7 +528,7 @@ export default function SupervisorMissionDispatcher() {
           },
         ]}
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#00e5ff" />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#2563EB" />}
         keyboardShouldPersistTaps="handled"
       >
         {/* ─── A. SUPERVISOR HEADER ─── */}
@@ -557,7 +557,7 @@ export default function SupervisorMissionDispatcher() {
         {/* ─── B. LIVE METRICS SUMMARY ROW ─── */}
         <View style={styles.summaryHeaderRow}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-            <Ionicons name="bar-chart" size={15} color="#00e5ff" />
+            <Ionicons name="bar-chart" size={15} color="#2563EB" />
             <Text style={styles.summaryHeaderTitle}>TRIP SUMMARY METRICS</Text>
           </View>
           <TouchableOpacity
@@ -565,9 +565,9 @@ export default function SupervisorMissionDispatcher() {
             onPress={() => setDateRangeModalVisible(true)}
             activeOpacity={0.8}
           >
-            <Ionicons name="calendar-outline" size={12} color="#00e5ff" />
+            <Ionicons name="calendar-outline" size={12} color="#2563EB" />
             <Text style={styles.summaryDateBadgeText} numberOfLines={1}>{activePeriodLabel}</Text>
-            <Ionicons name="chevron-down" size={12} color="#00e5ff" />
+            <Ionicons name="chevron-down" size={12} color="#2563EB" />
           </TouchableOpacity>
         </View>
 
@@ -575,7 +575,7 @@ export default function SupervisorMissionDispatcher() {
           <View style={styles.metricCard}>
             <View style={styles.metricCardHeader}>
               <Text style={styles.metricLabel}>TOTAL TRIPS</Text>
-              <Ionicons name="swap-horizontal" size={14} color="#00e5ff" />
+              <Ionicons name="swap-horizontal" size={14} color="#2563EB" />
             </View>
             <Text style={[styles.metricValue, { color: '#2563EB' }]}>{countTotal}</Text>
             <Text style={styles.metricSub}>{totalContainersDispatched} Containers Dispatched</Text>
@@ -612,7 +612,7 @@ export default function SupervisorMissionDispatcher() {
         {/* ─── C. TRIP MONITORING WITH SEARCH & FILTERS ─── */}
         <View style={styles.sectionWrap}>
           <View style={styles.sectionTitleRow}>
-            <Ionicons name="pulse" size={18} color="#00e5ff" />
+            <Ionicons name="pulse" size={18} color="#2563EB" />
             <Text style={styles.sectionTitle}>
               INTER-TERMINAL TRIP MONITORING ({filteredTrips.length})
             </Text>
@@ -694,7 +694,7 @@ export default function SupervisorMissionDispatcher() {
                 activeOpacity={0.85}
               >
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 }}>
-                  <Ionicons name="calendar" size={14} color="#00e5ff" />
+                  <Ionicons name="calendar" size={14} color="#2563EB" />
                   <Text style={styles.activeRangeBannerText}>
                     {dateRangeStart && dateRangeEnd
                       ? `Range: ${formatFriendlyDate(dateRangeStart)}  ➔  ${formatFriendlyDate(dateRangeEnd)}`
@@ -791,7 +791,7 @@ export default function SupervisorMissionDispatcher() {
           {/* List of Trip Monitoring Cards Grouped Date-Wise */}
           <View style={{ gap: 14, marginTop: 4 }}>
             {loading ? (
-              <ActivityIndicator size="large" color="#00e5ff" style={{ marginVertical: 20 }} />
+              <ActivityIndicator size="large" color="#2563EB" style={{ marginVertical: 20 }} />
             ) : tripsByDate.length === 0 ? (
               <View style={styles.emptyPendingCard}>
                 <Ionicons name="file-tray-outline" size={28} color="#849396" />
@@ -806,7 +806,7 @@ export default function SupervisorMissionDispatcher() {
                   {/* Date Section Header */}
                   <View style={styles.dateGroupHeader}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                      <Ionicons name="calendar" size={14} color="#00e5ff" />
+                      <Ionicons name="calendar" size={14} color="#2563EB" />
                       <Text style={styles.dateGroupTitle}>{group.displayDate.toUpperCase()}</Text>
                       {group.isToday && (
                         <View style={styles.todayPill}>
@@ -875,11 +875,11 @@ export default function SupervisorMissionDispatcher() {
                           {/* Route Row */}
                           <View style={styles.monRouteBox}>
                             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                              <Ionicons name="boat" size={13} color="#00e5ff" />
+                              <Ionicons name="boat" size={13} color="#2563EB" />
                               <Text style={styles.monRouteText}>
                                 {t.sourceTerminal || 'CICT'}
                               </Text>
-                              <Ionicons name="arrow-forward" size={13} color="#00e5ff" />
+                              <Ionicons name="arrow-forward" size={13} color="#2563EB" />
                               <Text style={styles.monRouteText}>
                                 {getTripDischargeTerminal(t)}
                               </Text>
@@ -896,7 +896,7 @@ export default function SupervisorMissionDispatcher() {
                               <View style={styles.monTimingPanel}>
                                 <View style={styles.monTimingCol}>
                                   <View style={styles.monTimingHeader}>
-                                    <Ionicons name="play-circle" size={12} color="#00e5ff" />
+                                    <Ionicons name="play-circle" size={12} color="#2563EB" />
                                     <Text style={styles.monTimingLabel}>STARTED DATE & TIME</Text>
                                   </View>
                                   <Text style={styles.monTimingDate}>{timing.startDate}</Text>
@@ -957,7 +957,7 @@ export default function SupervisorMissionDispatcher() {
                           {/* Container Manifest Chips */}
                           {t.containers && t.containers.length > 0 && (
                             <View style={styles.monContainersRow}>
-                              <Ionicons name="cube" size={13} color="#00e5ff" />
+                              <Ionicons name="cube" size={13} color="#2563EB" />
                               <Text style={styles.monContainersText}>
                                 {t.containers.map((c: any) => `${c.containerNumber} (${c.size || '20FT'} ➔ ${c.destTerminal || getTripDischargeTerminal(t)})`).join('  •  ')}
                               </Text>
@@ -970,14 +970,14 @@ export default function SupervisorMissionDispatcher() {
                               backgroundColor: '#0a101d',
                               borderRadius: 10,
                               borderWidth: 1,
-                              borderColor: 'rgba(0, 229, 255, 0.25)',
+                              borderColor: '#EFF6FF',
                               padding: 10,
                               gap: 8,
                               marginTop: 6,
                             }}>
                               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingBottom: 4, borderBottomWidth: 1, borderBottomColor: '#E2E8F0' }}>
                                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
-                                  <Ionicons name="shield-checkmark" size={13} color="#00e5ff" />
+                                  <Ionicons name="shield-checkmark" size={13} color="#2563EB" />
                                   <Text style={{ fontSize: 9.5, fontWeight: '900', color: '#2563EB', letterSpacing: 0.4 }}>
                                     DRIVER DISCHARGE & SEAL VERIFICATION
                                   </Text>
@@ -1050,10 +1050,10 @@ export default function SupervisorMissionDispatcher() {
 
                               {/* Full width remarks */}
                               <View style={{
-                                backgroundColor: '#0c1421',
+                                backgroundColor: '#F8FAFC',
                                 borderRadius: 6,
                                 borderLeftWidth: 3,
-                                borderLeftColor: '#00e5ff',
+                                borderLeftColor: '#2563EB',
                                 paddingHorizontal: 8,
                                 paddingVertical: 6,
                               }}>
@@ -1074,7 +1074,7 @@ export default function SupervisorMissionDispatcher() {
                                 style={styles.approveBtn}
                                 onPress={() => handleDischargeAndComplete(t)}
                               >
-                                <Ionicons name="shield-checkmark" size={14} color="#00363d" />
+                                <Ionicons name="shield-checkmark" size={14} color="#FFFFFF" />
                                 <Text style={styles.approveBtnText}>
                                   {isPending ? 'APPROVE & DISCHARGE GATE PASS' : 'DISCHARGE & COMPLETE TRIP'}
                                 </Text>
@@ -1161,7 +1161,7 @@ export default function SupervisorMissionDispatcher() {
             {/* Header */}
             <View style={styles.modalHeader}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <Ionicons name="calendar" size={18} color="#00e5ff" />
+                <Ionicons name="calendar" size={18} color="#2563EB" />
                 <Text style={styles.modalTitle}>FILTER BY DATE RANGE</Text>
               </View>
               <TouchableOpacity
@@ -1199,7 +1199,7 @@ export default function SupervisorMissionDispatcher() {
                   {dateRangeStart ? formatFriendlyDate(dateRangeStart) : 'Select Start'}
                 </Text>
               </View>
-              <Ionicons name="arrow-forward" size={16} color="#00e5ff" />
+              <Ionicons name="arrow-forward" size={16} color="#2563EB" />
               <View style={styles.rangeDateCol}>
                 <Text style={styles.rangeDateLabel}>END DATE</Text>
                 <Text style={styles.rangeDateVal}>
@@ -1220,16 +1220,16 @@ export default function SupervisorMissionDispatcher() {
                 onDayPress={(day) => handleDayPress(day.dateString)}
                 theme={{
                   backgroundColor: '#FFFFFF',
-                  calendarBackground: '#0c1524',
+                  calendarBackground: '#FFFFFF',
                   textSectionTitleColor: '#849396',
-                  selectedDayBackgroundColor: '#00e5ff',
-                  selectedDayTextColor: '#070c14',
-                  todayTextColor: '#00e5ff',
+                  selectedDayBackgroundColor: '#2563EB',
+                  selectedDayTextColor: '#F8FAFC',
+                  todayTextColor: '#2563EB',
                   dayTextColor: '#dde2f0',
                   textDisabledColor: '#323f4b',
-                  arrowColor: '#00e5ff',
-                  monthTextColor: '#00e5ff',
-                  indicatorColor: '#00e5ff',
+                  arrowColor: '#2563EB',
+                  monthTextColor: '#2563EB',
+                  indicatorColor: '#2563EB',
                   textDayFontWeight: '600',
                   textMonthFontWeight: '800',
                   textDayHeaderFontWeight: '700',
@@ -1262,7 +1262,7 @@ export default function SupervisorMissionDispatcher() {
                   setDateRangeModalVisible(false);
                 }}
               >
-                <Ionicons name="checkmark-done" size={15} color="#002022" />
+                <Ionicons name="checkmark-done" size={15} color="#FFFFFF" />
                 <Text style={styles.calendarApplyBtnText}>APPLY FILTER</Text>
               </TouchableOpacity>
             </View>
@@ -1355,7 +1355,7 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: '#00e5ff',
+    backgroundColor: '#2563EB',
   },
   onlineText: {
     fontSize: 9,
@@ -1501,7 +1501,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   todayPill: {
-    backgroundColor: '#00e5ff',
+    backgroundColor: '#2563EB',
     paddingHorizontal: 5,
     paddingVertical: 1,
     borderRadius: 3,
@@ -1632,7 +1632,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderWidth: 1,
-    borderColor: 'rgba(0, 229, 255, 0.25)',
+    borderColor: '#EFF6FF',
   },
   monRouteTagText: {
     fontSize: 9,
@@ -1761,7 +1761,7 @@ const styles = StyleSheet.create({
   approveBtn: {
     flex: 1,
     height: 38,
-    backgroundColor: '#00e5ff',
+    backgroundColor: '#2563EB',
     borderRadius: radius.DEFAULT,
     flexDirection: 'row',
     alignItems: 'center',
@@ -1867,7 +1867,7 @@ const styles = StyleSheet.create({
     gap: 5,
     backgroundColor: '#EFF6FF',
     borderWidth: 1,
-    borderColor: 'rgba(0, 229, 255, 0.25)',
+    borderColor: '#EFF6FF',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 6,
@@ -1895,13 +1895,13 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   changeRangeBtn: {
-    backgroundColor: '#00e5ff',
+    backgroundColor: '#2563EB',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 4,
   },
   changeRangeBtnText: {
-    color: '#002022',
+    color: '#FFFFFF',
     fontSize: 10,
     fontWeight: '900',
     letterSpacing: 0.5,
@@ -1942,7 +1942,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     backgroundColor: '#F8FAFC',
     borderWidth: 1,
-    borderColor: 'rgba(0, 229, 255, 0.25)',
+    borderColor: '#EFF6FF',
     borderRadius: 10,
     paddingHorizontal: 14,
     paddingVertical: 10,
@@ -1999,10 +1999,10 @@ const styles = StyleSheet.create({
     gap: 6,
     height: 42,
     borderRadius: 10,
-    backgroundColor: '#00e5ff',
+    backgroundColor: '#2563EB',
   },
   calendarApplyBtnText: {
-    color: '#002022',
+    color: '#FFFFFF',
     fontSize: 12,
     fontWeight: '900',
     letterSpacing: 0.6,

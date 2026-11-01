@@ -40,7 +40,7 @@ export default function ForgotPasswordScreen() {
 
   // Determine role style dynamically from username
   const isSupervisor = username.trim().toUpperCase().startsWith('SUP');
-  const roleColor = isSupervisor ? '#feb300' : '#00e5ff';
+  const roleColor = isSupervisor ? '#feb300' : '#2563EB';
 
   const containerPadding = width > 768 ? 40 : 18;
   const contentMaxWidth = width > 768 ? 540 : '100%';
@@ -155,7 +155,7 @@ export default function ForgotPasswordScreen() {
             onPress={() => router.replace('/(auth)/login')}
             activeOpacity={0.7}
           >
-            <Ionicons name="arrow-back" size={18} color="#00e5ff" />
+            <Ionicons name="arrow-back" size={18} color="#2563EB" />
             <Text style={styles.backBtnText}>BACK TO LOGIN TERMINAL</Text>
           </TouchableOpacity>
 
@@ -175,11 +175,11 @@ export default function ForgotPasswordScreen() {
             <Text style={styles.quickBarLabel}>QUICK TEST AUTOFILL:</Text>
             <View style={{ flexDirection: 'row', gap: 8 }}>
               <TouchableOpacity
-                style={[styles.quickChip, { borderColor: 'rgba(0, 229, 255, 0.4)' }]}
+                style={[styles.quickChip, { borderColor: '#EFF6FF' }]}
                 onPress={() => handleQuickAutofill('DRIVER')}
               >
-                <Ionicons name="car-sport" size={12} color="#00e5ff" />
-                <Text style={[styles.quickChipText, { color: '#00e5ff' }]}>DRIVER (DRV-00001)</Text>
+                <Ionicons name="car-sport" size={12} color="#2563EB" />
+                <Text style={[styles.quickChipText, { color: '#2563EB' }]}>DRIVER (DRV-00001)</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.quickChip, { borderColor: 'rgba(254, 179, 0, 0.4)' }]}
@@ -274,13 +274,13 @@ export default function ForgotPasswordScreen() {
                 activeOpacity={0.85}
               >
                 {loading ? (
-                  <ActivityIndicator color={isSupervisor ? '#432c00' : '#00363d'} />
+                  <ActivityIndicator color={isSupervisor ? '#432c00' : '#FFFFFF'} />
                 ) : (
                   <>
                     <Ionicons
                       name="shield-checkmark-outline"
                       size={18}
-                      color={isSupervisor ? '#432c00' : '#00363d'}
+                      color={isSupervisor ? '#432c00' : '#FFFFFF'}
                     />
                     <Text
                       style={[
@@ -315,7 +315,7 @@ export default function ForgotPasswordScreen() {
                 </View>
 
                 <View style={[styles.sectionHeader, { marginTop: 18 }]}>
-                  <Ionicons name="lock-closed" size={18} color="#00e5ff" />
+                  <Ionicons name="lock-closed" size={18} color="#2563EB" />
                   <Text style={styles.sectionHeaderText}>2. ENTER NEW COCKPIT PASSWORD</Text>
                 </View>
 
@@ -323,7 +323,7 @@ export default function ForgotPasswordScreen() {
                 <View style={styles.fieldGroup}>
                   <Text style={styles.fieldLabel}>NEW PASSWORD (MIN 8 CHARS) *</Text>
                   <View style={styles.inputWrap}>
-                    <Ionicons name="key-outline" size={16} color="#00e5ff" style={styles.inputIcon} />
+                    <Ionicons name="key-outline" size={16} color="#2563EB" style={styles.inputIcon} />
                     <TextInput
                       style={[styles.input, { flex: 1 }]}
                       placeholder="Min 8 characters (A-Z, a-z, 0-9, symbol)"
@@ -350,7 +350,7 @@ export default function ForgotPasswordScreen() {
                 <View style={styles.fieldGroup}>
                   <Text style={styles.fieldLabel}>CONFIRM NEW PASSWORD *</Text>
                   <View style={styles.inputWrap}>
-                    <Ionicons name="key-outline" size={16} color="#00e5ff" style={styles.inputIcon} />
+                    <Ionicons name="key-outline" size={16} color="#2563EB" style={styles.inputIcon} />
                     <TextInput
                       style={[styles.input, { flex: 1 }]}
                       placeholder="Re-type new password"
@@ -456,7 +456,7 @@ export default function ForgotPasswordScreen() {
             </View>
             <Text style={styles.modalTitle}>PASSWORD RESET SUCCESSFUL</Text>
             <Text style={styles.modalDesc}>
-              Your credentials for operator <Text style={{ color: '#00e5ff', fontWeight: '800' }}>{username}</Text> have been updated.
+              Your credentials for operator <Text style={{ color: '#2563EB', fontWeight: '800' }}>{username}</Text> have been updated.
               You must now sign in using your newly updated password. Your previous old password is no longer valid.
             </Text>
 
@@ -465,7 +465,7 @@ export default function ForgotPasswordScreen() {
               onPress={navigateBackToLogin}
               activeOpacity={0.88}
             >
-              <Ionicons name="log-in-outline" size={18} color="#00363d" />
+              <Ionicons name="log-in-outline" size={18} color="#FFFFFF" />
               <Text style={styles.modalBtnText}>RETURN TO LOGIN TERMINAL</Text>
             </TouchableOpacity>
           </View>

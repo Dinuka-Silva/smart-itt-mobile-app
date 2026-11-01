@@ -369,7 +369,7 @@ export default function SupervisorDrivers() {
           },
         ]}
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#00e5ff" />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#2563EB" />}
         keyboardShouldPersistTaps="handled"
       >
         {/* ─── A. SUPERVISOR HEADER ─── */}
@@ -390,7 +390,7 @@ export default function SupervisorDrivers() {
           </View>
 
           <View style={styles.countPill}>
-            <Ionicons name="people" size={14} color="#00e5ff" />
+            <Ionicons name="people" size={14} color="#2563EB" />
             <Text style={styles.countPillText}>{drivers.length} DRIVERS</Text>
           </View>
         </View>
@@ -398,7 +398,7 @@ export default function SupervisorDrivers() {
         {/* ─── B. OPERATOR DIRECTORY SECTION ─── */}
         <View style={styles.sectionWrap}>
           <View style={styles.sectionTitleRow}>
-            <Ionicons name="shield-checkmark" size={18} color="#00e5ff" />
+            <Ionicons name="shield-checkmark" size={18} color="#2563EB" />
             <Text style={styles.sectionTitle}>
               REGISTERED PORT OPERATORS ({filteredDrivers.length})
             </Text>
@@ -413,7 +413,7 @@ export default function SupervisorDrivers() {
               </TouchableOpacity>
             )}
             <View style={{ marginLeft: 'auto', flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-              <Ionicons name="finger-print" size={13} color="#00e5ff" />
+              <Ionicons name="finger-print" size={13} color="#2563EB" />
               <Text style={{ color: '#2563EB', fontSize: 10, fontWeight: '800' }}>TAP FOR DOSSIER</Text>
             </View>
           </View>
@@ -440,7 +440,7 @@ export default function SupervisorDrivers() {
           {/* Drivers List */}
           <View style={{ gap: 10, marginTop: 4 }}>
             {loading ? (
-              <ActivityIndicator size="large" color="#00e5ff" style={{ marginVertical: 20 }} />
+              <ActivityIndicator size="large" color="#2563EB" style={{ marginVertical: 20 }} />
             ) : filteredDrivers.length === 0 ? (
               searchQuery.trim() ? (
                 <View style={styles.emptyCard}>
@@ -451,7 +451,7 @@ export default function SupervisorDrivers() {
               ) : (
                 <View style={styles.emptyCard}>
                   <View style={styles.emptyIconCircle}>
-                    <Ionicons name="people-outline" size={36} color="#00e5ff" />
+                    <Ionicons name="people-outline" size={36} color="#2563EB" />
                   </View>
                   <Text style={styles.emptyTitle}>NO DRIVERS REGISTERED YET</Text>
                   <Text style={styles.emptySub}>
@@ -465,7 +465,7 @@ export default function SupervisorDrivers() {
                     onPress={() => router.push('/(auth)/register?role=DRIVER')}
                     activeOpacity={0.8}
                   >
-                    <Ionicons name="person-add" size={15} color="#001529" style={{ marginRight: 6 }} />
+                    <Ionicons name="person-add" size={15} color="#FFFFFF" style={{ marginRight: 6 }} />
                     <Text style={styles.emptyRegisterBtnText}>REGISTER DRIVER ACCOUNT</Text>
                   </TouchableOpacity>
                 </View>
@@ -525,7 +525,7 @@ export default function SupervisorDrivers() {
                         </View>
                         {/* LOGIN USERNAME pill */}
                         <View style={styles.usernamePill}>
-                          <Ionicons name="key" size={10} color="#00e5ff" />
+                          <Ionicons name="key" size={10} color="#2563EB" />
                           <Text style={styles.usernamePillLabel}>LOGIN USERNAME:</Text>
                           <Text style={styles.usernamePillValue}>{drv.username || code}</Text>
                         </View>
@@ -561,7 +561,7 @@ export default function SupervisorDrivers() {
 
                       <View style={styles.specBox}>
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
-                          <Ionicons name="hardware-chip" size={10} color="#00e5ff" />
+                          <Ionicons name="hardware-chip" size={10} color="#2563EB" />
                           <Text style={styles.specKey}>CHE / CHASSIS</Text>
                         </View>
                         <Text style={[styles.specVal, { color: '#2563EB' }]}>
@@ -599,9 +599,9 @@ export default function SupervisorDrivers() {
                           flexDirection: 'row',
                           alignItems: 'center',
                           justifyContent: 'space-between',
-                          backgroundColor: isDue ? 'rgba(254, 179, 0, 0.08)' : 'rgba(0, 229, 255, 0.05)',
+                          backgroundColor: isDue ? 'rgba(254, 179, 0, 0.08)' : '#EFF6FF',
                           borderWidth: 1,
-                          borderColor: isDue ? 'rgba(254, 179, 0, 0.3)' : 'rgba(0, 229, 255, 0.15)',
+                          borderColor: isDue ? 'rgba(254, 179, 0, 0.3)' : '#EFF6FF',
                           borderRadius: radius.md,
                           paddingHorizontal: 10,
                           paddingVertical: 6,
@@ -610,9 +610,9 @@ export default function SupervisorDrivers() {
                           gap: 6,
                         }}>
                           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                            <Ionicons name="card" size={12} color={isDue ? '#feb300' : '#00e5ff'} />
+                            <Ionicons name="card" size={12} color={isDue ? '#feb300' : '#2563EB'} />
                             <Text style={{ fontSize: 11, fontWeight: '700', color: '#1E293B' }}>
-                              Driver Pass: <Text style={{ color: dDays <= 30 ? '#feb300' : '#00e5ff' }}>{dPass}</Text> ({dDays <= 0 ? 'EXPIRED' : `${dDays}d`})
+                              Driver Pass: <Text style={{ color: dDays <= 30 ? '#feb300' : '#2563EB' }}>{dPass}</Text> ({dDays <= 0 ? 'EXPIRED' : `${dDays}d`})
                             </Text>
                           </View>
                           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
@@ -657,7 +657,7 @@ export default function SupervisorDrivers() {
                         </Text>
                         {(drv.monthlyContainers || 50) >= 50 && (
                           <View style={styles.milestonePill}>
-                            <Ionicons name="trophy" size={10} color="#00363d" />
+                            <Ionicons name="trophy" size={10} color="#FFFFFF" />
                             <Text style={styles.milestonePillText}>50+ CONTAINERS MILESTONE</Text>
                           </View>
                         )}
@@ -687,7 +687,7 @@ export default function SupervisorDrivers() {
 
                         <View style={styles.viewDossierPill}>
                           <Text style={styles.viewDossierText}>VIEW DOSSIER</Text>
-                          <Ionicons name="chevron-forward" size={12} color="#00e5ff" />
+                          <Ionicons name="chevron-forward" size={12} color="#2563EB" />
                         </View>
                       </View>
                     </View>
@@ -715,7 +715,7 @@ export default function SupervisorDrivers() {
                 {/* Modal Header */}
                 <View style={styles.modalHeader}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
-                    <Ionicons name="document-text" size={18} color="#00e5ff" />
+                    <Ionicons name="document-text" size={18} color="#2563EB" />
                     <View>
                       <Text style={styles.modalHeaderTitle}>DRIVER SIGN-UP DOSSIER</Text>
                       <Text style={styles.modalHeaderSubtitle}>Official Port Logistics Registration Record</Text>
@@ -727,7 +727,7 @@ export default function SupervisorDrivers() {
                       onPress={() => handleOpenEditDriverModal(selectedDriver)}
                       activeOpacity={0.8}
                     >
-                      <Ionicons name="create-outline" size={13} color="#00e5ff" />
+                      <Ionicons name="create-outline" size={13} color="#2563EB" />
                       <Text style={styles.headerEditBtnText}>EDIT</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
@@ -746,7 +746,7 @@ export default function SupervisorDrivers() {
                       <Image source={{ uri: selectedDriver.coverImage }} style={styles.heroBannerCover} />
                     ) : (
                       <View style={styles.heroBannerGradient}>
-                        <Ionicons name="boat" size={54} color="rgba(0, 229, 255, 0.15)" style={styles.heroBgIcon} />
+                        <Ionicons name="boat" size={54} color="#EFF6FF" style={styles.heroBgIcon} />
                         <Text style={styles.heroBannerWatermark}>SCK LOGISTICS • ITT FLEET</Text>
                       </View>
                     )}
@@ -799,7 +799,7 @@ export default function SupervisorDrivers() {
                   {/* 1. FLEET & EQUIPMENT ASSIGNMENT */}
                   <View style={styles.dossierSection}>
                     <View style={styles.dossierSectionHeader}>
-                      <Ionicons name="hardware-chip" size={15} color="#00e5ff" />
+                      <Ionicons name="hardware-chip" size={15} color="#2563EB" />
                       <Text style={styles.dossierSectionTitle}>ASSIGNED VEHICLE & CHE EQUIPMENT</Text>
                     </View>
                     <View style={styles.dossierGrid}>
@@ -813,7 +813,7 @@ export default function SupervisorDrivers() {
                       <View style={styles.dossierItemHalf}>
                         <Text style={styles.dossierItemLabel}>CHE NO (CONTAINER CHASSIS)</Text>
                         <View style={styles.badgeHighlightCyan}>
-                          <Ionicons name="hardware-chip" size={13} color="#00e5ff" />
+                          <Ionicons name="hardware-chip" size={13} color="#2563EB" />
                           <Text style={styles.badgeHighlightCyanText}>{selectedDriver.chassisNumber || selectedDriver.cheNumber}</Text>
                         </View>
                       </View>
@@ -925,7 +925,7 @@ export default function SupervisorDrivers() {
                   {/* 5. CONTACT & RESIDENTIAL ADDRESS */}
                   <View style={styles.dossierSection}>
                     <View style={styles.dossierSectionHeader}>
-                      <Ionicons name="call" size={15} color="#00e5ff" />
+                      <Ionicons name="call" size={15} color="#2563EB" />
                       <Text style={styles.dossierSectionTitle}>CONTACT & RESIDENTIAL DETAILS</Text>
                     </View>
                     <View style={styles.dossierList}>
@@ -976,16 +976,16 @@ export default function SupervisorDrivers() {
                   </View>
 
                   {/* 6. SYSTEM LOGIN CREDENTIALS */}
-                  <View style={[styles.dossierSection, { borderColor: 'rgba(0,229,255,0.4)' }]}>
+                  <View style={[styles.dossierSection, { borderColor: '#EFF6FF' }]}>
                     <View style={styles.dossierSectionHeader}>
-                      <Ionicons name="key" size={15} color="#00e5ff" />
+                      <Ionicons name="key" size={15} color="#2563EB" />
                       <Text style={[styles.dossierSectionTitle, { color: '#2563EB' }]}>SYSTEM LOGIN CREDENTIALS</Text>
                     </View>
                     {/* Big Username Highlight */}
                     <View style={{
-                      backgroundColor: 'rgba(0,229,255,0.08)',
+                      backgroundColor: '#EFF6FF',
                       borderWidth: 1,
-                      borderColor: 'rgba(0,229,255,0.35)',
+                      borderColor: '#EFF6FF',
                       borderRadius: 10,
                       paddingHorizontal: 14,
                       paddingVertical: 12,
@@ -996,11 +996,11 @@ export default function SupervisorDrivers() {
                     }}>
                       <View style={{
                         width: 36, height: 36,
-                        backgroundColor: 'rgba(0,229,255,0.15)',
+                        backgroundColor: '#EFF6FF',
                         borderRadius: 18,
                         alignItems: 'center', justifyContent: 'center',
                       }}>
-                        <Ionicons name="person-circle" size={20} color="#00e5ff" />
+                        <Ionicons name="person-circle" size={20} color="#2563EB" />
                       </View>
                       <View style={{ flex: 1 }}>
                         <Text style={{ fontSize: 10, fontWeight: '700', color: '#849396', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 2 }}>
@@ -1043,7 +1043,7 @@ export default function SupervisorDrivers() {
                       disabled={updatingStatus}
                     >
                       {updatingStatus ? (
-                        <ActivityIndicator size="small" color="#00e5ff" />
+                        <ActivityIndicator size="small" color="#2563EB" />
                       ) : (
                         <>
                           <Ionicons
@@ -1067,14 +1067,14 @@ export default function SupervisorDrivers() {
                       style={[styles.actionBtn, { backgroundColor: '#EFF6FF', borderColor: '#2563EB' }]}
                       onPress={() => handleOpenEditDriverModal(selectedDriver)}
                     >
-                      <Ionicons name="create-outline" size={16} color="#00e5ff" />
+                      <Ionicons name="create-outline" size={16} color="#2563EB" />
                       <Text style={[styles.actionBtnText, { color: '#2563EB', fontWeight: '800' }]}>
                         EDIT DRIVER
                       </Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity
-                      style={[styles.actionBtn, { backgroundColor: '#00e5ff', borderColor: '#2563EB' }]}
+                      style={[styles.actionBtn, { backgroundColor: '#2563EB', borderColor: '#2563EB' }]}
                       onPress={() => {
                         Alert.alert(
                           'Direct Dispatch Comms',
@@ -1082,7 +1082,7 @@ export default function SupervisorDrivers() {
                         );
                       }}
                     >
-                      <Ionicons name="call" size={15} color="#00363d" />
+                      <Ionicons name="call" size={15} color="#FFFFFF" />
                       <Text style={[styles.actionBtnText, { color: '#FFFFFF', fontWeight: '900' }]}>
                         CALL
                       </Text>
@@ -1117,7 +1117,7 @@ export default function SupervisorDrivers() {
           <View style={[styles.modalContainer, { maxHeight: '90%' }]}>
             <View style={styles.modalHeader}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <Ionicons name="create-outline" size={18} color="#00e5ff" />
+                <Ionicons name="create-outline" size={18} color="#2563EB" />
                 <View>
                   <Text style={styles.modalHeaderTitle}>EDIT DRIVER DOSSIER</Text>
                   <Text style={styles.modalHeaderSubtitle}>Modify driver, vehicle & license credentials</Text>
@@ -1319,10 +1319,10 @@ export default function SupervisorDrivers() {
                   activeOpacity={0.88}
                 >
                   {savingDriverEdit ? (
-                    <ActivityIndicator size="small" color="#00363d" />
+                    <ActivityIndicator size="small" color="#FFFFFF" />
                   ) : (
                     <>
-                      <Ionicons name="checkmark-done" size={16} color="#00363d" />
+                      <Ionicons name="checkmark-done" size={16} color="#FFFFFF" />
                       <Text style={styles.editSaveBtnText}>SAVE DOSSIER</Text>
                     </>
                   )}
@@ -1791,7 +1791,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: '#00363d',
+    backgroundColor: '#FFFFFF',
     borderWidth: 2,
     borderColor: '#2563EB',
     alignItems: 'center',
@@ -2021,7 +2021,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 18,
     borderRadius: radius.DEFAULT,
-    backgroundColor: '#00e5ff',
+    backgroundColor: '#2563EB',
     justifyContent: 'center',
   },
   editSaveBtnText: {
@@ -2035,7 +2035,7 @@ const styles = StyleSheet.create({
     gap: 4,
     backgroundColor: '#EFF6FF',
     borderWidth: 1,
-    borderColor: 'rgba(0, 229, 255, 0.35)',
+    borderColor: '#EFF6FF',
     borderRadius: 6,
     paddingHorizontal: 7,
     paddingVertical: 2,
@@ -2077,7 +2077,7 @@ const styles = StyleSheet.create({
     borderRadius: 32,
     backgroundColor: '#EFF6FF',
     borderWidth: 1,
-    borderColor: 'rgba(0, 229, 255, 0.25)',
+    borderColor: '#EFF6FF',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 12,
@@ -2085,14 +2085,14 @@ const styles = StyleSheet.create({
   emptyRegisterBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#00e5ff',
+    backgroundColor: '#2563EB',
     borderRadius: 8,
     paddingHorizontal: 16,
     paddingVertical: 10,
     marginTop: 16,
   },
   emptyRegisterBtnText: {
-    color: '#001529',
+    color: '#FFFFFF',
     fontSize: 11,
     fontWeight: '900',
     letterSpacing: 0.5,
