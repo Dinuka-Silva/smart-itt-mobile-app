@@ -1,16 +1,15 @@
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
-import { ThemedText } from './themed-text';
-import { ThemedView } from './themed-view';
-import { statusColor, statusLabel } from '../theme';
+import { StyleSheet, View, Text } from 'react-native';
+import { getStatusChipStyle } from '../theme';
 
 type Props = {
   status: string;
   size?: 'sm' | 'md';
+  customLabel?: string;
 };
 
-export function StatusPill({ status, size = 'md' }: Props) {
-  const color = statusColor(status);
+export function StatusPill({ status, size = 'md', customLabel }: Props) {
+  const chip = getStatusChipStyle(status);
   const isSm = size === 'sm';
 
   return (
@@ -18,28 +17,24 @@ export function StatusPill({ status, size = 'md' }: Props) {
       style={[
         styles.pill,
         {
-          backgroundColor: `${color}18`,
-          borderColor: `${color}40`,
+          backgroundColor: chip.bg,
           paddingHorizontal: isSm ? 8 : 10,
-          paddingVertical: isSm ? 3 : 5,
+          paddingVertical: isSm ? 2 : 4,
         },
       ]}
     >
-      <View style={[styles.dotWrapper, { backgroundColor: `${color}30` }]}>
-        <View style={[styles.dot, { backgroundColor: color }]} />
-      </View>
-      <ThemedText
-        type="code"
+      <View style={[styles.dot, { backgroundColor: chip.text }]} />
+      <Text
         style={[
           styles.text,
           {
-            color,
-            fontSize: isSm ? 9 : 10,
+            color: chip.text,
+            fontSize: isSm ? 11 : 12,
           },
         ]}
       >
-        {statusLabel(status)}
-      </ThemedText>
+        {customLabel || chip.label}
+      </Text>
     </View>
   );
 }
@@ -48,17 +43,9 @@ const styles = StyleSheet.create({
   pill: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: 999,
-    borderWidth: 1,
+    borderRadius: 6,
     gap: 6,
     alignSelf: 'flex-start',
-  },
-  dotWrapper: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   dot: {
     width: 6,
@@ -66,8 +53,9 @@ const styles = StyleSheet.create({
     borderRadius: 3,
   },
   text: {
-    fontWeight: '800',
-    textTransform: 'uppercase',
-    letterSpacing: 0.6,
+    fontWeight: '500',
+    letterSpacing: 0.3,
   },
 });
+
+export default StatusPill;
