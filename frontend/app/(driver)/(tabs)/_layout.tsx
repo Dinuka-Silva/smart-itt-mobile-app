@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, Platform } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -12,25 +12,19 @@ export default function DriverTabsLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: '#2563EB',
-        tabBarInactiveTintColor: '#64748B',
+        tabBarActiveTintColor: '#0F766E',
+        tabBarInactiveTintColor: '#6B7C85',
         tabBarStyle: {
           backgroundColor: '#FFFFFF',
           borderTopWidth: 1,
-          borderTopColor: '#E2E8F0',
-          elevation: 4,
-          shadowColor: '#000000',
-          shadowOffset: { width: 0, height: -2 },
-          shadowOpacity: 0.05,
-          shadowRadius: 8,
-          height: 64 + bottomInset,
+          borderTopColor: '#E5EAEC',
+          height: 60 + bottomInset,
           paddingBottom: bottomInset,
-          paddingTop: 8,
+          paddingTop: 6,
         },
         tabBarLabelStyle: {
-          fontSize: 10,
-          fontWeight: '700',
-          letterSpacing: 0.5,
+          fontSize: 12,
+          fontWeight: '500',
           marginTop: 2,
         },
       }}
@@ -38,10 +32,14 @@ export default function DriverTabsLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Dashboard',
-          tabBarIcon: ({ color, focused }) => (
+          title: 'Home',
+          tabBarIcon: ({ focused }) => (
             <View style={[styles.iconWrap, focused && styles.iconWrapActive]}>
-              <Ionicons name={focused ? 'speedometer' : 'speedometer-outline'} size={22} color={color as any} />
+              <Ionicons
+                name={focused ? 'home' : 'home-outline'}
+                size={20}
+                color={focused ? '#0F766E' : '#6B7C85'}
+              />
             </View>
           ),
         }}
@@ -50,9 +48,13 @@ export default function DriverTabsLayout() {
         name="trips"
         options={{
           title: 'My Trips',
-          tabBarIcon: ({ color, focused }) => (
+          tabBarIcon: ({ focused }) => (
             <View style={[styles.iconWrap, focused && styles.iconWrapActive]}>
-              <Ionicons name={focused ? 'swap-horizontal' : 'swap-horizontal-outline'} size={22} color={color as any} />
+              <Ionicons
+                name={focused ? 'repeat' : 'repeat-outline'}
+                size={20}
+                color={focused ? '#0F766E' : '#6B7C85'}
+              />
             </View>
           ),
         }}
@@ -61,9 +63,13 @@ export default function DriverTabsLayout() {
         name="containers"
         options={{
           title: 'Containers',
-          tabBarIcon: ({ color, focused }) => (
+          tabBarIcon: ({ focused }) => (
             <View style={[styles.iconWrap, focused && styles.iconWrapActive]}>
-              <Ionicons name={focused ? 'cube' : 'cube-outline'} size={22} color={color as any} />
+              <Ionicons
+                name={focused ? 'cube' : 'cube-outline'}
+                size={20}
+                color={focused ? '#0F766E' : '#6B7C85'}
+              />
             </View>
           ),
         }}
@@ -72,9 +78,13 @@ export default function DriverTabsLayout() {
         name="profile"
         options={{
           title: 'Profile',
-          tabBarIcon: ({ color, focused }) => (
+          tabBarIcon: ({ focused }) => (
             <View style={[styles.iconWrap, focused && styles.iconWrapActive]}>
-              <Ionicons name={focused ? 'person' : 'person-outline'} size={22} color={color as any} />
+              <Ionicons
+                name={focused ? 'person' : 'person-outline'}
+                size={20}
+                color={focused ? '#0F766E' : '#6B7C85'}
+              />
             </View>
           ),
         }}
@@ -87,9 +97,9 @@ const styles = StyleSheet.create({
   iconWrap: {
     paddingHorizontal: 12,
     paddingVertical: 3,
-    borderRadius: 12,
+    borderRadius: 8,
   },
   iconWrapActive: {
-    backgroundColor: '#EFF6FF',
+    backgroundColor: '#E3F4F1',
   },
 });

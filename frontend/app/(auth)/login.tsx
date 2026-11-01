@@ -594,10 +594,6 @@ export default function LoginScreen() {
             />
           </View>
 
-          <View style={styles.companyPill}>
-            <Ionicons name="shield-checkmark" size={13} color="#2563EB" />
-            <Text style={styles.companyPillText}>POWERED BY SCK LOGISTICS</Text>
-          </View>
           <Text
             style={styles.brandTitle}
             numberOfLines={1}
@@ -606,26 +602,21 @@ export default function LoginScreen() {
           >
             SCK ITT PROJECT
           </Text>
-          <Text style={styles.brandSubtitle}>INTER-TERMINAL TRANSPORTATION MANAGEMENT SYSTEM</Text>
+          <Text style={styles.brandSubtitle}>Inter-Terminal Transportation Management System</Text>
 
-          {adminTapHint ? (
+          {adminTapHint && (
             <View style={{
-              backgroundColor: '#EFF6FF',
-              borderColor: '#2563EB',
+              backgroundColor: '#E3F4F1',
+              borderColor: '#0F766E',
               borderWidth: 1,
-              borderRadius: 16,
+              borderRadius: 12,
               paddingHorizontal: 12,
               paddingVertical: 4,
-              marginTop: 4,
+              marginTop: 6,
             }}>
-              <Text style={{ color: '#2563EB', fontSize: 11, fontWeight: '700' }}>
+              <Text style={{ color: '#0F766E', fontSize: 11, fontWeight: '600' }}>
                 {adminTapHint}
               </Text>
-            </View>
-          ) : (
-            <View style={styles.onlineBadge}>
-              <View style={styles.onlineDot} />
-              <Text style={styles.onlineText}>SCK FLEET TELEMATICS GATEWAY ONLINE</Text>
             </View>
           )}
         </TouchableOpacity>
@@ -847,21 +838,9 @@ export default function LoginScreen() {
         </View>
 
         <View style={styles.footerWrap}>
-          <View style={styles.footerLogoContainer}>
-            <Image
-              source={require('../../assets/sck-logo.png')}
-              style={styles.footerLogo}
-              resizeMode="contain"
-            />
-          </View>
           <Text style={styles.footer}>
-            SCK LOGISTICS (PVT) LTD · PORT & TERMINAL TELEMATICS
+            SCK Logistics (Pvt) Ltd · Port Logistics
           </Text>
-          <Text style={styles.footerSub}>TLS 1.3 MESH · 256-BIT JWT ENCRYPTION</Text>
-          <View style={styles.securityBadgeRow}>
-            <Ionicons name="shield-checkmark" size={12} color="#10b981" />
-            <Text style={styles.securityBadgeText}>HARDWARE ENCLAVE & SALTED SHA-256 ACTIVE</Text>
-          </View>
         </View>
       </ScrollView>
     </View>
@@ -871,7 +850,7 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: '#F7F9FA',
   },
   backgroundWrap: {
     display: 'none',
@@ -885,75 +864,47 @@ const styles = StyleSheet.create({
   },
   scroll: {
     flexGrow: 1,
-    paddingHorizontal: spacing.margin,
+    paddingHorizontal: 16,
     paddingBottom: 32,
     justifyContent: 'center',
-    maxWidth: 480,
+    maxWidth: 440,
     width: '100%',
     alignSelf: 'center',
     zIndex: 1,
   },
   hero: {
     paddingTop: 16,
-    paddingBottom: 18,
+    paddingBottom: 16,
     alignItems: 'center',
-    gap: 8,
+    gap: 6,
   },
   brandIconCard: {
-    width: 84,
-    height: 84,
-    borderRadius: 20,
+    width: 76,
+    height: 76,
+    borderRadius: 16,
     backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1.5,
-    borderColor: '#2563EB',
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 6,
-    elevation: 3,
-    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: '#E5EAEC',
+    marginBottom: 6,
     overflow: 'hidden',
   },
   brandIconImg: {
     width: '100%',
     height: '100%',
-    borderRadius: 18,
-  },
-  companyPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: '#EFF6FF',
-    paddingHorizontal: 12,
-    paddingVertical: 5,
-    borderRadius: radius.pill,
-    borderWidth: 1,
-    borderColor: '#DBEAFE',
-    marginBottom: 4,
-  },
-  companyPillText: {
-    fontSize: 10,
-    fontWeight: '800',
-    color: '#2563EB',
-    letterSpacing: 1.2,
   },
   brandTitle: {
     fontSize: 22,
-    fontWeight: '900',
-    color: '#1E293B',
-    letterSpacing: 0.5,
+    fontWeight: '600',
+    color: '#1F2D33',
+    letterSpacing: -0.3,
     textAlign: 'center',
-    alignSelf: 'center',
-    maxWidth: '100%',
-    paddingHorizontal: 6,
   },
   brandSubtitle: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: '#64748B',
-    letterSpacing: 0.5,
+    fontSize: 13,
+    fontWeight: '400',
+    color: '#6B7C85',
     textAlign: 'center',
   },
   onlineBadge: {
@@ -1042,24 +993,19 @@ const styles = StyleSheet.create({
 
   sheet: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 16,
+    borderRadius: 12,
     padding: 20,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: '#E5EAEC',
     gap: 12,
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 3,
   },
   authTabContainer: {
     flexDirection: 'row',
-    backgroundColor: '#F1F5F9',
-    borderRadius: 10,
-    padding: 4,
+    backgroundColor: '#F7F9FA',
+    borderRadius: 8,
+    padding: 3,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: '#E5EAEC',
     marginBottom: 4,
   },
   authTab: {
@@ -1067,30 +1013,26 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 9,
-    borderRadius: 8,
+    paddingVertical: 8,
+    borderRadius: 6,
     gap: 6,
   },
   authTabActive: {
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#2563EB',
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
+    borderColor: '#0F766E',
   },
   authTabTextActive: {
     fontSize: 12,
-    fontWeight: '800',
-    color: '#2563EB',
-    letterSpacing: 0.5,
+    fontWeight: '600',
+    color: '#0F766E',
+    letterSpacing: 0.2,
   },
   authTabTextInactive: {
     fontSize: 12,
-    fontWeight: '700',
-    color: '#64748B',
-    letterSpacing: 0.5,
+    fontWeight: '500',
+    color: '#6B7C85',
+    letterSpacing: 0.2,
   },
   quickFillBar: {
     flexDirection: 'row',
@@ -1101,40 +1043,39 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   quickFillLabel: {
-    fontSize: 9,
-    fontWeight: '800',
-    color: '#64748B',
-    letterSpacing: 0.8,
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#6B7C85',
     marginRight: 2,
   },
   quickChip: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: '#F7F9FA',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: '#E5EAEC',
   },
   quickChipActiveCyan: {
-    borderColor: '#2563EB',
-    backgroundColor: '#EFF6FF',
+    borderColor: '#0F766E',
+    backgroundColor: '#E3F4F1',
   },
   quickChipActiveAmber: {
-    borderColor: '#D97706',
-    backgroundColor: '#FEF3C7',
+    borderColor: '#8A5A00',
+    backgroundColor: '#FFF4DB',
   },
   quickChipTextCyan: {
-    fontSize: 10,
-    fontWeight: '800',
-    color: '#2563EB',
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#0F766E',
   },
   quickChipTextAmber: {
-    fontSize: 10,
-    fontWeight: '800',
-    color: '#D97706',
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#8A5A00',
   },
   quickChipReset: {
     flexDirection: 'row',
@@ -1143,14 +1084,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
     paddingVertical: 4,
     borderRadius: 6,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: '#F7F9FA',
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: '#E5EAEC',
   },
   quickChipResetText: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: '#64748B',
+    fontSize: 11,
+    fontWeight: '500',
+    color: '#6B7C85',
   },
   labelRow: {
     flexDirection: 'row',
@@ -1159,11 +1100,9 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   inputLabel: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#1E293B',
-    letterSpacing: 0.5,
-    textTransform: 'uppercase',
+    fontSize: 13,
+    fontWeight: '500',
+    color: '#6B7C85',
   },
   roleMiniTag: {
     flexDirection: 'row',
@@ -1174,22 +1113,20 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   roleMiniTagCyan: {
-    backgroundColor: '#EFF6FF',
+    backgroundColor: '#E3F4F1',
   },
   roleMiniTagAmber: {
-    backgroundColor: '#FEF3C7',
+    backgroundColor: '#FFF4DB',
   },
   roleMiniTagCyanText: {
-    fontSize: 9,
-    fontWeight: '800',
-    color: '#2563EB',
-    letterSpacing: 0.5,
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#0F766E',
   },
   roleMiniTagAmberText: {
-    fontSize: 9,
-    fontWeight: '800',
-    color: '#D97706',
-    letterSpacing: 0.5,
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#8A5A00',
   },
   statusDot: {
     width: 5,
@@ -1199,16 +1136,15 @@ const styles = StyleSheet.create({
   inputWrap: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: 10,
-    backgroundColor: '#F8FAFC',
+    borderRadius: 12,
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: '#E5EAEC',
     paddingHorizontal: 12,
     height: 48,
   },
   inputWrapFocused: {
-    borderColor: '#2563EB',
-    backgroundColor: '#EFF6FF',
+    borderColor: '#0F766E',
   },
   clearFieldBtn: {
     padding: 6,
@@ -1218,8 +1154,8 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    fontSize: 13,
-    color: '#1E293B',
+    fontSize: 15,
+    color: '#1F2D33',
     height: 48,
   },
   eyeBtn: {
@@ -1242,20 +1178,20 @@ const styles = StyleSheet.create({
     width: 18,
     height: 18,
     borderRadius: 4,
-    borderWidth: 1.5,
-    borderColor: '#CBD5E1',
+    borderWidth: 1,
+    borderColor: '#E5EAEC',
     backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
   },
   checkboxActive: {
-    backgroundColor: '#2563EB',
-    borderColor: '#2563EB',
+    backgroundColor: '#0F766E',
+    borderColor: '#0F766E',
   },
   rememberText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#64748B',
+    fontSize: 13,
+    fontWeight: '500',
+    color: '#6B7C85',
   },
   forgotBtn: {
     flexDirection: 'row',
@@ -1264,35 +1200,33 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   forgotBtnText: {
-    color: '#2563EB',
-    fontSize: 11,
-    fontWeight: '700',
-    letterSpacing: 0.5,
+    color: '#0F766E',
+    fontSize: 12,
+    fontWeight: '600',
   },
   loginBtn: {
     flexDirection: 'row',
-    height: 50,
-    borderRadius: 10,
+    height: 48,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
     marginTop: 8,
-    elevation: 2,
-    backgroundColor: '#2563EB',
+    backgroundColor: '#0F766E',
   },
   loginBtnCyan: {
-    backgroundColor: '#2563EB',
+    backgroundColor: '#0F766E',
   },
   loginBtnAmber: {
-    backgroundColor: '#2563EB',
+    backgroundColor: '#0F766E',
   },
   loginBtnDisabled: {
     opacity: 0.5,
   },
   loginBtnText: {
-    fontSize: 13,
-    fontWeight: '800',
-    letterSpacing: 0.8,
+    fontSize: 16,
+    fontWeight: '600',
+    letterSpacing: 0.2,
     color: '#FFFFFF',
   },
   loginBtnTextCyan: {
@@ -1305,9 +1239,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: '#FEF2F2',
+    backgroundColor: '#FDE8E8',
     borderWidth: 1,
-    borderColor: '#FECACA',
+    borderColor: '#FDE8E8',
     paddingHorizontal: 12,
     paddingVertical: 10,
     borderRadius: 8,
@@ -1315,9 +1249,9 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   errorText: {
-    color: '#DC2626',
-    fontSize: 12,
-    fontWeight: '600',
+    color: '#B42318',
+    fontSize: 13,
+    fontWeight: '500',
     flex: 1,
   },
   createAccountRow: {
@@ -1328,15 +1262,14 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
   },
   createAccountPrompt: {
-    fontSize: 12,
-    color: '#64748B',
-    fontWeight: '600',
+    fontSize: 13,
+    color: '#6B7C85',
+    fontWeight: '400',
   },
   createAccountLink: {
-    fontSize: 12,
-    color: '#2563EB',
-    fontWeight: '800',
-    textDecorationLine: 'underline',
+    fontSize: 13,
+    color: '#0F766E',
+    fontWeight: '600',
   },
   footerWrap: {
     alignItems: 'center',
@@ -1399,25 +1332,25 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 10,
-    height: 46,
-    borderRadius: 10,
+    gap: 8,
+    height: 48,
+    borderRadius: 12,
     borderWidth: 1,
-    backgroundColor: '#EFF6FF',
-    borderColor: '#BFDBFE',
+    backgroundColor: '#E3F4F1',
+    borderColor: '#E5EAEC',
     marginTop: 8,
   },
   biometricBtnCyan: {
-    borderColor: '#BFDBFE',
+    borderColor: '#E5EAEC',
   },
   biometricBtnAmber: {
-    borderColor: '#FDE68A',
+    borderColor: '#E5EAEC',
   },
   biometricBtnText: {
-    fontSize: 12,
-    fontWeight: '800',
-    letterSpacing: 0.5,
-    color: '#2563EB',
+    fontSize: 14,
+    fontWeight: '600',
+    letterSpacing: 0.2,
+    color: '#0F766E',
   },
   securityBadgeRow: {
     flexDirection: 'row',

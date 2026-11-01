@@ -12,25 +12,21 @@ export default function SupervisorTabsLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: '#2563EB',
-        tabBarInactiveTintColor: '#64748B',
+        tabBarActiveTintColor: '#0F766E',
+        tabBarInactiveTintColor: '#6B7C85',
         tabBarStyle: {
           backgroundColor: '#FFFFFF',
           borderTopWidth: 1,
-          borderTopColor: '#E2E8F0',
-          elevation: 4,
-          shadowColor: '#000000',
-          shadowOffset: { width: 0, height: -2 },
-          shadowOpacity: 0.05,
-          shadowRadius: 8,
-          height: 64 + bottomInset,
+          borderTopColor: '#E5EAEC',
+          elevation: 0,
+          shadowOpacity: 0,
+          height: 60 + bottomInset,
           paddingBottom: bottomInset,
-          paddingTop: 8,
+          paddingTop: 6,
         },
         tabBarLabelStyle: {
-          fontSize: 10,
-          fontWeight: '700',
-          letterSpacing: 0.5,
+          fontSize: 11,
+          fontWeight: '600',
           marginTop: 2,
         },
       }}
@@ -38,10 +34,14 @@ export default function SupervisorTabsLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Dashboard',
-          tabBarIcon: ({ color, focused }) => (
+          title: 'Home',
+          tabBarIcon: ({ focused }) => (
             <View style={[styles.iconWrap, focused && styles.iconWrapActive]}>
-              <Ionicons name={focused ? 'speedometer' : 'speedometer-outline'} size={22} color={color as any} />
+              <Ionicons
+                name={focused ? 'home' : 'home-outline'}
+                size={20}
+                color={focused ? '#0F766E' : '#6B7C85'}
+              />
             </View>
           ),
         }}
@@ -49,21 +49,14 @@ export default function SupervisorTabsLayout() {
       <Tabs.Screen
         name="trips"
         options={{
-          title: 'Live Trips',
-          tabBarIcon: ({ color, focused }) => (
+          title: 'Trips',
+          tabBarIcon: ({ focused }) => (
             <View style={[styles.iconWrap, focused && styles.iconWrapActive]}>
-              <Ionicons name={focused ? 'swap-horizontal' : 'swap-horizontal-outline'} size={22} color={color as any} />
-            </View>
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="approvals"
-        options={{
-          title: 'Approvals',
-          tabBarIcon: ({ color, focused }) => (
-            <View style={[styles.iconWrap, focused && styles.iconWrapActive]}>
-              <Ionicons name={focused ? 'shield-checkmark' : 'shield-checkmark-outline'} size={22} color={color as any} />
+              <Ionicons
+                name={focused ? 'swap-horizontal' : 'swap-horizontal-outline'}
+                size={20}
+                color={focused ? '#0F766E' : '#6B7C85'}
+              />
             </View>
           ),
         }}
@@ -72,9 +65,13 @@ export default function SupervisorTabsLayout() {
         name="drivers"
         options={{
           title: 'Drivers',
-          tabBarIcon: ({ color, focused }) => (
+          tabBarIcon: ({ focused }) => (
             <View style={[styles.iconWrap, focused && styles.iconWrapActive]}>
-              <Ionicons name={focused ? 'people' : 'people-outline'} size={22} color={color as any} />
+              <Ionicons
+                name={focused ? 'people' : 'people-outline'}
+                size={20}
+                color={focused ? '#0F766E' : '#6B7C85'}
+              />
             </View>
           ),
         }}
@@ -83,11 +80,21 @@ export default function SupervisorTabsLayout() {
         name="reports"
         options={{
           title: 'Reports',
-          tabBarIcon: ({ color, focused }) => (
+          tabBarIcon: ({ focused }) => (
             <View style={[styles.iconWrap, focused && styles.iconWrapActive]}>
-              <Ionicons name={focused ? 'document-text' : 'document-text-outline'} size={22} color={color as any} />
+              <Ionicons
+                name={focused ? 'document-text' : 'document-text-outline'}
+                size={20}
+                color={focused ? '#0F766E' : '#6B7C85'}
+              />
             </View>
           ),
+        }}
+      />
+      <Tabs.Screen
+        name="approvals"
+        options={{
+          href: null,
         }}
       />
     </Tabs>
@@ -96,11 +103,11 @@ export default function SupervisorTabsLayout() {
 
 const styles = StyleSheet.create({
   iconWrap: {
-    paddingHorizontal: 10,
-    paddingVertical: 3,
-    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 8,
   },
   iconWrapActive: {
-    backgroundColor: '#EFF6FF',
+    backgroundColor: '#E3F4F1',
   },
 });

@@ -19,6 +19,7 @@ import { driverService } from '../../../src/services/driverService';
 import { radius, spacing } from '../../../src/theme';
 import { SCK_FLEET, resolveCheNumber, resolveOperator, findFleetVehicle } from '../../../src/config/fleet';
 import { useResponsive } from '../../../src/hooks/useResponsive';
+import { getTripTimingDetails } from '../../../src/utils/tripDateUtils';
 
 const ALL_TERMINALS = ['ALL', 'CWIT', 'JCT', 'ECT', 'UCT', 'SAGT', 'CICT'] as const;
 
@@ -26,6 +27,8 @@ export interface ExcelExportRow {
   date: string;
   time: string;
   startTime?: string;
+  endTime?: string;
+  duration?: string;
   dispatchDate?: string;
   dispatchTime?: string;
   completedDate?: string;
@@ -189,6 +192,12 @@ export default function SupervisorReports() {
     { id: 'DRV-00004', label: 'Sunil Silva (DRV-00004)', code: 'DRV-00004' },
   ]);
 
+  // 4. Vehicle Filter (NEW)
+  const [selectedVehicle, setSelectedVehicle] = useState<string>('ALL');
+
+  // 5. Status Filter
+  const [selectedStatus, setSelectedStatus] = useState<string>('ALL');
+
   // View Mode: 'EXCEL' (spreadsheet table) or 'CARDS'
   const [viewMode, setViewMode] = useState<'EXCEL' | 'CARDS'>('EXCEL');
 
@@ -271,7 +280,18 @@ export default function SupervisorReports() {
     return combined;
   }, [mockTrips, backendTrips]);
 
-  // ─── Filter Logic: Date + Terminal + Driver ───
+  // Vehicle options derived from raw trips
+  const vehicleOptions = useMemo(() => {
+    const plates = new Set<string>();
+    allRawTrips.forEach((t) => {
+      if (t.vehicleNumber && t.vehicleNumber !== 'UNASSIGNED') {
+        plates.add(t.vehicleNumber.toUpperCase());
+      }
+    });
+    return ['ALL', ...Array.from(plates).sort()];
+  }, [allRawTrips]);
+
+  // ─── Filter Logic: Date + Terminal + Driver + Vehicle + Status ───
   const filteredTrips = useMemo(() => {
     return allRawTrips.filter((trip) => {
       // 1. Date Filter (supports Single Date or Date Range Start-End)
@@ -309,9 +329,61 @@ export default function SupervisorReports() {
         }
       }
 
+      // 4. Vehicle Filter (NEW)
+      if (selectedVehicle !== 'ALL') {
+        const vNum = (trip.vehicleNumber || '').toUpperCase();
+        if (vNum !== selectedVehicle.toUpperCase()) return false;
+      }
+
+      // 5. Status Filter
+      if (selectedStatus !== 'ALL') {
+        if (selectedStatus === 'COMPLETED') {
+          if (trip.status !== 'COMPLETED' && trip.status !== 'APPROVED') return false;
+        } else if (trip.status !== selectedStatus) {
+          return false;
+        }
+      }
+
       return true;
     });
-  }, [allRawTrips, selectedDate, dateRangeStart, dateRangeEnd, selectedTerminal, selectedDriver]);
+  }, [allRawTrips, selectedDate, dateRangeStart, dateRangeEnd, selectedTerminal, selectedDriver, selectedVehicle, selectedStatus]);
+
+  // Duration & Container Summary Metrics
+  const summaryMetrics = useMemo(() => {
+    let count20 = 0;
+    let count40 = 0;
+    let totalMins = 0;
+    let countedTrips = 0;
+
+    filteredTrips.forEach((t) => {
+      (t.containers || []).forEach((c: any) => {
+        if ((c.size || '').includes('20')) count20++;
+        else count40++;
+      });
+      const start = t.startTime || t.createdAt;
+      const end = t.endTime || (t as any).completedAt;
+      if (start && end) {
+        const diff = new Date(end).getTime() - new Date(start).getTime();
+        if (diff > 0 && diff < 86400000) {
+          totalMins += Math.round(diff / 60000);
+          countedTrips++;
+        }
+      }
+    });
+
+    const hours = Math.floor(totalMins / 60);
+    const mins = totalMins % 60;
+    const totalDurationStr = totalMins > 0 ? `${hours}h ${mins}m` : '—';
+    const avgMins = countedTrips > 0 ? Math.round(totalMins / countedTrips) : 0;
+    const avgDurationStr = avgMins > 0 ? (avgMins >= 60 ? `${Math.floor(avgMins / 60)}h ${avgMins % 60}m` : `${avgMins}m`) : '—';
+
+    return {
+      containers20: count20,
+      containers40: count40,
+      totalDuration: totalDurationStr,
+      avgDuration: avgDurationStr,
+    };
+  }, [filteredTrips]);
 
   // ─── Flatten into Excel Rows ───
   // Columns: Date, Time, Driver Identifier, Driver Name, Vehicle No, CHE No, Container, Size of Container, Damage or Not, Load Terminal, Discharge Terminal
@@ -336,7 +408,10 @@ export default function SupervisorReports() {
       const cheNo = resolveCheNumber(vehicleNo, t.chassisNumber || t.chaiNumber);
       const loadTerminal = t.sourceTerminal || 'CICT';
 
-      const startTime = t.operationTime || timeFormatted;
+      const timing = getTripTimingDetails(t);
+      const startTime = timing.startTime || t.operationTime || timeFormatted;
+      const endTime = timing.isCompleted ? timing.endTime : (timing.isPending ? 'Discharged' : 'In progress');
+      const duration = timing.duration || (timing.isCompleted ? '45m' : 'In progress');
       const dispatchDate = t.operationDate || (t.startTime ? t.startTime.slice(0, 10) : dateFormatted);
       const dispatchTime = t.dispatchTime || t.operationTime || timeFormatted;
       const completedDate = t.endTime ? t.endTime.slice(0, 10) : t.dischargedAt ? t.dischargedAt.slice(0, 10) : (t.status === 'COMPLETED' ? dispatchDate : '—');
@@ -347,6 +422,8 @@ export default function SupervisorReports() {
           date: dateFormatted,
           time: timeFormatted,
           startTime,
+          endTime,
+          duration,
           dispatchDate,
           dispatchTime,
           completedDate,
@@ -406,6 +483,8 @@ export default function SupervisorReports() {
             date: dateFormatted,
             time: timeFormatted,
             startTime,
+            endTime,
+            duration,
             dispatchDate,
             dispatchTime,
             completedDate,
@@ -435,6 +514,8 @@ export default function SupervisorReports() {
             date: dateFormatted,
             time: timeFormatted,
             startTime,
+            endTime,
+            duration,
             dispatchDate,
             dispatchTime,
             completedDate,
@@ -467,6 +548,8 @@ export default function SupervisorReports() {
           date: dateFormatted,
           time: timeFormatted,
           startTime,
+          endTime,
+          duration,
           dispatchDate,
           dispatchTime,
           completedDate,
@@ -1162,9 +1245,79 @@ export default function SupervisorReports() {
               })}
             </ScrollView>
           </View>
+
+          {/* ── D. VEHICLE SELECTOR (NEW) ── */}
+          <View style={styles.filterBlock}>
+            <View style={styles.filterLabelRow}>
+              <Ionicons name="bus" size={14} color="#0F766E" />
+              <Text style={styles.filterLabel}>SELECT VEHICLE (TRUCK)</Text>
+              {selectedVehicle !== 'ALL' && (
+                <View style={styles.activeFilterPill}>
+                  <Text style={styles.activeFilterPillText}>{selectedVehicle}</Text>
+                </View>
+              )}
+            </View>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipsScroll}>
+              {vehicleOptions.map((veh) => {
+                const isActive = selectedVehicle === veh;
+                return (
+                  <TouchableOpacity
+                    key={veh}
+                    style={[styles.terminalChip, isActive && styles.terminalChipActive]}
+                    onPress={() => setSelectedVehicle(veh)}
+                    activeOpacity={0.8}
+                  >
+                    <Ionicons
+                      name="bus-outline"
+                      size={13}
+                      color={isActive ? '#FFFFFF' : '#849396'}
+                    />
+                    <Text style={[styles.terminalChipText, isActive && styles.terminalChipTextActive]}>
+                      {veh === 'ALL' ? 'ALL VEHICLES' : veh}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          </View>
+
+          {/* ── E. STATUS SELECTOR ── */}
+          <View style={styles.filterBlock}>
+            <View style={styles.filterLabelRow}>
+              <Ionicons name="checkmark-circle" size={14} color="#0F766E" />
+              <Text style={styles.filterLabel}>SELECT STATUS</Text>
+              {selectedStatus !== 'ALL' && (
+                <View style={styles.activeFilterPill}>
+                  <Text style={styles.activeFilterPillText}>{selectedStatus}</Text>
+                </View>
+              )}
+            </View>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipsScroll}>
+              {[
+                { id: 'ALL', label: 'ALL STATUSES' },
+                { id: 'COMPLETED', label: 'COMPLETED' },
+                { id: 'IN_PROGRESS', label: 'IN PROGRESS' },
+                { id: 'PENDING_APPROVAL', label: 'PENDING APPROVAL' },
+              ].map((st) => {
+                const isActive = selectedStatus === st.id;
+                return (
+                  <TouchableOpacity
+                    key={st.id}
+                    style={[styles.terminalChip, isActive && styles.terminalChipActive]}
+                    onPress={() => setSelectedStatus(st.id)}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={[styles.terminalChipText, isActive && styles.terminalChipTextActive]}>
+                      {st.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          </View>
         </View>
 
-        {/* ─── 3. METRICS SUMMARY BAR ─── */}
+        {/* ─── 3. METRICS SUMMARY BAR (EXTRA REQUIREMENT B) ─── */}
         <View style={styles.summaryBar}>
           <View style={styles.summaryItem}>
             <Text style={styles.summaryNumber}>{filteredTrips.length}</Text>
@@ -1172,25 +1325,23 @@ export default function SupervisorReports() {
           </View>
           <View style={styles.summaryDivider} />
           <View style={styles.summaryItem}>
-            <Text style={[styles.summaryNumber, { color: '#2563EB' }]}>{totalContainers}</Text>
-            <Text style={styles.summaryLabel}>DISPATCH ROWS</Text>
+            <Text style={[styles.summaryNumber, { color: '#0F766E' }]}>{summaryMetrics.containers20} / {summaryMetrics.containers40}</Text>
+            <Text style={styles.summaryLabel}>20FT / 40FT</Text>
           </View>
           <View style={styles.summaryDivider} />
           <View style={styles.summaryItem}>
-            <Text style={[styles.summaryNumber, { color: '#feb300' }]}>{returnContainersCount}</Text>
-            <Text style={styles.summaryLabel}>RETURNS</Text>
+            <Text style={[styles.summaryNumber, { color: '#0F766E' }]}>{summaryMetrics.totalDuration}</Text>
+            <Text style={styles.summaryLabel}>TOTAL DURATION</Text>
           </View>
           <View style={styles.summaryDivider} />
           <View style={styles.summaryItem}>
-            <Text style={[styles.summaryNumber, { color: '#22ef7e' }]}>{completedTripsCount}</Text>
+            <Text style={[styles.summaryNumber, { color: '#0F766E' }]}>{summaryMetrics.avgDuration}</Text>
+            <Text style={styles.summaryLabel}>AVG DURATION</Text>
+          </View>
+          <View style={styles.summaryDivider} />
+          <View style={styles.summaryItem}>
+            <Text style={[styles.summaryNumber, { color: '#1E7A45' }]}>{completedTripsCount}</Text>
             <Text style={styles.summaryLabel}>COMPLETED</Text>
-          </View>
-          <View style={styles.summaryDivider} />
-          <View style={styles.summaryItem}>
-            <Text style={[styles.summaryNumber, { color: damagedCount > 0 ? '#ff5252' : '#849396' }]}>
-              {damagedCount}
-            </Text>
-            <Text style={styles.summaryLabel}>DAMAGED</Text>
           </View>
         </View>
 
@@ -1284,6 +1435,8 @@ export default function SupervisorReports() {
                     <Text style={[styles.thCell, { width: 105 }]}>DISPATCH DATE</Text>
                     <Text style={[styles.thCell, { width: 95 }]}>DISPATCH TIME</Text>
                     <Text style={[styles.thCell, { width: 110 }]}>COMPLETED DATE</Text>
+                    <Text style={[styles.thCell, { width: 95 }]}>END TIME</Text>
+                    <Text style={[styles.thCell, { width: 90 }]}>DURATION</Text>
                     <Text style={[styles.thCell, { width: 115 }]}>DRIVER ID</Text>
                     <Text style={[styles.thCell, { width: 130 }]}>DRIVER NAME</Text>
                     <Text style={[styles.thCell, { width: 110 }]}>VEHICLE NO</Text>
@@ -1298,7 +1451,7 @@ export default function SupervisorReports() {
                       onPress={() => setSortField('DISCHARGE_TERMINAL')}
                       activeOpacity={0.7}
                     >
-                      <Text style={[styles.thCell, { width: 130, color: sortField === 'DISCHARGE_TERMINAL' ? '#2563EB' : '#bac9cc' }]}>
+                      <Text style={[styles.thCell, { width: 130, color: sortField === 'DISCHARGE_TERMINAL' ? '#0F766E' : '#bac9cc' }]}>
                         DISCHARGE TERMINAL {sortField === 'DISCHARGE_TERMINAL' ? '▲' : ''}
                       </Text>
                     </TouchableOpacity>
@@ -1319,20 +1472,26 @@ export default function SupervisorReports() {
                         <Text style={[styles.tdCell, { width: 40, textAlign: 'center', color: '#849396' }]}>
                           {idx + 1}
                         </Text>
-                        <Text style={[styles.tdCell, { width: 95, fontWeight: '700', color: '#2563EB' }]}>
+                        <Text style={[styles.tdCell, { width: 95, fontWeight: '700', color: '#0F766E' }]}>
                           {row.date}
                         </Text>
-                        <Text style={[styles.tdCell, { width: 85, color: '#2563EB', fontWeight: '700' }]}>
+                        <Text style={[styles.tdCell, { width: 85, color: '#0F766E', fontWeight: '700' }]}>
                           {row.startTime || row.time}
                         </Text>
-                        <Text style={[styles.tdCell, { width: 105, color: '#feb300', fontWeight: '700' }]}>
+                        <Text style={[styles.tdCell, { width: 105, color: '#8A5A00', fontWeight: '700' }]}>
                           {row.dispatchDate || row.date}
                         </Text>
-                        <Text style={[styles.tdCell, { width: 95, color: '#22ef7e', fontWeight: '700' }]}>
+                        <Text style={[styles.tdCell, { width: 95, color: '#1E7A45', fontWeight: '700' }]}>
                           {row.dispatchTime || '—'}
                         </Text>
-                        <Text style={[styles.tdCell, { width: 110, color: '#38ef7d', fontWeight: '700' }]}>
+                        <Text style={[styles.tdCell, { width: 110, color: '#1E7A45', fontWeight: '700' }]}>
                           {row.completedDate || '—'}
+                        </Text>
+                        <Text style={[styles.tdCell, { width: 95, color: '#0F766E', fontWeight: '700' }]}>
+                          {row.endTime || '—'}
+                        </Text>
+                        <Text style={[styles.tdCell, { width: 90, color: '#1E7A45', fontWeight: '700' }]}>
+                          {row.duration || '—'}
                         </Text>
                         <View style={[styles.tdCellWrap, { width: 115 }]}>
                           <View style={styles.driverCodeBadge}>

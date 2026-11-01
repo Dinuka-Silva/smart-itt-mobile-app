@@ -189,6 +189,14 @@ export default function DriverRegisterScreen() {
       const resolvedFullName = fullName.trim() || 'Nimal Samantha Silva';
       const resolvedNic = nic.trim() || `1990${randSuffix}012V`;
       const resolvedEmployeeId = employeeId.trim() || `SUP-${randSuffix}`;
+
+      // Check unique Supervisor ID / username
+      const existingSup = adminFleetStore.getSupervisor(resolvedEmployeeId);
+      if (existingSup) {
+        setFormError(`Supervisor ID "${resolvedEmployeeId}" already exists. Please choose a different ID.`);
+        setLoading(false);
+        return;
+      }
       const resolvedMobile = mobileNumber.trim() || `071${randSuffix}99`;
       const resolvedAddress = address.trim() || 'No. 12, Galle Face Road, Colombo 03';
       const resolvedEmail = email.trim() || `supervisor${randSuffix}@smartitt.lk`;
@@ -325,6 +333,14 @@ export default function DriverRegisterScreen() {
     const resolvedFullName = fullName.trim() || 'Kasun Chamara Perera';
     const resolvedNic = nic.trim() || `1992${randSuffix}042V`;
     const resolvedEmployeeId = employeeId.trim() || `DRV-${randSuffix}`;
+
+    // Check unique Driver Code / username
+    const existingDriver = adminFleetStore.getDriver(resolvedEmployeeId);
+    if (existingDriver) {
+      setFormError(`Username "${resolvedEmployeeId}" already exists. Please choose a different username.`);
+      setLoading(false);
+      return;
+    }
     const resolvedMobile = mobileNumber.trim() || `077${randSuffix}21`;
     const resolvedAddress = address.trim() || 'No. 45/B, Port Access Road, Colombo 13';
     const resolvedLicense = (licenseNumber.trim() || `B-${randSuffix}88`).toUpperCase();

@@ -600,7 +600,7 @@ class AdminFleetStore {
   async getSupervisorRegisteredDrivers(search?: string, status?: string): Promise<AdminDriver[]> {
     await this.init();
     const initialCodes = new Set(INITIAL_DRIVERS.map(d => d.driverCode.toUpperCase()));
-    let registered = this.drivers.filter(d => !initialCodes.has(d.driverCode.toUpperCase()) && !d.id.startsWith('d-'));
+    let registered = this.drivers.filter(d => !initialCodes.has(d.driverCode.toUpperCase()));
 
     if (status && status !== 'ALL') {
       registered = registered.filter(d => d.status === status);

@@ -29,6 +29,7 @@ import API_BASE_URL from '../../../src/config/api';
 import { useResponsive } from '../../../src/hooks/useResponsive';
 import { getTripTimingDetails } from '../../../src/utils/tripDateUtils';
 import { getTripDischargeTerminal } from '../../../src/utils/tripTerminalUtils';
+import { AppButton, StatCard, ListRow, StatusPill } from '../../../src/components';
 
 const TERMINALS = ['CICT', 'CWIT', 'ECT', 'JCT', 'UCT', 'SAGT'] as const;
 type TerminalCode = (typeof TERMINALS)[number];
@@ -663,738 +664,162 @@ export default function DriverHomeDashboard() {
           </TouchableOpacity>
         )}
 
-        {/* ─── B. DRIVER SUMMARY CARDS (LIVE BACKEND METRICS) ─── */}
-        <View style={styles.summaryGrid}>
-          <View style={[styles.summaryCard, { width: summaryCardWidth }]}>
-            <View style={styles.summaryCardHeader}>
-              <Text style={styles.summaryCardTitle}>ACTIVE TRIPS</Text>
-              <Ionicons name="navigate" size={16} color="#2563EB" />
-            </View>
-            <Text style={[styles.summaryCardValue, { color: '#2563EB' }]}>
-              {dashboardStats.activeTrips}
-            </Text>
-            <Text style={styles.summaryCardSub}>Live on route</Text>
-          </View>
-
-          <View style={[styles.summaryCard, { width: summaryCardWidth }]}>
-            <View style={styles.summaryCardHeader}>
-              <Text style={styles.summaryCardTitle}>COMPLETED TODAY</Text>
-              <Ionicons name="checkmark-done-circle" size={16} color="#22ef7e" />
-            </View>
-            <Text style={[styles.summaryCardValue, { color: '#22ef7e' }]}>
-              {dashboardStats.completedTripsToday}
-            </Text>
-            <Text style={styles.summaryCardSub}>Shift total</Text>
-          </View>
-
-          <View style={[styles.summaryCard, { width: summaryCardWidth }]}>
-            <View style={styles.summaryCardHeader}>
-              <Text style={styles.summaryCardTitle}>CONTAINERS</Text>
-              <Ionicons name="cube" size={16} color="#feb300" />
-            </View>
-            <Text style={[styles.summaryCardValue, { color: '#feb300' }]}>
-              {dashboardStats.containersTransportedToday}
-            </Text>
-            <Text style={styles.summaryCardSub}>Transported Containers</Text>
-          </View>
-
-          <View style={[styles.summaryCard, { width: summaryCardWidth }]}>
-            <View style={styles.summaryCardHeader}>
-              <Text style={styles.summaryCardTitle}>PENDING APPROVAL</Text>
-              <Ionicons name="time" size={16} color="#ff9800" />
-            </View>
-            <Text style={[styles.summaryCardValue, { color: '#ff9800' }]}>
-              {dashboardStats.tripsPendingApproval}
-            </Text>
-            <Text style={styles.summaryCardSub}>Awaiting Gate Pass</Text>
-          </View>
+        {/* ─── B. METRICS SUMMARY (2 CLEAN STAT CARDS) ─── */}
+        <View style={{ flexDirection: 'row', gap: 12, marginBottom: 16 }}>
+          <StatCard
+            label="TODAY'S TRIPS"
+            value={dashboardStats.completedTripsToday}
+            hint="Completed shifts"
+            iconName="checkmark-circle-outline"
+            valueColor="#0F766E"
+          />
+          <StatCard
+            label="CONTAINERS"
+            value={dashboardStats.containersTransportedToday}
+            hint="Transported units"
+            iconName="cube-outline"
+            valueColor="#0F766E"
+          />
         </View>
 
-        {/* ─── MONTHLY CONTAINER MISSION TARGET (50 / 300 CONTAINERS) ─── */}
-        <View style={styles.monthlyMissionCard}>
-          <View style={styles.monthlyMissionHeader}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
-              <View style={styles.monthlyMissionIconBox}>
-                <Ionicons name="trophy" size={18} color="#feb300" />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.monthlyMissionHeading}>MONTHLY CONTAINER MISSION</Text>
-                <Text style={styles.monthlyMissionSubHeading}>Target: 300 Containers for this month</Text>
-              </View>
-            </View>
-            <TouchableOpacity
-              style={styles.celebrationTriggerBtn}
-              activeOpacity={0.8}
-              onPress={triggerCelebrationAnimation}
-            >
-              <Ionicons name="sparkles" size={12} color="#FFFFFF" />
-              <Text style={styles.celebrationTriggerText}>50 TARGET</Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Large Counter display: Actual Containers / 150 */}
-          <View style={styles.missionNumbersRow}>
-            <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 6 }}>
-              <Text style={styles.missionCurrentVal}>{currentMonthContainers}</Text>
-              <Text style={styles.missionSlash}>/</Text>
-              <Text style={styles.missionTargetVal}>{monthlyTarget}</Text>
-              <Text style={styles.missionUnitText}>Containers</Text>
-            </View>
-            <View style={styles.missionPercentBadge}>
-              <Text style={styles.missionPercentText}>
-                {Math.round((currentMonthContainers / monthlyTarget) * 100)}%
-              </Text>
-            </View>
-          </View>
-
-          {/* Actual Trip Count Indicator in front */}
-          <View style={styles.missionTripInfoRow}>
-            <Ionicons name="git-commit" size={14} color="#2563EB" />
-            <Text style={styles.missionTripInfoText}>
-              Actual Completed: <Text style={{ color: '#2563EB', fontWeight: '900' }}>{actualTripCount} Trips</Text> ({currentMonthContainers} Containers transported)
-            </Text>
-          </View>
-
-          {/* Progress bar track */}
-          <View style={styles.missionProgressBarTrack}>
-            <View
-              style={[
-                styles.missionProgressBarFill,
-                { width: `${Math.min(100, Math.round((currentMonthContainers / monthlyTarget) * 100))}%` },
-              ]}
-            />
-          </View>
-
-          {/* Milestone Congratulation Trigger Banner */}
-          {currentMonthContainers >= 50 ? (
-            <TouchableOpacity
-              style={styles.milestoneNoticeBanner}
-              activeOpacity={0.85}
-              onPress={triggerCelebrationAnimation}
-            >
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
-                <View style={styles.milestoneStarCircle}>
-                  <Ionicons name="star" size={14} color="#FFFFFF" />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.milestoneNoticeTitle}>🎉 50 CONTAINERS MILESTONE REACHED!</Text>
-                  <Text style={styles.milestoneNoticeSub}>Tap here to view your celebration honors</Text>
-                </View>
-              </View>
-              <Ionicons name="chevron-forward" size={16} color="#22ef7e" />
-            </TouchableOpacity>
-          ) : (
-            <TouchableOpacity
-              style={[styles.milestoneNoticeBanner, { borderColor: 'rgba(254, 179, 0, 0.35)', backgroundColor: 'rgba(254, 179, 0, 0.08)' }]}
-              activeOpacity={0.85}
-              onPress={triggerCelebrationAnimation}
-            >
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
-                <View style={[styles.milestoneStarCircle, { backgroundColor: '#feb300' }]}>
-                  <Ionicons name="trophy" size={14} color="#FFFFFF" />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.milestoneNoticeTitle, { color: '#feb300' }]}>🎯 50 CONTAINERS TARGET MILESTONE</Text>
-                  <Text style={styles.milestoneNoticeSub}>{50 - currentMonthContainers > 0 ? `${50 - currentMonthContainers} more to reach 50!` : ''} Tap to celebrate milestone</Text>
-                </View>
-              </View>
-              <Ionicons name="chevron-forward" size={16} color="#feb300" />
-            </TouchableOpacity>
-          )}
-        </View>
-
-        {/* ─── C. DRIVER MISSION OPERATIONS CONSOLE (DYNAMIC TRIP LIFECYCLE) ─── */}
+        {/* ─── C. PRIMARY TRIP ACTION / ACTIVE MISSION ─── */}
         {activeTrip ? (
-          <View style={styles.missionLifecycleCard}>
-            {/* 1. Trip Header Bar with Live Status */}
-            <View style={styles.missionCardHeader}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <Ionicons name="git-network" size={20} color="#2563EB" />
-                <View>
-                  <Text style={styles.missionIdText}>
-                    TRIP #{activeTrip.tripNumber || activeTrip.id?.slice(0, 8)}
-                  </Text>
-                  <Text style={styles.missionVesselText}>
-                    {activeTrip.vesselName || 'MV Colombo Express'}
-                  </Text>
-                </View>
+          <View style={{ backgroundColor: '#FFFFFF', borderRadius: 12, padding: 16, borderWidth: 1, borderColor: '#E5EAEC', marginBottom: 16 }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <View>
+                <Text style={{ fontSize: 13, color: '#6B7C85', fontWeight: '600' }}>ACTIVE MISSION</Text>
+                <Text style={{ fontSize: 18, color: '#1F2D33', fontWeight: '700' }}>
+                  Trip #{activeTrip.tripNumber || activeTrip.id?.slice(0, 8)}
+                </Text>
+                <Text style={{ fontSize: 13, color: '#6B7C85', marginTop: 2 }}>
+                  {activeTrip.vesselName || 'MV ITT Express'}
+                </Text>
               </View>
-
-              {/* Status Pill Badge */}
-              {activeTrip.status === 'PENDING_APPROVAL' && (
-                <View style={styles.statusPillPending}>
-                  <Ionicons name="time" size={13} color="#feb300" />
-                  <Text style={styles.statusPillTextPending}>AWAITING CONFIRMATION</Text>
-                </View>
-              )}
-              {activeTrip.status === 'APPROVED' && (
-                <View style={styles.statusPillApproved}>
-                  <Ionicons name="checkmark-circle" size={13} color="#22ef7e" />
-                  <Text style={styles.statusPillTextApproved}>SUPERVISOR CONFIRMED</Text>
-                </View>
-              )}
-              {activeTrip.status === 'IN_PROGRESS' && (
-                <View style={styles.statusPillProgress}>
-                  <View style={styles.livePulseDot} />
-                  <Text style={styles.statusPillTextProgress}>TRIP IN PROGRESS</Text>
-                </View>
-              )}
-              {activeTrip.status === 'ARRIVED' && (
-                <View style={styles.statusPillArrived}>
-                  <Ionicons name="flag" size={13} color="#2563EB" />
-                  <Text style={styles.statusPillTextArrived}>ARRIVED AT TERMINAL</Text>
-                </View>
-              )}
-              {activeTrip.status === 'COMPLETED' && (
-                <View style={styles.statusPillCompleted}>
-                  <Ionicons name="checkmark-done" size={13} color="#22ef7e" />
-                  <Text style={styles.statusPillTextCompleted}>TRIP COMPLETED</Text>
-                </View>
-              )}
+              <StatusPill status={activeTrip.status} />
             </View>
 
-            {/* ─── TRIP STARTED DATE TIME & END TIME DETAILS ─── */}
+            {/* Route */}
+            <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#F7F9FA', borderRadius: 8, padding: 12, marginBottom: 12 }}>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 11, color: '#6B7C85', fontWeight: '700' }}>FROM</Text>
+                <Text style={{ fontSize: 15, color: '#1F2D33', fontWeight: '700' }}>{activeTrip.sourceTerminal || 'CICT'}</Text>
+              </View>
+              <Ionicons name="arrow-forward" size={18} color="#0F766E" />
+              <View style={{ flex: 1, alignItems: 'flex-end' }}>
+                <Text style={{ fontSize: 11, color: '#6B7C85', fontWeight: '700' }}>TO</Text>
+                <Text style={{ fontSize: 15, color: '#0F766E', fontWeight: '700' }}>{getTripDischargeTerminal(activeTrip)}</Text>
+              </View>
+            </View>
+
+            {/* Containers summary & timing */}
             {(() => {
               const timing = getTripTimingDetails(activeTrip);
               return (
-                <View style={styles.missionTimingPanel}>
-                  <View style={styles.missionTimingCol}>
-                    <View style={styles.missionTimingHeader}>
-                      <Ionicons name="play-circle" size={12} color="#2563EB" />
-                      <Text style={styles.missionTimingLabel}>STARTED DATE & TIME</Text>
-                    </View>
-                    <Text style={styles.missionTimingDate}>{timing.startDate}</Text>
-                    <Text style={styles.missionTimingTime}>{timing.startTime}</Text>
-                  </View>
-
-                  <View style={styles.missionTimingDivider}>
-                    <Ionicons name="arrow-forward" size={14} color="#3a4756" />
-                    {timing.duration && (
-                      <View style={styles.missionDurationPill}>
-                        <Ionicons name="timer-outline" size={10} color="#22ef7e" />
-                        <Text style={styles.missionDurationText}>{timing.duration}</Text>
-                      </View>
-                    )}
-                  </View>
-
-                  <View style={styles.missionTimingCol}>
-                    <View style={styles.missionTimingHeader}>
-                      <Ionicons
-                        name={timing.isCompleted ? 'checkmark-circle' : timing.isPending ? 'time' : 'navigate-circle'}
-                        size={12}
-                        color={timing.statusColor}
-                      />
-                      <Text style={[styles.missionTimingLabel, { color: timing.statusColor }]}>
-                        {timing.isCompleted ? 'COMPLETED DATE & TIME' : timing.isPending ? 'DISCHARGED (AWAITING SIGN-OFF)' : 'CURRENT STATUS'}
-                      </Text>
-                    </View>
-                    <Text style={[styles.missionTimingDate, !timing.isCompleted && !timing.isPending && { color: '#849396' }]}>
-                      {timing.endDate}
-                    </Text>
-                    <Text style={[styles.missionTimingTime, { color: timing.statusColor }]}>
-                      {timing.endTime}
-                    </Text>
-                  </View>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, borderTopWidth: 1, borderTopColor: '#E5EAEC', paddingTop: 10 }}>
+                  <Text style={{ fontSize: 13, color: '#1F2D33', fontWeight: '600' }}>
+                    📦 {activeTrip.containers?.length || 1} Container{(activeTrip.containers?.length || 1) > 1 ? 's' : ''} Loaded
+                  </Text>
+                  <Text style={{ fontSize: 12, color: '#6B7C85' }}>
+                    {timing.duration ? `⏱ ${timing.duration}` : `Started: ${timing.startTime}`}
+                  </Text>
                 </View>
               );
             })()}
 
-            {/* 2. Route & Terminal Pair */}
-            <View style={styles.routePairBox}>
-              <View style={styles.routeCol}>
-                <Text style={styles.routeLabel}>LOAD FROM</Text>
-                <Text style={styles.routeTerminal}>{activeTrip.sourceTerminal || 'CICT'}</Text>
-                <Text style={styles.routeSub}>Origin Gate</Text>
-              </View>
-
-              <View style={styles.routeArrowBox}>
-                <Ionicons name="arrow-forward" size={20} color="#2563EB" />
-                <Text style={styles.routeDistanceText}>ITT ROUTE</Text>
-              </View>
-
-              <View style={[styles.routeCol, { alignItems: 'flex-end' }]}>
-                <Text style={styles.routeLabel}>DISCHARGE TO</Text>
-                <Text style={[styles.routeTerminal, { color: '#22ef7e' }]}>
-                  {getTripDischargeTerminal(activeTrip)}
-                </Text>
-                <Text style={styles.routeSub}>Destination Bay</Text>
-              </View>
-            </View>
-
-            {/* 3. Containers on Chassis */}
-            <View style={styles.containersListBox}>
-              <View style={styles.containersListHeader}>
-                <Ionicons name="cube" size={14} color="#2563EB" />
-                <Text style={styles.containersListTitle}>
-                  LOADED CONTAINERS ({activeTrip.containers?.length || 1})
-                </Text>
-                <Text style={styles.chassisTag}>CHE: {activeTrip.chassisNumber || user?.cheNumber || 'SCK 100'}</Text>
-              </View>
-
-              <View style={styles.chassisRuleBadge}>
-                <Ionicons name="shield-checkmark" size={12} color="#22ef7e" />
-                <Text style={styles.chassisRuleBadgeText}>
-                  Chassis Load: <Text style={{ color: '#2563EB', fontWeight: '800' }}>{count40Ft > 0 ? '1 × 40FT' : `${count20Ft || activeTrip.containers?.length || 1} × 20FT`}</Text> · Policy: Max 1×40FT or 2×20FT only
-                </Text>
-              </View>
-
-              {/* Dual vs Single Discharge Terminal Routing Strip */}
-              {(() => {
-                const termStr = getTripDischargeTerminal(activeTrip);
-                const isDual = termStr.includes('&');
-                return (
-                  <View
-                    style={{
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      gap: 6,
-                      backgroundColor: isDual ? '#EFF6FF' : 'rgba(34, 239, 126, 0.1)',
-                      borderWidth: 1,
-                      borderColor: isDual ? '#EFF6FF' : 'rgba(34, 239, 126, 0.35)',
-                      borderRadius: 6,
-                      paddingHorizontal: 8,
-                      paddingVertical: 5,
-                      marginBottom: 8,
-                    }}
-                  >
-                    <Ionicons
-                      name={isDual ? "swap-horizontal" : "checkmark-circle"}
-                      size={13}
-                      color={isDual ? "#2563EB" : "#22ef7e"}
-                    />
-                    <Text style={{ fontSize: 11, fontWeight: '700', color: isDual ? '#2563EB' : '#22ef7e', flex: 1 }}>
-                      {isDual
-                        ? `DUAL DISCHARGE TERMINALS: ${termStr}`
-                        : `DISCHARGE TERMINAL: ${termStr}`}
-                    </Text>
-                  </View>
-                );
-              })()}
-
-              {(activeTrip.containers || []).map((c: any, idx: number) => {
-                const cDest = c.destTerminal || getTripDischargeTerminal(activeTrip);
-                return (
-                  <View key={c.id || idx} style={styles.containerItemRow}>
-                    <View style={styles.containerBadge}>
-                      <Text style={styles.containerBadgeText}>{idx + 1}</Text>
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.containerItemNumber}>{c.containerNumber || 'MSKU-88219-0'}</Text>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2, flexWrap: 'wrap' }}>
-                        <Text style={styles.containerItemSub}>
-                          {c.size || '20FT'} · {c.damageStatus === 'DAMAGED' ? '⚠️ DAMAGED' : '✓ SOUND'}
-                        </Text>
-                        <View style={{ backgroundColor: '#EFF6FF', paddingHorizontal: 6, paddingVertical: 1, borderRadius: 4, borderWidth: 1, borderColor: '#2563EB' }}>
-                          <Text style={{ color: '#2563EB', fontSize: 10, fontWeight: '800' }}>
-                            Discharge: {cDest}
-                          </Text>
-                        </View>
-                      </View>
-                    </View>
-                    <View style={styles.containerStatusTag}>
-                      <Text style={styles.containerStatusTagText}>{c.status || activeTrip.status}</Text>
-                    </View>
-                  </View>
-                );
-              })}
-            </View>
-
-            {/* 4. DYNAMIC NOTIFICATIONS & ACTION BUTTONS */}
-
-            {/* STATE A: Awaiting Supervisor Confirmation After Trip Delivery */}
-            {activeTrip.status === 'PENDING_APPROVAL' && (
-              <View style={styles.notificationBannerPending}>
-                <View style={styles.notificationBannerHeader}>
-                  <Ionicons name="hourglass" size={20} color="#feb300" />
-                  <Text style={styles.notificationBannerTitlePending}>
-                    AWAITING SUPERVISOR CONFIRMATION
-                  </Text>
-                </View>
-                <Text style={styles.notificationBannerMsg}>
-                  Trip delivered and containers discharged at {activeTrip.destTerminal || getTripDischargeTerminal(activeTrip)}! Complete operational discharge details have been transmitted to the Operations Supervisor for verification and sign-off.
-                </Text>
-
-                {/* ─── ELEGANT DISCHARGE & SEAL VERIFICATION MANIFEST CARD ─── */}
-                <View style={styles.pendingDetailsCard}>
-                  {/* Card Header Strip */}
-                  <View style={styles.pendingCardHeaderStrip}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                      <Ionicons name="shield-checkmark" size={13} color="#2563EB" />
-                      <Text style={styles.pendingCardHeaderTitle}>
-                        SLPA PORT CLEARANCE MANIFEST
-                      </Text>
-                    </View>
-                    <View style={styles.pendingAuditedBadge}>
-                      <Text style={styles.pendingAuditedBadgeText}>VERIFIED & LOGGED</Text>
-                    </View>
-                  </View>
-
-                  {/* Operational Details Metrics Row */}
-                  <View style={styles.pendingDetailsMetricsRow}>
-                    {/* Bay / Slot */}
-                    <View style={styles.pendingMetricPill}>
-                      <Text style={styles.pendingMetricPillLabel}>DISCHARGE BAY</Text>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
-                        <Ionicons name="location" size={11} color="#feb300" />
-                        <Text style={styles.pendingMetricPillValue} numberOfLines={1}>
-                          {activeTrip.destTerminal || getTripDischargeTerminal(activeTrip)} · {activeTrip.dischargeBay || 'Bay 04, Crane 02'}
-                        </Text>
-                      </View>
-                    </View>
-
-                    {/* Seal Status */}
-                    <View style={[
-                      styles.pendingMetricPill,
-                      activeTrip.sealStatus?.includes('DAMAGED') ? styles.pillRedBorder : styles.pillGreenBorder,
-                    ]}>
-                      <Text style={styles.pendingMetricPillLabel}>SEAL STATUS</Text>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
-                        <Ionicons
-                          name={activeTrip.sealStatus?.includes('DAMAGED') ? 'warning' : 'shield-checkmark'}
-                          size={11}
-                          color={activeTrip.sealStatus?.includes('DAMAGED') ? '#ff5252' : '#22ef7e'}
-                        />
-                        <Text style={[styles.pendingMetricPillValue, { color: activeTrip.sealStatus?.includes('DAMAGED') ? '#ff5252' : '#22ef7e' }]} numberOfLines={1}>
-                          {activeTrip.sealStatus || 'INTACT (VERIFIED)'}
-                        </Text>
-                      </View>
-                    </View>
-
-                    {/* Cargo Condition */}
-                    <View style={[
-                      styles.pendingMetricPill,
-                      activeTrip.damageStatus === 'DAMAGED' ? styles.pillRedBorder : styles.pillGreenBorder,
-                    ]}>
-                      <Text style={styles.pendingMetricPillLabel}>CARGO</Text>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
-                        <Ionicons
-                          name={activeTrip.damageStatus === 'DAMAGED' ? 'alert-circle' : 'checkmark-circle'}
-                          size={11}
-                          color={activeTrip.damageStatus === 'DAMAGED' ? '#ff5252' : '#22ef7e'}
-                        />
-                        <Text style={[styles.pendingMetricPillValue, { color: activeTrip.damageStatus === 'DAMAGED' ? '#ff5252' : '#22ef7e' }]} numberOfLines={1}>
-                          {activeTrip.damageStatus === 'DAMAGED' ? 'DAMAGED' : 'SOUND'}
-                        </Text>
-                      </View>
-                    </View>
-                  </View>
-
-                  {/* Full-Width Driver Remarks Box */}
-                  <View style={styles.driverRemarksCallout}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 3 }}>
-                      <Ionicons name="chatbubble-ellipses" size={12} color="#2563EB" />
-                      <Text style={styles.driverRemarksCalloutLabel}>DRIVER COMPLETION NOTES</Text>
-                    </View>
-                    <Text style={styles.driverRemarksCalloutText}>
-                      "{activeTrip.driverCompletionNotes || 'Containers discharged safely at destination terminal berth. Seals inspected and verified intact.'}"
-                    </Text>
-                  </View>
-
-                  {/* Security Footer */}
-                  <View style={styles.pendingAuditFooter}>
-                    <Ionicons name="lock-closed" size={11} color="#849396" />
-                    <Text style={styles.pendingAuditFooterText}>
-                      SLPA Digital Handover Audit • Transmitted to Port Operations Supervisor
-                    </Text>
-                  </View>
-                </View>
-
-                <View style={styles.pendingActionInfoRow}>
-                  <ActivityIndicator size="small" color="#feb300" />
-                  <Text style={styles.pendingWaitingText}>
-                    Waiting for supervisor sign-off to update 300 Containers target (+1) & allowance...
-                  </Text>
-                </View>
-              </View>
-            )}
-
-            {/* STATE B: Supervisor Confirmed Trip */}
-            {activeTrip.status === 'APPROVED' && (
-              <View style={styles.notificationBannerApproved}>
-                <View style={styles.notificationBannerHeader}>
-                  <Ionicons name="checkmark-circle" size={22} color="#22ef7e" />
-                  <Text style={styles.notificationBannerTitleApproved}>
-                    SUPERVISOR CONFIRMED THE TRIP! 🎉
-                  </Text>
-                </View>
-                <Text style={styles.notificationBannerMsgApproved}>
-                  Your delivery has been officially confirmed by the operations supervisor! Your completed trip count and driver allowance have been updated.
-                </Text>
-
-                <TouchableOpacity
-                  style={[styles.startTripPrimaryBtn, { backgroundColor: '#22ef7e' }]}
-                  onPress={() => router.push('/(driver)/trips/new')}
-                  activeOpacity={0.88}
-                >
-                  <Ionicons name="add-circle" size={22} color="#FFFFFF" />
-                  <Text style={styles.startTripPrimaryBtnText}>START NEXT TRIP</Text>
-                </TouchableOpacity>
-              </View>
-            )}
-
-            {/* STATE C: Trip In Progress -> ARRIVE THE TERMINAL BUTTON */}
-            {activeTrip.status === 'IN_PROGRESS' && (
-              <View style={styles.notificationBannerInProgress}>
-                <View style={styles.notificationBannerHeader}>
-                  <Ionicons name="navigate-circle" size={22} color="#2563EB" />
-                  <Text style={styles.notificationBannerTitleInProgress}>
-                    TRIP IN TRANSIT TO {getTripDischargeTerminal(activeTrip)}
-                  </Text>
-                </View>
-                <Text style={styles.notificationBannerMsg}>
-                  Drive safely along the designated ITT corridor. When you pull up to the discharge gate, tap the button below to register terminal arrival.
-                </Text>
-
-                <TouchableOpacity
-                  style={styles.arriveTerminalBtn}
-                  onPress={() => handleArriveTerminal(activeTrip.id)}
-                  disabled={actionInProgress}
-                  activeOpacity={0.88}
-                >
-                  {actionInProgress ? (
-                    <ActivityIndicator color="#FFFFFF" size="small" />
-                  ) : (
-                    <>
-                      <Ionicons name="location" size={24} color="#FFFFFF" />
-                      <Text style={styles.arriveTerminalBtnText}>
-                        ARRIVED AT TERMINAL ({getTripDischargeTerminal(activeTrip)})
-                      </Text>
-                    </>
-                  )}
-                </TouchableOpacity>
-              </View>
-            )}
-
-            {/* STATE D: Arrived At Terminal -> DISCHARGE & SUBMIT FOR SUPERVISOR APPROVAL */}
-            {activeTrip.status === 'ARRIVED' && (
-              <View style={styles.notificationBannerArrived}>
-                <View style={styles.notificationBannerHeader}>
-                  <Ionicons name="flag" size={22} color="#22ef7e" />
-                  <Text style={styles.notificationBannerTitleArrived}>
-                    ARRIVED AT {getTripDischargeTerminal(activeTrip)}
-                  </Text>
-                </View>
-                <Text style={styles.notificationBannerMsg}>
-                  Containers are ready to be discharged from chassis {activeTrip.chassisNumber || user?.cheNumber || 'CHE 100'}. Verify offloading bay, container seal status, and cargo condition, then submit to Operations Supervisor for delivery clearance.
-                </Text>
-
-                <TouchableOpacity
-                  style={[styles.completeTripBtn, { backgroundColor: '#2563EB', marginTop: 10 }]}
+            {/* Action buttons (3 taps or fewer) */}
+            <View style={{ gap: 8 }}>
+              {activeTrip.status === 'IN_PROGRESS' && (
+                <AppButton
+                  label="Mark Arrival & Complete Trip"
                   onPress={() => handleOpenDischargeModal(activeTrip)}
-                  disabled={actionInProgress}
-                  activeOpacity={0.88}
-                >
-                  {actionInProgress ? (
-                    <ActivityIndicator color="#FFFFFF" size="small" />
-                  ) : (
-                    <>
-                      <Ionicons name="paper-plane" size={18} color="#FFFFFF" />
-                      <Text style={[styles.completeTripBtnText, { color: '#FFFFFF' }]}>
-                        DISCHARGE & SUBMIT FOR SUPERVISOR APPROVAL
-                      </Text>
-                    </>
-                  )}
-                </TouchableOpacity>
-              </View>
-            )}
-
-            {/* STATE E: Trip Completed Confirmation */}
-            {activeTrip.status === 'COMPLETED' && (
-              <View style={styles.notificationBannerCompleted}>
-                <View style={styles.notificationBannerHeader}>
-                  <Ionicons name="trophy" size={22} color="#22ef7e" />
-                  <Text style={styles.notificationBannerTitleCompleted}>
-                    TRIP CONFIRMED & COMPLETED! 🎉
+                  variant="primary"
+                  iconName="checkmark-done"
+                />
+              )}
+              {activeTrip.status === 'ARRIVED' && (
+                <AppButton
+                  label="Complete Trip (Discharge Containers)"
+                  onPress={() => handleOpenDischargeModal(activeTrip)}
+                  variant="primary"
+                  iconName="checkmark-done"
+                />
+              )}
+              {activeTrip.status === 'PENDING_APPROVAL' && (
+                <View style={{ backgroundColor: '#FFF4DB', borderRadius: 8, padding: 12, alignItems: 'center' }}>
+                  <Text style={{ fontSize: 13, color: '#8A5A00', fontWeight: '600' }}>
+                    Awaiting Supervisor Sign-off
                   </Text>
                 </View>
-                <Text style={styles.notificationBannerMsg}>
-                  Delivery verified and completed! Your completed trip count (+1) and earnings have been updated!
-                </Text>
-
-                <TouchableOpacity
-                  style={[styles.startTripPrimaryBtn, { backgroundColor: '#22ef7e', marginTop: 12 }]}
-                  onPress={() => router.push('/(driver)/trips/new')}
-                  activeOpacity={0.88}
-                >
-                  <Ionicons name="add-circle" size={22} color="#FFFFFF" />
-                  <Text style={styles.startTripPrimaryBtnText}>START NEXT TRIP</Text>
-                </TouchableOpacity>
+              )}
+              <View style={{ flexDirection: 'row', gap: 8, marginTop: 4 }}>
+                <View style={{ flex: 1 }}>
+                  <AppButton
+                    label="Report Damage"
+                    variant="outline"
+                    onPress={() => setDamageReportModalVisible(true)}
+                    iconName="warning-outline"
+                  />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <AppButton
+                    label="Allowance"
+                    variant="outline"
+                    onPress={() => setAllowanceModalVisible(true)}
+                    iconName="cash-outline"
+                  />
+                </View>
               </View>
-            )}
+            </View>
           </View>
         ) : (
-          <View style={styles.noActiveCard}>
-            <Ionicons name="hourglass-outline" size={32} color="#849396" />
-            <Text style={styles.noActiveTitle}>NO ACTIVE MISSION</Text>
-            <Text style={styles.noActiveSub}>
-              You currently have no mission in progress. Tap below to enter trip details and container numbers to begin.
+          <View style={{ backgroundColor: '#FFFFFF', borderRadius: 12, padding: 20, borderWidth: 1, borderColor: '#E5EAEC', marginBottom: 16, alignItems: 'center' }}>
+            <Ionicons name="boat-outline" size={36} color="#0F766E" style={{ marginBottom: 8 }} />
+            <Text style={{ fontSize: 17, fontWeight: '700', color: '#1F2D33', marginBottom: 4 }}>
+              Ready for your next trip?
             </Text>
-            <TouchableOpacity style={styles.startManualBtn} onPress={() => router.push('/(driver)/trips/new')}>
-              <Ionicons name="add-circle" size={18} color="#FFFFFF" />
-              <Text style={styles.startManualBtnText}>CREATE NEW TRIP</Text>
-            </TouchableOpacity>
+            <Text style={{ fontSize: 13, color: '#6B7C85', textAlign: 'center', marginBottom: 16 }}>
+              Enter vessel, origin, destination and container numbers to begin your haulage.
+            </Text>
+            <View style={{ width: '100%' }}>
+              <AppButton
+                label="+ Start New Trip"
+                variant="primary"
+                onPress={() => router.push('/(driver)/trips/new')}
+                iconName="add-circle"
+              />
+            </View>
           </View>
         )}
 
-        {/* ─── D. CREATE NEW TRIP ACTION ─── */}
-        <TouchableOpacity
-          style={styles.prominentAddContainerBtn}
-          onPress={() => router.push('/(driver)/trips/new')}
-          activeOpacity={0.88}
-        >
-          <View style={styles.prominentAddIconCircle}>
-            <Ionicons name="trail-sign" size={20} color="#FFFFFF" />
+        {/* ─── D. RECENT TRIPS LIST ─── */}
+        <View style={{ backgroundColor: '#FFFFFF', borderRadius: 12, padding: 16, borderWidth: 1, borderColor: '#E5EAEC', marginBottom: 24 }}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+            <Text style={{ fontSize: 16, fontWeight: '700', color: '#1F2D33' }}>Recent Trips</Text>
+            <TouchableOpacity onPress={() => router.push('/(driver)/(tabs)/trips')}>
+              <Text style={{ fontSize: 13, fontWeight: '600', color: '#0F766E' }}>View All</Text>
+            </TouchableOpacity>
           </View>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.prominentAddTitle}>CREATE NEW TRIP</Text>
-            <Text style={styles.prominentAddSub}>
-              Enter vessel, origin, destination and container numbers with ISO 6346 verification
+
+          {trips && trips.length > 0 ? (
+            trips.slice(0, 4).map((t: any, index: number) => {
+              const timing = getTripTimingDetails(t);
+              const dest = getTripDischargeTerminal(t);
+              return (
+                <ListRow
+                  key={t.id || index}
+                  title={`Trip #${t.tripNumber || t.id?.slice(0, 8)} • ${t.vesselName || 'ITT'}`}
+                  subtitle={`${t.sourceTerminal || 'Origin'} → ${dest} • ${timing.duration || timing.startTime || timing.startDate}`}
+                  rightElement={<StatusPill status={t.status} />}
+                  onPress={() => router.push('/(driver)/(tabs)/trips')}
+                  showArrow
+                />
+              );
+            })
+          ) : (
+            <Text style={{ fontSize: 13, color: '#6B7C85', paddingVertical: 12, textAlign: 'center' }}>
+              No trips recorded yet.
             </Text>
-          </View>
-          <Ionicons name="chevron-forward" size={20} color="#2563EB" />
-        </TouchableOpacity>
-
-        {/* ─── E. 8-STAGE WORKFLOW PROGRESS TRACKER ─── */}
-        <View style={styles.progressTrackerCard}>
-          <View style={styles.trackerHeader}>
-            <Ionicons name="git-commit" size={16} color="#2563EB" />
-            <Text style={styles.trackerTitle}>8-STAGE INTER-TERMINAL WORKFLOW</Text>
-          </View>
-
-          <View style={styles.stagesList}>
-            {[
-              { id: 1, title: '1. Trip Assigned', done: currentStageIndex >= 1 },
-              { id: 2, title: '2. Containers Added', done: currentStageIndex >= 2 },
-              { id: 3, title: '3. Trip Started', done: currentStageIndex >= 3 },
-              { id: 4, title: '4. Arrived at Destination', done: currentStageIndex >= 4 },
-              { id: 5, title: '5. Handover Confirmed', done: currentStageIndex >= 5 },
-              { id: 6, title: '6. Trip Submitted', done: currentStageIndex >= 6 },
-              { id: 7, title: '7. Supervisor Approved', done: currentStageIndex >= 7 },
-              { id: 8, title: '8. Trip Completed', done: currentStageIndex >= 8 },
-            ].map((stage) => (
-              <View key={stage.id} style={styles.stageItem}>
-                <View
-                  style={[
-                    styles.stageCircle,
-                    stage.done && styles.stageCircleDone,
-                    stage.id === currentStageIndex && styles.stageCircleActive,
-                  ]}
-                >
-                  <Ionicons
-                    name={stage.done ? 'checkmark' : 'ellipse'}
-                    size={10}
-                    color={stage.done ? '#FFFFFF' : '#849396'}
-                  />
-                </View>
-                <Text
-                  style={[
-                    styles.stageItemText,
-                    stage.done && styles.stageItemTextDone,
-                    stage.id === currentStageIndex && styles.stageItemTextActive,
-                  ]}
-                >
-                  {stage.title}
-                </Text>
-              </View>
-            ))}
-          </View>
-
-          {/* Quick Stage Progression Buttons */}
-          {activeTrip && (
-            <View style={styles.stageButtonsRow}>
-              {currentStageIndex < 3 && (
-                <TouchableOpacity
-                  style={styles.stageActionBtn}
-                  onPress={() => handleTransitionTripStage('IN_PROGRESS', 'Trip Started')}
-                >
-                  <Ionicons name="play" size={14} color="#FFFFFF" />
-                  <Text style={styles.stageActionBtnText}>START TRIP</Text>
-                </TouchableOpacity>
-              )}
-              {currentStageIndex === 3 && (
-                <TouchableOpacity
-                  style={styles.stageActionBtn}
-                  onPress={() => handleTransitionTripStage('ARRIVED', 'Arrived at Destination')}
-                >
-                  <Ionicons name="flag" size={14} color="#FFFFFF" />
-                  <Text style={styles.stageActionBtnText}>MARK ARRIVAL</Text>
-                </TouchableOpacity>
-              )}
-              {currentStageIndex === 4 && (
-                <TouchableOpacity
-                  style={styles.stageActionBtn}
-                  onPress={() => handleTransitionTripStage('HANDOVER_CONFIRMED', 'Handover Confirmed')}
-                >
-                  <Ionicons name="checkmark-done" size={14} color="#FFFFFF" />
-                  <Text style={styles.stageActionBtnText}>CONFIRM HANDOVER</Text>
-                </TouchableOpacity>
-              )}
-              {currentStageIndex === 5 && (
-                <TouchableOpacity
-                  style={styles.stageActionBtn}
-                  onPress={() => handleTransitionTripStage('PENDING_APPROVAL', 'Submitted for Approval')}
-                >
-                  <Ionicons name="send" size={14} color="#FFFFFF" />
-                  <Text style={styles.stageActionBtnText}>SUBMIT FOR APPROVAL</Text>
-                </TouchableOpacity>
-              )}
-            </View>
           )}
-        </View>
-
-        {/* ─── F. DRIVER QUICK ACTIONS ─── */}
-        <View style={styles.quickActionsSection}>
-          <Text style={styles.sectionHeaderTitle}>DRIVER QUICK ACTIONS</Text>
-          <View style={styles.quickActionsGrid}>
-            <TouchableOpacity style={styles.quickActionTile} onPress={() => router.push('/(driver)/trips/new')}>
-              <View style={[styles.tileIconCircle, { backgroundColor: '#EFF6FF' }]}>
-                <Ionicons name="add-circle" size={20} color="#2563EB" />
-              </View>
-              <Text style={styles.tileTitle}>New Trip</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.quickActionTile} onPress={() => router.push('/(driver)/(tabs)/trips')}>
-              <View style={[styles.tileIconCircle, { backgroundColor: 'rgba(34, 239, 126, 0.15)' }]}>
-                <Ionicons name="layers" size={20} color="#22ef7e" />
-              </View>
-              <Text style={styles.tileTitle}>My Trips</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.quickActionTile} onPress={() => router.push('/(driver)/(tabs)/trips')}>
-              <View style={[styles.tileIconCircle, { backgroundColor: 'rgba(254, 179, 0, 0.15)' }]}>
-                <Ionicons name="time" size={20} color="#feb300" />
-              </View>
-              <Text style={styles.tileTitle}>Trip History</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.quickActionTile} onPress={() => setAllowanceModalVisible(true)}>
-              <View style={[styles.tileIconCircle, { backgroundColor: 'rgba(34, 239, 126, 0.15)' }]}>
-                <Ionicons name="cash" size={20} color="#22ef7e" />
-              </View>
-              <Text style={styles.tileTitle}>My Allowance</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.quickActionTile} onPress={() => setDamageReportModalVisible(true)}>
-              <View style={[styles.tileIconCircle, { backgroundColor: 'rgba(255, 82, 82, 0.15)' }]}>
-                <Ionicons name="warning" size={20} color="#ff5252" />
-              </View>
-              <Text style={styles.tileTitle}>Report Damage</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.quickActionTile} onPress={() => setSupervisorModalVisible(true)}>
-              <View style={[styles.tileIconCircle, { backgroundColor: '#EFF6FF' }]}>
-                <Ionicons name="chatbubbles" size={20} color="#2563EB" />
-              </View>
-              <Text style={styles.tileTitle}>Supervisor</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.quickActionTile} onPress={() => router.push('/(driver)/(tabs)/profile')}>
-              <View style={[styles.tileIconCircle, { backgroundColor: 'rgba(254, 179, 0, 0.15)' }]}>
-                <Ionicons name="person-circle" size={20} color="#feb300" />
-              </View>
-              <Text style={styles.tileTitle}>Cab Specs</Text>
-            </TouchableOpacity>
-          </View>
         </View>
 
         <View style={{ height: 40 }} />

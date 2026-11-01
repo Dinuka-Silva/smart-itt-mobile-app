@@ -14,23 +14,19 @@ export default function AdminTabsLayout() {
         headerShown: false,
         tabBarStyle: {
           backgroundColor: '#FFFFFF',
-          borderTopColor: '#E2E8F0',
+          borderTopColor: '#E5EAEC',
           borderTopWidth: 1,
-          elevation: 4,
-          shadowColor: '#000000',
-          shadowOffset: { width: 0, height: -2 },
-          shadowOpacity: 0.05,
-          shadowRadius: 8,
-          height: 64 + bottomInset,
+          elevation: 0,
+          shadowOpacity: 0,
+          height: 60 + bottomInset,
           paddingBottom: bottomInset,
-          paddingTop: 8,
+          paddingTop: 6,
         },
-        tabBarActiveTintColor: '#2563EB',
-        tabBarInactiveTintColor: '#64748B',
+        tabBarActiveTintColor: '#0F766E',
+        tabBarInactiveTintColor: '#6B7C85',
         tabBarLabelStyle: {
-          fontSize: 9.5,
-          fontWeight: '700',
-          letterSpacing: 0.4,
+          fontSize: 11,
+          fontWeight: '600',
           marginTop: 2,
         },
       }}
@@ -38,10 +34,14 @@ export default function AdminTabsLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Dashboard',
-          tabBarIcon: ({ color, focused }) => (
+          title: 'Home',
+          tabBarIcon: ({ focused }) => (
             <View style={[styles.iconWrap, focused && styles.iconWrapActive]}>
-              <Ionicons name={focused ? 'speedometer' : 'speedometer-outline'} size={20} color={color as any} />
+              <Ionicons
+                name={focused ? 'home' : 'home-outline'}
+                size={20}
+                color={focused ? '#0F766E' : '#6B7C85'}
+              />
             </View>
           ),
         }}
@@ -50,20 +50,13 @@ export default function AdminTabsLayout() {
         name="drivers"
         options={{
           title: 'Drivers',
-          tabBarIcon: ({ color, focused }) => (
+          tabBarIcon: ({ focused }) => (
             <View style={[styles.iconWrap, focused && styles.iconWrapActive]}>
-              <Ionicons name={focused ? 'people' : 'people-outline'} size={20} color={color as any} />
-            </View>
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="vehicles"
-        options={{
-          title: 'Vehicles',
-          tabBarIcon: ({ color, focused }) => (
-            <View style={[styles.iconWrap, focused && styles.iconWrapActive]}>
-              <Ionicons name={focused ? 'bus' : 'bus-outline'} size={20} color={color as any} />
+              <Ionicons
+                name={focused ? 'people' : 'people-outline'}
+                size={20}
+                color={focused ? '#0F766E' : '#6B7C85'}
+              />
             </View>
           ),
         }}
@@ -72,20 +65,28 @@ export default function AdminTabsLayout() {
         name="supervisors"
         options={{
           title: 'Supervisors',
-          tabBarIcon: ({ color, focused }) => (
+          tabBarIcon: ({ focused }) => (
             <View style={[styles.iconWrap, focused && styles.iconWrapActive]}>
-              <Ionicons name={focused ? 'shield-checkmark' : 'shield-checkmark-outline'} size={20} color={color as any} />
+              <Ionicons
+                name={focused ? 'shield-checkmark' : 'shield-checkmark-outline'}
+                size={20}
+                color={focused ? '#0F766E' : '#6B7C85'}
+              />
             </View>
           ),
         }}
       />
       <Tabs.Screen
-        name="trips"
+        name="vehicles"
         options={{
-          title: 'Trips',
-          tabBarIcon: ({ color, focused }) => (
+          title: 'Vehicles',
+          tabBarIcon: ({ focused }) => (
             <View style={[styles.iconWrap, focused && styles.iconWrapActive]}>
-              <Ionicons name={focused ? 'swap-horizontal' : 'swap-horizontal-outline'} size={20} color={color as any} />
+              <Ionicons
+                name={focused ? 'bus' : 'bus-outline'}
+                size={20}
+                color={focused ? '#0F766E' : '#6B7C85'}
+              />
             </View>
           ),
         }}
@@ -94,11 +95,21 @@ export default function AdminTabsLayout() {
         name="reports"
         options={{
           title: 'Reports',
-          tabBarIcon: ({ color, focused }) => (
+          tabBarIcon: ({ focused }) => (
             <View style={[styles.iconWrap, focused && styles.iconWrapActive]}>
-              <Ionicons name={focused ? 'bar-chart' : 'bar-chart-outline'} size={20} color={color as any} />
+              <Ionicons
+                name={focused ? 'document-text' : 'document-text-outline'}
+                size={20}
+                color={focused ? '#0F766E' : '#6B7C85'}
+              />
             </View>
           ),
+        }}
+      />
+      <Tabs.Screen
+        name="trips"
+        options={{
+          href: null,
         }}
       />
     </Tabs>
@@ -107,11 +118,11 @@ export default function AdminTabsLayout() {
 
 const styles = StyleSheet.create({
   iconWrap: {
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 8,
   },
   iconWrapActive: {
-    backgroundColor: '#EFF6FF',
+    backgroundColor: '#E3F4F1',
   },
 });

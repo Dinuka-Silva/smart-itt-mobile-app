@@ -126,10 +126,10 @@ export default function DriverContainers() {
   };
 
   const getStatusColor = (label: string) => {
-    if (label === 'DELIVERED') return { bg: 'rgba(34, 239, 126, 0.15)', text: '#22ef7e' };
-    if (label === 'IN TRANSIT') return { bg: '#EFF6FF', text: '#2563EB' };
-    if (label === 'DISCHARGED') return { bg: 'rgba(254, 179, 0, 0.15)', text: '#feb300' };
-    return { bg: 'rgba(254, 179, 0, 0.15)', text: '#feb300' };
+    if (label === 'DELIVERED') return { bg: '#E6F6EC', text: '#1E7A45' };
+    if (label === 'IN TRANSIT') return { bg: '#FFF4DB', text: '#8A5A00' };
+    if (label === 'DISCHARGED') return { bg: '#E3F4F1', text: '#0F766E' };
+    return { bg: '#FFF4DB', text: '#8A5A00' };
   };
 
   return (
@@ -142,7 +142,7 @@ export default function DriverContainers() {
         paddingBottom: Math.max(bottomInset + 24, 40),
       }}
       showsVerticalScrollIndicator={false}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#2563EB" />}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#0F766E" />}
     >
       <View
         style={[
@@ -164,7 +164,7 @@ export default function DriverContainers() {
             style={styles.dateFilterBtn}
             onPress={() => setShowDatePicker(true)}
           >
-            <Ionicons name="calendar" size={16} color="#2563EB" />
+            <Ionicons name="calendar-outline" size={16} color="#0F766E" />
             <Text style={styles.dateFilterText}>
               {selectedDate === 'All' ? 'ALL DATES' : selectedDate}
             </Text>
@@ -175,16 +175,16 @@ export default function DriverContainers() {
       {/* Summary Cards */}
       {!loading && (
         <View style={[styles.summaryRow, { paddingHorizontal: containerPaddingHorizontal }]}>
-          <View style={[styles.summaryCard, { borderLeftColor: '#2563EB' }]}>
-            <Text style={[styles.summaryValue, { color: '#2563EB', fontSize: isSmallMobile ? 20 : 26 }]}>{ft20}</Text>
+          <View style={[styles.summaryCard, { borderTopColor: '#0F766E' }]}>
+            <Text style={[styles.summaryValue, { color: '#0F766E', fontSize: isSmallMobile ? 20 : 24 }]}>{ft20}</Text>
             <Text style={styles.summaryLabel}>20FT</Text>
           </View>
-          <View style={[styles.summaryCard, { borderLeftColor: '#feb300' }]}>
-            <Text style={[styles.summaryValue, { color: '#feb300', fontSize: isSmallMobile ? 20 : 26 }]}>{ft40}</Text>
+          <View style={[styles.summaryCard, { borderTopColor: '#0F766E' }]}>
+            <Text style={[styles.summaryValue, { color: '#0F766E', fontSize: isSmallMobile ? 20 : 24 }]}>{ft40}</Text>
             <Text style={styles.summaryLabel}>40FT</Text>
           </View>
-          <View style={[styles.summaryCard, { borderLeftColor: '#22ef7e' }]}>
-            <Text style={[styles.summaryValue, { color: '#22ef7e', fontSize: isSmallMobile ? 20 : 26 }]}>{filteredContainers.length}</Text>
+          <View style={[styles.summaryCard, { borderTopColor: '#0F766E' }]}>
+            <Text style={[styles.summaryValue, { color: '#0F766E', fontSize: isSmallMobile ? 20 : 24 }]}>{filteredContainers.length}</Text>
             <Text style={styles.summaryLabel}>TOTAL</Text>
           </View>
         </View>
@@ -193,7 +193,7 @@ export default function DriverContainers() {
       {/* ITT Haulage Capacity Rule Banner */}
       {!loading && (
         <View style={[styles.policyNoticeBox, { marginHorizontal: containerPaddingHorizontal }]}>
-          <Ionicons name="information-circle" size={15} color="#2563EB" />
+          <Ionicons name="information-circle-outline" size={16} color="#0F766E" />
           <Text style={styles.policyNoticeText}>
             ITT Haulage Rule: 1 Trip can transport only 1 × 40FT container OR up to 2 × 20FT containers.
           </Text>
@@ -202,14 +202,14 @@ export default function DriverContainers() {
 
       {/* Discharge Terminal Filter & Terminalwise Sorting Carousel */}
       {!loading && (
-        <View style={{ marginHorizontal: containerPaddingHorizontal, marginTop: 10, marginBottom: 4 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6, flexWrap: 'wrap', gap: 6 }}>
-            <Text style={{ fontSize: 10, fontWeight: '800', color: '#849396', letterSpacing: 0.6 }}>
-              DISCHARGE TERMINAL FILTER & SORT
+        <View style={{ marginHorizontal: containerPaddingHorizontal, marginTop: 12, marginBottom: 6 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, flexWrap: 'wrap', gap: 6 }}>
+            <Text style={{ fontSize: 12, fontWeight: '700', color: '#1F2D33' }}>
+              DISCHARGE TERMINAL
             </Text>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-              <Ionicons name="swap-vertical" size={11} color="#2563EB" />
-              <Text style={{ fontSize: 9, fontWeight: '800', color: '#2563EB' }}>SORTED: DISCHARGE TERMINAL</Text>
+              <Ionicons name="funnel-outline" size={12} color="#0F766E" />
+              <Text style={{ fontSize: 11, fontWeight: '600', color: '#0F766E' }}>FILTER</Text>
             </View>
           </View>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingBottom: 4 }}>
@@ -223,25 +223,25 @@ export default function DriverContainers() {
                     alignItems: 'center',
                     gap: 6,
                     paddingHorizontal: 12,
-                    paddingVertical: 6,
-                    borderRadius: 6,
-                    backgroundColor: isActive ? '#2563EB' : '#161c25',
+                    paddingVertical: 7,
+                    borderRadius: 8,
+                    backgroundColor: isActive ? '#0F766E' : '#FFFFFF',
                     borderWidth: 1,
-                    borderColor: isActive ? '#2563EB' : '#242a34',
+                    borderColor: isActive ? '#0F766E' : '#E5EAEC',
                   }}
                   onPress={() => setSelectedTerminal(term)}
                   activeOpacity={0.8}
                 >
                   <Ionicons
-                    name={term === 'All' ? 'layers' : 'boat'}
-                    size={12}
-                    color={isActive ? '#FFFFFF' : '#849396'}
+                    name={term === 'All' ? 'layers-outline' : 'boat-outline'}
+                    size={13}
+                    color={isActive ? '#FFFFFF' : '#6B7C85'}
                   />
                   <Text
                     style={{
-                      fontSize: 11,
-                      fontWeight: '800',
-                      color: isActive ? '#FFFFFF' : '#dde2f0',
+                      fontSize: 12,
+                      fontWeight: '600',
+                      color: isActive ? '#FFFFFF' : '#6B7C85',
                     }}
                   >
                     {term === 'All' ? 'ALL TERMINALS' : term}
@@ -254,12 +254,12 @@ export default function DriverContainers() {
       )}
 
       {loading ? (
-        <ActivityIndicator size="large" color="#2563EB" style={{ marginTop: 30 }} />
+        <ActivityIndicator size="large" color="#0F766E" style={{ marginTop: 30 }} />
       ) : filteredContainers.length === 0 ? (
         <View style={[styles.emptyBox, { marginHorizontal: containerPaddingHorizontal }]}>
-          <Ionicons name="cube-outline" size={42} color="#849396" style={{ marginBottom: 12 }} />
+          <Ionicons name="cube-outline" size={42} color="#A3B1B8" style={{ marginBottom: 12 }} />
           <Text style={styles.emptyTitle}>NO CONTAINERS</Text>
-          <Text style={styles.emptySubtitle}>No containers match the selected date</Text>
+          <Text style={styles.emptySubtitle}>No containers match the selected filter</Text>
         </View>
       ) : (
         filteredContainers.map((c: any, idx: number) => {
@@ -281,18 +281,18 @@ export default function DriverContainers() {
               {/* Container Number + Size */}
               <View style={[styles.cardHeader, { flexWrap: 'wrap', gap: 8 }]}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexShrink: 1 }}>
-                  <Ionicons name="cube" size={16} color="#2563EB" />
-                  <Text style={[styles.containerNum, { fontSize: isSmallMobile ? 14 : 16 }]}>
+                  <Ionicons name="cube-outline" size={18} color="#0F766E" />
+                  <Text style={[styles.containerNum, { fontSize: isSmallMobile ? 15 : 17 }]}>
                     {(c.containerNumber || '').replace(/[^A-Za-z0-9]/g, '').toUpperCase()}
                   </Text>
                 </View>
                 <View style={[
                   styles.sizeBadge,
-                  { backgroundColor: sizeLabel.startsWith('20') ? '#EFF6FF' : 'rgba(254, 179, 0, 0.15)' }
+                  { backgroundColor: '#E3F4F1' }
                 ]}>
                   <Text style={[
                     styles.sizeText,
-                    { color: sizeLabel.startsWith('20') ? '#2563EB' : '#feb300' }
+                    { color: '#0F766E' }
                   ]}>
                     {sizeLabel}
                   </Text>
@@ -300,8 +300,8 @@ export default function DriverContainers() {
               </View>
 
               {/* Trip Info */}
-              <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
-                <Ionicons name="boat" size={13} color="#feb300" style={{ marginRight: 6 }} />
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 6, marginBottom: 10 }}>
+                <Ionicons name="boat-outline" size={14} color="#6B7C85" style={{ marginRight: 6 }} />
                 <Text style={styles.tripName}>
                   {c.vesselName || 'Vessel'} — {c.tripNumber || 'Trip'}
                 </Text>
@@ -313,10 +313,10 @@ export default function DriverContainers() {
                   <Text style={styles.termLabel}>ORIGIN</Text>
                   <Text style={styles.termValue}>{c.sourceTerminal || 'ECT'}</Text>
                 </View>
-                <Ionicons name="arrow-forward" size={16} color="#2563EB" />
+                <Ionicons name="arrow-forward" size={16} color="#0F766E" />
                 <View style={styles.termBox}>
                   <Text style={styles.termLabel}>DESTINATION</Text>
-                  <Text style={styles.termValue}>{c.destTerminal || 'JCT'}</Text>
+                  <Text style={[styles.termValue, { color: '#0F766E' }]}>{c.destTerminal || 'JCT'}</Text>
                 </View>
               </View>
 
@@ -328,7 +328,7 @@ export default function DriverContainers() {
               {/* Weight if available */}
               {c.weight && (
                 <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8 }}>
-                  <Ionicons name="scale-outline" size={13} color="#849396" style={{ marginRight: 4 }} />
+                  <Ionicons name="scale-outline" size={13} color="#6B7C85" style={{ marginRight: 4 }} />
                   <Text style={styles.weightText}>Weight: {c.weight}T</Text>
                 </View>
               )}
@@ -418,92 +418,138 @@ function getFallbackContainers() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F8FAFC' },
+  container: { flex: 1, backgroundColor: '#F7F9FA' },
   header: {
     paddingBottom: 12,
-    backgroundColor: 'rgba(14, 20, 29, 0.96)', borderBottomWidth: 1, borderBottomColor: '#1a2029',
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5EAEC',
   },
-  headerTitle: { fontSize: 18, fontWeight: '900', color: '#1E293B', letterSpacing: 0.8 },
-  headerSub: { color: '#849396', fontSize: 13, marginTop: 4 },
-  summaryRow: { flexDirection: 'row', marginTop: 14, gap: 8 },
+  headerTitle: { fontSize: 20, fontWeight: '700', color: '#1F2D33', letterSpacing: 0.3 },
+  headerSub: { color: '#6B7C85', fontSize: 13, marginTop: 2 },
+  summaryRow: { flexDirection: 'row', marginTop: 14, gap: 10 },
   summaryCard: {
-    flex: 1, backgroundColor: '#FFFFFF', borderRadius: 8, padding: 10,
-    borderLeftWidth: 4, borderWidth: 1, borderColor: '#242a34',
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 12,
+    borderTopWidth: 3,
+    borderWidth: 1,
+    borderColor: '#E5EAEC',
   },
-  summaryValue: { fontSize: 24, fontWeight: '900' },
-  summaryLabel: { fontSize: 11, color: '#849396', marginTop: 4, fontWeight: '800' },
+  summaryValue: { fontSize: 22, fontWeight: '700', color: '#0F766E' },
+  summaryLabel: { fontSize: 12, color: '#6B7C85', marginTop: 4, fontWeight: '600' },
   policyNoticeBox: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: '#EFF6FF',
+    backgroundColor: '#E3F4F1',
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#EFF6FF',
+    borderColor: '#0F766E',
     marginHorizontal: 16,
     marginTop: 12,
     paddingHorizontal: 12,
     paddingVertical: 8,
   },
   policyNoticeText: {
-    color: '#2563EB',
-    fontSize: 11,
-    fontWeight: '700',
+    color: '#0F766E',
+    fontSize: 12,
+    fontWeight: '600',
     flex: 1,
   },
   emptyBox: {
-    alignItems: 'center', justifyContent: 'center', padding: 36,
-    backgroundColor: '#FFFFFF', borderRadius: 8, margin: 16, borderWidth: 1, borderColor: '#242a34',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 36,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    margin: 16,
+    borderWidth: 1,
+    borderColor: '#E5EAEC',
   },
   emptyIcon: { fontSize: 36, marginBottom: 12 },
-  emptyTitle: { fontSize: 14, fontWeight: '800', color: '#1E293B', letterSpacing: 0.8 },
-  emptySubtitle: { fontSize: 11, color: '#849396', textAlign: 'center', marginTop: 6 },
+  emptyTitle: { fontSize: 15, fontWeight: '700', color: '#1F2D33' },
+  emptySubtitle: { fontSize: 13, color: '#6B7C85', textAlign: 'center', marginTop: 4 },
   card: {
-    backgroundColor: '#FFFFFF', marginHorizontal: 16, borderRadius: 8,
-    padding: 16, marginBottom: 12, marginTop: 12, borderWidth: 1, borderColor: '#242a34',
+    backgroundColor: '#FFFFFF',
+    marginHorizontal: 16,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 10,
+    marginTop: 6,
+    borderWidth: 1,
+    borderColor: '#E5EAEC',
   },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  containerNum: { fontSize: 16, fontWeight: '900', color: '#2563EB', letterSpacing: 0.5 },
-  sizeBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 4 },
-  sizeText: { fontSize: 11, fontWeight: '800' },
-  tripName: { fontSize: 13, color: '#1E293B', marginTop: 8, fontWeight: '800' },
+  containerNum: { fontSize: 16, fontWeight: '700', color: '#1F2D33', letterSpacing: 0.5 },
+  sizeBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6 },
+  sizeText: { fontSize: 12, fontWeight: '700' },
+  tripName: { fontSize: 13, color: '#6B7C85', fontWeight: '500' },
   routeRow: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    backgroundColor: '#F8FAFC', padding: 10, borderRadius: 6, marginTop: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#F7F9FA',
+    padding: 12,
+    borderRadius: 8,
+    marginTop: 6,
   },
   termBox: { alignItems: 'center', flex: 1 },
-  termLabel: { fontSize: 8, color: '#849396', fontWeight: '700', letterSpacing: 0.5 },
-  termValue: { fontSize: 14, fontWeight: '900', color: '#1E293B', marginTop: 2 },
-  arrow: { fontSize: 18, color: '#2563EB', fontWeight: '900' },
-  statusBadge: { alignSelf: 'flex-start', paddingHorizontal: 12, paddingVertical: 4, borderRadius: 4, marginTop: 10 },
-  statusText: { fontSize: 11, fontWeight: '900', letterSpacing: 0.6 },
-  weightText: { fontSize: 12, color: '#849396', marginTop: 8, fontWeight: '700' },
+  termLabel: { fontSize: 10, color: '#6B7C85', fontWeight: '700', letterSpacing: 0.5 },
+  termValue: { fontSize: 15, fontWeight: '700', color: '#1F2D33', marginTop: 2 },
+  arrow: { fontSize: 18, color: '#0F766E', fontWeight: '700' },
+  statusBadge: { alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6, marginTop: 10 },
+  statusText: { fontSize: 12, fontWeight: '600', letterSpacing: 0.3 },
+  weightText: { fontSize: 12, color: '#6B7C85', marginTop: 8, fontWeight: '600' },
 
   dateFilterBtn: {
-    flexDirection: 'row', alignItems: 'center', gap: 6,
-    backgroundColor: '#FFFFFF', paddingHorizontal: 12, paddingVertical: 8,
-    borderRadius: 8, borderWidth: 1, borderColor: '#242a34',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E5EAEC',
   },
-  dateFilterText: { color: '#2563EB', fontSize: 11, fontWeight: '800' },
+  dateFilterText: { color: '#0F766E', fontSize: 12, fontWeight: '700' },
   modalOverlay: {
-    flex: 1, backgroundColor: 'rgba(8, 14, 23, 0.8)',
-    justifyContent: 'center', alignItems: 'center', padding: 20,
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
   },
   modalContent: {
-    backgroundColor: '#FFFFFF', borderRadius: 12, padding: 16,
-    width: '92%', maxWidth: 360, borderWidth: 1, borderColor: '#242a34',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 16,
+    width: '92%',
+    maxWidth: 360,
+    borderWidth: 1,
+    borderColor: '#E5EAEC',
   },
-  modalTitle: { color: '#1E293B', fontSize: 16, fontWeight: '900', marginBottom: 16, textAlign: 'center' },
+  modalTitle: { color: '#1F2D33', fontSize: 16, fontWeight: '700', marginBottom: 16, textAlign: 'center' },
   dateOption: {
-    paddingVertical: 12, paddingHorizontal: 16, borderRadius: 8,
-    marginBottom: 8, backgroundColor: '#F8FAFC', borderWidth: 1, borderColor: '#242a34',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    marginBottom: 8,
+    backgroundColor: '#F7F9FA',
+    borderWidth: 1,
+    borderColor: '#E5EAEC',
   },
-  dateOptionActive: { backgroundColor: '#EFF6FF', borderColor: '#2563EB' },
-  dateOptionText: { color: '#849396', fontSize: 14, fontWeight: '700', textAlign: 'center' },
-  dateOptionTextActive: { color: '#2563EB' },
+  dateOptionActive: { backgroundColor: '#E3F4F1', borderColor: '#0F766E' },
+  dateOptionText: { color: '#6B7C85', fontSize: 14, fontWeight: '600', textAlign: 'center' },
+  dateOptionTextActive: { color: '#0F766E', fontWeight: '700' },
   modalCloseBtn: {
-    marginTop: 16, backgroundColor: '#242a34', paddingVertical: 12,
-    borderRadius: 8, alignItems: 'center',
+    marginTop: 16,
+    backgroundColor: '#0F766E',
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: 'center',
   },
-  modalCloseText: { color: '#1E293B', fontSize: 13, fontWeight: '900' },
+  modalCloseText: { color: '#FFFFFF', fontSize: 14, fontWeight: '700' },
 });
