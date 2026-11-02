@@ -18,6 +18,7 @@ import { Calendar } from 'react-native-calendars';
 import { useAuthStore } from '../../../src/store/authStore';
 import { tripService } from '../../../src/services/tripService';
 import { useMockTripStore } from '../../../src/store/mockTripStore';
+import { adminFleetStore } from '../../../src/store/adminFleetStore';
 import { securityAuditService } from '../../../src/services/securityAuditService';
 import { colors, radius, spacing } from '../../../src/theme';
 import { resolveCheNumber, resolveOperator } from '../../../src/config/fleet';
@@ -74,6 +75,7 @@ export default function SupervisorMissionDispatcher() {
   // Filters & Search
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTerminal, setSelectedTerminal] = useState<string>('ALL');
+  const [selectedVehicle, setSelectedVehicle] = useState<string>('ALL');
   const [selectedStatus, setSelectedStatus] = useState<string>('ALL');
   const [selectedDriverFilter, setSelectedDriverFilter] = useState<string>('ALL');
   const [selectedPeriodFilter, setSelectedPeriodFilter] = useState<string>('DAILY');
@@ -277,7 +279,25 @@ export default function SupervisorMissionDispatcher() {
   const countCompleted = dateFilteredTrips.filter((t) => t.status === 'COMPLETED' || t.status === 'APPROVED').length;
   const totalContainersDispatched = dateFilteredTrips.reduce((acc, t) => acc + (t.containers?.length || 1), 0);
 
-  // Filtered trips for list view (includes Terminal, Status, Search)
+  // Vehicle options derived from trips & registered fleet
+  const vehicleOptions = useMemo(() => {
+    const plates = new Set<string>();
+    trips.forEach((t) => {
+      if (t.vehicleNumber && t.vehicleNumber !== 'UNASSIGNED') {
+        plates.add(t.vehicleNumber.toUpperCase().trim());
+      }
+    });
+    try {
+      (adminFleetStore.getAllVehiclesList() || []).forEach((v: any) => {
+        if (v.vehicleNumber && v.vehicleNumber !== 'UNASSIGNED') {
+          plates.add(v.vehicleNumber.toUpperCase().trim());
+        }
+      });
+    } catch {}
+    return ['ALL', ...Array.from(plates).sort()];
+  }, [trips]);
+
+  // Filtered trips for list view (includes Terminal, Vehicle, Status, Search)
   const filteredTrips = useMemo(() => {
     return dateFilteredTrips.filter((t) => {
       // 1. Discharge Terminal Filter
@@ -290,7 +310,14 @@ export default function SupervisorMissionDispatcher() {
         if (!matchesDest && !matchesContainerDest) return false;
       }
 
-      // 2. Status Filter
+      // 2. Vehicle Filter (with plate normalization)
+      if (selectedVehicle !== 'ALL') {
+        const v = (t.vehicleNumber || '').toUpperCase().replace(/[\s-]/g, '');
+        const targetV = selectedVehicle.toUpperCase().replace(/[\s-]/g, '');
+        if (v !== targetV) return false;
+      }
+
+      // 3. Status Filter
       if (selectedStatus !== 'ALL') {
         if (selectedStatus === 'COMPLETED') {
           if (t.status !== 'COMPLETED' && t.status !== 'APPROVED') return false;
@@ -299,7 +326,7 @@ export default function SupervisorMissionDispatcher() {
         }
       }
 
-      // 3. Search query
+      // 4. Search query
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase().trim();
         const tripNum = (t.tripNumber || t.id || '').toLowerCase();
@@ -318,7 +345,7 @@ export default function SupervisorMissionDispatcher() {
 
       return true;
     });
-  }, [dateFilteredTrips, selectedTerminal, selectedStatus, searchQuery]);
+  }, [dateFilteredTrips, selectedTerminal, selectedVehicle, selectedStatus, searchQuery]);
 
   // Date-wise grouped trips
   const tripsByDate = useMemo(() => {
@@ -756,6 +783,32 @@ export default function SupervisorMissionDispatcher() {
                     ]}
                   >
                     {t}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+
+          {/* Vehicle Filters */}
+          <View>
+            <Text style={styles.filterGroupLabel}>VEHICLE FLEET FILTER</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterChipsScroll}>
+              {vehicleOptions.map((veh) => (
+                <TouchableOpacity
+                  key={veh}
+                  style={[
+                    styles.filterChip,
+                    selectedVehicle === veh && styles.filterChipActiveCyan,
+                  ]}
+                  onPress={() => setSelectedVehicle(veh)}
+                >
+                  <Text
+                    style={[
+                      styles.filterChipText,
+                      selectedVehicle === veh && styles.filterChipTextActiveCyan,
+                    ]}
+                  >
+                    {veh === 'ALL' ? 'ALL VEHICLES' : veh}
                   </Text>
                 </TouchableOpacity>
               ))}

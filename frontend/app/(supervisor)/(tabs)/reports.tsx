@@ -14,6 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Calendar } from 'react-native-calendars';
 import { useAuthStore } from '../../../src/store/authStore';
 import { useMockTripStore } from '../../../src/store/mockTripStore';
+import { adminFleetStore } from '../../../src/store/adminFleetStore';
 import { tripService } from '../../../src/services/tripService';
 import { driverService } from '../../../src/services/driverService';
 import { radius, spacing } from '../../../src/theme';
@@ -280,14 +281,22 @@ export default function SupervisorReports() {
     return combined;
   }, [mockTrips, backendTrips]);
 
-  // Vehicle options derived from raw trips
+  // Vehicle options derived from raw trips & fleet database
   const vehicleOptions = useMemo(() => {
     const plates = new Set<string>();
     allRawTrips.forEach((t) => {
       if (t.vehicleNumber && t.vehicleNumber !== 'UNASSIGNED') {
-        plates.add(t.vehicleNumber.toUpperCase());
+        plates.add(t.vehicleNumber.toUpperCase().trim());
       }
     });
+    try {
+      const fleetVehicles = adminFleetStore.getAllVehiclesList() || [];
+      fleetVehicles.forEach((v: any) => {
+        if (v.vehicleNumber && v.vehicleNumber !== 'UNASSIGNED') {
+          plates.add(v.vehicleNumber.toUpperCase().trim());
+        }
+      });
+    } catch {}
     return ['ALL', ...Array.from(plates).sort()];
   }, [allRawTrips]);
 
@@ -329,10 +338,11 @@ export default function SupervisorReports() {
         }
       }
 
-      // 4. Vehicle Filter (NEW)
+      // 4. Vehicle Filter (with plate normalization)
       if (selectedVehicle !== 'ALL') {
-        const vNum = (trip.vehicleNumber || '').toUpperCase();
-        if (vNum !== selectedVehicle.toUpperCase()) return false;
+        const vNum = (trip.vehicleNumber || '').toUpperCase().replace(/[\s-]/g, '');
+        const targetV = selectedVehicle.toUpperCase().replace(/[\s-]/g, '');
+        if (vNum !== targetV) return false;
       }
 
       // 5. Status Filter

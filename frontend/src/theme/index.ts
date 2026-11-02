@@ -1,4 +1,12 @@
-import { Colors, Spacing, Typography, Layout } from '../constants/theme';
+import {
+  Colors,
+  Spacing,
+  Typography,
+  Layout,
+  Fonts,
+  BottomTabInset,
+  MaxContentWidth,
+} from '../constants/theme';
 import type { ThemeColor } from '../constants/theme';
 
 type Palette = (typeof Colors)['light'];
@@ -201,5 +209,13 @@ export function statusLabel(status: string): string {
   return getStatusChipStyle(status).label;
 }
 
-export { Typography, Layout };
+export {
+  Colors,
+  Spacing,
+  Typography,
+  Layout,
+  Fonts,
+  BottomTabInset,
+  MaxContentWidth,
+};
 export type { ThemeColor };

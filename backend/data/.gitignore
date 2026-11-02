@@ -1,0 +1,4 @@
+*.db
+*.mv.db
+*.trace.db
+*.lock.db

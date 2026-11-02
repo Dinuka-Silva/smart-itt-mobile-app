@@ -15,6 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { adminService } from '../../../src/services/adminService';
 import { useResponsive } from '../../../src/hooks/useResponsive';
 import { useMockTripStore } from '../../../src/store/mockTripStore';
+import { adminFleetStore } from '../../../src/store/adminFleetStore';
 import {
   getTripDischargeTerminal,
   getTripTimingInfo,
@@ -32,6 +33,7 @@ export default function AdminTripsScreen() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
   const [terminalFilter, setTerminalFilter] = useState<string>('ALL');
+  const [vehicleFilter, setVehicleFilter] = useState<string>('ALL');
 
   // Action / Detail Modal
   const [selectedTrip, setSelectedTrip] = useState<any | null>(null);
@@ -88,6 +90,13 @@ export default function AdminTripsScreen() {
           ))
         );
       }
+      if (vehicleFilter !== 'ALL') {
+        const targetV = vehicleFilter.toUpperCase().replace(/[\s-]/g, '');
+        list = list.filter((t) => {
+          const v = (t.vehicleNumber || '').toUpperCase().replace(/[\s-]/g, '');
+          return v === targetV;
+        });
+      }
       setTrips(list);
     } catch {
       let list = [...mockTrips];
@@ -100,6 +109,13 @@ export default function AdminTripsScreen() {
           getTripDischargeTerminal(t).includes(terminalFilter) ||
           (t.containers || []).some((c: any) => c.destTerminal === terminalFilter)
         );
+      }
+      if (vehicleFilter !== 'ALL') {
+        const targetV = vehicleFilter.toUpperCase().replace(/[\s-]/g, '');
+        list = list.filter((t) => {
+          const v = (t.vehicleNumber || '').toUpperCase().replace(/[\s-]/g, '');
+          return v === targetV;
+        });
       }
       if (search && search.trim()) {
         const q = search.trim().toLowerCase();
@@ -119,7 +135,24 @@ export default function AdminTripsScreen() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [search, statusFilter, terminalFilter, mockTrips]);
+  }, [search, statusFilter, terminalFilter, vehicleFilter, mockTrips]);
+
+  const vehicleOptions = React.useMemo(() => {
+    const plates = new Set<string>();
+    mockTrips.forEach((t) => {
+      if (t.vehicleNumber && t.vehicleNumber !== 'UNASSIGNED') {
+        plates.add(t.vehicleNumber.toUpperCase().trim());
+      }
+    });
+    try {
+      (adminFleetStore.getAllVehiclesList() || []).forEach((v: any) => {
+        if (v.vehicleNumber && v.vehicleNumber !== 'UNASSIGNED') {
+          plates.add(v.vehicleNumber.toUpperCase().trim());
+        }
+      });
+    } catch {}
+    return ['ALL', ...Array.from(plates).sort()];
+  }, [mockTrips]);
 
   useEffect(() => {
     fetchTrips();
@@ -212,6 +245,22 @@ export default function AdminTripsScreen() {
             >
               <Text style={[styles.termPillText, terminalFilter === term && styles.termPillTextActive]}>
                 {term}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+
+        {/* Vehicle Filter Scroll */}
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={[styles.filterScroll, { marginTop: 6 }]}>
+          {vehicleOptions.map((veh) => (
+            <TouchableOpacity
+              key={veh}
+              style={[styles.termPill, vehicleFilter === veh && styles.termPillActive]}
+              onPress={() => setVehicleFilter(veh)}
+              activeOpacity={0.7}
+            >
+              <Text style={[styles.termPillText, vehicleFilter === veh && styles.termPillTextActive]}>
+                {veh === 'ALL' ? 'ALL VEHICLES' : veh}
               </Text>
             </TouchableOpacity>
           ))}

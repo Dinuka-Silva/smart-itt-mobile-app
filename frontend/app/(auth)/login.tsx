@@ -131,39 +131,12 @@ export default function LoginScreen() {
   useEffect(() => {
     if (params.prefillUser) {
       setUsername(params.prefillUser);
-      const upper = params.prefillUser.trim().toUpperCase();
-      credentialStore.hasUpdatedPassword(upper).then((hasUpdated) => {
-        if (hasUpdated) {
-          setPassword('');
-        } else if (/^SUP([-\s]?\d+)?/i.test(upper) || upper.includes('SUPERVISOR')) {
-          setPassword('supervisor');
-        } else if (params.prefillUser !== 'DRV-00001') {
-          setPassword('');
-        }
-      });
     }
   }, [params.prefillUser]);
 
   const handleUsernameChange = (text: string) => {
     setUsername(text);
     if (errorMessage) setErrorMessage(null);
-    const upper = text.trim().toUpperCase();
-
-    credentialStore.hasUpdatedPassword(text).then((hasUpdated) => {
-      if (hasUpdated) {
-        setPassword('');
-        return;
-      }
-      if (/^SUP([-\s]?\d+)?/i.test(upper) || upper.includes('SUPERVISOR')) {
-        if (!password || password === 'driver') {
-          setPassword('supervisor');
-        }
-      } else if (/^DRV([-\s]?\d+)?/i.test(upper) || upper.includes('DRIVER')) {
-        if (!password || password === 'supervisor') {
-          setPassword('driver');
-        }
-      }
-    });
   };
 
   const handlePasswordChange = (text: string) => {
@@ -263,6 +236,9 @@ export default function LoginScreen() {
         return;
       }
 
+      // Cache salted hash for offline login (valid 7 days for drivers/supervisors; never admin)
+      await credentialStore.cacheOnlineLogin(cleanUser, cleanPass, resolvedRole);
+
       await login(user);
       if (user.role === 'ADMIN') router.replace('/(admin)/(tabs)');
       else if (user.role === 'SUPERVISOR') router.replace('/(supervisor)/(tabs)');
@@ -337,22 +313,11 @@ export default function LoginScreen() {
       }
 
       if (role === 'ADMIN') {
-        if (cleanPass === 'Admin@123' || cleanPass === 'AdminSecure@2026' || cleanPass.toLowerCase() === 'admin') {
-          await credentialStore.recordSuccessfulAttempt(cleanUser);
-          const adminUser = {
-            id: 'admin-root',
-            username: cleanUser,
-            role: 'ADMIN' as const,
-            name: 'System Administrator',
-            fullName: 'System Administrator',
-            token: 'admin-sec-bearer-token',
-            email: cleanUser,
-            status: 'ACTIVE',
-          };
-          await login(adminUser as any);
-          router.replace('/(admin)/(tabs)');
-          return;
-        }
+        const adminOfflineMsg = 'System Administrator sign-in requires an active network connection to the server. Offline login is disabled.';
+        setErrorMessage(adminOfflineMsg);
+        Alert.alert('Network Required', adminOfflineMsg);
+        setLoading(false);
+        return;
       }
 
       const verifyResult = await credentialStore.verifyOffline(cleanUser, cleanPass, role as any);
@@ -493,6 +458,29 @@ export default function LoginScreen() {
         const isAdmin = upperUser.includes('ADMIN');
         const isSup = isSupervisorIdentified || upperUser.startsWith('SUP');
         const role = isAdmin ? 'ADMIN' : (isSup ? 'SUPERVISOR' : 'DRIVER');
+
+        if (isAdmin) {
+          const adminBioMsg = 'System Administrator sign-in requires online password verification.';
+          setErrorMessage(adminBioMsg);
+          Alert.alert('Network Required', adminBioMsg);
+          return;
+        }
+
+        const credRecord = await credentialStore.getRecord(cleanUser);
+        if (!credRecord || !credRecord.lastOnlineLoginAt) {
+          const msg = 'Biometric sign-in requires a prior successful online sign-in on this device.';
+          setErrorMessage(msg);
+          Alert.alert('Online Sign-In Required', msg);
+          return;
+        }
+        const OFFLINE_LOGIN_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
+        const lastLoginTime = new Date(credRecord.lastOnlineLoginAt).getTime();
+        if (isNaN(lastLoginTime) || Date.now() - lastLoginTime > OFFLINE_LOGIN_MAX_AGE_MS) {
+          const msg = 'Biometric sign-in expired: Please sign in online with your password to re-enable offline access.';
+          setErrorMessage(msg);
+          Alert.alert('Session Expired', msg);
+          return;
+        }
 
         const mockUser = {
           id: isSup ? 'sup-demo-001' : (isAdmin ? 'admin-root' : (fleetDriver?.id || 'demo-user-123')),

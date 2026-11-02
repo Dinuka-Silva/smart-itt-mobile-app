@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -12,7 +12,6 @@ import {
   Alert,
   Platform,
   Image,
-  Animated,
   KeyboardAvoidingView,
 } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
@@ -21,8 +20,7 @@ import { useAuthStore } from '../../../src/store/authStore';
 import { tripService } from '../../../src/services/tripService';
 import { dashboardService, DriverDashboardStats } from '../../../src/services/dashboardService';
 import { driverService } from '../../../src/services/driverService';
-import { colors, radius, spacing } from '../../../src/theme';
-import { useMockTripStore } from '../../../src/store/mockTripStore';
+import { Colors, Typography, Layout, Spacing } from '../../../src/constants/theme';
 import { adminFleetStore } from '../../../src/store/adminFleetStore';
 import axios from 'axios';
 import API_BASE_URL from '../../../src/config/api';
@@ -30,15 +28,18 @@ import { useResponsive } from '../../../src/hooks/useResponsive';
 import { getTripTimingDetails } from '../../../src/utils/tripDateUtils';
 import { getTripDischargeTerminal } from '../../../src/utils/tripTerminalUtils';
 import { AppButton, StatCard, ListRow, StatusPill } from '../../../src/components';
+import { useNetworkStatus } from '../../../src/hooks/useNetworkStatus';
+
+const theme = Colors.light;
 
 const TERMINALS = ['CICT', 'CWIT', 'ECT', 'JCT', 'UCT', 'SAGT'] as const;
-type TerminalCode = (typeof TERMINALS)[number];
 
 export default function DriverHomeDashboard() {
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
   const router = useRouter();
-  const { topInset, bottomInset, contentMaxWidth, containerPaddingHorizontal, summaryCardWidth } = useResponsive();
+  const { topInset, bottomInset, contentMaxWidth, containerPaddingHorizontal } = useResponsive();
+  const { isOnline } = useNetworkStatus();
 
   // Trips & Dashboard State
   const [trips, setTrips] = useState<any[]>([]);
@@ -52,7 +53,6 @@ export default function DriverHomeDashboard() {
     activeTrip: null,
   });
   const [refreshing, setRefreshing] = useState(false);
-  const [isOnline, setIsOnline] = useState(true);
 
   // Administrative Suspension Status
   const isSuspended = useMemo(() => {
@@ -62,19 +62,14 @@ export default function DriverHomeDashboard() {
   }, [user]);
 
   // Modals state
+  const [moreMenuVisible, setMoreMenuVisible] = useState(false);
   const [allowanceModalVisible, setAllowanceModalVisible] = useState(false);
   const [damageReportModalVisible, setDamageReportModalVisible] = useState(false);
   const [supervisorModalVisible, setSupervisorModalVisible] = useState(false);
 
-  // Discharge & Supervisor Clearance Submission Modal State
-  const [dischargeModalVisible, setDischargeModalVisible] = useState(false);
-  const [dischargeTerminal, setDischargeTerminal] = useState('');
-  const [dischargeBay, setDischargeBay] = useState('Bay 04, Crane 02');
-  const [sealStatus, setSealStatus] = useState<'INTACT (VERIFIED)' | 'DAMAGED / TAMPERED'>('INTACT (VERIFIED)');
-  const [cargoDamageStatus, setCargoDamageStatus] = useState<'NONE' | 'DAMAGED'>('NONE');
-  const [driverCompletionNotes, setDriverCompletionNotes] = useState('Discharged cargo safely at destination terminal berth. Seals inspected and verified intact.');
-
-  // Official Delivery Handover Receipt Modal State
+  // Receipt Modal State (supporting both submission and inspection)
+  const [receiptModalVisible, setReceiptModalVisible] = useState(false);
+  const [selectedReceiptTrip, setSelectedReceiptTrip] = useState<any>(null);
   const [submissionReceiptVisible, setSubmissionReceiptVisible] = useState(false);
   const [submissionReceipt, setSubmissionReceipt] = useState<{
     tripNumber: string;
@@ -89,261 +84,160 @@ export default function DriverHomeDashboard() {
     cheNumber: string;
   } | null>(null);
 
+  // Discharge Submission Modal State
+  const [dischargeModalVisible, setDischargeModalVisible] = useState(false);
+  const [dischargeTerminal, setDischargeTerminal] = useState('');
+  const [dischargeBay, setDischargeBay] = useState('Bay 04, Crane 02');
+  const [sealStatus, setSealStatus] = useState<'INTACT (VERIFIED)' | 'DAMAGED / TAMPERED'>('INTACT (VERIFIED)');
+  const [cargoDamageStatus, setCargoDamageStatus] = useState<'NONE' | 'DAMAGED'>('NONE');
+  const [driverCompletionNotes, setDriverCompletionNotes] = useState('Discharged cargo safely at destination terminal berth. Seals inspected and verified intact.');
+
   // Damage Report Form State
   const [damageContainerNumber, setDamageContainerNumber] = useState('');
   const [damageDescription, setDamageDescription] = useState('');
   const [damageSuccessMsg, setDamageSuccessMsg] = useState<string | null>(null);
 
-  // HUD Interactive Controls State
-  const [bayArrived, setBayArrived] = useState(false);
-  const [hookConfirmed, setHookConfirmed] = useState(false);
-  const [towerAck, setTowerAck] = useState(false);
-
-  // ─── MONTHLY CONTAINER MISSION & CELEBRATION ANIMATION STATE ───
-  const monthlyTarget = 300;
-  const [celebrationModalVisible, setCelebrationModalVisible] = useState(false);
-  const scaleAnim = useRef(new Animated.Value(0)).current;
-  const rotateAnim = useRef(new Animated.Value(0)).current;
-  const confettiAnim = useRef(new Animated.Value(0)).current;
-  const pulseAnim = useRef(new Animated.Value(1)).current;
-
-  const triggerCelebrationAnimation = useCallback(() => {
-    setCelebrationModalVisible(true);
-    scaleAnim.setValue(0);
-    rotateAnim.setValue(0);
-    confettiAnim.setValue(0);
-    pulseAnim.setValue(1);
-
-    Animated.spring(scaleAnim, {
-      toValue: 1,
-      friction: 5,
-      tension: 40,
-      useNativeDriver: true,
-    }).start();
-
-    Animated.sequence([
-      Animated.timing(rotateAnim, { toValue: -0.15, duration: 180, useNativeDriver: true }),
-      Animated.timing(rotateAnim, { toValue: 0.15, duration: 180, useNativeDriver: true }),
-      Animated.timing(rotateAnim, { toValue: -0.08, duration: 140, useNativeDriver: true }),
-      Animated.timing(rotateAnim, { toValue: 0, duration: 140, useNativeDriver: true }),
-    ]).start();
-
-    Animated.timing(confettiAnim, {
-      toValue: 1,
-      duration: 2200,
-      useNativeDriver: true,
-    }).start();
-
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulseAnim, { toValue: 1.1, duration: 700, useNativeDriver: true }),
-        Animated.timing(pulseAnim, { toValue: 1, duration: 700, useNativeDriver: true }),
-      ]),
-      { iterations: 4 }
-    ).start();
-  }, [scaleAnim, rotateAnim, confettiAnim, pulseAnim]);
-
   const [driverProfile, setDriverProfile] = useState<any>(null);
-  const mockTrips = useMockTripStore((s) => s.mockTrips);
+  const [actionInProgress, setActionInProgress] = useState(false);
 
-  // Fetch live dashboard & trips
+  // Fetch live dashboard & trips without fake demo trips merging
   const loadData = useCallback(async () => {
-    const driverId = user?.driverId || user?.id || 'demo-driver';
-    const demoTrips = useMockTripStore.getState().getTripsForDriver(driverId);
+    const driverId = user?.driverId || user?.id || '';
 
     try {
       // 1. Fetch live trips from backend
-      const apiTrips = await tripService.getTrips(user?.driverId);
+      const apiTrips = await tripService.getTrips(driverId || undefined);
       const list = Array.isArray(apiTrips) ? apiTrips : [];
-      const byId = new Map<string, any>();
-      list.forEach((t) => byId.set(t.id, t));
-      demoTrips.forEach((t) => { if (!byId.has(t.id)) byId.set(t.id, t); });
-      const merged = Array.from(byId.values());
-      setTrips(merged);
+      setTrips(list);
 
-      // 2. Fetch live dashboard metrics & compute dynamic live counts
-      const stats = await dashboardService.getDriverDashboard(driverId);
-      const completedCount = merged.filter((t) => t.status === 'COMPLETED' || t.status === 'APPROVED').length;
-      const activeCount = merged.filter((t) => t.status === 'IN_PROGRESS' || t.status === 'ARRIVED').length;
-      const pendingCount = merged.filter((t) => t.status === 'PENDING_APPROVAL').length;
+      // 2. Compute dynamic stats from live trips
+      const completedCount = list.filter((t) => t.status === 'COMPLETED' || t.status === 'APPROVED').length;
+      const activeCount = list.filter((t) => t.status === 'IN_PROGRESS' || t.status === 'ARRIVED').length;
+      const pendingCount = list.filter((t) => t.status === 'PENDING_APPROVAL').length;
       let containersDelivered = 0;
-      merged.forEach((t) => {
+      list.forEach((t) => {
         if (t.status === 'COMPLETED' || t.status === 'APPROVED') {
           containersDelivered += (t.containers?.length || 1);
         }
       });
 
+      // Fetch dashboard metrics
+      let serverStats: Partial<DriverDashboardStats> = {};
+      if (driverId) {
+        try {
+          serverStats = await dashboardService.getDriverDashboard(driverId);
+        } catch { }
+      }
+
       setDashboardStats({
-        ...stats,
         activeTrips: activeCount,
         completedTripsToday: completedCount,
-        containersTransportedToday: containersDelivered || stats.containersTransportedToday,
+        containersTransportedToday: containersDelivered || serverStats.containersTransportedToday || 0,
         tripsPendingApproval: pendingCount,
         approvedAllowance: completedCount * 2500,
         pendingAllowance: pendingCount * 2500,
-        activeTrip: merged.find((t) => t.status === 'IN_PROGRESS' || t.status === 'ARRIVED' || t.status === 'PENDING_APPROVAL') || null,
+        activeTrip: list.find((t) => ['IN_PROGRESS', 'ARRIVED', 'PENDING_APPROVAL', 'APPROVED'].includes(t.status)) || null,
       });
-      setIsOnline(true);
 
-      // 3. Fetch driver profile to sync assigned vehicle and 1-year revenue license metrics
+      // 3. Fetch driver profile if available
       try {
-        const driverIdentifier = user?.driverCode || user?.driverId || user?.username || 'DRV-00001';
-        const prof = await driverService.getProfile(driverIdentifier);
-        if (prof) {
-          setDriverProfile(prof);
+        const driverIdentifier = user?.driverCode || user?.driverId || user?.username;
+        if (driverIdentifier) {
+          const prof = await driverService.getProfile(driverIdentifier);
+          if (prof) {
+            setDriverProfile(prof);
+          }
         }
-      } catch {}
-    } catch {
-      setTrips(demoTrips);
-      setIsOnline(false);
-      // Fallback calculations from local store
-      const completedCount = demoTrips.filter((t) => t.status === 'COMPLETED' || t.status === 'APPROVED').length;
-      const activeCount = demoTrips.filter((t) => t.status === 'IN_PROGRESS' || t.status === 'ARRIVED').length;
-      const pendingCount = demoTrips.filter((t) => t.status === 'PENDING_APPROVAL').length;
-      let containersCount = 0;
-      demoTrips.forEach((t) => {
-        if (t.status === 'COMPLETED' || t.status === 'APPROVED') {
-          containersCount += (t.containers?.length || 0);
-        }
-      });
-
-      setDashboardStats({
-        activeTrips: activeCount,
-        completedTripsToday: completedCount,
-        containersTransportedToday: containersCount,
-        tripsPendingApproval: pendingCount,
-        approvedAllowance: completedCount * 2500,
-        pendingAllowance: pendingCount * 2500,
-        activeTrip: demoTrips.find((t) => t.status === 'IN_PROGRESS' || t.status === 'ARRIVED' || t.status === 'PENDING_APPROVAL') || null,
-      });
+      } catch { }
+    } catch (err) {
+      console.warn('Network or API sync error:', err);
     } finally {
       setRefreshing(false);
     }
-  }, [user?.driverCode, user?.driverId, user?.id, mockTrips]);
+  }, [user?.driverCode, user?.driverId, user?.id, user?.username]);
 
   useEffect(() => { loadData(); }, [loadData]);
   useFocusEffect(useCallback(() => { loadData(); }, [loadData]));
 
-  // Active and relevant trips resolution
-  const inProgressTrip = useMemo(() => {
-    return trips.find((t) => t.status === 'IN_PROGRESS' || t.status === 'ARRIVED');
-  }, [trips]);
-
-  const pendingApprovalTrip = useMemo(() => {
-    return trips.find((t) => t.status === 'PENDING_APPROVAL');
-  }, [trips]);
-
-  const approvedTrip = useMemo(() => {
-    return trips.find((t) => t.status === 'APPROVED');
-  }, [trips]);
-
+  // Strict activeTrip computation: strictly IN_PROGRESS, ARRIVED, PENDING_APPROVAL, or APPROVED
   const activeTrip = useMemo(() => {
-    return inProgressTrip ||
-      approvedTrip ||
-      pendingApprovalTrip ||
-      trips.find((t) => t.status === 'DRAFT') ||
-      (trips.length > 0 ? trips[0] : null);
-  }, [inProgressTrip, approvedTrip, pendingApprovalTrip, trips]);
-
-  const driverName = driverProfile?.fullName || user?.name || user?.fullName || 'Kamal Perera';
-  const driverCode = driverProfile?.driverCode || user?.driverCode || user?.username || 'DRV-00001';
-  const vehicleNumber = driverProfile?.vehicleNumber || user?.vehicleNumber || activeTrip?.vehicleNumber || 'LY-6439';
-  const initials = driverName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase();
-  const driverPhoto = driverProfile?.profilePhoto || user?.profilePhoto || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80';
-
-  // Assigned Vehicle Revenue License (Valid 1 Year, Updated by Admin)
-  const vehicleLicenseIssuedDate = driverProfile?.vehicleLicenseIssuedDate || user?.vehicleLicenseIssuedDate || '2025-11-06';
-  const vehicleLicenseExpiryDate = driverProfile?.vehicleLicenseExpiryDate || user?.vehicleLicenseExpiryDate || '2026-11-06';
-  const vehicleLicenseDaysLeft = driverProfile?.vehicleLicenseDaysLeft ?? user?.vehicleLicenseDaysLeft ?? (
-    Math.round((new Date(vehicleLicenseExpiryDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
-  );
-  const vehicleLicenseRenewalDue = driverProfile?.vehicleLicenseRenewalDue ?? user?.vehicleLicenseRenewalDue ?? (vehicleLicenseDaysLeft <= 30);
-
-  // Driver Port Pass & Vehicle Port Pass Expiry (SLPA Gate Pass - 5 days renewal warning check)
-  const driverPortPassExpiryDate = driverProfile?.driverPortPassExpiryDate || user?.driverPortPassExpiryDate || '2026-11-15';
-  const driverPortPassDaysLeft = Math.round((new Date(driverPortPassExpiryDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
-  const driverPortPassRenewalDue = driverPortPassDaysLeft <= 5;
-
-  const vehiclePortPassExpiryDate = driverProfile?.vehiclePortPassExpiryDate || user?.vehiclePortPassExpiryDate || '2026-11-20';
-  const vehiclePortPassDaysLeft = Math.round((new Date(vehiclePortPassExpiryDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
-  const vehiclePortPassRenewalDue = vehiclePortPassDaysLeft <= 5;
-
-  // Container counts for active trip
-  const count20Ft = (activeTrip?.containers || []).filter((c: any) => c.size === '20FT' || c.size === 'FT_20').length;
-  const count40Ft = (activeTrip?.containers || []).filter((c: any) => c.size === '40FT' || c.size === 'FT_40').length;
-
-  // Actual trips completed and container count for current month
-  const actualCompletedTrips = useMemo(() => {
-    return trips.filter((t) => t.status === 'COMPLETED' || t.status === 'APPROVED');
+    return trips.find((t) => ['IN_PROGRESS', 'ARRIVED', 'PENDING_APPROVAL', 'APPROVED'].includes(t.status)) || null;
   }, [trips]);
 
-  const actualTripCount = useMemo(() => {
-    return actualCompletedTrips.length;
-  }, [actualCompletedTrips]);
+  // Clean real profile data - no fake demo defaults
+  const driverName = driverProfile?.fullName || user?.name || user?.fullName || '-';
+  const driverCode = driverProfile?.driverCode || user?.driverCode || user?.username || '-';
+  const vehicleNumber = driverProfile?.vehicleNumber || user?.vehicleNumber || activeTrip?.vehicleNumber || '-';
+  const driverPhoto = driverProfile?.profilePhoto || user?.profilePhoto || null;
+  const initials = driverName !== '-' ? driverName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() : 'DR';
 
-  const currentMonthContainers = useMemo(() => {
-    let count = 0;
-    actualCompletedTrips.forEach((t) => {
-      count += (t.containers?.length || 1);
-    });
-    return count;
-  }, [actualCompletedTrips]);
+  // License & Port Pass Expiry Warnings (Show ONLY when renewal is due)
+  const vehicleLicenseExpiryDate = driverProfile?.vehicleLicenseExpiryDate || user?.vehicleLicenseExpiryDate;
+  const vehicleLicenseDaysLeft = vehicleLicenseExpiryDate
+    ? Math.round((new Date(vehicleLicenseExpiryDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+    : null;
+  const vehicleLicenseRenewalDue = vehicleLicenseDaysLeft !== null && vehicleLicenseDaysLeft <= 30;
 
-  const [actionInProgress, setActionInProgress] = useState(false);
+  const driverPortPassExpiryDate = driverProfile?.driverPortPassExpiryDate || user?.driverPortPassExpiryDate;
+  const driverPortPassDaysLeft = driverPortPassExpiryDate
+    ? Math.round((new Date(driverPortPassExpiryDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+    : null;
+  const driverPortPassRenewalDue = driverPortPassDaysLeft !== null && driverPortPassDaysLeft <= 5;
 
-  // 1. START TRIP HANDLER
+  const vehiclePortPassExpiryDate = driverProfile?.vehiclePortPassExpiryDate || user?.vehiclePortPassExpiryDate;
+  const vehiclePortPassDaysLeft = vehiclePortPassExpiryDate
+    ? Math.round((new Date(vehiclePortPassExpiryDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+    : null;
+  const vehiclePortPassRenewalDue = vehiclePortPassDaysLeft !== null && vehiclePortPassDaysLeft <= 5;
+
+  // Single renewal warning message if any is due
+  const renewalWarningText = useMemo(() => {
+    if (vehicleLicenseRenewalDue && vehicleLicenseDaysLeft !== null) {
+      return `Vehicle License expires in ${vehicleLicenseDaysLeft <= 0 ? 'today' : `${vehicleLicenseDaysLeft} days`}`;
+    }
+    if (driverPortPassRenewalDue && driverPortPassDaysLeft !== null) {
+      return `Driver Port Pass expires in ${driverPortPassDaysLeft <= 0 ? 'today' : `${driverPortPassDaysLeft} days`}`;
+    }
+    if (vehiclePortPassRenewalDue && vehiclePortPassDaysLeft !== null) {
+      return `Vehicle Port Pass expires in ${vehiclePortPassDaysLeft <= 0 ? 'today' : `${vehiclePortPassDaysLeft} days`}`;
+    }
+    return null;
+  }, [vehicleLicenseRenewalDue, vehicleLicenseDaysLeft, driverPortPassRenewalDue, driverPortPassDaysLeft, vehiclePortPassRenewalDue, vehiclePortPassDaysLeft]);
+
+  // 1. START TRIP HANDLER (for APPROVED trips)
   const handleStartActiveTrip = async (tripId: string) => {
     setActionInProgress(true);
     try {
       await axios.patch(`${API_BASE_URL}/trips/${tripId}/status`, { status: 'IN_PROGRESS' });
-      useMockTripStore.getState().updateTripStatus(tripId, 'IN_PROGRESS');
       await loadData();
-      Alert.alert('Trip Started! 🚛', 'Terminal Gate Pass verified. Mission is now IN PROGRESS. Drive safely!');
-    } catch {
-      useMockTripStore.getState().updateTripStatus(tripId, 'IN_PROGRESS');
-      await loadData();
-      Alert.alert('Trip Started! 🚛', 'Terminal Gate Pass verified. Mission is now IN PROGRESS.');
+      Alert.alert('Trip Started', 'Trip is now IN PROGRESS. Drive safely.');
+    } catch (err) {
+      console.error('Failed to start trip:', err);
+      Alert.alert('Error', 'Unable to start trip. Please check connection and try again.');
     } finally {
       setActionInProgress(false);
     }
   };
 
-  // 2. ARRIVE AT TERMINAL HANDLER
-  const handleArriveTerminal = async (tripId: string) => {
-    setActionInProgress(true);
-    try {
-      await axios.patch(`${API_BASE_URL}/trips/${tripId}/status`, { status: 'ARRIVED' });
-      useMockTripStore.getState().updateTripStatus(tripId, 'ARRIVED' as any);
-      await loadData();
-      Alert.alert('Arrived at Terminal! 📍', `Gate-In clearance registered at destination terminal: ${getTripDischargeTerminal(activeTrip)}.`);
-    } catch {
-      useMockTripStore.getState().updateTripStatus(tripId, 'ARRIVED' as any);
-      await loadData();
-      Alert.alert('Arrived at Terminal! 📍', `Gate-In clearance registered at destination terminal: ${getTripDischargeTerminal(activeTrip)}.`);
-    } finally {
-      setActionInProgress(false);
-    }
-  };
-
-  // 3. OPEN DISCHARGE & SUPERVISOR CLEARANCE MODAL
+  // 2. OPEN DISCHARGE MODAL
   const handleOpenDischargeModal = (trip: any) => {
     if (isSuspended) {
       Alert.alert(
         'Account Suspended',
-        'Your driver account has been suspended by Administration. You cannot submit or complete trips. Please contact Administration or Port Dispatch.'
+        'Your driver account has been suspended by Administration. You cannot submit or complete trips.'
       );
       return;
     }
     const target = trip || activeTrip;
-    setDischargeTerminal(getTripDischargeTerminal(target) || target?.destTerminal || 'ECT');
+    setDischargeTerminal(getTripDischargeTerminal(target) || target?.destTerminal || '');
     setDischargeBay(target?.dischargeBay || 'Bay 04, Crane 02');
     setSealStatus(target?.sealStatus || 'INTACT (VERIFIED)');
     setCargoDamageStatus(target?.damageStatus || 'NONE');
-    setDriverCompletionNotes(target?.driverCompletionNotes || 'Containers discharged safely at destination terminal berth. Seals inspected and verified intact.');
+    setDriverCompletionNotes(target?.driverCompletionNotes || 'Discharged cargo safely at destination terminal berth.');
     setDischargeModalVisible(true);
   };
 
-  // 4. SUBMIT DISCHARGED TRIP TO SUPERVISOR FOR APPROVAL
+  // 3. SUBMIT DISCHARGED TRIP TO SUPERVISOR (Never fake success on error)
   const handleSubmitDischargeToSupervisor = async (tripId: string) => {
     if (isSuspended) {
       Alert.alert(
@@ -355,24 +249,12 @@ export default function DriverHomeDashboard() {
     setActionInProgress(true);
     try {
       const trip = trips.find((t) => t.id === tripId) || activeTrip;
-      const finalDest = dischargeTerminal || getTripDischargeTerminal(trip) || 'ECT';
+      const finalDest = dischargeTerminal || getTripDischargeTerminal(trip) || trip?.destTerminal || '-';
       const finalBay = dischargeBay.trim() || 'Bay 04, Crane 02';
-      const finalNotes = driverCompletionNotes.trim() || 'Containers discharged safely at destination berth. Awaiting supervisor clearance.';
+      const finalNotes = driverCompletionNotes.trim() || 'Discharged cargo safely at destination berth.';
 
-      try {
-        await axios.patch(`${API_BASE_URL}/trips/${tripId}/complete`, {
-          dischargeTerminal: finalDest,
-          dischargeBay: finalBay,
-          sealStatus,
-          damageStatus: cargoDamageStatus,
-          driverNotes: finalNotes,
-        });
-        await axios.patch(`${API_BASE_URL}/trips/${tripId}/submit`, {
-          notes: finalNotes,
-        });
-      } catch {}
-
-      useMockTripStore.getState().submitCompletedTripToSupervisor(tripId, {
+      // Official server API calls
+      await axios.patch(`${API_BASE_URL}/trips/${tripId}/complete`, {
         dischargeTerminal: finalDest,
         dischargeBay: finalBay,
         sealStatus,
@@ -380,89 +262,45 @@ export default function DriverHomeDashboard() {
         driverNotes: finalNotes,
       });
 
+      await axios.patch(`${API_BASE_URL}/trips/${tripId}/submit`, {
+        notes: finalNotes,
+      });
+
       const nowTime = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
       setSubmissionReceipt({
-        tripNumber: trip?.tripNumber || tripId,
-        route: `${trip?.sourceTerminal || 'Origin'} ➔ ${finalDest}`,
+        tripNumber: trip?.tripNumber || tripId?.slice(0, 8),
+        route: `${trip?.sourceTerminal || '-'} ➔ ${finalDest}`,
         dischargeBay: `${finalDest} · ${finalBay}`,
         sealStatus,
         damageStatus: cargoDamageStatus,
         notes: finalNotes,
         timestamp: nowTime,
         containersCount: trip?.containers?.length || 1,
-        vehicleNumber: trip?.vehicleNumber || user?.vehicleNumber || 'LY-6439',
-        cheNumber: trip?.chassisNumber || user?.cheNumber || 'CHE 100',
+        vehicleNumber: trip?.vehicleNumber || user?.vehicleNumber || '-',
+        cheNumber: trip?.chassisNumber || user?.cheNumber || '-',
       });
 
       setDischargeModalVisible(false);
       setSubmissionReceiptVisible(true);
       await loadData();
-    } catch {
-      const fallbackDest = dischargeTerminal || getTripDischargeTerminal(activeTrip) || 'ECT';
-      const fallbackBay = dischargeBay.trim() || 'Bay 04, Crane 02';
-      const fallbackNotes = driverCompletionNotes.trim() || 'Containers discharged safely. Awaiting supervisor clearance.';
-      const nowTime = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-
-      useMockTripStore.getState().submitCompletedTripToSupervisor(tripId, {
-        dischargeTerminal: fallbackDest,
-        dischargeBay: fallbackBay,
-        sealStatus,
-        damageStatus: cargoDamageStatus,
-        driverNotes: fallbackNotes,
-      });
-
-      setSubmissionReceipt({
-        tripNumber: activeTrip?.tripNumber || tripId,
-        route: `${activeTrip?.sourceTerminal || 'Origin'} ➔ ${fallbackDest}`,
-        dischargeBay: `${fallbackDest} · ${fallbackBay}`,
-        sealStatus,
-        damageStatus: cargoDamageStatus,
-        notes: fallbackNotes,
-        timestamp: nowTime,
-        containersCount: activeTrip?.containers?.length || 1,
-        vehicleNumber: activeTrip?.vehicleNumber || user?.vehicleNumber || 'LY-6439',
-        cheNumber: activeTrip?.chassisNumber || user?.cheNumber || 'CHE 100',
-      });
-
-      setDischargeModalVisible(false);
-      setSubmissionReceiptVisible(true);
-      await loadData();
+    } catch (err: any) {
+      console.error('Failed to submit discharge to supervisor:', err);
+      Alert.alert(
+        'Submission Failed',
+        'Server could not record trip completion. Please check network connection and try again.'
+      );
     } finally {
       setActionInProgress(false);
     }
   };
 
-  // 5. BACKWARD-COMPATIBLE COMPLETE TRIP HANDLER
-  const handleCompleteActiveTrip = async (tripId: string) => {
-    const trip = trips.find((t) => t.id === tripId) || activeTrip;
-    handleOpenDischargeModal(trip);
-  };
-
-  const handleFinalizeTripComplete = async (tripId: string) => {
-    handleOpenDischargeModal(activeTrip);
-  };
-
-  // Stage transition triggers for progress tracker
-  const handleTransitionTripStage = async (nextStatus: string, actionLabel: string) => {
-    if (!activeTrip) return;
-    try {
-      await tripService.updateTripStatus(activeTrip.id, nextStatus as any);
-      useMockTripStore.getState().updateTripStatus(activeTrip.id, nextStatus as any);
-      await loadData();
-      Alert.alert('Status Updated', `Trip status advanced: ${actionLabel}`);
-    } catch {
-      useMockTripStore.getState().updateTripStatus(activeTrip.id, nextStatus as any);
-      await loadData();
-      Alert.alert('Status Updated (Local)', `Trip status advanced: ${actionLabel}`);
-    }
-  };
-
+  // 4. REPORT DAMAGE HANDLER
   const handleReportDamage = () => {
     if (!damageDescription.trim()) {
       Alert.alert('Missing Field', 'Please provide a damage description.');
       return;
     }
-    setDamageSuccessMsg('Damage report registered with Central Port Safety.');
+    setDamageSuccessMsg('Damage report registered with Port Safety.');
     setTimeout(() => {
       setDamageReportModalVisible(false);
       setDamageDescription('');
@@ -471,19 +309,11 @@ export default function DriverHomeDashboard() {
     }, 1500);
   };
 
-  // Progress tracker stage index (1 to 8)
-  const currentStageIndex = useMemo(() => {
-    if (!activeTrip) return 1;
-    const s = activeTrip.status;
-    if (s === 'DRAFT') return (activeTrip.containers?.length || 0) > 0 ? 2 : 1;
-    if (s === 'IN_PROGRESS') return 3;
-    if (s === 'ARRIVED') return 4;
-    if (s === 'HANDOVER_CONFIRMED') return 5;
-    if (s === 'PENDING_APPROVAL') return 6;
-    if (s === 'APPROVED') return 7;
-    if (s === 'COMPLETED') return 8;
-    return 3;
-  }, [activeTrip]);
+  // Inspect specific trip receipt / details
+  const handleViewTripReceipt = (trip: any) => {
+    setSelectedReceiptTrip(trip);
+    setReceiptModalVisible(true);
+  };
 
   return (
     <View style={styles.container}>
@@ -491,7 +321,7 @@ export default function DriverHomeDashboard() {
         contentContainerStyle={[
           styles.scroll,
           {
-            paddingTop: Math.max(topInset, 16),
+            paddingTop: Math.max(topInset, Layout.screenPadding),
             paddingBottom: Math.max(bottomInset + 30, 48),
             paddingHorizontal: containerPaddingHorizontal,
             maxWidth: contentMaxWidth,
@@ -499,11 +329,17 @@ export default function DriverHomeDashboard() {
             alignSelf: 'center',
           },
         ]}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); loadData(); }} tintColor="#2563EB" />}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={() => { setRefreshing(true); loadData(); }}
+            tintColor={theme.accent}
+          />
+        }
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        {/* ─── A. DRIVER HEADER ─── */}
+        {/* ─── 1. CLEAN HEADER (White, Name, Grey Code + Vehicle, Status Chip, Logout Icon) ─── */}
         <View style={styles.header}>
           <View style={styles.headerLeft}>
             <TouchableOpacity
@@ -520,194 +356,122 @@ export default function DriverHomeDashboard() {
             </TouchableOpacity>
             <View>
               <Text style={styles.driverNameText}>{driverName}</Text>
-              <View style={styles.codeRow}>
-                <Text style={styles.driverCodeBadge}>{driverCode}</Text>
-                <View style={styles.vehiclePill}>
-                  <Ionicons name="bus" size={11} color="#feb300" />
-                  <Text style={styles.vehiclePillText}>{vehicleNumber}</Text>
-                </View>
-                <TouchableOpacity
-                  activeOpacity={0.8}
-                  onPress={() => router.push('/(driver)/(tabs)/profile')}
-                  style={[styles.licensePill, vehicleLicenseRenewalDue && styles.licensePillDue]}
-                >
-                  <Ionicons
-                    name={vehicleLicenseRenewalDue ? 'warning' : 'shield-checkmark'}
-                    size={10}
-                    color={vehicleLicenseRenewalDue ? '#f59e0b' : '#22ef7e'}
-                  />
-                  <Text style={[styles.licensePillText, vehicleLicenseRenewalDue && { color: '#f59e0b' }]}>
-                    Lic: {vehicleLicenseExpiryDate} {vehicleLicenseRenewalDue ? `(${vehicleLicenseDaysLeft}d)` : '• 1-Yr'}
-                  </Text>
-                </TouchableOpacity>
-              </View>
+              <Text style={styles.driverSubText}>
+                {driverCode} {vehicleNumber !== '-' ? `• ${vehicleNumber}` : ''}
+              </Text>
             </View>
           </View>
 
           <View style={styles.headerRight}>
-            {/* Online / Offline status toggle */}
+            {/* Real Connection Status Chip */}
+            <View style={[styles.statusChip, isOnline ? styles.statusOnline : styles.statusOffline]}>
+              <View style={[styles.statusDot, { backgroundColor: isOnline ? theme.statusApprovedText : theme.statusRejectedText }]} />
+              <Text style={[styles.statusText, { color: isOnline ? theme.statusApprovedText : theme.statusRejectedText }]}>
+                {isOnline ? 'Online' : 'Offline'}
+              </Text>
+            </View>
+
+            {/* More Menu Trigger ("...") */}
             <TouchableOpacity
-              style={[styles.statusToggle, isOnline ? styles.statusOnline : styles.statusOffline]}
-              onPress={() => setIsOnline(!isOnline)}
+              style={styles.iconBtn}
+              onPress={() => setMoreMenuVisible(true)}
+              activeOpacity={0.8}
             >
-              <View style={[styles.statusDot, { backgroundColor: isOnline ? '#22ef7e' : '#ff5252' }]} />
-              <Text style={styles.statusToggleText}>{isOnline ? 'ONLINE' : 'OFFLINE'}</Text>
+              <Ionicons name="ellipsis-horizontal" size={18} color={theme.textSecondary} />
             </TouchableOpacity>
 
-            {/* Logout button */}
+            {/* Logout Icon Button */}
             <TouchableOpacity
-              style={styles.headerLogoutBtn}
+              style={styles.iconBtn}
               onPress={() => {
                 logout();
                 router.replace('/(auth)/login');
               }}
+              activeOpacity={0.8}
             >
-              <Ionicons name="log-out-outline" size={18} color="#ff5252" />
+              <Ionicons name="log-out-outline" size={18} color={theme.danger} />
             </TouchableOpacity>
           </View>
         </View>
 
-        {/* ─── DRIVER ADMINISTRATIVE SUSPENSION BANNER ─── */}
+        {/* ─── 2. SUSPENSION BANNER (ONLY IF SUSPENDED) ─── */}
         {isSuspended && (
-          <View style={styles.suspendedWarningBanner}>
-            <View style={styles.suspendedWarningIconBox}>
-              <Ionicons name="alert-circle" size={22} color="#ff5252" />
-            </View>
+          <View style={styles.suspendedBanner}>
+            <Ionicons name="alert-circle" size={20} color={theme.danger} />
             <View style={{ flex: 1 }}>
-              <Text style={styles.suspendedWarningTitle}>ACCOUNT SUSPENDED BY ADMIN</Text>
-              <Text style={styles.suspendedWarningSubtitle}>
-                Your driver account is currently suspended by Port Administration. Operational trip dispatches are restricted. Please contact Port Dispatch Administration.
+              <Text style={styles.suspendedTitle}>Account Suspended</Text>
+              <Text style={styles.suspendedText}>
+                Operational trip dispatches are restricted. Please contact Port Dispatch.
               </Text>
             </View>
             <TouchableOpacity
-              style={styles.suspendedContactBtn}
+              style={styles.suspendedHelpBtn}
               onPress={() => setSupervisorModalVisible(true)}
-              activeOpacity={0.8}
             >
-              <Text style={styles.suspendedContactBtnText}>HELP</Text>
+              <Text style={styles.suspendedHelpBtnText}>Help</Text>
             </TouchableOpacity>
           </View>
         )}
 
-        {/* ─── VEHICLE REVENUE LICENSE RENEWAL NOTIFICATION (Active within 1 month, disappears when renewed for 1 year) ─── */}
-        {vehicleLicenseRenewalDue && (
+        {/* ─── 3. RENEWAL WARNING PILL (ONE small #FFF4DB pill, shown ONLY when due) ─── */}
+        {renewalWarningText && (
           <TouchableOpacity
             activeOpacity={0.85}
             onPress={() => router.push('/(driver)/(tabs)/profile')}
-            style={styles.vehicleLicenseAlertCard}
+            style={styles.renewalPill}
           >
-            <View style={styles.vehicleLicenseAlertIcon}>
-              <Ionicons name="warning" size={20} color="#f59e0b" />
-            </View>
-            <View style={{ flex: 1 }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 2 }}>
-                <Text style={styles.vehicleLicenseAlertTitle}>VEHICLE LICENSE RENEWAL DUE</Text>
-                <View style={styles.vehicleLicenseBadge}>
-                  <Text style={styles.vehicleLicenseBadgeText}>
-                    {vehicleLicenseDaysLeft <= 0 ? 'EXPIRED' : `${vehicleLicenseDaysLeft} DAYS LEFT`}
-                  </Text>
-                </View>
-              </View>
-              <Text style={styles.vehicleLicenseAlertBody}>
-                Assigned Vehicle {vehicleNumber} revenue license expires on {vehicleLicenseExpiryDate} (1-year validity cycle). Admin and Supervisor have been notified. Tap to view license status.
-              </Text>
-            </View>
-            <Ionicons name="chevron-forward" size={16} color="#f59e0b" />
+            <Ionicons name="warning-outline" size={16} color={theme.warning} />
+            <Text style={styles.renewalPillText}>{renewalWarningText}</Text>
+            <Ionicons name="chevron-forward" size={14} color={theme.warning} />
           </TouchableOpacity>
         )}
 
-        {/* ─── PORT PASS EXPIRY REMINDER (DRIVER & VEHICLE PORT PASSES - ACTIVE WITHIN 5 DAYS) ─── */}
-        {(driverPortPassRenewalDue || vehiclePortPassRenewalDue) && (
-          <TouchableOpacity
-            activeOpacity={0.85}
-            onPress={() => router.push('/(driver)/(tabs)/profile')}
-            style={[styles.vehicleLicenseAlertCard, { borderColor: '#feb300', backgroundColor: 'rgba(254, 179, 0, 0.08)' }]}
-          >
-            <View style={[styles.vehicleLicenseAlertIcon, { backgroundColor: 'rgba(254, 179, 0, 0.2)' }]}>
-              <Ionicons name="card" size={20} color="#feb300" />
-            </View>
-            <View style={{ flex: 1 }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-                <Text style={[styles.vehicleLicenseAlertTitle, { color: '#feb300' }]}>
-                  PORT PASS RENEWAL WARNING (EXPIRING WITHIN 5 DAYS)
-                </Text>
-                <View style={[styles.vehicleLicenseBadge, { backgroundColor: '#feb300' }]}>
-                  <Text style={[styles.vehicleLicenseBadgeText, { color: '#FFFFFF' }]}>
-                    ACTION REQUIRED
-                  </Text>
-                </View>
-              </View>
-
-              <View style={{ gap: 4 }}>
-                {driverPortPassRenewalDue && (
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                    <Ionicons name="person-circle" size={13} color="#2563EB" />
-                    <Text style={{ fontSize: 12, color: '#1E293B', fontWeight: '700' }}>
-                      Driver Port Pass: <Text style={{ color: '#2563EB' }}>{driverPortPassExpiryDate}</Text> ({driverPortPassDaysLeft <= 0 ? 'EXPIRED' : `${driverPortPassDaysLeft} days left - RENEW NOW`})
-                    </Text>
-                  </View>
-                )}
-                {vehiclePortPassRenewalDue && (
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                    <Ionicons name="bus" size={13} color="#feb300" />
-                    <Text style={{ fontSize: 12, color: '#1E293B', fontWeight: '700' }}>
-                      Vehicle Port Pass: <Text style={{ color: '#feb300' }}>{vehiclePortPassExpiryDate}</Text> ({vehiclePortPassDaysLeft <= 0 ? 'EXPIRED' : `${vehiclePortPassDaysLeft} days left - RENEW NOW`})
-                    </Text>
-                  </View>
-                )}
-              </View>
-              <Text style={[styles.vehicleLicenseAlertBody, { marginTop: 4, color: '#bac9cc' }]}>
-                Sri Lanka Ports Authority (SLPA) gate clearance pass is within 5 days of expiration. Please renew immediately to avoid terminal gate-in lockout.
-              </Text>
-            </View>
-            <Ionicons name="chevron-forward" size={16} color="#feb300" />
-          </TouchableOpacity>
-        )}
-
-        {/* ─── B. METRICS SUMMARY (2 CLEAN STAT CARDS) ─── */}
-        <View style={{ flexDirection: 'row', gap: 12, marginBottom: 16 }}>
+        {/* ─── 4. SUMMARY METRICS (2 CLEAN STAT CARDS) ─── */}
+        <View style={styles.statsRow}>
           <StatCard
             label="TODAY'S TRIPS"
             value={dashboardStats.completedTripsToday}
             hint="Completed shifts"
             iconName="checkmark-circle-outline"
-            valueColor="#0F766E"
+            valueColor={theme.accent}
           />
           <StatCard
             label="CONTAINERS"
             value={dashboardStats.containersTransportedToday}
             hint="Transported units"
             iconName="cube-outline"
-            valueColor="#0F766E"
+            valueColor={theme.accent}
           />
         </View>
 
-        {/* ─── C. PRIMARY TRIP ACTION / ACTIVE MISSION ─── */}
+        {/* ─── 5. ACTIVE MISSION CARD OR NO ACTIVE TRIP CARD ─── */}
         {activeTrip ? (
-          <View style={{ backgroundColor: '#FFFFFF', borderRadius: 12, padding: 16, borderWidth: 1, borderColor: '#E5EAEC', marginBottom: 16 }}>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+          <View style={styles.card}>
+            <View style={styles.cardHeader}>
               <View>
-                <Text style={{ fontSize: 13, color: '#6B7C85', fontWeight: '600' }}>ACTIVE MISSION</Text>
-                <Text style={{ fontSize: 18, color: '#1F2D33', fontWeight: '700' }}>
+                <Text style={styles.cardCategory}>ACTIVE MISSION</Text>
+                <Text style={styles.cardTitle}>
                   Trip #{activeTrip.tripNumber || activeTrip.id?.slice(0, 8)}
                 </Text>
-                <Text style={{ fontSize: 13, color: '#6B7C85', marginTop: 2 }}>
-                  {activeTrip.vesselName || 'MV ITT Express'}
+                <Text style={styles.cardSub}>
+                  {activeTrip.vesselName || '-'}
                 </Text>
               </View>
               <StatusPill status={activeTrip.status} />
             </View>
 
             {/* Route */}
-            <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#F7F9FA', borderRadius: 8, padding: 12, marginBottom: 12 }}>
+            <View style={styles.routeBox}>
               <View style={{ flex: 1 }}>
-                <Text style={{ fontSize: 11, color: '#6B7C85', fontWeight: '700' }}>FROM</Text>
-                <Text style={{ fontSize: 15, color: '#1F2D33', fontWeight: '700' }}>{activeTrip.sourceTerminal || 'CICT'}</Text>
+                <Text style={styles.routeLabel}>FROM</Text>
+                <Text style={styles.routeVal}>{activeTrip.sourceTerminal || '-'}</Text>
               </View>
-              <Ionicons name="arrow-forward" size={18} color="#0F766E" />
+              <Ionicons name="arrow-forward" size={18} color={theme.accent} />
               <View style={{ flex: 1, alignItems: 'flex-end' }}>
-                <Text style={{ fontSize: 11, color: '#6B7C85', fontWeight: '700' }}>TO</Text>
-                <Text style={{ fontSize: 15, color: '#0F766E', fontWeight: '700' }}>{getTripDischargeTerminal(activeTrip)}</Text>
+                <Text style={styles.routeLabel}>TO</Text>
+                <Text style={[styles.routeVal, { color: theme.accent }]}>
+                  {getTripDischargeTerminal(activeTrip) || activeTrip.destTerminal || '-'}
+                </Text>
               </View>
             </View>
 
@@ -715,247 +479,165 @@ export default function DriverHomeDashboard() {
             {(() => {
               const timing = getTripTimingDetails(activeTrip);
               return (
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, borderTopWidth: 1, borderTopColor: '#E5EAEC', paddingTop: 10 }}>
-                  <Text style={{ fontSize: 13, color: '#1F2D33', fontWeight: '600' }}>
+                <View style={styles.tripMetaRow}>
+                  <Text style={styles.tripMetaText}>
                     📦 {activeTrip.containers?.length || 1} Container{(activeTrip.containers?.length || 1) > 1 ? 's' : ''} Loaded
                   </Text>
-                  <Text style={{ fontSize: 12, color: '#6B7C85' }}>
+                  <Text style={styles.tripTimingText}>
                     {timing.duration ? `⏱ ${timing.duration}` : `Started: ${timing.startTime}`}
                   </Text>
                 </View>
               );
             })()}
 
-            {/* Action buttons (3 taps or fewer) */}
-            <View style={{ gap: 8 }}>
-              {activeTrip.status === 'IN_PROGRESS' && (
+            {/* ONE Primary Action Button based on status */}
+            <View style={{ marginTop: 8 }}>
+              {activeTrip.status === 'APPROVED' && (
                 <AppButton
-                  label="Mark Arrival & Complete Trip"
-                  onPress={() => handleOpenDischargeModal(activeTrip)}
+                  label="Start Trip"
+                  onPress={() => handleStartActiveTrip(activeTrip.id)}
                   variant="primary"
-                  iconName="checkmark-done"
+                  iconName="play-circle-outline"
+                  loading={actionInProgress}
                 />
               )}
-              {activeTrip.status === 'ARRIVED' && (
+
+              {(activeTrip.status === 'IN_PROGRESS' || activeTrip.status === 'ARRIVED') && (
                 <AppButton
-                  label="Complete Trip (Discharge Containers)"
+                  label="Complete Trip"
                   onPress={() => handleOpenDischargeModal(activeTrip)}
                   variant="primary"
-                  iconName="checkmark-done"
+                  iconName="checkmark-done-outline"
+                  loading={actionInProgress}
                 />
               )}
+
               {activeTrip.status === 'PENDING_APPROVAL' && (
-                <View style={{ backgroundColor: '#FFF4DB', borderRadius: 8, padding: 12, alignItems: 'center' }}>
-                  <Text style={{ fontSize: 13, color: '#8A5A00', fontWeight: '600' }}>
+                <View style={styles.pendingStrip}>
+                  <Ionicons name="time-outline" size={16} color={theme.warning} />
+                  <Text style={styles.pendingStripText}>
                     Awaiting Supervisor Sign-off
                   </Text>
                 </View>
               )}
-              <View style={{ flexDirection: 'row', gap: 8, marginTop: 4 }}>
-                <View style={{ flex: 1 }}>
-                  <AppButton
-                    label="Report Damage"
-                    variant="outline"
-                    onPress={() => setDamageReportModalVisible(true)}
-                    iconName="warning-outline"
-                  />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <AppButton
-                    label="Allowance"
-                    variant="outline"
-                    onPress={() => setAllowanceModalVisible(true)}
-                    iconName="cash-outline"
-                  />
-                </View>
-              </View>
             </View>
           </View>
         ) : (
-          <View style={{ backgroundColor: '#FFFFFF', borderRadius: 12, padding: 20, borderWidth: 1, borderColor: '#E5EAEC', marginBottom: 16, alignItems: 'center' }}>
-            <Ionicons name="boat-outline" size={36} color="#0F766E" style={{ marginBottom: 8 }} />
-            <Text style={{ fontSize: 17, fontWeight: '700', color: '#1F2D33', marginBottom: 4 }}>
-              Ready for your next trip?
+          /* NO ACTIVE TRIP CARD: Exactly ONE "+ Start New Trip" button */
+          <View style={styles.noTripCard}>
+            <Ionicons name="boat-outline" size={32} color={theme.accent} style={{ marginBottom: 6 }} />
+            <Text style={styles.noTripTitle}>No active trip</Text>
+            <Text style={styles.noTripSub}>
+              You currently have no trip in progress.
             </Text>
-            <Text style={{ fontSize: 13, color: '#6B7C85', textAlign: 'center', marginBottom: 16 }}>
-              Enter vessel, origin, destination and container numbers to begin your haulage.
-            </Text>
-            <View style={{ width: '100%' }}>
+            <View style={{ width: '100%', marginTop: 12 }}>
               <AppButton
                 label="+ Start New Trip"
                 variant="primary"
                 onPress={() => router.push('/(driver)/trips/new')}
-                iconName="add-circle"
+                iconName="add-circle-outline"
               />
             </View>
           </View>
         )}
 
-        {/* ─── D. RECENT TRIPS LIST ─── */}
-        <View style={{ backgroundColor: '#FFFFFF', borderRadius: 12, padding: 16, borderWidth: 1, borderColor: '#E5EAEC', marginBottom: 24 }}>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-            <Text style={{ fontSize: 16, fontWeight: '700', color: '#1F2D33' }}>Recent Trips</Text>
+        {/* ─── 6. RECENT TRIPS LIST ─── */}
+        <View style={styles.card}>
+          <View style={styles.recentHeader}>
+            <Text style={styles.sectionTitle}>Recent Trips</Text>
             <TouchableOpacity onPress={() => router.push('/(driver)/(tabs)/trips')}>
-              <Text style={{ fontSize: 13, fontWeight: '600', color: '#0F766E' }}>View All</Text>
+              <Text style={styles.viewAllText}>View All</Text>
             </TouchableOpacity>
           </View>
 
           {trips && trips.length > 0 ? (
             trips.slice(0, 4).map((t: any, index: number) => {
               const timing = getTripTimingDetails(t);
-              const dest = getTripDischargeTerminal(t);
+              const dest = getTripDischargeTerminal(t) || t.destTerminal || '-';
               return (
                 <ListRow
                   key={t.id || index}
-                  title={`Trip #${t.tripNumber || t.id?.slice(0, 8)} • ${t.vesselName || 'ITT'}`}
-                  subtitle={`${t.sourceTerminal || 'Origin'} → ${dest} • ${timing.duration || timing.startTime || timing.startDate}`}
+                  title={`Trip #${t.tripNumber || t.id?.slice(0, 8)} • ${t.vesselName || '-'}`}
+                  subtitle={`${t.sourceTerminal || '-'} → ${dest} • ${timing.duration || timing.startTime || timing.startDate}`}
                   rightElement={<StatusPill status={t.status} />}
-                  onPress={() => router.push('/(driver)/(tabs)/trips')}
+                  onPress={() => handleViewTripReceipt(t)}
                   showArrow
                 />
               );
             })
           ) : (
-            <Text style={{ fontSize: 13, color: '#6B7C85', paddingVertical: 12, textAlign: 'center' }}>
+            <Text style={styles.emptyText}>
               No trips recorded yet.
             </Text>
           )}
         </View>
 
-        <View style={{ height: 40 }} />
+        <View style={{ height: 32 }} />
       </ScrollView>
 
-
-
-      {/* ─── MODAL 2: ALLOWANCE / SALARY SUMMARY ─── */}
-      <Modal visible={allowanceModalVisible} transparent animationType="fade">
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalCard}>
+      {/* ─── MODAL: MORE MENU ("...") ─── */}
+      <Modal visible={moreMenuVisible} transparent animationType="fade">
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setMoreMenuVisible(false)}
+        >
+          <View style={[styles.modalCard, { maxWidth: 360 }]}>
             <View style={styles.modalHeader}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <Ionicons name="cash" size={20} color="#22ef7e" />
-                <Text style={styles.modalTitle}>OPERATOR ALLOWANCE SUMMARY</Text>
-              </View>
-              <TouchableOpacity onPress={() => setAllowanceModalVisible(false)}>
-                <Ionicons name="close" size={22} color="#849396" />
+              <Text style={styles.modalTitle}>More Options</Text>
+              <TouchableOpacity onPress={() => setMoreMenuVisible(false)}>
+                <Ionicons name="close" size={20} color={theme.textSecondary} />
               </TouchableOpacity>
             </View>
 
-            <View style={styles.allowanceCard}>
-              <Text style={styles.allowanceLabel}>APPROVED SALARY / ALLOWANCE</Text>
-              <Text style={styles.allowanceValueApproved}>
-                LKR {dashboardStats.approvedAllowance.toLocaleString()}.00
-              </Text>
-              <Text style={styles.allowanceSub}>
-                Calculated from {dashboardStats.completedTripsToday} approved inter-terminal trips (LKR 2,500/trip)
-              </Text>
-            </View>
+            <View style={{ gap: 8, paddingVertical: 8 }}>
+              <TouchableOpacity
+                style={styles.menuItem}
+                onPress={() => {
+                  setMoreMenuVisible(false);
+                  setDamageReportModalVisible(true);
+                }}
+              >
+                <Ionicons name="warning-outline" size={20} color={theme.warning} />
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.menuItemTitle}>Report Damage</Text>
+                  <Text style={styles.menuItemSub}>Log container or seal damage incident</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={16} color={theme.textHint} />
+              </TouchableOpacity>
 
-            <View style={[styles.allowanceCard, { borderColor: '#feb300' }]}>
-              <Text style={[styles.allowanceLabel, { color: '#feb300' }]}>PENDING APPROVAL ALLOWANCE</Text>
-              <Text style={styles.allowanceValuePending}>
-                LKR {dashboardStats.pendingAllowance.toLocaleString()}.00
-              </Text>
-              <Text style={styles.allowanceSub}>
-                From {dashboardStats.tripsPendingApproval} trips awaiting supervisor gate approval
-              </Text>
-            </View>
+              <TouchableOpacity
+                style={styles.menuItem}
+                onPress={() => {
+                  setMoreMenuVisible(false);
+                  setAllowanceModalVisible(true);
+                }}
+              >
+                <Ionicons name="cash-outline" size={20} color={theme.accent} />
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.menuItemTitle}>My Allowance</Text>
+                  <Text style={styles.menuItemSub}>View approved and pending earnings</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={16} color={theme.textHint} />
+              </TouchableOpacity>
 
-            <TouchableOpacity
-              style={[styles.modalSubmitBtn, { backgroundColor: '#22ef7e' }]}
-              onPress={() => setAllowanceModalVisible(false)}
-            >
-              <Text style={[styles.modalSubmitBtnText, { color: '#003918' }]}>CLOSE SUMMARY</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
-
-      {/* ─── MODAL 3: REPORT DAMAGE ─── */}
-      <Modal visible={damageReportModalVisible} transparent animationType="slide">
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalCard}>
-            <View style={styles.modalHeader}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <Ionicons name="warning" size={20} color="#ff5252" />
-                <Text style={styles.modalTitle}>REPORT CONTAINER DAMAGE</Text>
-              </View>
-              <TouchableOpacity onPress={() => setDamageReportModalVisible(false)}>
-                <Ionicons name="close" size={22} color="#849396" />
+              <TouchableOpacity
+                style={styles.menuItem}
+                onPress={() => {
+                  setMoreMenuVisible(false);
+                  setSupervisorModalVisible(true);
+                }}
+              >
+                <Ionicons name="chatbubbles-outline" size={20} color={theme.accent} />
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.menuItemTitle}>Contact Supervisor</Text>
+                  <Text style={styles.menuItemSub}>Terminal dispatch contact info</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={16} color={theme.textHint} />
               </TouchableOpacity>
             </View>
-
-            <View style={styles.modalFieldGroup}>
-              <Text style={styles.modalLabel}>CONTAINER NUMBER</Text>
-              <View style={styles.inputWrap}>
-                <TextInput
-                  style={styles.modalInput}
-                  placeholder="e.g. MSCU1234566"
-                  placeholderTextColor="#849396"
-                  value={damageContainerNumber}
-                  onChangeText={setDamageContainerNumber}
-                  autoCapitalize="characters"
-                />
-              </View>
-            </View>
-
-            <View style={styles.modalFieldGroup}>
-              <Text style={styles.modalLabel}>DAMAGE DETAILS &amp; LOCATION</Text>
-              <View style={[styles.inputWrap, { height: 90, alignItems: 'flex-start', paddingTop: 8 }]}>
-                <TextInput
-                  style={[styles.modalInput, { height: 74 }]}
-                  placeholder="Describe dent, seal breach, lock malfunction..."
-                  placeholderTextColor="#849396"
-                  multiline
-                  value={damageDescription}
-                  onChangeText={setDamageDescription}
-                />
-              </View>
-            </View>
-
-            {damageSuccessMsg && (
-              <View style={styles.successBox}>
-                <Ionicons name="checkmark-circle" size={16} color="#22ef7e" />
-                <Text style={styles.successBoxText}>{damageSuccessMsg}</Text>
-              </View>
-            )}
-
-            <TouchableOpacity style={[styles.modalSubmitBtn, { backgroundColor: '#ff5252' }]} onPress={handleReportDamage}>
-              <Ionicons name="shield-outline" size={18} color="#fff" />
-              <Text style={[styles.modalSubmitBtnText, { color: '#FFFFFF' }]}>SUBMIT DAMAGE INCIDENT</Text>
-            </TouchableOpacity>
           </View>
-        </View>
-      </Modal>
-
-      {/* ─── MODAL 5: CONTACT SUPERVISOR ─── */}
-      <Modal visible={supervisorModalVisible} transparent animationType="fade">
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalCard}>
-            <View style={styles.modalHeader}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <Ionicons name="chatbubbles" size={20} color="#2563EB" />
-                <Text style={styles.modalTitle}>PORT SUPERVISOR DISPATCH</Text>
-              </View>
-              <TouchableOpacity onPress={() => setSupervisorModalVisible(false)}>
-                <Ionicons name="close" size={22} color="#849396" />
-              </TouchableOpacity>
-            </View>
-
-            <View style={styles.notifItem}>
-              <Ionicons name="person-circle" size={28} color="#2563EB" />
-              <View style={{ flex: 1 }}>
-                <Text style={styles.notifTitle}>Nimal Silva (Duty Supervisor)</Text>
-                <Text style={styles.notifSub}>Terminal Control Tower · Extension 402</Text>
-                <Text style={styles.notifSub}>Direct Comms: 011-2456789</Text>
-              </View>
-            </View>
-
-            <TouchableOpacity style={styles.modalSubmitBtn} onPress={() => setSupervisorModalVisible(false)}>
-              <Text style={styles.modalSubmitBtnText}>RETURN TO DASHBOARD</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
+        </TouchableOpacity>
       </Modal>
 
       {/* ─── MODAL: DISCHARGE & SUBMIT TO SUPERVISOR ─── */}
@@ -964,54 +646,35 @@ export default function DriverHomeDashboard() {
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
           style={styles.modalOverlay}
         >
-          <View style={[styles.modalCard, { maxWidth: 460 }]}>
+          <View style={[styles.modalCard, { maxWidth: 440 }]}>
             <View style={styles.modalHeader}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <Ionicons name="document-text" size={20} color="#2563EB" />
-                <Text style={styles.modalTitle}>DISCHARGE & SUPERVISOR CLEARANCE</Text>
+                <Ionicons name="checkmark-done-circle" size={22} color={theme.accent} />
+                <Text style={styles.modalTitle}>Complete Trip</Text>
               </View>
               <TouchableOpacity onPress={() => setDischargeModalVisible(false)}>
-                <Ionicons name="close" size={22} color="#849396" />
+                <Ionicons name="close" size={22} color={theme.textSecondary} />
               </TouchableOpacity>
             </View>
 
             <Text style={styles.modalSubtitle}>
-              Confirm accurate discharge bay, seal verification, and cargo condition. Details are transmitted directly to the Operations Supervisor for verification and sign-off.
+              Confirm destination discharge bay and cargo seal condition before submitting.
             </Text>
 
-            {/* Mission Identity Strip */}
-            <View style={styles.dischargeTripContextStrip}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                  <Ionicons name="git-network" size={13} color="#2563EB" />
-                  <Text style={styles.dischargeTripContextId}>
-                    TRIP #{activeTrip?.tripNumber || activeTrip?.id?.slice(0, 8)}
-                  </Text>
-                </View>
-                <View style={styles.slpaSecurityBadge}>
-                  <Ionicons name="shield-checkmark" size={10} color="#22ef7e" />
-                  <Text style={styles.slpaSecurityBadgeText}>SLPA PROTOCOL</Text>
-                </View>
-              </View>
-              <Text style={styles.dischargeTripContextSub}>
-                {activeTrip?.sourceTerminal || 'Origin'} ➔ {dischargeTerminal || getTripDischargeTerminal(activeTrip)} • {activeTrip?.vehicleNumber || user?.vehicleNumber || 'LY-6439'} ({activeTrip?.chassisNumber || user?.cheNumber || 'CHE 100'})
-              </Text>
-            </View>
-
-            {/* Discharge Terminal */}
-            <View style={{ gap: 4 }}>
-              <Text style={styles.modalLabel}>DESTINATION DISCHARGE TERMINAL</Text>
-              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
+            {/* Destination Terminal Picker */}
+            <View style={styles.formGroup}>
+              <Text style={styles.fieldLabel}>DISCHARGE TERMINAL</Text>
+              <View style={styles.termWrap}>
                 {TERMINALS.map((term) => {
                   const isSel = dischargeTerminal === term;
                   return (
                     <TouchableOpacity
                       key={term}
-                      style={[styles.termSelectChip, isSel && styles.termSelectChipActive]}
+                      style={[styles.termChip, isSel && styles.termChipActive]}
                       onPress={() => setDischargeTerminal(term)}
                       activeOpacity={0.8}
                     >
-                      <Text style={[styles.termSelectChipText, isSel && styles.termSelectChipTextActive]}>
+                      <Text style={[styles.termChipText, isSel && styles.termChipTextActive]}>
                         {term}
                       </Text>
                     </TouchableOpacity>
@@ -1020,475 +683,379 @@ export default function DriverHomeDashboard() {
               </View>
             </View>
 
-            {/* Discharge Bay / Yard Slot */}
-            <View style={{ gap: 4 }}>
-              <Text style={styles.modalLabel}>DISCHARGE BAY / CRANE SLOT</Text>
-              <View style={styles.inputWrap}>
-                <Ionicons name="location-outline" size={16} color="#2563EB" />
-                <TextInput
-                  style={styles.modalInput}
-                  placeholder="e.g. Bay 04, Crane 02 / Block C-14"
-                  placeholderTextColor="#849396"
-                  value={dischargeBay}
-                  onChangeText={setDischargeBay}
-                />
-              </View>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6, marginTop: 4 }}>
-                {['Bay 04, Crane 02', 'Bay 12, Crane 05', 'Block C, Row 14', 'Yard Slot 08-A'].map((preset) => (
-                  <TouchableOpacity
-                    key={preset}
-                    style={[styles.presetChip, dischargeBay === preset && styles.presetChipActive]}
-                    onPress={() => setDischargeBay(preset)}
-                    activeOpacity={0.8}
-                  >
-                    <Text style={[styles.presetChipText, dischargeBay === preset && styles.presetChipTextActive]}>
-                      {preset}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
+            {/* Discharge Bay Input */}
+            <View style={styles.formGroup}>
+              <Text style={styles.fieldLabel}>DISCHARGE BAY / SLOT</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="e.g. Bay 04, Crane 02"
+                placeholderTextColor={theme.textHint}
+                value={dischargeBay}
+                onChangeText={setDischargeBay}
+              />
             </View>
 
-            {/* Seal Status Selection */}
-            <View style={{ gap: 4 }}>
-              <Text style={styles.modalLabel}>CONTAINER SEAL VERIFICATION</Text>
+            {/* Seal Verification */}
+            <View style={styles.formGroup}>
+              <Text style={styles.fieldLabel}>SEAL VERIFICATION</Text>
               <View style={{ flexDirection: 'row', gap: 8 }}>
                 <TouchableOpacity
                   style={[
-                    styles.toggleOptionBtn,
-                    sealStatus === 'INTACT (VERIFIED)' && styles.toggleOptionBtnGreenActive,
+                    styles.toggleBtn,
+                    sealStatus === 'INTACT (VERIFIED)' && styles.toggleBtnGreen,
                   ]}
                   onPress={() => setSealStatus('INTACT (VERIFIED)')}
-                  activeOpacity={0.8}
                 >
-                  <Ionicons
-                    name="shield-checkmark"
-                    size={15}
-                    color={sealStatus === 'INTACT (VERIFIED)' ? '#FFFFFF' : '#22ef7e'}
-                  />
                   <Text
                     style={[
-                      styles.toggleOptionBtnText,
-                      sealStatus === 'INTACT (VERIFIED)' && styles.toggleOptionBtnTextDark,
+                      styles.toggleBtnText,
+                      sealStatus === 'INTACT (VERIFIED)' && styles.toggleBtnTextGreen,
                     ]}
                   >
-                    SEALS INTACT (VERIFIED)
+                    Seals Intact
                   </Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
                   style={[
-                    styles.toggleOptionBtn,
-                    sealStatus === 'DAMAGED / TAMPERED' && styles.toggleOptionBtnRedActive,
+                    styles.toggleBtn,
+                    sealStatus === 'DAMAGED / TAMPERED' && styles.toggleBtnRed,
                   ]}
                   onPress={() => setSealStatus('DAMAGED / TAMPERED')}
-                  activeOpacity={0.8}
                 >
-                  <Ionicons
-                    name="warning"
-                    size={15}
-                    color={sealStatus === 'DAMAGED / TAMPERED' ? '#fff' : '#ff5252'}
-                  />
                   <Text
                     style={[
-                      styles.toggleOptionBtnText,
-                      sealStatus === 'DAMAGED / TAMPERED' && styles.toggleOptionBtnTextWhite,
+                      styles.toggleBtnText,
+                      sealStatus === 'DAMAGED / TAMPERED' && styles.toggleBtnTextRed,
                     ]}
                   >
-                    SEAL DEFECTIVE
+                    Seal Defective
                   </Text>
                 </TouchableOpacity>
               </View>
             </View>
 
-            {/* Cargo Condition Selection */}
-            <View style={{ gap: 4 }}>
-              <Text style={styles.modalLabel}>CARGO CONDITION</Text>
+            {/* Cargo Condition */}
+            <View style={styles.formGroup}>
+              <Text style={styles.fieldLabel}>CARGO CONDITION</Text>
               <View style={{ flexDirection: 'row', gap: 8 }}>
                 <TouchableOpacity
                   style={[
-                    styles.toggleOptionBtn,
-                    cargoDamageStatus === 'NONE' && styles.toggleOptionBtnGreenActive,
+                    styles.toggleBtn,
+                    cargoDamageStatus === 'NONE' && styles.toggleBtnGreen,
                   ]}
                   onPress={() => setCargoDamageStatus('NONE')}
-                  activeOpacity={0.8}
                 >
-                  <Ionicons
-                    name="checkmark-circle"
-                    size={15}
-                    color={cargoDamageStatus === 'NONE' ? '#FFFFFF' : '#22ef7e'}
-                  />
                   <Text
                     style={[
-                      styles.toggleOptionBtnText,
-                      cargoDamageStatus === 'NONE' && styles.toggleOptionBtnTextDark,
+                      styles.toggleBtnText,
+                      cargoDamageStatus === 'NONE' && styles.toggleBtnTextGreen,
                     ]}
                   >
-                    SOUND (NO DAMAGE)
+                    Sound / No Damage
                   </Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
                   style={[
-                    styles.toggleOptionBtn,
-                    cargoDamageStatus === 'DAMAGED' && styles.toggleOptionBtnRedActive,
+                    styles.toggleBtn,
+                    cargoDamageStatus === 'DAMAGED' && styles.toggleBtnRed,
                   ]}
                   onPress={() => setCargoDamageStatus('DAMAGED')}
-                  activeOpacity={0.8}
                 >
-                  <Ionicons
-                    name="alert-circle"
-                    size={15}
-                    color={cargoDamageStatus === 'DAMAGED' ? '#fff' : '#ff5252'}
-                  />
                   <Text
                     style={[
-                      styles.toggleOptionBtnText,
-                      cargoDamageStatus === 'DAMAGED' && styles.toggleOptionBtnTextWhite,
+                      styles.toggleBtnText,
+                      cargoDamageStatus === 'DAMAGED' && styles.toggleBtnTextRed,
                     ]}
                   >
-                    DAMAGE REPORTED
+                    Damage Reported
                   </Text>
                 </TouchableOpacity>
               </View>
             </View>
 
-            {/* Driver Operational Remarks */}
-            <View style={{ gap: 4 }}>
-              <Text style={styles.modalLabel}>DRIVER COMPLETION REMARKS</Text>
-              <View style={[styles.inputWrap, { height: 68, alignItems: 'flex-start', paddingTop: 6 }]}>
-                <TextInput
-                  style={[styles.modalInput, { height: 56, textAlignVertical: 'top' }]}
-                  placeholder="Enter completion remarks (e.g. Discharged at Berth 04 without delay)..."
-                  placeholderTextColor="#849396"
-                  multiline
-                  value={driverCompletionNotes}
-                  onChangeText={setDriverCompletionNotes}
-                />
-              </View>
+            {/* Completion Remarks */}
+            <View style={styles.formGroup}>
+              <Text style={styles.fieldLabel}>COMPLETION REMARKS</Text>
+              <TextInput
+                style={[styles.input, { height: 60, textAlignVertical: 'top', paddingTop: 8 }]}
+                placeholder="Optional notes..."
+                placeholderTextColor={theme.textHint}
+                multiline
+                value={driverCompletionNotes}
+                onChangeText={setDriverCompletionNotes}
+              />
             </View>
 
             {/* Submit Action */}
-            <TouchableOpacity
-              style={[styles.modalSubmitBtn, { backgroundColor: '#2563EB', marginTop: 4 }]}
-              onPress={() => activeTrip && handleSubmitDischargeToSupervisor(activeTrip.id)}
-              disabled={actionInProgress}
-              activeOpacity={0.88}
-            >
-              {actionInProgress ? (
-                <ActivityIndicator color="#FFFFFF" size="small" />
-              ) : (
-                <>
-                  <Ionicons name="paper-plane" size={18} color="#FFFFFF" />
-                  <Text style={[styles.modalSubmitBtnText, { color: '#FFFFFF', fontWeight: '900' }]}>
-                    SUBMIT FOR SUPERVISOR APPROVAL
-                  </Text>
-                </>
-              )}
-            </TouchableOpacity>
+            <View style={{ marginTop: 12 }}>
+              <AppButton
+                label="Submit for Approval"
+                onPress={() => activeTrip && handleSubmitDischargeToSupervisor(activeTrip.id)}
+                variant="primary"
+                iconName="paper-plane-outline"
+                loading={actionInProgress}
+              />
+            </View>
           </View>
         </KeyboardAvoidingView>
       </Modal>
 
-      {/* ─── MODAL: OFFICIAL DELIVERY HANDOVER RECEIPT ─── */}
+      {/* ─── MODAL: OFFICIAL DELIVERY RECEIPT ─── */}
       <Modal visible={submissionReceiptVisible} transparent animationType="fade">
         <View style={styles.modalOverlay}>
-          <View style={[styles.modalCard, { maxWidth: 440, borderColor: 'rgba(34, 239, 126, 0.4)' }]}>
-            {/* Receipt Top Icon & Title */}
-            <View style={{ alignItems: 'center', paddingVertical: 4, gap: 4 }}>
-              <View style={{
-                width: 48,
-                height: 48,
-                borderRadius: 24,
-                backgroundColor: 'rgba(34, 239, 126, 0.15)',
-                borderWidth: 1.5,
-                borderColor: '#22ef7e',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}>
-                <Ionicons name="shield-checkmark" size={26} color="#22ef7e" />
+          <View style={[styles.modalCard, { maxWidth: 420 }]}>
+            <View style={{ alignItems: 'center', marginBottom: 12 }}>
+              <View style={styles.receiptCheckCircle}>
+                <Ionicons name="checkmark-done" size={24} color={theme.statusApprovedText} />
               </View>
-              <Text style={{ fontSize: 13, fontWeight: '900', color: '#22ef7e', letterSpacing: 0.8, marginTop: 4 }}>
-                DELIVERY SUBMITTED TO SUPERVISOR
-              </Text>
-              <Text style={{ fontSize: 10, color: '#849396', fontWeight: '600' }}>
-                Official SLPA Handover Receipt • Transmission Logged
-              </Text>
+              <Text style={styles.receiptTitle}>Trip Submitted</Text>
+              <Text style={styles.receiptSub}>Awaiting supervisor sign-off</Text>
             </View>
 
-            {/* Receipt Details Box */}
             {submissionReceipt && (
-              <View style={{
-                backgroundColor: '#F8FAFC',
-                borderRadius: 10,
-                borderWidth: 1,
-                borderColor: '#E2E8F0',
-                padding: 12,
-                gap: 8,
-              }}>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingBottom: 6, borderBottomWidth: 1, borderBottomColor: '#E2E8F0' }}>
-                  <Text style={{ fontSize: 10, color: '#849396', fontWeight: '700' }}>MISSION ID</Text>
-                  <Text style={{ fontSize: 11, color: '#2563EB', fontWeight: '900', fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace' }}>
-                    {submissionReceipt.tripNumber}
-                  </Text>
+              <View style={styles.receiptDetailsBox}>
+                <View style={styles.receiptRow}>
+                  <Text style={styles.receiptLabel}>TRIP NUMBER</Text>
+                  <Text style={styles.receiptValue}>{submissionReceipt.tripNumber}</Text>
                 </View>
-
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                  <Text style={{ fontSize: 10, color: '#849396', fontWeight: '700' }}>CORRIDOR ROUTE</Text>
-                  <Text style={{ fontSize: 10.5, color: '#1E293B', fontWeight: '800' }}>
-                    {submissionReceipt.route}
-                  </Text>
+                <View style={styles.receiptRow}>
+                  <Text style={styles.receiptLabel}>ROUTE</Text>
+                  <Text style={styles.receiptValue}>{submissionReceipt.route}</Text>
                 </View>
-
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                  <Text style={{ fontSize: 10, color: '#849396', fontWeight: '700' }}>DISCHARGE BERTH</Text>
-                  <Text style={{ fontSize: 10.5, color: '#feb300', fontWeight: '800' }}>
-                    {submissionReceipt.dischargeBay}
-                  </Text>
+                <View style={styles.receiptRow}>
+                  <Text style={styles.receiptLabel}>DISCHARGE BAY</Text>
+                  <Text style={styles.receiptValue}>{submissionReceipt.dischargeBay}</Text>
                 </View>
-
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Text style={{ fontSize: 10, color: '#849396', fontWeight: '700' }}>SEAL INTEGRITY</Text>
-                  <View style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    gap: 4,
-                    backgroundColor: submissionReceipt.sealStatus?.includes('DAMAGED') ? 'rgba(255, 82, 82, 0.15)' : 'rgba(34, 239, 126, 0.15)',
-                    paddingHorizontal: 6,
-                    paddingVertical: 2,
-                    borderRadius: 4,
-                  }}>
-                    <Ionicons
-                      name={submissionReceipt.sealStatus?.includes('DAMAGED') ? 'warning' : 'shield-checkmark'}
-                      size={11}
-                      color={submissionReceipt.sealStatus?.includes('DAMAGED') ? '#ff5252' : '#22ef7e'}
-                    />
-                    <Text style={{
-                      fontSize: 9.5,
-                      fontWeight: '800',
-                      color: submissionReceipt.sealStatus?.includes('DAMAGED') ? '#ff5252' : '#22ef7e',
-                    }}>
-                      {submissionReceipt.sealStatus}
-                    </Text>
-                  </View>
+                <View style={styles.receiptRow}>
+                  <Text style={styles.receiptLabel}>SEAL STATUS</Text>
+                  <Text style={styles.receiptValue}>{submissionReceipt.sealStatus}</Text>
                 </View>
-
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Text style={{ fontSize: 10, color: '#849396', fontWeight: '700' }}>CARGO CONDITION</Text>
-                  <Text style={{
-                    fontSize: 10,
-                    fontWeight: '800',
-                    color: submissionReceipt.damageStatus === 'DAMAGED' ? '#ff5252' : '#22ef7e',
-                  }}>
-                    {submissionReceipt.damageStatus === 'DAMAGED' ? '⚠️ DAMAGE LOGGED' : '✓ SOUND (NO DAMAGE)'}
-                  </Text>
-                </View>
-
-                {/* Driver Notes Quote */}
-                <View style={{
-                  backgroundColor: '#0d1625',
-                  borderRadius: 6,
-                  borderLeftWidth: 3,
-                  borderLeftColor: '#2563EB',
-                  padding: 8,
-                  marginTop: 2,
-                }}>
-                  <Text style={{ fontSize: 8.5, color: '#2563EB', fontWeight: '800', letterSpacing: 0.5, marginBottom: 2 }}>
-                    TRANSMITTED DRIVER REMARKS
-                  </Text>
-                  <Text style={{ fontSize: 9.5, color: '#1E293B', fontStyle: 'italic', lineHeight: 14 }}>
-                    "{submissionReceipt.notes}"
-                  </Text>
-                </View>
-
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingTop: 4 }}>
-                  <Text style={{ fontSize: 9, color: '#556575' }}>AUDIT TIMESTAMP</Text>
-                  <Text style={{ fontSize: 9, color: '#849396', fontWeight: '700' }}>
-                    {submissionReceipt.timestamp} • DISPATCH QUEUED
-                  </Text>
+                <View style={styles.receiptRow}>
+                  <Text style={styles.receiptLabel}>SUBMITTED AT</Text>
+                  <Text style={styles.receiptValue}>{submissionReceipt.timestamp}</Text>
                 </View>
               </View>
             )}
 
-            {/* Notice */}
-            <View style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              gap: 8,
-              backgroundColor: 'rgba(254, 179, 0, 0.08)',
-              borderWidth: 1,
-              borderColor: 'rgba(254, 179, 0, 0.25)',
-              borderRadius: 8,
-              padding: 10,
-            }}>
-              <Ionicons name="time" size={16} color="#feb300" />
-              <Text style={{ fontSize: 9.5, color: '#1E293B', flex: 1, lineHeight: 14 }}>
-                Your completed delivery is now in the supervisor review queue. As soon as verified, your <Text style={{ color: '#feb300', fontWeight: '800' }}>300 Containers target (+1)</Text> will credit automatically.
-              </Text>
+            <View style={{ marginTop: 16 }}>
+              <AppButton
+                label="Return to Dashboard"
+                variant="primary"
+                onPress={() => setSubmissionReceiptVisible(false)}
+              />
             </View>
-
-            {/* Dismiss Button */}
-            <TouchableOpacity
-              style={[styles.modalSubmitBtn, { backgroundColor: '#22ef7e', height: 44 }]}
-              onPress={() => setSubmissionReceiptVisible(false)}
-              activeOpacity={0.88}
-            >
-              <Ionicons name="checkmark-done" size={18} color="#FFFFFF" />
-              <Text style={[styles.modalSubmitBtnText, { color: '#FFFFFF', fontWeight: '900' }]}>
-                VIEW IN DASHBOARD
-              </Text>
-            </TouchableOpacity>
           </View>
         </View>
       </Modal>
 
-      {/* ─── MODAL: 50 CONTAINERS CELEBRATION WITH ANIMATION ─── */}
-      <Modal visible={celebrationModalVisible} transparent animationType="fade">
-        <View style={styles.celebrationOverlay}>
-          {/* Animated Confetti Particles */}
-          <View style={styles.confettiContainer} pointerEvents="none">
-            {Array.from({ length: 20 }).map((_, i) => {
-              const confColors = ['#feb300', '#2563EB', '#22ef7e', '#ff4081', '#e040fb', '#ffffff'];
-              const confColor = confColors[i % confColors.length];
-              const leftPercent = `${(i * 5) + 2}%`;
-              const translateY = confettiAnim.interpolate({
-                inputRange: [0, 1],
-                outputRange: [-30 - (i % 6) * 20, 600 + (i % 5) * 40],
-              });
-              const rotate = confettiAnim.interpolate({
-                inputRange: [0, 1],
-                outputRange: ['0deg', `${(i % 2 === 0 ? 1 : -1) * (360 + i * 40)}deg`],
-              });
-              const opacity = confettiAnim.interpolate({
-                inputRange: [0, 0.1, 0.85, 1],
-                outputRange: [0, 1, 1, 0],
-              });
-              return (
-                <Animated.View
-                  key={i}
-                  style={[
-                    styles.confettiPiece,
-                    {
-                      left: leftPercent as any,
-                      backgroundColor: confColor,
-                      transform: [{ translateY }, { rotate }],
-                      opacity,
-                      width: i % 3 === 0 ? 12 : 8,
-                      height: i % 2 === 0 ? 14 : 8,
-                      borderRadius: i % 4 === 0 ? 6 : 2,
-                    },
-                  ]}
-                />
-              );
-            })}
-          </View>
+      {/* ─── MODAL: TRIP RECEIPT / DETAILS (for recent trips) ─── */}
+      <Modal visible={receiptModalVisible} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalCard, { maxWidth: 420 }]}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Trip Details</Text>
+              <TouchableOpacity onPress={() => setReceiptModalVisible(false)}>
+                <Ionicons name="close" size={20} color={theme.textSecondary} />
+              </TouchableOpacity>
+            </View>
 
-          {/* Animated Celebration Card */}
-          <Animated.View
-            style={[
-              styles.celebrationCard,
-              {
-                transform: [{ scale: scaleAnim }],
-              },
-            ]}
-          >
-            {/* Close button */}
-            <TouchableOpacity
-              style={styles.celebrationCloseBtn}
-              onPress={() => setCelebrationModalVisible(false)}
-            >
-              <Ionicons name="close" size={20} color="#849396" />
-            </TouchableOpacity>
+            {selectedReceiptTrip && (
+              <View style={styles.receiptDetailsBox}>
+                <View style={styles.receiptRow}>
+                  <Text style={styles.receiptLabel}>TRIP NUMBER</Text>
+                  <Text style={styles.receiptValue}>
+                    {selectedReceiptTrip.tripNumber || selectedReceiptTrip.id?.slice(0, 8)}
+                  </Text>
+                </View>
+                <View style={styles.receiptRow}>
+                  <Text style={styles.receiptLabel}>STATUS</Text>
+                  <StatusPill status={selectedReceiptTrip.status} />
+                </View>
+                <View style={styles.receiptRow}>
+                  <Text style={styles.receiptLabel}>VESSEL</Text>
+                  <Text style={styles.receiptValue}>{selectedReceiptTrip.vesselName || '-'}</Text>
+                </View>
+                <View style={styles.receiptRow}>
+                  <Text style={styles.receiptLabel}>ROUTE</Text>
+                  <Text style={styles.receiptValue}>
+                    {selectedReceiptTrip.sourceTerminal || '-'} → {getTripDischargeTerminal(selectedReceiptTrip) || selectedReceiptTrip.destTerminal || '-'}
+                  </Text>
+                </View>
+                <View style={styles.receiptRow}>
+                  <Text style={styles.receiptLabel}>CONTAINERS</Text>
+                  <Text style={styles.receiptValue}>
+                    {selectedReceiptTrip.containers?.length || 1} units
+                  </Text>
+                </View>
+                {(() => {
+                  const timing = getTripTimingDetails(selectedReceiptTrip);
+                  return (
+                    <>
+                      <View style={styles.receiptRow}>
+                        <Text style={styles.receiptLabel}>START TIME</Text>
+                        <Text style={styles.receiptValue}>{timing.startTime || timing.startDate}</Text>
+                      </View>
+                      <View style={styles.receiptRow}>
+                        <Text style={styles.receiptLabel}>DURATION</Text>
+                        <Text style={styles.receiptValue}>{timing.duration || 'In progress'}</Text>
+                      </View>
+                    </>
+                  );
+                })()}
+              </View>
+            )}
 
-            {/* Pulsing Trophy Halo */}
-            <View style={styles.trophyHaloWrap}>
-              <Animated.View
-                style={[
-                  styles.trophyHaloGlow,
-                  {
-                    transform: [{ scale: pulseAnim }],
-                  },
-                ]}
+            <View style={{ marginTop: 16 }}>
+              <AppButton
+                label="Close"
+                variant="outline"
+                onPress={() => setReceiptModalVisible(false)}
               />
-              <Animated.View
-                style={[
-                  styles.trophyIconBox,
-                  {
-                    transform: [
-                      {
-                        rotate: rotateAnim.interpolate({
-                          inputRange: [-0.2, 0.2],
-                          outputRange: ['-15deg', '15deg'],
-                        }),
-                      },
-                    ],
-                  },
-                ]}
-              >
-                <Ionicons name="trophy" size={56} color="#feb300" />
-              </Animated.View>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* ─── MODAL: ALLOWANCE SUMMARY ─── */}
+      <Modal visible={allowanceModalVisible} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalCard, { maxWidth: 380 }]}>
+            <View style={styles.modalHeader}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <Ionicons name="cash-outline" size={22} color={theme.accent} />
+                <Text style={styles.modalTitle}>Allowance Summary</Text>
+              </View>
+              <TouchableOpacity onPress={() => setAllowanceModalVisible(false)}>
+                <Ionicons name="close" size={20} color={theme.textSecondary} />
+              </TouchableOpacity>
             </View>
 
-            {/* Congratulatory Tag */}
-            <View style={styles.celebrationTagBadge}>
-              <Ionicons name="sparkles" size={12} color="#FFFFFF" />
-              <Text style={styles.celebrationTagBadgeText}>MILESTONE UNLOCKED</Text>
-            </View>
-
-            <Text style={styles.celebrationTitle}>CONGRATULATIONS!</Text>
-            <Text style={styles.celebrationDriverName}>{driverName.toUpperCase()}</Text>
-
-            <Text style={styles.celebrationMessage}>
-              Outstanding operational excellence! You have achieved the{' '}
-              <Text style={{ color: '#feb300', fontWeight: '900' }}>50 Containers Milestone</Text>{' '}
-              toward your monthly mission of <Text style={{ color: '#2563EB', fontWeight: '900' }}>300 Containers</Text>!
-            </Text>
-
-            {/* Achievement Highlights Box */}
-            <View style={styles.achievementBox}>
-              <View style={styles.achievementRow}>
-                <View style={styles.achievementItem}>
-                  <Text style={styles.achievementLabel}>TRIPS</Text>
-                  <Text style={[styles.achievementVal, { color: '#2563EB' }]}>{actualTripCount}</Text>
-                  <Text style={styles.achievementSubText}>Completed</Text>
-                </View>
-                <View style={styles.achievementDivider} />
-                <View style={styles.achievementItem}>
-                  <Text style={styles.achievementLabel}>CONTAINERS</Text>
-                  <Text style={[styles.achievementVal, { color: '#feb300' }]}>{currentMonthContainers}</Text>
-                  <Text style={styles.achievementSubText}>Transported</Text>
-                </View>
-                <View style={styles.achievementDivider} />
-                <View style={styles.achievementItem}>
-                  <Text style={styles.achievementLabel}>TARGET</Text>
-                  <Text style={[styles.achievementVal, { color: '#22ef7e' }]}>{monthlyTarget}</Text>
-                  <Text style={styles.achievementSubText}>Containers</Text>
-                </View>
+            <View style={{ gap: 12, paddingVertical: 8 }}>
+              <View style={styles.allowanceCard}>
+                <Text style={styles.allowanceLabel}>APPROVED ALLOWANCE</Text>
+                <Text style={styles.allowanceValueApproved}>
+                  LKR {dashboardStats.approvedAllowance.toLocaleString()}.00
+                </Text>
+                <Text style={styles.allowanceSub}>
+                  {dashboardStats.completedTripsToday} approved trips (LKR 2,500/trip)
+                </Text>
               </View>
 
-              <View style={styles.celebrationHonorRow}>
-                <Ionicons name="ribbon" size={20} color="#feb300" />
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.celebrationHonorTitle}>
-                    🌟 50 CONTAINERS MILESTONE CELEBRATION
-                  </Text>
-                  <Text style={styles.celebrationHonorSub}>
-                    Exceptional operational turnaround, terminal safety, and on-time inter-terminal transportation achieved across Colombo Port terminals!
-                  </Text>
-                </View>
+              <View style={[styles.allowanceCard, { borderColor: theme.border }]}>
+                <Text style={styles.allowanceLabel}>PENDING APPROVAL</Text>
+                <Text style={styles.allowanceValuePending}>
+                  LKR {dashboardStats.pendingAllowance.toLocaleString()}.00
+                </Text>
+                <Text style={styles.allowanceSub}>
+                  {dashboardStats.tripsPendingApproval} trips awaiting supervisor clearance
+                </Text>
               </View>
             </View>
 
-            {/* Action button */}
-            <TouchableOpacity
-              style={styles.celebrationActionBtn}
-              activeOpacity={0.85}
-              onPress={() => setCelebrationModalVisible(false)}
-            >
-              <Ionicons name="rocket" size={18} color="#FFFFFF" />
-              <Text style={styles.celebrationActionBtnText}>CONTINUE MISSIONS</Text>
-            </TouchableOpacity>
-          </Animated.View>
+            <View style={{ marginTop: 8 }}>
+              <AppButton
+                label="Close"
+                variant="outline"
+                onPress={() => setAllowanceModalVisible(false)}
+              />
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* ─── MODAL: REPORT DAMAGE ─── */}
+      <Modal visible={damageReportModalVisible} transparent animationType="slide">
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          style={styles.modalOverlay}
+        >
+          <View style={[styles.modalCard, { maxWidth: 400 }]}>
+            <View style={styles.modalHeader}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <Ionicons name="warning-outline" size={22} color={theme.warning} />
+                <Text style={styles.modalTitle}>Report Damage</Text>
+              </View>
+              <TouchableOpacity onPress={() => setDamageReportModalVisible(false)}>
+                <Ionicons name="close" size={20} color={theme.textSecondary} />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.formGroup}>
+              <Text style={styles.fieldLabel}>CONTAINER NUMBER</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="e.g. MSCU1234567"
+                placeholderTextColor={theme.textHint}
+                value={damageContainerNumber}
+                onChangeText={setDamageContainerNumber}
+                autoCapitalize="characters"
+              />
+            </View>
+
+            <View style={styles.formGroup}>
+              <Text style={styles.fieldLabel}>DAMAGE DETAILS</Text>
+              <TextInput
+                style={[styles.input, { height: 75, textAlignVertical: 'top', paddingTop: 8 }]}
+                placeholder="Describe dent, seal breach, or malfunction..."
+                placeholderTextColor={theme.textHint}
+                multiline
+                value={damageDescription}
+                onChangeText={setDamageDescription}
+              />
+            </View>
+
+            {damageSuccessMsg && (
+              <View style={styles.successBanner}>
+                <Ionicons name="checkmark-circle" size={16} color={theme.statusApprovedText} />
+                <Text style={styles.successBannerText}>{damageSuccessMsg}</Text>
+              </View>
+            )}
+
+            <View style={{ marginTop: 12 }}>
+              <AppButton
+                label="Submit Damage Report"
+                variant="primary"
+                onPress={handleReportDamage}
+                iconName="shield-outline"
+              />
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
+
+      {/* ─── MODAL: CONTACT SUPERVISOR ─── */}
+      <Modal visible={supervisorModalVisible} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalCard, { maxWidth: 380 }]}>
+            <View style={styles.modalHeader}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <Ionicons name="chatbubbles-outline" size={22} color={theme.accent} />
+                <Text style={styles.modalTitle}>Supervisor Contact</Text>
+              </View>
+              <TouchableOpacity onPress={() => setSupervisorModalVisible(false)}>
+                <Ionicons name="close" size={20} color={theme.textSecondary} />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.contactCard}>
+              <Ionicons name="person-circle-outline" size={36} color={theme.accent} />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.contactName}>Duty Operations Supervisor</Text>
+                <Text style={styles.contactSub}>Terminal Control Tower • Ext 402</Text>
+                <Text style={styles.contactSub}>Phone: 011-2456789</Text>
+              </View>
+            </View>
+
+            <View style={{ marginTop: 16 }}>
+              <AppButton
+                label="Close"
+                variant="outline"
+                onPress={() => setSupervisorModalVisible(false)}
+              />
+            </View>
+          </View>
         </View>
       </Modal>
     </View>
@@ -1498,2520 +1065,519 @@ export default function DriverHomeDashboard() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: theme.background,
   },
   scroll: {
     flexGrow: 1,
-    gap: 14,
+    gap: Spacing.two,
   },
 
   // ─── HEADER ───
   header: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    padding: 14,
+    backgroundColor: theme.backgroundElement,
+    borderRadius: Layout.radius,
+    borderWidth: Layout.borderWidth,
+    borderColor: theme.border,
+    padding: Layout.screenPadding,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    flexWrap: 'wrap',
-    gap: 10,
   },
   headerLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
-    flexShrink: 1,
-    minWidth: 150,
+    gap: 12,
+    flex: 1,
   },
   avatarWrap: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#2563EB',
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: theme.accentSoft,
     alignItems: 'center',
     justifyContent: 'center',
   },
   avatarImage: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    borderWidth: 2,
-    borderColor: '#2563EB',
+    width: 42,
+    height: 42,
+    borderRadius: 21,
   },
   avatarText: {
-    color: '#FFFFFF',
-    fontWeight: '900',
-    fontSize: 16,
+    color: theme.accent,
+    fontWeight: '700',
+    fontSize: 15,
   },
   driverNameText: {
-    color: '#1E293B',
-    fontWeight: '800',
-    fontSize: 16,
+    ...Typography.listTitle,
+    color: theme.text,
   },
-  codeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flexWrap: 'wrap',
-    gap: 6,
-    marginTop: 3,
-  },
-  driverCodeBadge: {
-    backgroundColor: '#EFF6FF',
-    borderColor: '#2563EB',
-    borderWidth: 1,
-    borderRadius: 6,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    color: '#2563EB',
-    fontSize: 11,
-    fontWeight: '800',
-  },
-  vehiclePill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(254, 179, 0, 0.12)',
-    borderRadius: 6,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    gap: 4,
-  },
-  vehiclePillText: {
-    color: '#feb300',
-    fontSize: 11,
-    fontWeight: '700',
+  driverSubText: {
+    ...Typography.label,
+    marginTop: 2,
+    color: theme.textSecondary,
   },
   headerRight: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'flex-end',
     gap: 8,
-    flexShrink: 0,
   },
-  statusToggle: {
+  statusChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 14,
-    borderWidth: 1,
-    gap: 6,
-  },
-  statusOnline: {
-    backgroundColor: 'rgba(0, 230, 118, 0.12)',
-    borderColor: '#00e676',
-  },
-  statusOffline: {
-    backgroundColor: 'rgba(255, 82, 82, 0.12)',
-    borderColor: '#ff5252',
-  },
-  statusDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 4,
-  },
-  statusToggleText: {
-    fontSize: 10,
-    fontWeight: '800',
-    color: '#1E293B',
-    letterSpacing: 0.5,
-  },
-  headerIconBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    backgroundColor: '#EFF6FF',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    alignItems: 'center',
-    justifyContent: 'center',
-    position: 'relative',
-  },
-  unreadBadge: {
-    position: 'absolute',
-    top: -4,
-    right: -4,
-    backgroundColor: '#ff5252',
-    minWidth: 16,
-    height: 16,
-    paddingHorizontal: 2,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  unreadBadgeText: {
-    color: '#FFFFFF',
-    fontSize: 9,
-    fontWeight: '900',
-  },
-  headerLogoutBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    backgroundColor: 'rgba(255, 82, 82, 0.1)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 82, 82, 0.3)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
-  // ─── SUMMARY CARDS GRID ───
-  summaryGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-  },
-  summaryCard: {
-    width: '48%',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    padding: 14,
-    gap: 4,
-  },
-  summaryCardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  summaryCardTitle: {
-    color: '#78909c',
-    fontSize: 10,
-    fontWeight: '800',
-    letterSpacing: 0.6,
-  },
-  summaryCardValue: {
-    fontSize: 26,
-    fontWeight: '900',
-    marginTop: 2,
-    letterSpacing: -0.5,
-  },
-  summaryCardSub: {
-    color: '#78909c',
-    fontSize: 11,
-  },
-
-  // ─── MONTHLY CONTAINER MISSION CARD ───
-  monthlyMissionCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    borderWidth: 1.5,
-    borderColor: 'rgba(254, 179, 0, 0.35)',
-    padding: 14,
-    gap: 10,
-  },
-  monthlyMissionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  monthlyMissionIconBox: {
-    width: 36,
-    height: 34,
-    borderRadius: 8,
-    backgroundColor: 'rgba(254, 179, 0, 0.15)',
-    borderWidth: 1,
-    borderColor: 'rgba(254, 179, 0, 0.4)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  monthlyMissionHeading: {
-    color: '#1E293B',
-    fontSize: 12,
-    fontWeight: '900',
-    letterSpacing: 0.5,
-  },
-  monthlyMissionSubHeading: {
-    color: '#849396',
-    fontSize: 10,
-    marginTop: 1,
-  },
-  celebrationTriggerBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: '#feb300',
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 5,
+    borderRadius: 12,
+    gap: 5,
   },
-  celebrationTriggerText: {
-    color: '#FFFFFF',
-    fontSize: 9,
-    fontWeight: '900',
-    letterSpacing: 0.5,
+  statusOnline: {
+    backgroundColor: theme.statusApprovedBg,
   },
-  missionNumbersRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingTop: 4,
+  statusOffline: {
+    backgroundColor: theme.statusRejectedBg,
   },
-  missionCurrentVal: {
-    color: '#feb300',
-    fontSize: 26,
-    fontWeight: '900',
+  statusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
   },
-  missionSlash: {
-    color: '#849396',
-    fontSize: 20,
-    fontWeight: '700',
-  },
-  missionTargetVal: {
-    color: '#2563EB',
-    fontSize: 22,
-    fontWeight: '900',
-  },
-  missionUnitText: {
-    color: '#849396',
+  statusText: {
     fontSize: 11,
     fontWeight: '600',
-    marginLeft: 2,
   },
-  missionPercentBadge: {
-    backgroundColor: '#EFF6FF',
-    borderWidth: 1,
-    borderColor: '#2563EB',
-    borderRadius: 6,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-  },
-  missionPercentText: {
-    color: '#2563EB',
-    fontWeight: '900',
-    fontSize: 12,
-  },
-  missionProgressBarTrack: {
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#0a1017',
-    borderWidth: 1,
-    borderColor: '#242a34',
-    overflow: 'hidden',
-    width: '100%',
-  },
-  missionProgressBarFill: {
-    height: '100%',
-    borderRadius: 4,
-    backgroundColor: '#feb300',
-  },
-  milestoneNoticeBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: 'rgba(34, 239, 126, 0.1)',
+  iconBtn: {
+    width: 36,
+    height: 36,
     borderRadius: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(34, 239, 126, 0.35)',
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    marginTop: 2,
-  },
-  milestoneStarCircle: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: '#22ef7e',
+    backgroundColor: theme.backgroundSurfaceLow,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  milestoneNoticeTitle: {
-    color: '#22ef7e',
-    fontSize: 11,
-    fontWeight: '900',
-  },
-  milestoneNoticeSub: {
-    color: '#849396',
-    fontSize: 9,
-    marginTop: 1,
+    borderWidth: 1,
+    borderColor: theme.border,
   },
 
-  // ─── CELEBRATION MODAL & ANIMATION ───
-  celebrationOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(10, 16, 26, 0.88)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 20,
-  },
-  confettiContainer: {
-    ...StyleSheet.absoluteFill,
-    overflow: 'hidden',
-  },
-  confettiPiece: {
-    position: 'absolute',
-    top: 0,
-  },
-  celebrationCard: {
-    width: '100%',
-    maxWidth: 400,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 20,
-    borderWidth: 2,
-    borderColor: '#feb300',
-    padding: 22,
-    alignItems: 'center',
-    shadowColor: '#feb300',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3,
-    shadowRadius: 20,
-    elevation: 12,
-  },
-  celebrationCloseBtn: {
-    position: 'absolute',
-    top: 14,
-    right: 14,
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#242a34',
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 10,
-  },
-  trophyHaloWrap: {
-    width: 100,
-    height: 100,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 8,
-  },
-  trophyHaloGlow: {
-    position: 'absolute',
-    width: 90,
-    height: 90,
-    borderRadius: 45,
-    backgroundColor: 'rgba(254, 179, 0, 0.22)',
-  },
-  trophyIconBox: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  celebrationTagBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: '#feb300',
-    borderRadius: 12,
-    paddingHorizontal: 10,
-    paddingVertical: 3,
-    marginBottom: 8,
-  },
-  celebrationTagBadgeText: {
-    color: '#FFFFFF',
-    fontSize: 9,
-    fontWeight: '900',
-    letterSpacing: 0.8,
-  },
-  celebrationTitle: {
-    color: '#feb300',
-    fontSize: 22,
-    fontWeight: '900',
-    letterSpacing: 1,
-    textAlign: 'center',
-  },
-  celebrationDriverName: {
-    color: '#1E293B',
-    fontSize: 14,
-    fontWeight: '800',
-    letterSpacing: 0.5,
-    marginTop: 2,
-    textAlign: 'center',
-  },
-  celebrationMessage: {
-    color: '#bac9cc',
-    fontSize: 12,
-    lineHeight: 18,
-    textAlign: 'center',
-    marginTop: 10,
-    paddingHorizontal: 10,
-  },
-  achievementBox: {
-    width: '100%',
-    backgroundColor: '#F8FAFC',
-    borderRadius: 12,
+  // ─── SUSPENSION BANNER ───
+  suspendedBanner: {
+    backgroundColor: theme.statusRejectedBg,
+    borderRadius: Layout.radius,
     borderWidth: 1,
-    borderColor: '#242a34',
+    borderColor: theme.statusRejectedText,
     padding: 12,
-    marginTop: 16,
-    gap: 10,
-  },
-  achievementRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-around',
+    gap: 10,
   },
-  achievementItem: {
-    alignItems: 'center',
-    flex: 1,
-  },
-  achievementDivider: {
-    width: 1,
-    height: 28,
-    backgroundColor: '#242a34',
-  },
-  achievementLabel: {
-    color: '#849396',
-    fontSize: 8,
-    fontWeight: '800',
-    letterSpacing: 0.5,
-  },
-  achievementVal: {
-    fontSize: 18,
-    fontWeight: '900',
-    marginTop: 2,
-  },
-  achievementSubText: {
-    color: '#849396',
-    fontSize: 9,
+  suspendedTitle: {
+    fontSize: 13,
     fontWeight: '700',
+    color: theme.danger,
+  },
+  suspendedText: {
+    fontSize: 12,
+    color: theme.danger,
     marginTop: 1,
   },
-  celebrationHonorRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    backgroundColor: 'rgba(254, 179, 0, 0.1)',
-    borderRadius: 8,
-    padding: 10,
-    borderWidth: 1,
-    borderColor: 'rgba(254, 179, 0, 0.3)',
-  },
-  celebrationHonorTitle: {
-    color: '#feb300',
-    fontSize: 11,
-    fontWeight: '900',
-    letterSpacing: 0.5,
-  },
-  celebrationHonorSub: {
-    color: '#1E293B',
-    fontSize: 10,
-    lineHeight: 14,
-    marginTop: 2,
-  },
-  missionTripInfoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: '#EFF6FF',
-    borderRadius: 6,
-    paddingHorizontal: 8,
+  suspendedHelpBtn: {
+    backgroundColor: theme.danger,
+    paddingHorizontal: 10,
     paddingVertical: 5,
-    borderWidth: 1,
-    borderColor: '#EFF6FF',
+    borderRadius: 6,
   },
-  missionTripInfoText: {
-    color: '#849396',
-    fontSize: 10,
-    fontWeight: '600',
-  },
-  celebrationActionBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    backgroundColor: '#feb300',
-    width: '100%',
-    paddingVertical: 13,
-    borderRadius: 10,
-    marginTop: 16,
-  },
-  celebrationActionBtnText: {
+  suspendedHelpBtnText: {
     color: '#FFFFFF',
-    fontSize: 12,
-    fontWeight: '900',
-    letterSpacing: 0.6,
+    fontSize: 11,
+    fontWeight: '700',
   },
 
-  // ─── ACTIVE TRIP CARD ───
-  activeTripCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    borderWidth: 1.5,
-    borderColor: '#2563EB',
-    padding: 14,
+  // ─── RENEWAL WARNING PILL (Small #FFF4DB pill) ───
+  renewalPill: {
+    backgroundColor: theme.statusPendingBg,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: theme.statusPendingText,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
+  renewalPillText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: theme.statusPendingText,
+    flex: 1,
+  },
+
+  // ─── METRIC STAT CARDS ───
+  statsRow: {
+    flexDirection: 'row',
     gap: 12,
   },
-  activeTripHeader: {
+
+  // ─── CARDS ───
+  card: {
+    backgroundColor: theme.backgroundElement,
+    borderRadius: Layout.radius,
+    borderWidth: Layout.borderWidth,
+    borderColor: theme.border,
+    padding: Layout.screenPadding,
+  },
+  cardHeader: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
-    paddingBottom: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0',
+    alignItems: 'flex-start',
+    marginBottom: 12,
   },
-  pulseLive: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#2563EB',
-  },
-  activeTripIdText: {
-    color: '#2563EB',
-    fontWeight: '900',
-    fontSize: 16,
-  },
-  tripStatusPill: {
-    backgroundColor: '#EFF6FF',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 4,
-    borderWidth: 1,
-    borderColor: '#2563EB',
-  },
-  tripStatusPillText: {
-    color: '#2563EB',
+  cardCategory: {
     fontSize: 11,
-    fontWeight: '800',
+    color: theme.textSecondary,
+    fontWeight: '700',
+    letterSpacing: 0.5,
   },
-  routeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#EFF6FF',
-    borderRadius: 12,
-    padding: 10,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-  },
-  terminalBox: {
-    alignItems: 'center',
-  },
-  terminalLabel: {
-    color: '#849396',
-    fontSize: 10,
-    fontWeight: '800',
-  },
-  terminalCode: {
-    color: '#2563EB',
-    fontSize: 18,
-    fontWeight: '900',
+  cardTitle: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: theme.text,
     marginTop: 2,
   },
-  routeArrowBox: {
-    alignItems: 'center',
-    gap: 2,
+  cardSub: {
+    fontSize: 13,
+    color: theme.textSecondary,
+    marginTop: 1,
   },
-  routeDistText: {
-    color: '#849396',
-    fontSize: 9,
-    letterSpacing: 0.8,
-  },
-  specsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  specItem: {
-    width: '48%',
-    backgroundColor: '#EFF6FF',
-    borderRadius: 8,
-    padding: 8,
-    gap: 2,
-  },
-  specLabel: {
-    color: '#849396',
-    fontSize: 10,
-    fontWeight: '800',
-  },
-  specValue: {
-    color: '#1E293B',
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  specValueMono: {
-    color: '#feb300',
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  loadedContainersSection: {
-    backgroundColor: '#EFF6FF',
-    borderRadius: 8,
-    padding: 10,
-    gap: 6,
-  },
-  loadedTitle: {
-    color: '#849396',
-    fontSize: 10,
-    fontWeight: '800',
-    letterSpacing: 0.8,
-  },
-  loadedContainerRow: {
+  routeBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    backgroundColor: theme.backgroundSurfaceLow,
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 12,
   },
-  loadedCode: {
-    color: '#1E293B',
-    fontSize: 12,
-    fontWeight: '700',
-    flex: 1,
-  },
-  loadedSize: {
-    color: '#2563EB',
+  routeLabel: {
     fontSize: 11,
-    fontWeight: '800',
-  },
-  loadedStatus: {
-    color: '#22ef7e',
-    fontSize: 10,
     fontWeight: '700',
+    color: theme.textSecondary,
   },
-  activeTripActions: {
+  routeVal: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: theme.text,
+    marginTop: 2,
+  },
+  tripMetaRow: {
     flexDirection: 'row',
-    gap: 10,
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 10,
+    borderTopWidth: 1,
+    borderTopColor: theme.border,
+    marginBottom: 8,
   },
-  continueTripBtn: {
-    flex: 1,
-    height: 44,
-    backgroundColor: '#2563EB',
-    borderRadius: 10,
+  tripMetaText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: theme.text,
+  },
+  tripTimingText: {
+    fontSize: 12,
+    color: theme.textSecondary,
+  },
+  pendingStrip: {
+    backgroundColor: theme.statusPendingBg,
+    borderRadius: 8,
+    padding: 12,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
   },
-  continueTripBtnText: {
-    color: '#FFFFFF',
-    fontWeight: '900',
-    fontSize: 11,
-    letterSpacing: 0.6,
-  },
-  addContBtnSmall: {
-    paddingHorizontal: 14,
-    height: 44,
-    backgroundColor: '#EFF6FF',
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#2563EB',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  addContBtnSmallText: {
-    color: '#2563EB',
-    fontSize: 10,
-    fontWeight: '800',
+  pendingStripText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: theme.statusPendingText,
   },
 
   // ─── NO ACTIVE TRIP CARD ───
-  noActiveCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    padding: 20,
+  noTripCard: {
+    backgroundColor: theme.backgroundElement,
+    borderRadius: Layout.radius,
+    borderWidth: Layout.borderWidth,
+    borderColor: theme.border,
+    padding: 24,
     alignItems: 'center',
-    gap: 8,
-    textAlign: 'center',
   },
-  noActiveTitle: {
-    color: '#849396',
-    fontSize: 12,
-    fontWeight: '900',
-    letterSpacing: 0.8,
-  },
-  noActiveSub: {
-    color: '#849396',
-    fontSize: 10,
-    textAlign: 'center',
-    lineHeight: 15,
-  },
-  startManualBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: '#2563EB',
-    borderRadius: 10,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    marginTop: 4,
-  },
-  startManualBtnText: {
-    color: '#FFFFFF',
-    fontWeight: '900',
-    fontSize: 11,
-  },
-
-  // ─── PROMINENT ADD CONTAINER ACTION ───
-  prominentAddContainerBtn: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    borderWidth: 1.5,
-    borderColor: '#2563EB',
-    padding: 14,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  prominentAddIconCircle: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    backgroundColor: '#2563EB',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  prominentAddTitle: {
-    color: '#2563EB',
-    fontWeight: '900',
-    fontSize: 12,
-    letterSpacing: 0.6,
-  },
-  prominentAddSub: {
-    color: '#849396',
-    fontSize: 9,
-    lineHeight: 13,
-    marginTop: 2,
-  },
-
-  // ─── 8-STAGE WORKFLOW TRACKER ───
-  progressTrackerCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    padding: 14,
-    gap: 10,
-  },
-  trackerHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    paddingBottom: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#242a34',
-  },
-  trackerTitle: {
-    color: '#1E293B',
-    fontSize: 11,
-    fontWeight: '800',
-    letterSpacing: 0.6,
-  },
-  stagesList: {
-    gap: 6,
-  },
-  stageItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  stageCircle: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    backgroundColor: '#F8FAFC',
-    borderWidth: 1,
-    borderColor: '#242a34',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  stageCircleDone: {
-    backgroundColor: '#22ef7e',
-    borderColor: '#22ef7e',
-  },
-  stageCircleActive: {
-    borderColor: '#2563EB',
-    borderWidth: 2,
-  },
-  stageItemText: {
-    fontSize: 11,
-    color: '#849396',
-  },
-  stageItemTextDone: {
-    color: '#1E293B',
-    fontWeight: '600',
-  },
-  stageItemTextActive: {
-    color: '#2563EB',
-    fontWeight: '800',
-  },
-  stageButtonsRow: {
-    marginTop: 8,
-    paddingTop: 8,
-    borderTopWidth: 1,
-    borderTopColor: '#242a34',
-  },
-  stageActionBtn: {
-    height: 40,
-    backgroundColor: '#2563EB',
-    borderRadius: radius.DEFAULT,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-  },
-  stageActionBtnText: {
-    color: '#FFFFFF',
-    fontWeight: '900',
-    fontSize: 11,
-    letterSpacing: 0.8,
-  },
-
-  // ─── QUICK ACTIONS GRID ───
-  quickActionsSection: {
-    gap: 10,
-  },
-  sectionHeaderTitle: {
-    color: '#849396',
-    fontSize: 10,
-    fontWeight: '800',
-    letterSpacing: 0.8,
-  },
-  quickActionsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-  },
-  quickActionTile: {
-    width: '22%',
-    backgroundColor: '#FFFFFF',
-    borderRadius: radius.DEFAULT,
-    borderWidth: 1,
-    borderColor: '#242a34',
-    padding: 10,
-    alignItems: 'center',
-    gap: 6,
-  },
-  tileIconCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  tileTitle: {
-    color: '#1E293B',
-    fontSize: 9,
+  noTripTitle: {
+    fontSize: 16,
     fontWeight: '700',
+    color: theme.text,
+  },
+  noTripSub: {
+    fontSize: 13,
+    color: theme.textSecondary,
+    marginTop: 2,
     textAlign: 'center',
   },
 
-  // ─── MODAL STYLES ───
+  // ─── RECENT TRIPS SECTION ───
+  recentHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  sectionTitle: {
+    ...Typography.sectionTitle,
+    fontSize: 16,
+  },
+  viewAllText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: theme.accent,
+  },
+  emptyText: {
+    fontSize: 13,
+    color: theme.textSecondary,
+    textAlign: 'center',
+    paddingVertical: 16,
+  },
+
+  // ─── MODALS ───
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(8, 14, 23, 0.94)',
+    backgroundColor: 'rgba(31, 45, 51, 0.4)',
     justifyContent: 'center',
-    ...(Platform.OS === 'web'
-      ? {
-          position: 'fixed' as any,
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          zIndex: 999999,
-        }
-      : {}),
-  },
-  modalScroll: {
-    flexGrow: 1,
-    justifyContent: 'center',
+    alignItems: 'center',
     padding: 16,
-    paddingVertical: 30,
   },
   modalCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: radius.DEFAULT,
-    borderWidth: 1.5,
-    borderColor: '#2563EB',
-    padding: 16,
-    gap: 12,
+    width: '100%',
+    backgroundColor: theme.backgroundElement,
+    borderRadius: Layout.radius,
+    borderWidth: 1,
+    borderColor: theme.border,
+    padding: 20,
   },
   modalHeader: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
-    paddingBottom: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#242a34',
+    alignItems: 'center',
+    marginBottom: 12,
   },
   modalTitle: {
-    color: '#2563EB',
-    fontWeight: '900',
-    fontSize: 12,
-    letterSpacing: 0.8,
-  },
-  modalFieldGroup: {
-    gap: 6,
-  },
-  modalLabel: {
-    color: '#849396',
-    fontSize: 9,
-    fontWeight: '800',
-    letterSpacing: 0.6,
-  },
-  inputWrap: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F8FAFC',
-    borderRadius: radius.DEFAULT,
-    borderWidth: 1,
-    borderColor: '#242a34',
-    paddingHorizontal: 12,
-    height: 46,
-  },
-  modalInput: {
-    flex: 1,
-    color: '#1E293B',
-        fontSize: 13,
-    ...(Platform.OS === 'web' ? { outlineStyle: 'none' } : {}),
-  } as any,
-
-  // ISO Pill
-  validationPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderRadius: radius.sm,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    gap: 6,
-  },
-  pillValid: {
-    backgroundColor: 'rgba(34, 239, 126, 0.12)',
-    borderWidth: 1,
-    borderColor: '#22ef7e',
-  },
-  pillInvalid: {
-    backgroundColor: 'rgba(255, 82, 82, 0.12)',
-    borderWidth: 1,
-    borderColor: '#ff5252',
-  },
-  validationPillText: {
-    flex: 1,
-    fontSize: 10,
+    fontSize: 16,
     fontWeight: '700',
+    color: theme.text,
   },
-  fixDigitBtn: {
-    backgroundColor: '#2563EB',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 4,
+  modalSubtitle: {
+    fontSize: 12,
+    color: theme.textSecondary,
+    marginBottom: 14,
+    lineHeight: 17,
   },
-  fixDigitBtnText: {
-    color: '#FFFFFF',
-    fontSize: 9,
-    fontWeight: '900',
+  formGroup: {
+    gap: 4,
+    marginBottom: 12,
   },
-
-  // Size buttons
-  sizeToggleRow: {
-    flexDirection: 'row',
-    gap: 10,
+  fieldLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: theme.textSecondary,
   },
-  sizeBtn: {
-    flex: 1,
-    height: 42,
-    borderRadius: radius.DEFAULT,
-    backgroundColor: '#F8FAFC',
+  input: {
+    backgroundColor: theme.backgroundSurfaceLow,
+    borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#242a34',
-    alignItems: 'center',
-    justifyContent: 'center',
+    borderColor: theme.border,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    fontSize: 14,
+    color: theme.text,
   },
-  sizeBtnActive: {
-    backgroundColor: '#EFF6FF',
-    borderColor: '#2563EB',
-  },
-  sizeBtnText: {
-    color: '#849396',
-    fontSize: 10,
-    fontWeight: '800',
-  },
-  sizeBtnTextActive: {
-    color: '#2563EB',
-  },
-
-  // Terminal Chips
-  terminalChipsWrap: {
+  termWrap: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 6,
   },
-  terminalChip: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: radius.sm,
-    backgroundColor: '#F8FAFC',
-    borderWidth: 1,
-    borderColor: '#242a34',
-  },
-  terminalChipActive: {
-    backgroundColor: '#EFF6FF',
-    borderColor: '#2563EB',
-  },
-  terminalChipText: {
-    color: '#849396',
-    fontSize: 10,
-    fontWeight: '800',
-      },
-  terminalChipTextActive: {
-    color: '#2563EB',
-  },
-
-  missionTimingPanel: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#F8FAFC',
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: '#1e293b',
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    marginBottom: 12,
-    gap: 8,
-  },
-  missionTimingCol: {
-    flex: 1,
-    gap: 2,
-  },
-  missionTimingHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    marginBottom: 2,
-  },
-  missionTimingLabel: {
-    fontSize: 8.5,
-    fontWeight: '800',
-    color: '#2563EB',
-    letterSpacing: 0.4,
-  },
-  missionTimingDate: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#1E293B',
-  },
-  missionTimingTime: {
-    fontSize: 12,
-    fontWeight: '900',
-    color: '#2563EB',
-    letterSpacing: 0.2,
-  },
-  missionTimingDivider: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 3,
-    paddingHorizontal: 2,
-  },
-  missionDurationPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 3,
-    backgroundColor: 'rgba(34, 239, 126, 0.12)',
-    paddingHorizontal: 5,
-    paddingVertical: 2,
-    borderRadius: 4,
-    borderWidth: 1,
-    borderColor: 'rgba(34, 239, 126, 0.3)',
-  },
-  missionDurationText: {
-    fontSize: 9,
-    fontWeight: '800',
-    color: '#22ef7e',
-  },
-
-  errorBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255, 82, 82, 0.12)',
-    borderColor: '#ff5252',
-    borderWidth: 1,
-    borderRadius: radius.sm,
-    padding: 10,
-    gap: 8,
-  },
-  errorBoxText: {
-    color: '#ff8a80',
-    fontSize: 10,
-    fontWeight: '700',
-    flex: 1,
-  },
-  successBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(34, 239, 126, 0.12)',
-    borderColor: '#22ef7e',
-    borderWidth: 1,
-    borderRadius: radius.sm,
-    padding: 10,
-    gap: 8,
-  },
-  successBoxText: {
-    color: '#22ef7e',
-    fontSize: 10,
-    fontWeight: '700',
-    flex: 1,
-  },
-  modalSubmitBtn: {
-    height: 48,
-    backgroundColor: '#2563EB',
-    borderRadius: radius.DEFAULT,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    marginTop: 4,
-  },
-  modalSubmitBtnText: {
-    color: '#FFFFFF',
-    fontWeight: '900',
-    fontSize: 11,
-    letterSpacing: 0.8,
-  },
-
-  // Allowance Card
-  allowanceCard: {
-    backgroundColor: '#F8FAFC',
-    borderRadius: radius.DEFAULT,
-    borderWidth: 1,
-    borderColor: '#22ef7e',
-    padding: 14,
-    gap: 4,
-  },
-  allowanceLabel: {
-    color: '#22ef7e',
-    fontSize: 9,
-    fontWeight: '800',
-    letterSpacing: 0.6,
-  },
-  allowanceValueApproved: {
-    color: '#22ef7e',
-    fontSize: 22,
-    fontWeight: '900',
-      },
-  allowanceValuePending: {
-    color: '#feb300',
-    fontSize: 22,
-    fontWeight: '900',
-      },
-  allowanceSub: {
-    color: '#849396',
-    fontSize: 9,
-    lineHeight: 13,
-  },
-
-  // Notif item
-  notifItem: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    backgroundColor: '#F8FAFC',
-    borderRadius: radius.sm,
-    padding: 10,
-    gap: 10,
-    borderWidth: 1,
-    borderColor: '#242a34',
-  },
-  notifTitle: {
-    color: '#1E293B',
-    fontSize: 11,
-    fontWeight: '800',
-  },
-  notifSub: {
-    color: '#849396',
-    fontSize: 9,
-    marginTop: 2,
-  },
-
-  // ─── STITCH HUD STYLES ───
-  stitchHudContainer: {
-    gap: 12,
-  },
-  hudTelematicsBanner: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: radius.DEFAULT,
-    borderWidth: 1,
-    borderColor: '#242a34',
-    padding: 14,
-    gap: 10,
-    overflow: 'hidden',
-  },
-  hudBannerTop: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  hudMissionBadge: {
-    backgroundColor: '#2563EB',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 4,
-  },
-  hudMissionBadgeText: {
-    color: '#FFFFFF',
-    fontSize: 9,
-    fontWeight: '900',
-    letterSpacing: 0.6,
-  },
-  hudMissionIdText: {
-    color: '#2563EB',
-    fontSize: 12,
-    fontWeight: '900',
-    letterSpacing: 0.8,
-  },
-  hudTransmittingBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    backgroundColor: '#F8FAFC',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 4,
-    borderWidth: 1,
-    borderColor: '#242a34',
-  },
-  pingDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: '#22ef7e',
-  },
-  hudTransmittingText: {
-    color: '#22ef7e',
-    fontSize: 8,
-    fontWeight: '900',
-    letterSpacing: 0.8,
-  },
-  hudContainerTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    justifyContent: 'space-between',
-  },
-  hudContainerId: {
-    color: '#1E293B',
-    fontSize: 22,
-    fontWeight: '900',
-    letterSpacing: 0.5,
-  },
-  hudContainerSize: {
-    color: '#feb300',
-    fontSize: 13,
-    fontWeight: '900',
-  },
-  hudSpecChipsGrid: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  hudSpecChip: {
-    flex: 1,
-    backgroundColor: '#F8FAFC',
-    padding: 8,
-    borderRadius: radius.sm,
-    borderWidth: 1,
-    borderColor: '#1a2029',
-  },
-  hudSpecLabel: {
-    color: '#849396',
-    fontSize: 8,
-    fontWeight: '800',
-    letterSpacing: 0.5,
-  },
-  hudSpecValCyan: {
-    color: '#2563EB',
-    fontSize: 11,
-    fontWeight: '900',
-    marginTop: 2,
-  },
-  hudSpecValLime: {
-    color: '#22ef7e',
-    fontSize: 11,
-    fontWeight: '900',
-    marginTop: 2,
-  },
-
-  // Turn Guidance Banner
-  hudTurnGuidanceBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#2563EB',
-    borderRadius: radius.DEFAULT,
-    padding: 12,
-    gap: 12,
-  },
-  hudTurnIconBox: {
-    width: 42,
-    height: 42,
-    borderRadius: radius.sm,
-    backgroundColor: '#F8FAFC',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  hudDistLabel: {
-    color: '#FFFFFF',
-    fontSize: 9,
-    fontWeight: '900',
-    letterSpacing: 0.8,
-  },
-  routeCodeTag: {
-    backgroundColor: 'rgba(0, 54, 61, 0.2)',
-    paddingHorizontal: 6,
-    paddingVertical: 1,
-    borderRadius: 4,
-  },
-  routeCodeTagText: {
-    color: '#FFFFFF',
-    fontSize: 8,
-    fontWeight: '900',
-  },
-  hudTurnInstruction: {
-    color: '#FFFFFF',
-    fontSize: 12,
-    fontWeight: '900',
-    letterSpacing: 0.5,
-    marginTop: 2,
-  },
-
-  // Yard Radar Card
-  hudYardRadarCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: radius.DEFAULT,
-    borderWidth: 1,
-    borderColor: '#242a34',
-    overflow: 'hidden',
-  },
-  radarSimulationBox: {
-    height: 180,
-    backgroundColor: '#F8FAFC',
-    position: 'relative',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  radarBayLabel1: {
-    position: 'absolute',
-    left: 20,
-    top: 20,
-    backgroundColor: '#FFFFFF',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
-  },
-  radarBayLabel2: {
-    position: 'absolute',
-    left: 20,
-    top: 70,
-    backgroundColor: '#EFF6FF',
-    borderWidth: 1,
-    borderColor: '#2563EB',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
-  },
-  radarBayLabel3: {
-    position: 'absolute',
-    left: 20,
-    top: 120,
-    backgroundColor: '#FFFFFF',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
-  },
-  radarBayText: {
-    color: '#849396',
-    fontSize: 9,
-    fontWeight: '700',
-  },
-  radarBayTextActive: {
-    color: '#2563EB',
-    fontSize: 9,
-    fontWeight: '900',
-  },
-  tractorBeaconWrap: {
-    position: 'absolute',
-    right: 70,
-    top: 50,
-    alignItems: 'center',
-  },
-  tractorBeaconPulse: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#2563EB',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  tractorBeaconTag: {
-    color: '#2563EB',
-    fontSize: 9,
-    fontWeight: '900',
-    marginTop: 2,
-    backgroundColor: '#F8FAFC',
-    paddingHorizontal: 4,
-    borderRadius: 2,
-  },
-  radarCornerTopLeft: {
-    position: 'absolute',
-    top: 8,
-    left: 8,
-    gap: 4,
-  },
-  radarBadgePill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: 'rgba(8, 14, 23, 0.9)',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
-  radarBadgeText: {
-    color: '#1E293B',
-    fontSize: 8,
-    fontWeight: '800',
-  },
-  radarSpeedHud: {
-    position: 'absolute',
-    top: 8,
-    right: 8,
-    alignItems: 'flex-end',
-    backgroundColor: 'rgba(8, 14, 23, 0.9)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
-  },
-  speedValueText: {
-    color: '#2563EB',
-    fontSize: 20,
-    fontWeight: '900',
-  },
-  speedUnitText: {
-    color: '#849396',
-    fontSize: 8,
-    fontWeight: '800',
-  },
-  speedLimitText: {
-    color: '#feb300',
-    fontSize: 7,
-    fontWeight: '900',
-  },
-  radarDestTargetBar: {
-    position: 'absolute',
-    bottom: 8,
-    left: 8,
-    right: 8,
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(8, 14, 23, 0.95)',
-    padding: 8,
-    borderRadius: radius.sm,
-    borderWidth: 1,
-    borderColor: '#242a34',
-  },
-  radarDestSubLabel: {
-    color: '#849396',
-    fontSize: 7,
-    fontWeight: '800',
-  },
-  radarDestTitle: {
-    color: '#1E293B',
-    fontSize: 10,
-    fontWeight: '900',
-  },
-  radarDestDist: {
-    color: '#2563EB',
-    fontSize: 12,
-    fontWeight: '900',
-  },
-
-  // Waypoints Pipeline
-  hudWaypointsCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: radius.DEFAULT,
-    borderWidth: 1,
-    borderColor: '#242a34',
-    padding: 12,
-    gap: 10,
-  },
-  hudWaypointsHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  hudWaypointsTitle: {
-    color: '#1E293B',
-    fontSize: 11,
-    fontWeight: '900',
-    letterSpacing: 0.6,
-  },
-  hudWaypointsStep: {
-    color: '#22ef7e',
-    fontSize: 9,
-    fontWeight: '900',
-  },
-  waypointsList: {
-    gap: 6,
-  },
-  waypointRowDone: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: '#F8FAFC',
-    padding: 8,
-    borderRadius: radius.sm,
-  },
-  wpIconDone: {
-    width: 24,
-    height: 24,
-    borderRadius: 4,
-    backgroundColor: '#22ef7e',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  wpTitleDone: {
-    color: '#1E293B',
-    fontSize: 10,
-    fontWeight: '800',
-  },
-  wpSub: {
-    color: '#849396',
-    fontSize: 9,
-  },
-  wpTimeDone: {
-    color: '#22ef7e',
-    fontSize: 9,
-    fontWeight: '800',
-  },
-  waypointRowActive: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: '#1f2733',
-    borderWidth: 1,
-    borderColor: '#2563EB',
-    padding: 8,
-    borderRadius: radius.sm,
-  },
-  wpIconActive: {
-    width: 24,
-    height: 24,
-    borderRadius: 4,
-    backgroundColor: '#2563EB',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  wpIconActiveText: {
-    color: '#FFFFFF',
-    fontSize: 11,
-    fontWeight: '900',
-  },
-  wpTitleActive: {
-    color: '#2563EB',
-    fontSize: 10,
-    fontWeight: '900',
-  },
-  wpSubActive: {
-    color: '#1E293B',
-    fontSize: 9,
-  },
-  wpTimeActive: {
-    color: '#2563EB',
-    fontSize: 9,
-    fontWeight: '900',
-  },
-  activeTagMini: {
-    backgroundColor: '#EFF6FF',
-    paddingHorizontal: 4,
-    borderRadius: 2,
-  },
-  activeTagMiniText: {
-    color: '#2563EB',
-    fontSize: 7,
-    fontWeight: '900',
-  },
-  waypointRowUpcoming: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: '#F8FAFC',
-    padding: 8,
-    borderRadius: radius.sm,
-    opacity: 0.7,
-  },
-  wpIconUpcoming: {
-    width: 24,
-    height: 24,
-    borderRadius: 4,
-    backgroundColor: '#242a34',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  wpIconUpcomingText: {
-    color: '#849396',
-    fontSize: 11,
-    fontWeight: '900',
-  },
-  wpTitleUpcoming: {
-    color: '#bac9cc',
-    fontSize: 10,
-    fontWeight: '700',
-  },
-  wpTimeUpcoming: {
-    color: '#feb300',
-    fontSize: 9,
-    fontWeight: '800',
-  },
-
-  // Telemetry Strip Grid
-  hudTelemetryStripGrid: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  hudTelemBox: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
-    padding: 10,
-    borderRadius: radius.DEFAULT,
-    borderWidth: 1,
-    borderColor: '#242a34',
-    gap: 2,
-  },
-  hudTelemLabel: {
-    color: '#849396',
-    fontSize: 7,
-    fontWeight: '800',
-    letterSpacing: 0.5,
-  },
-  hudTelemValLime: {
-    color: '#22ef7e',
-    fontSize: 11,
-    fontWeight: '900',
-  },
-  hudTelemValCyan: {
-    color: '#2563EB',
-    fontSize: 11,
-    fontWeight: '900',
-  },
-  hudTelemValWhite: {
-    color: '#1E293B',
-    fontSize: 12,
-    fontWeight: '900',
-  },
-  hudTelemSub: {
-    color: '#849396',
-    fontSize: 8,
-  },
-  hudTelemSubLime: {
-    color: '#22ef7e',
-    fontSize: 8,
-    fontWeight: '800',
-  },
-  batteryProgressBar: {
-    height: 4,
-    backgroundColor: '#F8FAFC',
-    borderRadius: 2,
-    marginVertical: 3,
-    overflow: 'hidden',
-  },
-  batteryProgressFill: {
-    height: '100%',
-    backgroundColor: '#2563EB',
-  },
-
-  // Glove-Optimized Controls
-  glovePrimaryBtn: {
-    height: 56,
-    backgroundColor: '#2563EB',
-    borderRadius: radius.DEFAULT,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    elevation: 3,
-  },
-  glovePrimaryBtnText: {
-    color: '#FFFFFF',
-    fontSize: 13,
-    fontWeight: '900',
-    letterSpacing: 0.8,
-  },
-  gloveSecondaryBtn: {
-    flex: 4,
-    height: 52,
-    backgroundColor: '#FFFFFF',
-    borderRadius: radius.DEFAULT,
-    borderWidth: 1,
-    borderColor: '#feb300',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-  },
-  gloveSecondaryBtnText: {
-    color: '#feb300',
-    fontSize: 10,
-    fontWeight: '900',
-    letterSpacing: 0.6,
-  },
-  gloveHazardBtn: {
-    flex: 1,
-    height: 52,
-    backgroundColor: 'rgba(255, 82, 82, 0.15)',
-    borderRadius: radius.DEFAULT,
-    borderWidth: 1,
-    borderColor: '#ff5252',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  gloveHazardBtnText: {
-    color: '#ff5252',
-    fontSize: 8,
-    fontWeight: '900',
-  },
-
-  // Mission Lifecycle Card & Operations Console
-  missionLifecycleCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: radius.DEFAULT,
-    borderWidth: 1,
-    borderColor: '#EFF6FF',
-    padding: 16,
-    gap: 14,
-    marginBottom: 16,
-    shadowColor: '#2563EB',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 10,
-    elevation: 4,
-  },
-  missionCardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingBottom: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#242a34',
-  },
-  missionIdText: {
-    color: '#1E293B',
-    fontSize: 13,
-    fontWeight: '900',
-    letterSpacing: 0.6,
-  },
-  missionVesselText: {
-    color: '#849396',
-    fontSize: 10,
-    fontWeight: '700',
-  },
-
-  // Status Pills
-  statusPillPending: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    backgroundColor: 'rgba(254, 179, 0, 0.15)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+  termChip: {
+    backgroundColor: theme.backgroundSurfaceLow,
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: '#feb300',
-  },
-  statusPillTextPending: {
-    color: '#feb300',
-    fontSize: 9,
-    fontWeight: '900',
-    letterSpacing: 0.5,
-  },
-  statusPillApproved: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    backgroundColor: 'rgba(34, 239, 126, 0.15)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: '#22ef7e',
-  },
-  statusPillTextApproved: {
-    color: '#22ef7e',
-    fontSize: 9,
-    fontWeight: '900',
-    letterSpacing: 0.5,
-  },
-  statusPillProgress: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: '#EFF6FF',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: '#2563EB',
-  },
-  livePulseDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: '#2563EB',
-  },
-  statusPillTextProgress: {
-    color: '#2563EB',
-    fontSize: 9,
-    fontWeight: '900',
-    letterSpacing: 0.5,
-  },
-  statusPillArrived: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    backgroundColor: '#EFF6FF',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: '#2563EB',
-  },
-  statusPillTextArrived: {
-    color: '#2563EB',
-    fontSize: 9,
-    fontWeight: '900',
-    letterSpacing: 0.5,
-  },
-  statusPillCompleted: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    backgroundColor: 'rgba(34, 239, 126, 0.15)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: '#22ef7e',
-  },
-  statusPillTextCompleted: {
-    color: '#22ef7e',
-    fontSize: 9,
-    fontWeight: '900',
-    letterSpacing: 0.5,
-  },
-
-  // Route Box
-  routePairBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#0c131d',
-    borderRadius: radius.DEFAULT,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: '#242a34',
-  },
-  routeCol: {
-    gap: 2,
-  },
-  routeLabel: {
-    color: '#849396',
-    fontSize: 8,
-    fontWeight: '800',
-    letterSpacing: 0.5,
-  },
-  routeTerminal: {
-    color: '#2563EB',
-    fontSize: 16,
-    fontWeight: '900',
-    letterSpacing: 0.6,
-  },
-  routeSub: {
-    color: '#556575',
-    fontSize: 8,
-    fontWeight: '700',
-  },
-  routeDistanceText: {
-    color: '#849396',
-    fontSize: 8,
-    fontWeight: '900',
-    letterSpacing: 0.5,
-  },
-
-  // Containers List Box
-  containersListBox: {
-    backgroundColor: '#0c131d',
-    borderRadius: radius.DEFAULT,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: '#242a34',
-    gap: 8,
-  },
-  containersListHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  containersListTitle: {
-    color: '#1E293B',
-    fontSize: 10,
-    fontWeight: '900',
-    letterSpacing: 0.5,
-    flex: 1,
-    marginLeft: 6,
-  },
-  chassisTag: {
-    color: '#feb300',
-    fontSize: 9,
-    fontWeight: '900',
-    backgroundColor: 'rgba(254, 179, 0, 0.1)',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
-  chassisRuleBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: '#EFF6FF',
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: '#EFF6FF',
-    paddingHorizontal: 8,
-    paddingVertical: 5,
-    marginBottom: 4,
-  },
-  chassisRuleBadgeText: {
-    color: '#849396',
-    fontSize: 9.5,
-    fontWeight: '700',
-    flex: 1,
-  },
-  containerItemRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    padding: 8,
-    borderRadius: radius.sm,
-    gap: 8,
-  },
-  containerBadge: {
-    width: 20,
-    height: 20,
-    borderRadius: 4,
-    backgroundColor: '#2563EB',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  containerBadgeText: {
-    color: '#FFFFFF',
-    fontSize: 10,
-    fontWeight: '900',
-  },
-  containerItemNumber: {
-    color: '#1E293B',
-    fontSize: 11,
-    fontWeight: '900',
-    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
-  },
-  containerItemSub: {
-    color: '#849396',
-    fontSize: 9,
-    marginTop: 1,
-  },
-  containerStatusTag: {
-    backgroundColor: '#EFF6FF',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
-  containerStatusTagText: {
-    color: '#2563EB',
-    fontSize: 8,
-    fontWeight: '800',
-  },
-
-  // Notification Banners for States
-  notificationBannerPending: {
-    backgroundColor: 'rgba(254, 179, 0, 0.1)',
-    borderWidth: 1,
-    borderColor: '#feb300',
-    borderRadius: radius.DEFAULT,
-    padding: 14,
-    gap: 8,
-  },
-  notificationBannerHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  notificationBannerTitlePending: {
-    color: '#feb300',
-    fontSize: 12,
-    fontWeight: '900',
-    letterSpacing: 0.6,
-  },
-  notificationBannerMsg: {
-    color: '#1E293B',
-    fontSize: 11,
-    lineHeight: 16,
-  },
-  pendingActionInfoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginTop: 4,
-  },
-  pendingWaitingText: {
-    color: '#feb300',
-    fontSize: 10,
-    fontWeight: '700',
-  },
-
-  notificationBannerApproved: {
-    backgroundColor: 'rgba(34, 239, 126, 0.12)',
-    borderWidth: 1.5,
-    borderColor: '#22ef7e',
-    borderRadius: radius.DEFAULT,
-    padding: 14,
-    gap: 10,
-  },
-  notificationBannerTitleApproved: {
-    color: '#22ef7e',
-    fontSize: 13,
-    fontWeight: '900',
-    letterSpacing: 0.6,
-  },
-  notificationBannerMsgApproved: {
-    color: '#1E293B',
-    fontSize: 11,
-    lineHeight: 16,
-  },
-  startTripPrimaryBtn: {
-    backgroundColor: '#22ef7e',
-    height: 52,
-    borderRadius: radius.DEFAULT,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 10,
-    elevation: 4,
-    shadowColor: '#22ef7e',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.35,
-    shadowRadius: 6,
-    marginTop: 4,
-  },
-  startTripPrimaryBtnText: {
-    color: '#FFFFFF',
-    fontSize: 13,
-    fontWeight: '900',
-    letterSpacing: 0.8,
-  },
-
-  notificationBannerInProgress: {
-    backgroundColor: '#EFF6FF',
-    borderWidth: 1.5,
-    borderColor: '#2563EB',
-    borderRadius: radius.DEFAULT,
-    padding: 14,
-    gap: 10,
-  },
-  notificationBannerTitleInProgress: {
-    color: '#2563EB',
-    fontSize: 12,
-    fontWeight: '900',
-    letterSpacing: 0.6,
-  },
-  arriveTerminalBtn: {
-    backgroundColor: '#2563EB',
-    height: 52,
-    borderRadius: radius.DEFAULT,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 10,
-    elevation: 4,
-    shadowColor: '#2563EB',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.35,
-    shadowRadius: 6,
-    marginTop: 4,
-  },
-  arriveTerminalBtnText: {
-    color: '#FFFFFF',
-    fontSize: 12,
-    fontWeight: '900',
-    letterSpacing: 0.8,
-  },
-
-  notificationBannerArrived: {
-    backgroundColor: 'rgba(34, 239, 126, 0.12)',
-    borderWidth: 1.5,
-    borderColor: '#22ef7e',
-    borderRadius: radius.DEFAULT,
-    padding: 14,
-    gap: 10,
-  },
-  notificationBannerTitleArrived: {
-    color: '#22ef7e',
-    fontSize: 12,
-    fontWeight: '900',
-    letterSpacing: 0.6,
-  },
-  completeTripBtn: {
-    backgroundColor: '#22ef7e',
-    height: 52,
-    borderRadius: radius.DEFAULT,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 10,
-    elevation: 4,
-    shadowColor: '#22ef7e',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.35,
-    shadowRadius: 6,
-    marginTop: 4,
-  },
-  completeTripBtnText: {
-    color: '#FFFFFF',
-    fontSize: 12,
-    fontWeight: '900',
-    letterSpacing: 0.8,
-  },
-
-  notificationBannerCompleted: {
-    backgroundColor: 'rgba(34, 239, 126, 0.15)',
-    borderWidth: 1,
-    borderColor: '#22ef7e',
-    borderRadius: radius.DEFAULT,
-    padding: 14,
-    gap: 6,
-  },
-  notificationBannerTitleCompleted: {
-    color: '#22ef7e',
-    fontSize: 12,
-    fontWeight: '900',
-    letterSpacing: 0.6,
-  },
-  licensePill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: '#0d1d29',
-    paddingHorizontal: 7,
-    paddingVertical: 2,
-    borderRadius: radius.pill,
-    borderWidth: 1,
-    borderColor: '#10b98144',
-  },
-  licensePillDue: {
-    backgroundColor: '#261a06',
-    borderColor: '#f59e0b',
-  },
-  licensePillText: {
-    color: '#10b981',
-    fontSize: 9,
-    fontWeight: '800',
-    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
-  },
-  vehicleLicenseAlertCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#261a06',
-    borderWidth: 1.5,
-    borderColor: '#f59e0b',
-    borderRadius: radius.md,
-    padding: 12,
-    marginBottom: 16,
-    gap: 12,
-    shadowColor: '#f59e0b',
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  vehicleLicenseAlertIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
-    backgroundColor: '#3d2806',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  vehicleLicenseAlertTitle: {
-    color: '#fbbf24',
-    fontSize: 11,
-    fontWeight: '900',
-    letterSpacing: 0.5,
-  },
-  vehicleLicenseAlertBody: {
-    color: '#fef3c7',
-    fontSize: 10,
-    lineHeight: 15,
-    fontWeight: '600',
-    marginTop: 2,
-  },
-  vehicleLicenseBadge: {
-    backgroundColor: '#f59e0b',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
-  vehicleLicenseBadgeText: {
-    color: '#1f1300',
-    fontSize: 9,
-    fontWeight: '900',
-    letterSpacing: 0.4,
-  },
-  suspendedWarningBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    backgroundColor: 'rgba(255, 82, 82, 0.12)',
-    borderWidth: 1.5,
-    borderColor: '#ff5252',
-    borderRadius: radius.DEFAULT,
-    padding: 12,
-  },
-  suspendedWarningIconBox: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: 'rgba(255, 82, 82, 0.22)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  suspendedWarningTitle: {
-    color: '#ff5252',
-    fontSize: 12,
-    fontWeight: '900',
-    letterSpacing: 0.6,
-  },
-  suspendedWarningSubtitle: {
-    color: '#1E293B',
-    fontSize: 10.5,
-    lineHeight: 15,
-    marginTop: 2,
-    fontWeight: '500',
-  },
-  suspendedContactBtn: {
-    backgroundColor: '#ff5252',
+    borderColor: theme.border,
     paddingHorizontal: 10,
     paddingVertical: 6,
-    borderRadius: 6,
   },
-  suspendedContactBtnText: {
-    color: '#1E293B',
-    fontSize: 10.5,
-    fontWeight: '900',
-    letterSpacing: 0.5,
+  termChipActive: {
+    backgroundColor: theme.accentSoft,
+    borderColor: theme.accent,
+  },
+  termChipText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: theme.textSecondary,
+  },
+  termChipTextActive: {
+    color: theme.accent,
+    fontWeight: '700',
+  },
+  toggleBtn: {
+    flex: 1,
+    height: 38,
+    backgroundColor: theme.backgroundSurfaceLow,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: theme.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  toggleBtnGreen: {
+    backgroundColor: theme.statusApprovedBg,
+    borderColor: theme.statusApprovedText,
+  },
+  toggleBtnRed: {
+    backgroundColor: theme.statusRejectedBg,
+    borderColor: theme.statusRejectedText,
+  },
+  toggleBtnText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: theme.textSecondary,
+  },
+  toggleBtnTextGreen: {
+    color: theme.statusApprovedText,
+    fontWeight: '700',
+  },
+  toggleBtnTextRed: {
+    color: theme.statusRejectedText,
+    fontWeight: '700',
   },
 
-  // ─── PENDING DETAILS CARD (DISCHARGE & SEAL VERIFICATION) ───
-  pendingDetailsCard: {
-    backgroundColor: '#F8FAFC',
-    borderWidth: 1,
-    borderColor: 'rgba(254, 179, 0, 0.35)',
-    borderRadius: 10,
+  // ─── MORE MENU ITEMS ───
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
     padding: 12,
-    gap: 10,
-    marginTop: 4,
+    backgroundColor: theme.backgroundSurfaceLow,
+    borderRadius: 8,
+    gap: 12,
   },
-  pendingCardHeaderStrip: {
+  menuItemTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: theme.text,
+  },
+  menuItemSub: {
+    fontSize: 11,
+    color: theme.textSecondary,
+    marginTop: 1,
+  },
+
+  // ─── RECEIPT DETAILS ───
+  receiptCheckCircle: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: theme.statusApprovedBg,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+  },
+  receiptTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: theme.text,
+  },
+  receiptSub: {
+    fontSize: 12,
+    color: theme.textSecondary,
+    marginTop: 2,
+  },
+  receiptDetailsBox: {
+    backgroundColor: theme.backgroundSurfaceLow,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: theme.border,
+    padding: 12,
+    gap: 8,
+  },
+  receiptRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingBottom: 6,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0',
-  },
-  pendingCardHeaderTitle: {
-    fontSize: 9.5,
-    fontWeight: '900',
-    color: '#2563EB',
-    letterSpacing: 0.5,
-  },
-  pendingAuditedBadge: {
-    backgroundColor: 'rgba(34, 239, 126, 0.12)',
-    paddingHorizontal: 6,
     paddingVertical: 2,
-    borderRadius: 4,
-    borderWidth: 1,
-    borderColor: 'rgba(34, 239, 126, 0.3)',
   },
-  pendingAuditedBadgeText: {
-    fontSize: 8.5,
-    fontWeight: '800',
-    color: '#22ef7e',
-    letterSpacing: 0.4,
-  },
-  pendingDetailsMetricsRow: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  pendingMetricPill: {
-    flex: 1,
-    backgroundColor: '#0d1625',
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: '#242a34',
-    padding: 7,
-  },
-  pillGreenBorder: {
-    borderColor: 'rgba(34, 239, 126, 0.35)',
-    backgroundColor: 'rgba(34, 239, 126, 0.05)',
-  },
-  pillRedBorder: {
-    borderColor: 'rgba(255, 82, 82, 0.35)',
-    backgroundColor: 'rgba(255, 82, 82, 0.05)',
-  },
-  pendingMetricPillLabel: {
-    fontSize: 8,
-    fontWeight: '800',
-    color: '#849396',
-    letterSpacing: 0.4,
-  },
-  pendingMetricPillValue: {
-    fontSize: 10,
-    fontWeight: '800',
-    color: '#1E293B',
-  },
-  driverRemarksCallout: {
-    backgroundColor: '#F8FAFC',
-    borderRadius: 6,
-    borderLeftWidth: 3,
-    borderLeftColor: '#2563EB',
-    paddingHorizontal: 10,
-    paddingVertical: 7,
-  },
-  driverRemarksCalloutLabel: {
-    fontSize: 8,
-    fontWeight: '900',
-    color: '#2563EB',
-    letterSpacing: 0.4,
-  },
-  driverRemarksCalloutText: {
-    fontSize: 10,
-    color: '#1E293B',
-    fontStyle: 'italic',
-    lineHeight: 14,
-  },
-  pendingAuditFooter: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    paddingTop: 2,
-  },
-  pendingAuditFooterText: {
-    fontSize: 8.5,
-    color: '#849396',
+  receiptLabel: {
+    fontSize: 11,
     fontWeight: '600',
+    color: theme.textSecondary,
+  },
+  receiptValue: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: theme.text,
   },
 
-  // ─── DISCHARGE MODAL CONTROLS ───
-  dischargeTripContextStrip: {
-    backgroundColor: '#09101c',
+  // ─── ALLOWANCE MODAL ───
+  allowanceCard: {
+    backgroundColor: theme.backgroundSurfaceLow,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#EFF6FF',
-    padding: 8,
-    gap: 3,
+    borderColor: theme.border,
+    padding: 12,
   },
-  dischargeTripContextId: {
-    fontSize: 10.5,
-    fontWeight: '900',
-    color: '#2563EB',
-    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
-  },
-  dischargeTripContextSub: {
-    fontSize: 9.5,
-    color: '#1E293B',
+  allowanceLabel: {
+    fontSize: 11,
     fontWeight: '700',
+    color: theme.textSecondary,
+    marginBottom: 4,
   },
-  slpaSecurityBadge: {
+  allowanceValueApproved: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: theme.accent,
+  },
+  allowanceValuePending: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: theme.statusPendingText,
+  },
+  allowanceSub: {
+    fontSize: 11,
+    color: theme.textSecondary,
+    marginTop: 4,
+  },
+
+  // ─── CONTACT & SUCCESS BANNERS ───
+  contactCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 3,
-    backgroundColor: 'rgba(34, 239, 126, 0.12)',
-    paddingHorizontal: 5,
-    paddingVertical: 1.5,
-    borderRadius: 4,
-    borderWidth: 1,
-    borderColor: 'rgba(34, 239, 126, 0.25)',
-  },
-  slpaSecurityBadgeText: {
-    fontSize: 8,
-    fontWeight: '900',
-    color: '#22ef7e',
-    letterSpacing: 0.4,
-  },
-  modalSubtitle: {
-    color: '#bac9cc',
-    fontSize: 10.5,
-    lineHeight: 15,
-  },
-  termSelectChip: {
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#242a34',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 6,
-  },
-  termSelectChipActive: {
-    backgroundColor: '#EFF6FF',
-    borderColor: '#2563EB',
-  },
-  termSelectChipText: {
-    color: '#849396',
-    fontSize: 10,
-    fontWeight: '800',
-  },
-  termSelectChipTextActive: {
-    color: '#2563EB',
-    fontWeight: '900',
-  },
-  presetChip: {
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#EFF6FF',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-  },
-  presetChipActive: {
-    backgroundColor: '#EFF6FF',
-    borderColor: '#2563EB',
-  },
-  presetChipText: {
-    color: '#849396',
-    fontSize: 9.5,
-    fontWeight: '700',
-  },
-  presetChipTextActive: {
-    color: '#2563EB',
-    fontWeight: '800',
-  },
-  toggleOptionBtn: {
-    flex: 1,
-    height: 38,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.backgroundSurfaceLow,
     borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#242a34',
+    padding: 12,
+    gap: 12,
+  },
+  contactName: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: theme.text,
+  },
+  contactSub: {
+    fontSize: 12,
+    color: theme.textSecondary,
+    marginTop: 2,
+  },
+  successBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    paddingHorizontal: 4,
+    backgroundColor: theme.statusApprovedBg,
+    borderRadius: 8,
+    padding: 10,
+    gap: 8,
+    marginTop: 4,
   },
-  toggleOptionBtnGreenActive: {
-    backgroundColor: '#22ef7e',
-    borderColor: '#22ef7e',
-  },
-  toggleOptionBtnRedActive: {
-    backgroundColor: '#ff5252',
-    borderColor: '#ff5252',
-  },
-  toggleOptionBtnText: {
-    fontSize: 9.5,
-    fontWeight: '800',
-    color: '#1E293B',
-  },
-  toggleOptionBtnTextDark: {
-    color: '#FFFFFF',
-    fontWeight: '900',
-  },
-  toggleOptionBtnTextWhite: {
-    color: '#1E293B',
-    fontWeight: '900',
+  successBannerText: {
+    fontSize: 12,
+    color: theme.statusApprovedText,
+    fontWeight: '600',
+
   },
 });

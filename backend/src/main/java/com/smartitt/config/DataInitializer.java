@@ -35,6 +35,7 @@ public class DataInitializer implements CommandLineRunner {
     private final VehicleRepository vehicleRepository;
     private final com.smartitt.audit.repository.AuditLogRepository auditLogRepository;
     private final PasswordEncoder passwordEncoder;
+    private final org.springframework.core.env.Environment environment;
 
     @Value("${admin.bootstrap.username:ADMIN}")
     private String adminBootstrapUsername;
@@ -51,10 +52,18 @@ public class DataInitializer implements CommandLineRunner {
     @Override
     @Transactional
     public void run(String... args) {
+        boolean isProd = java.util.Arrays.asList(environment.getActiveProfiles()).contains("prod");
+        if (isProd) {
+            log.info("[DataInitializer] Running in PRODUCTION profile - skipping demo users, demo audit logs, and test data seeding.");
+            seedTerminals();
+            bootstrapAdminAccount(true);
+            return;
+        }
+
         seedTerminals();
         seedVehicles();
         seedDemoUsers();
-        bootstrapAdminAccount();
+        bootstrapAdminAccount(false);
         seedAuditLogs();
     }
 
@@ -290,21 +299,17 @@ public class DataInitializer implements CommandLineRunner {
         }
     }
 
-    private void bootstrapAdminAccount() {
+    private void bootstrapAdminAccount(boolean isProd) {
         java.util.Optional<com.smartitt.user.entity.User> existingAdmin = userRepository.findByEmail(adminBootstrapEmail)
                 .or(() -> userRepository.findByUsername("ADMIN"))
                 .or(() -> userRepository.findByUsername("admin"));
 
         if (existingAdmin.isPresent()) {
             com.smartitt.user.entity.User admin = existingAdmin.get();
-            admin.setUsername("ADMIN");
-            admin.setPassword(passwordEncoder.encode(adminBootstrapPassword));
-            admin.setRole(com.smartitt.user.entity.Role.ADMIN);
-            admin.setStatus(com.smartitt.user.entity.AccountStatus.ACTIVE);
-            userRepository.save(admin);
-            log.info("Admin account synchronized: username=ADMIN, password=Admin@123 for email={}", adminBootstrapEmail);
+            log.info("[DataInitializer] Admin account already exists (ID: {}, Username: {}). Preserving existing credentials.",
+                    admin.getId(), admin.getUsername());
         } else {
-            log.info("Bootstrapping Admin account: username=ADMIN, email={}", adminBootstrapEmail);
+            log.info("[DataInitializer] Bootstrapping initial Admin account: username={}, email={}", adminBootstrapUsername, adminBootstrapEmail);
             com.smartitt.user.entity.User admin = new com.smartitt.user.entity.User();
             admin.setFullName(adminBootstrapName);
             admin.setEmail(adminBootstrapEmail);
@@ -316,7 +321,7 @@ public class DataInitializer implements CommandLineRunner {
             admin.setRole(com.smartitt.user.entity.Role.ADMIN);
             admin.setStatus(com.smartitt.user.entity.AccountStatus.ACTIVE);
             userRepository.save(admin);
-            log.info("Admin account bootstrapped: username=ADMIN, password=Admin@123");
+            log.info("[DataInitializer] Initial Admin account created successfully.");
         }
     }
 

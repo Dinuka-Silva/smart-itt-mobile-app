@@ -13,6 +13,9 @@ export interface UserCredentialRecord {
   lockedUntil?: string | null;
   status?: 'ACTIVE' | 'SUSPENDED' | 'DEACTIVATED';
   suspensionReason?: string;
+  // Offline credentials caching (valid 7 days from last successful online login)
+  lastOnlineLoginAt?: string;
+  onlineRole?: 'DRIVER' | 'SUPERVISOR';
   // Legacy migration compatibility fields
   currentPassword?: string;
   previousPasswords?: string[];
@@ -401,7 +404,56 @@ export const credentialStore = {
   },
 
   /**
+   * Caches a salted SHA-256 hash upon successful ONLINE authentication.
+   * Admins are strictly barred from offline authentication.
+   */
+  async cacheOnlineLogin(
+    rawUsername: string,
+    password: string,
+    role: 'DRIVER' | 'SUPERVISOR' | 'ADMIN'
+  ): Promise<void> {
+    if (role === 'ADMIN') return; // Admin offline login is forbidden
+    const id = normalizeIdentifier(rawUsername);
+    if (!id || !password) return;
+
+    let record = await this.getRecord(rawUsername);
+    const salt = record?.salt || generateSalt();
+    const hash = await hashWithSalt(salt, password);
+
+    const prevHashes = new Set<string>(record?.previousPasswordHashes || []);
+    if (record?.passwordHash && record.passwordHash !== hash) {
+      prevHashes.add(record.passwordHash);
+    }
+
+    const updated: UserCredentialRecord = {
+      username: rawUsername.trim(),
+      salt,
+      passwordHash: hash,
+      previousPasswordHashes: Array.from(prevHashes),
+      updatedAt: new Date().toISOString(),
+      hasChangedPassword: true,
+      failedAttempts: 0,
+      lockedUntil: null,
+      lastOnlineLoginAt: new Date().toISOString(),
+      onlineRole: role as 'DRIVER' | 'SUPERVISOR',
+    };
+
+    const recordJson = JSON.stringify(updated);
+    await storage.setItem(`${STORAGE_PREFIX}${id}`, recordJson);
+    const rawUpper = rawUsername.trim().toUpperCase();
+    if (rawUpper !== id) {
+      await storage.setItem(`${STORAGE_PREFIX}${rawUpper}`, recordJson);
+    }
+  },
+
+  /**
    * Verifies password against the stored salted hash offline.
+   * Strict Rules:
+   * 1. Never allow Admin offline login.
+   * 2. Allowed ONLY for drivers/supervisors who previously logged in ONLINE on this device.
+   * 3. Cached offline credentials expire after 7 days.
+   * 4. Enforces lockout and suspension checks.
+   * 5. No default-password fallbacks ('driver', 'password', etc.).
    */
   async verifyOffline(
     rawUsername: string,
@@ -413,7 +465,15 @@ export const credentialStore = {
     isSuspended?: boolean;
     errorMessage?: string;
   }> {
-    // 1. Check account suspension status first
+    // 1. Never allow Admin offline login
+    if (role === 'ADMIN') {
+      return {
+        valid: false,
+        errorMessage: 'Offline login is disabled for Administrators. An active network connection to the server is required.',
+      };
+    }
+
+    // 2. Check account suspension status first
     const accStatus = await this.getAccountStatus(rawUsername);
     if (accStatus.status === 'SUSPENDED') {
       const reasonPart = accStatus.reason ? `\n\nReason: ${accStatus.reason}` : '';
@@ -431,6 +491,7 @@ export const credentialStore = {
       };
     }
 
+    // 3. Check lockout
     const lockout = await this.getLockoutStatus(rawUsername);
     if (lockout.isLocked) {
       return {
@@ -442,46 +503,47 @@ export const credentialStore = {
     const cleanPass = (testPassword || '').trim();
     const record = await this.getRecord(rawUsername);
 
-    if (record && record.hasChangedPassword && record.salt) {
-      const testHash = await hashWithSalt(record.salt, cleanPass);
-
-      if (testHash === record.passwordHash) {
-        await this.recordSuccessfulAttempt(rawUsername);
-        return { valid: true };
-      }
-
-      const isOld = (record.previousPasswordHashes || []).includes(testHash);
-      await this.recordFailedAttempt(rawUsername);
-
-      if (isOld) {
-        return {
-          valid: false,
-          isOldPassword: true,
-          errorMessage:
-            'Incorrect password: You entered your old password. Please enter your newly updated password.',
-        };
-      }
-
+    // 4. Require prior successful online login
+    if (!record || !record.lastOnlineLoginAt || !record.passwordHash || !record.salt) {
       return {
         valid: false,
-        errorMessage: 'Incorrect username or password. Please try again.',
+        errorMessage:
+          'Offline login unavailable: You must sign in online at least once on this device while connected to the server.',
       };
     }
 
-    // User has not changed password yet: accept initial default demo passwords
-    const defaults =
-      role === 'ADMIN'
-        ? ['Admin@123', 'AdminSecure@2026', 'admin']
-        : role === 'SUPERVISOR'
-        ? ['supervisor', 'password', 'Password@123', '123456']
-        : ['driver', 'password', 'Password@123', '123456'];
+    // 5. Check 7-day expiry
+    const OFFLINE_LOGIN_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+    const lastLoginTime = new Date(record.lastOnlineLoginAt).getTime();
+    if (isNaN(lastLoginTime) || Date.now() - lastLoginTime > OFFLINE_LOGIN_MAX_AGE_MS) {
+      return {
+        valid: false,
+        errorMessage:
+          'Offline login expired: Offline access is valid for 7 days after your last online sign-in. Please connect to the network to sign in.',
+      };
+    }
 
-    if (defaults.includes(cleanPass)) {
+    // 6. Test password hash against cached online hash
+    const testHash = await hashWithSalt(record.salt, cleanPass);
+
+    if (testHash === record.passwordHash) {
       await this.recordSuccessfulAttempt(rawUsername);
       return { valid: true };
     }
 
+    // Check if the user entered an old archived password
+    const isOld = (record.previousPasswordHashes || []).includes(testHash);
     await this.recordFailedAttempt(rawUsername);
+
+    if (isOld) {
+      return {
+        valid: false,
+        isOldPassword: true,
+        errorMessage:
+          'Incorrect password: You entered your old password. Please enter your newly updated password.',
+      };
+    }
+
     return {
       valid: false,
       errorMessage: 'Incorrect username or password. Please try again.',
