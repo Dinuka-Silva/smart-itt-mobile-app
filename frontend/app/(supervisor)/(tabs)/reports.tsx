@@ -332,6 +332,77 @@ export default function SharedReportsScreen() {
     }
   };
 
+  // Export as CSV File
+  const handleExportCsv = () => {
+    if (trips.length === 0) {
+      Alert.alert('Empty Report', 'There are no rows matching your selected filters to export.');
+      return;
+    }
+
+    const headers = [
+      '#',
+      'Trip No',
+      'Date',
+      'Driver',
+      'Vehicle No',
+      'Chassis/CHE',
+      'Container No',
+      'Size',
+      'Origin',
+      'Destination',
+      'Start Time',
+      'End Time',
+      'Duration',
+      'Status',
+    ];
+
+    const escapeCsv = (val: string) => `"${(val || '').replace(/"/g, '""')}"`;
+
+    const csvRows = trips.map((t, idx) => {
+      const containersStr = (t.containers || []).map((c) => c.containerNumber).join('; ') || '-';
+      const sizesStr = (t.containers || []).map((c) => c.size || '40FT').join('; ') || '-';
+      const dateStr = formatDateColombo(t.startTime || t.createdAt);
+      const startStr = formatTimeColombo(t.startTime || t.createdAt);
+      const endStr = formatTimeColombo(t.endTime);
+      const durationStr = formatDurationText(t.durationMinutes, t.startTime, t.endTime);
+
+      return [
+        idx + 1,
+        escapeCsv(t.tripNumber || '-'),
+        escapeCsv(dateStr),
+        escapeCsv(t.driverName || t.driverCode || '-'),
+        escapeCsv(t.vehicleNumber || '-'),
+        escapeCsv(t.chassisNumber || '-'),
+        escapeCsv(containersStr),
+        escapeCsv(sizesStr),
+        escapeCsv(t.sourceTerminal || '-'),
+        escapeCsv(t.destTerminal || '-'),
+        escapeCsv(startStr),
+        escapeCsv(endStr),
+        escapeCsv(durationStr),
+        escapeCsv(t.status),
+      ].join(',');
+    });
+
+    const csvContent = [headers.join(','), ...csvRows].join('\r\n');
+    const fileName = `SMART_ITT_Report_${new Date().toISOString().slice(0, 10)}.csv`;
+
+    if (Platform.OS === 'web' && typeof window !== 'undefined' && typeof document !== 'undefined') {
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', fileName);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      Alert.alert('CSV Export Complete', `Report downloaded as "${fileName}". Contains ${trips.length} records.`);
+    } else {
+      Alert.alert('CSV Export Generated', `Generated "${fileName}" with ${trips.length} rows.`);
+    }
+  };
+
   // Export as Printable PDF / HTML Report
   const handleExportPdf = () => {
     if (trips.length === 0) {
@@ -456,10 +527,18 @@ export default function SharedReportsScreen() {
         <View style={styles.headerActions}>
           <TouchableOpacity
             style={styles.exportBtn}
+            onPress={handleExportCsv}
+            activeOpacity={0.88}
+          >
+            <Ionicons name="document-text-outline" size={14} color={colors.primary} />
+            <Text style={styles.exportBtnText}>CSV</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.exportBtn}
             onPress={handleExportExcel}
             activeOpacity={0.88}
           >
-            <Ionicons name="document-text-outline" size={15} color={colors.primary} />
+            <Ionicons name="grid-outline" size={14} color={colors.primary} />
             <Text style={styles.exportBtnText}>Excel</Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -467,7 +546,7 @@ export default function SharedReportsScreen() {
             onPress={handleExportPdf}
             activeOpacity={0.88}
           >
-            <Ionicons name="print-outline" size={15} color="#FFFFFF" />
+            <Ionicons name="print-outline" size={14} color="#FFFFFF" />
             <Text style={styles.exportBtnPdfText}>PDF</Text>
           </TouchableOpacity>
         </View>
