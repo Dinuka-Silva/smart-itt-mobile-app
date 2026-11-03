@@ -1,24 +1,56 @@
 import apiClient from './api';
 
+export interface TripFilterParams {
+  driverId?: string;
+  status?: string;
+  vehicleNumber?: string;
+  terminal?: string;
+  startDate?: string;
+  endDate?: string;
+  search?: string;
+}
+
 export interface Container {
   id: string;
   containerNumber: string;
+  size?: string;
   sourceTerminal: string;
-  destinationTerminal: string;
+  destinationTerminal?: string;
+  destTerminal?: string;
+  status?: string;
   unloadedAt?: string;
+  damageStatus?: string;
+  cargoType?: string;
+  sealNumber?: string;
 }
 
 export interface CreateTripRequest {
   driverId: string;
   sourceTerminal: string;
+  destTerminal?: string;
+  vehicleNumber?: string;
+  chassisNumber?: string;
+  vesselName?: string;
+  notes?: string;
   containers: Omit<Container, 'id' | 'unloadedAt'>[];
 }
 
 export interface TripResponse {
   id: string;
+  tripNumber?: string;
   driverId: string;
+  driverName?: string;
+  driverCode?: string;
+  vehicleNumber?: string;
+  chassisNumber?: string;
+  vesselName?: string;
   sourceTerminal: string;
+  destTerminal?: string;
   status: string;
+  notes?: string;
+  startTime?: string;
+  endTime?: string;
+  durationMinutes?: number;
   createdAt: string;
   updatedAt: string;
   containers: Container[];
@@ -39,10 +71,17 @@ export const tripService = {
     return response.data;
   },
 
-  async getTrips(driverId?: string, status?: string): Promise<TripResponse[]> {
-    const params: Record<string, string> = {};
-    if (driverId) params.driverId = driverId;
-    if (status) params.status = status;
+  async getTrips(
+    filterOrDriverId?: TripFilterParams | string,
+    status?: string
+  ): Promise<TripResponse[]> {
+    let params: Record<string, string> = {};
+    if (filterOrDriverId && typeof filterOrDriverId === 'object') {
+      params = { ...(filterOrDriverId as Record<string, string>) };
+    } else {
+      if (filterOrDriverId) params.driverId = filterOrDriverId;
+      if (status) params.status = status;
+    }
     
     const response = await apiClient.get<TripResponse[]>('/trips', { params });
     return response.data;

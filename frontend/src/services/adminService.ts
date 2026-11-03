@@ -119,13 +119,27 @@ export const adminService = {
   },
 
   // Trips
-  getTrips: async (search?: string, status?: string, terminal?: string, startDate?: string, endDate?: string): Promise<any[]> => {
-    const params: Record<string, string> = {};
-    if (search) params.search = search;
-    if (status) params.status = status;
-    if (terminal) params.terminal = terminal;
-    if (startDate) params.startDate = startDate;
-    if (endDate) params.endDate = endDate;
+  getTrips: async (
+    filterOrSearch?: any,
+    status?: string,
+    terminal?: string,
+    startDate?: string,
+    endDate?: string,
+    vehicleNumber?: string,
+    driverId?: string
+  ): Promise<any[]> => {
+    let params: Record<string, string> = {};
+    if (filterOrSearch && typeof filterOrSearch === 'object') {
+      params = { ...filterOrSearch };
+    } else {
+      if (filterOrSearch) params.search = filterOrSearch;
+      if (status) params.status = status;
+      if (terminal) params.terminal = terminal;
+      if (startDate) params.startDate = startDate;
+      if (endDate) params.endDate = endDate;
+      if (vehicleNumber) params.vehicleNumber = vehicleNumber;
+      if (driverId) params.driverId = driverId;
+    }
     const res = await apiClient.get<any[]>('/admin/trips', { params });
     return res.data;
   },

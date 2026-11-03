@@ -7,629 +7,276 @@ import {
   TouchableOpacity,
   RefreshControl,
   Alert,
-  Modal,
   Platform,
+  ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Calendar } from 'react-native-calendars';
 import { useAuthStore } from '../../../src/store/authStore';
-import { useMockTripStore } from '../../../src/store/mockTripStore';
-import { adminFleetStore } from '../../../src/store/adminFleetStore';
-import { tripService } from '../../../src/services/tripService';
-import { driverService } from '../../../src/services/driverService';
-import { radius, spacing } from '../../../src/theme';
-import { SCK_FLEET, resolveCheNumber, resolveOperator, findFleetVehicle } from '../../../src/config/fleet';
+import { tripService, TripResponse } from '../../../src/services/tripService';
+import { adminService } from '../../../src/services/adminService';
+import { colors, radius, spacing } from '../../../src/theme';
 import { useResponsive } from '../../../src/hooks/useResponsive';
-import { getTripTimingDetails } from '../../../src/utils/tripDateUtils';
+import {
+  FilterBar,
+  FilterState,
+  FilterOptionItem,
+} from '../../../src/components/FilterBar';
+import { StatusPill } from '../../../src/components/StatusPill';
+import {
+  formatDateColombo,
+  formatTimeColombo,
+  formatDateTimeColombo,
+  formatDurationText,
+} from '../../../src/utils/tripDateUtils';
 
-const ALL_TERMINALS = ['ALL', 'CWIT', 'JCT', 'ECT', 'UCT', 'SAGT', 'CICT'] as const;
+export type GroupByOption = 'NONE' | 'DRIVER' | 'VEHICLE' | 'DATE';
 
-export interface ExcelExportRow {
-  date: string;
-  time: string;
-  startTime?: string;
-  endTime?: string;
-  duration?: string;
-  dispatchDate?: string;
-  dispatchTime?: string;
-  completedDate?: string;
-  driverIdentifier: string;
-  driverName: string;
-  vehicleNo: string;
-  cheNo: string;
-  container: string;
-  sizeOfContainer: string;
-  containerType: 'RETURN' | 'STANDARD';
-  damageOrNot: string;
-  loadTerminal: string;
-  dischargeTerminal: string;
-  tripNumber: string;
-  status: string;
-}
-
-export default function SupervisorReports() {
+export default function SharedReportsScreen() {
   const { topInset, bottomInset, contentMaxWidth, containerPaddingHorizontal } = useResponsive();
   const user = useAuthStore((s) => s.user);
 
+  const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [backendTrips, setBackendTrips] = useState<any[]>([]);
+  const [trips, setTrips] = useState<TripResponse[]>([]);
 
-  // ─── Filter States ───
-  // 1. Date Filter Mode: 'SINGLE' | 'WEEK' | 'MONTH' | 'RANGE'
-  const [dateFilterMode, setDateFilterMode] = useState<'SINGLE' | 'WEEK' | 'MONTH' | 'RANGE'>('SINGLE');
-  const [selectedDate, setSelectedDate] = useState<string | null>(null);
-  const [dateRangeStart, setDateRangeStart] = useState<string | null>(null);
-  const [dateRangeEnd, setDateRangeEnd] = useState<string | null>(null);
-  const [calendarModalVisible, setCalendarModalVisible] = useState(false);
+  // Filter options loaded from backend
+  const [driverOptions, setDriverOptions] = useState<FilterOptionItem[]>([]);
+  const [vehicleOptions, setVehicleOptions] = useState<FilterOptionItem[]>([]);
 
-  // 2. Terminal: 'ALL' or specific terminal code ('JCT', 'CICT', etc.)
-  const [selectedTerminal, setSelectedTerminal] = useState<string>('ALL');
-  // 3. Terminal-wise Sorting Field (Default: DISCHARGE_TERMINAL)
-  const [sortField, setSortField] = useState<'DISCHARGE_TERMINAL' | 'DATE_TIME'>('DISCHARGE_TERMINAL');
+  // Active filters
+  const [filters, setFilters] = useState<FilterState>({
+    date: 'ALL',
+    status: 'ALL',
+  });
 
-  // Helper date formatting functions
-  const formatDateISO = (d: Date) => d.toISOString().split('T')[0];
-  const formatFriendlyDate = (isoStr: string) => {
+  // Grouping
+  const [groupBy, setGroupBy] = useState<GroupByOption>('NONE');
+
+  // Load driver & vehicle options from backend
+  const loadFilterOptions = useCallback(async () => {
     try {
-      const d = new Date(isoStr + 'T00:00:00');
-      return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-    } catch {
-      return isoStr;
-    }
-  };
-
-  // Preset Date Range Handlers
-  const handleSelectSingleDay = (dateStr: string) => {
-    setSelectedDate(dateStr);
-    setDateRangeStart(null);
-    setDateRangeEnd(null);
-    setCalendarModalVisible(false);
-  };
-
-  const handleSelectWeekPreset = (daysBack: number) => {
-    const end = new Date();
-    const start = new Date();
-    start.setDate(end.getDate() - daysBack);
-    const startISO = formatDateISO(start);
-    const endISO = formatDateISO(end);
-    setDateRangeStart(startISO);
-    setDateRangeEnd(endISO);
-    setSelectedDate(null);
-  };
-
-  const handleSelectMonthPreset = (monthsBack: number) => {
-    const end = new Date();
-    const start = new Date();
-    start.setMonth(end.getMonth() - monthsBack);
-    const startISO = formatDateISO(start);
-    const endISO = formatDateISO(end);
-    setDateRangeStart(startISO);
-    setDateRangeEnd(endISO);
-    setSelectedDate(null);
-  };
-
-  // Specific Calendar Month / Window Selector (e.g. Sept 20 to Oct 20)
-  const handleSelectCustomRange = (startISO: string, endISO: string) => {
-    setDateRangeStart(startISO);
-    setDateRangeEnd(endISO);
-    setSelectedDate(null);
-    setCalendarModalVisible(false);
-  };
-
-  const handleClearAllDates = () => {
-    setSelectedDate(null);
-    setDateRangeStart(null);
-    setDateRangeEnd(null);
-  };
-
-  // Compute Active Date Filter Display Label
-  const activeDateFilterLabel = useMemo(() => {
-    if (dateRangeStart && dateRangeEnd) {
-      return `${formatFriendlyDate(dateRangeStart)}  ➔  ${formatFriendlyDate(dateRangeEnd)}`;
-    }
-    if (dateRangeStart && !dateRangeEnd) {
-      return `From: ${formatFriendlyDate(dateRangeStart)} (Pick End Date)`;
-    }
-    if (selectedDate) {
-      return `Date: ${formatFriendlyDate(selectedDate)}`;
-    }
-    return null;
-  }, [dateRangeStart, dateRangeEnd, selectedDate]);
-
-  // Marked dates computation for calendar (highlighting range or single day)
-  const calendarMarkedDates = useMemo(() => {
-    const marks: Record<string, any> = {};
-
-    if (dateFilterMode === 'SINGLE') {
-      if (selectedDate) {
-        marks[selectedDate] = {
-          selected: true,
-          selectedColor: '#2563EB',
-          selectedTextColor: '#FFFFFF',
-        };
-      }
-      return marks;
-    }
-
-    // Range / Week / Month mode
-    if (dateRangeStart && dateRangeEnd) {
-      const cur = new Date(dateRangeStart + 'T00:00:00');
-      const end = new Date(dateRangeEnd + 'T00:00:00');
-      
-      while (cur <= end) {
-        const iso = formatDateISO(cur);
-        const isStart = iso === dateRangeStart;
-        const isEnd = iso === dateRangeEnd;
-
-        marks[iso] = {
-          selected: true,
-          startingDay: isStart,
-          endingDay: isEnd,
-          color: isStart || isEnd ? '#2563EB' : '#EFF6FF',
-          textColor: isStart || isEnd ? '#FFFFFF' : '#2563EB',
-        };
-        cur.setDate(cur.getDate() + 1);
-      }
-    } else if (dateRangeStart) {
-      marks[dateRangeStart] = {
-        selected: true,
-        startingDay: true,
-        endingDay: true,
-        color: '#feb300',
-        textColor: '#FFFFFF',
-      };
-    }
-
-    return marks;
-  }, [dateFilterMode, selectedDate, dateRangeStart, dateRangeEnd]);
-
-  // 3. Driver: 'ALL' or specific driver identifier (e.g., 'DRV-00001', 'demo-driver')
-  const [selectedDriver, setSelectedDriver] = useState<string>('ALL');
-  const [driverOptions, setDriverOptions] = useState<{ id: string; label: string; code: string }[]>([
-    { id: 'ALL', label: 'ALL DRIVERS', code: 'ALL' },
-    { id: 'DRV-00001', label: 'Kamal Perera (DRV-00001)', code: 'DRV-00001' },
-    { id: 'DRV-00002', label: 'Saman Kumara (DRV-00002)', code: 'DRV-00002' },
-    { id: 'DRV-00003', label: 'Nimal Fernando (DRV-00003)', code: 'DRV-00003' },
-    { id: 'DRV-00004', label: 'Sunil Silva (DRV-00004)', code: 'DRV-00004' },
-  ]);
-
-  // 4. Vehicle Filter (NEW)
-  const [selectedVehicle, setSelectedVehicle] = useState<string>('ALL');
-
-  // 5. Status Filter
-  const [selectedStatus, setSelectedStatus] = useState<string>('ALL');
-
-  // View Mode: 'EXCEL' (spreadsheet table) or 'CARDS'
-  const [viewMode, setViewMode] = useState<'EXCEL' | 'CARDS'>('EXCEL');
-
-  const mockTrips = useMockTripStore((s) => s.mockTrips);
-
-  // Fetch registered drivers and backend trips on load
-  const loadData = useCallback(async () => {
-    try {
-      const [driversData, tripsData] = await Promise.allSettled([
-        driverService.getAllDrivers(),
-        tripService.getTrips(),
+      const [drivers, vehicles] = await Promise.all([
+        adminService.getDrivers().catch(() => []),
+        adminService.getVehicles().catch(() => []),
       ]);
 
-      if (driversData.status === 'fulfilled' && Array.isArray(driversData.value)) {
-        const mapped = [
-          { id: 'ALL', label: 'ALL DRIVERS', code: 'ALL' },
-          ...driversData.value.map((d: any) => ({
-            id: d.driverCode || d.id,
-            label: `${d.fullName || d.username} (${d.driverCode || d.id})`,
-            code: d.driverCode || d.id,
-          })),
-        ];
-        const unique = mapped.filter((v, idx, a) => a.findIndex((t) => t.id === v.id) === idx);
-        setDriverOptions(unique);
+      if (Array.isArray(drivers)) {
+        const sortedDrivers = [...drivers].sort((a, b) =>
+          (a.fullName || '').localeCompare(b.fullName || '')
+        );
+        setDriverOptions(
+          sortedDrivers.map((d: any) => ({
+            id: d.id || d.driverCode || d.username,
+            label: d.fullName || d.name || 'Driver',
+            subLabel: `${d.driverCode || d.employeeId || ''}${d.vehicleNumber ? ' · ' + d.vehicleNumber : ''}`,
+          }))
+        );
       }
 
-      if (tripsData.status === 'fulfilled' && Array.isArray(tripsData.value)) {
-        setBackendTrips(tripsData.value);
+      if (Array.isArray(vehicles)) {
+        const sortedVehicles = [...vehicles].sort((a, b) =>
+          (a.vehicleNumber || '').localeCompare(b.vehicleNumber || '')
+        );
+        setVehicleOptions(
+          sortedVehicles.map((v: any) => ({
+            id: v.vehicleNumber,
+            label: v.vehicleNumber,
+            subLabel: v.driverName ? v.driverName : 'Unassigned',
+          }))
+        );
       }
-    } catch {
-      // fallback to mock store
+    } catch (e) {
+      console.warn('[Reports] Failed to load filter options:', e);
     }
   }, []);
 
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
+  // Compute date range for backend query
+  const getDateRangeParams = useCallback(() => {
+    const today = new Date();
+    const toISO = (d: Date) => d.toISOString().split('T')[0];
 
-  const onRefresh = async () => {
-    setRefreshing(true);
-    await loadData();
-    setTimeout(() => setRefreshing(false), 400);
-  };
+    if (filters.date === 'TODAY') {
+      const t = toISO(today);
+      return { startDate: t, endDate: t };
+    }
+    if (filters.date === 'YESTERDAY') {
+      const y = new Date(today);
+      y.setDate(y.getDate() - 1);
+      const yStr = toISO(y);
+      return { startDate: yStr, endDate: yStr };
+    }
+    if (filters.date === 'THIS_WEEK') {
+      const w = new Date(today);
+      w.setDate(w.getDate() - 7);
+      return { startDate: toISO(w), endDate: toISO(today) };
+    }
+    if (filters.date === 'THIS_MONTH') {
+      const m = new Date(today);
+      m.setDate(m.getDate() - 30);
+      return { startDate: toISO(m), endDate: toISO(today) };
+    }
+    if (filters.date === 'CUSTOM') {
+      return {
+        startDate: filters.customStartDate,
+        endDate: filters.customEndDate,
+      };
+    }
+    return { startDate: undefined, endDate: undefined };
+  }, [filters.date, filters.customStartDate, filters.customEndDate]);
 
-  // Combine Mock Trips & Backend Trips
-  const allRawTrips = useMemo(() => {
-    const combined = [...mockTrips];
-    backendTrips.forEach((bt) => {
-      if (!combined.some((mt) => mt.id === bt.id || mt.tripNumber === bt.id)) {
-        combined.push({
-          id: bt.id,
-          tripNumber: `ITT-${bt.id.slice(0, 8)}`,
-          driverId: bt.driverId,
-          driverCode: bt.driverCode || bt.driverId,
-          driverName: bt.driverName || `Driver ${bt.driverId.slice(0, 8)}`,
-          vehicleNumber: bt.vehicleNumber || 'LY-6439',
-          chassisNumber: resolveCheNumber(bt.vehicleNumber, bt.chassisNumber),
-          vesselName: bt.vesselName || 'Port Vessel',
-          operationTime: bt.operationTime,
-          dispatchTime: bt.dispatchTime,
-          isReturn: bt.isReturn,
-          sourceTerminal: bt.sourceTerminal || 'CICT',
-          destTerminal: bt.destTerminal || 'JCT',
-          status: bt.status || 'IN_PROGRESS',
-          startTime: bt.createdAt || new Date().toISOString(),
-          createdAt: bt.createdAt || new Date().toISOString(),
-          containers: (bt.containers || []).map((c: any, idx: number) => ({
-            id: c.id || `bc-${idx}`,
-            containerNumber: c.containerNumber || 'CONT-0000',
-            size: c.size || '40FT',
-            destTerminal: c.destinationTerminal || bt.destTerminal || 'JCT',
-            status: c.unloadedAt ? 'DISCHARGED' : 'IN_TRANSIT',
-            damageStatus: c.damageStatus || 'NONE',
-            isReturn: c.isReturn,
-            cargoType: c.cargoType,
-          })),
-        } as any);
-      }
-    });
-    return combined;
-  }, [mockTrips, backendTrips]);
-
-  // Vehicle options derived from raw trips & fleet database
-  const vehicleOptions = useMemo(() => {
-    const plates = new Set<string>();
-    allRawTrips.forEach((t) => {
-      if (t.vehicleNumber && t.vehicleNumber !== 'UNASSIGNED') {
-        plates.add(t.vehicleNumber.toUpperCase().trim());
-      }
-    });
+  // Fetch trips from backend query
+  const fetchTrips = useCallback(async () => {
     try {
-      const fleetVehicles = adminFleetStore.getAllVehiclesList() || [];
-      fleetVehicles.forEach((v: any) => {
-        if (v.vehicleNumber && v.vehicleNumber !== 'UNASSIGNED') {
-          plates.add(v.vehicleNumber.toUpperCase().trim());
-        }
-      });
-    } catch {}
-    return ['ALL', ...Array.from(plates).sort()];
-  }, [allRawTrips]);
+      const { startDate, endDate } = getDateRangeParams();
+      const queryParams: any = {
+        status: filters.status !== 'ALL' ? filters.status : undefined,
+        driverId: filters.driverId || undefined,
+        vehicleNumber: filters.vehicleNumber || undefined,
+        terminal: filters.terminal && filters.terminal !== 'ALL' ? filters.terminal : undefined,
+        startDate,
+        endDate,
+        search: filters.search || undefined,
+      };
 
-  // ─── Filter Logic: Date + Terminal + Driver + Vehicle + Status ───
-  const filteredTrips = useMemo(() => {
-    return allRawTrips.filter((trip) => {
-      // 1. Date Filter (supports Single Date or Date Range Start-End)
-      const rawDate = trip.createdAt || trip.startTime || trip.operationDate;
-      const tripDatePart = rawDate ? new Date(rawDate).toISOString().split('T')[0] : null;
+      const data = await tripService.getTrips(queryParams);
+      setTrips(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.warn('[Reports] Error fetching trips:', err);
+      // Fallback empty if network error
+      setTrips([]);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, [filters, getDateRangeParams]);
 
-      if (dateRangeStart && dateRangeEnd) {
-        if (!tripDatePart) return false;
-        if (tripDatePart < dateRangeStart || tripDatePart > dateRangeEnd) {
-          return false;
-        }
-      } else if (dateRangeStart && !dateRangeEnd) {
-        if (!tripDatePart || tripDatePart !== dateRangeStart) return false;
-      } else if (selectedDate) {
-        if (!tripDatePart || tripDatePart !== selectedDate) return false;
-      }
+  useEffect(() => {
+    loadFilterOptions();
+  }, [loadFilterOptions]);
 
-      // 2. Discharge Terminal Filter
-      if (selectedTerminal !== 'ALL') {
-        const targetTerm = selectedTerminal.toUpperCase();
-        const destMatch = (trip.destTerminal || '').toUpperCase() === targetTerm;
-        const containerDestMatch = (trip.containers || []).some(
-          (c: any) => (c.destTerminal || '').toUpperCase() === targetTerm
-        );
-        if (!destMatch && !containerDestMatch) return false;
-      }
+  useEffect(() => {
+    setLoading(true);
+    fetchTrips();
+  }, [fetchTrips]);
 
-      // 3. Driver Filter (matched against driverId, driverCode, or driverName)
-      if (selectedDriver !== 'ALL') {
-        const dId = (trip.driverId || '').toLowerCase();
-        const dCode = (trip.driverCode || '').toLowerCase();
-        const target = selectedDriver.toLowerCase();
-        if (dId !== target && dCode !== target && !dId.includes(target) && !dCode.includes(target)) {
-          return false;
-        }
-      }
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    fetchTrips();
+  }, [fetchTrips]);
 
-      // 4. Vehicle Filter (with plate normalization)
-      if (selectedVehicle !== 'ALL') {
-        const vNum = (trip.vehicleNumber || '').toUpperCase().replace(/[\s-]/g, '');
-        const targetV = selectedVehicle.toUpperCase().replace(/[\s-]/g, '');
-        if (vNum !== targetV) return false;
-      }
-
-      // 5. Status Filter
-      if (selectedStatus !== 'ALL') {
-        if (selectedStatus === 'COMPLETED') {
-          if (trip.status !== 'COMPLETED' && trip.status !== 'APPROVED') return false;
-        } else if (trip.status !== selectedStatus) {
-          return false;
-        }
-      }
-
-      return true;
-    });
-  }, [allRawTrips, selectedDate, dateRangeStart, dateRangeEnd, selectedTerminal, selectedDriver, selectedVehicle, selectedStatus]);
-
-  // Duration & Container Summary Metrics
-  const summaryMetrics = useMemo(() => {
+  // Summary Strip Calculations
+  const summary = useMemo(() => {
+    const totalTrips = trips.length;
     let count20 = 0;
     let count40 = 0;
-    let totalMins = 0;
-    let countedTrips = 0;
+    let totalMinutes = 0;
+    let tripsWithDuration = 0;
 
-    filteredTrips.forEach((t) => {
-      (t.containers || []).forEach((c: any) => {
-        if ((c.size || '').includes('20')) count20++;
-        else count40++;
-      });
-      const start = t.startTime || t.createdAt;
-      const end = t.endTime || (t as any).completedAt;
-      if (start && end) {
-        const diff = new Date(end).getTime() - new Date(start).getTime();
-        if (diff > 0 && diff < 86400000) {
-          totalMins += Math.round(diff / 60000);
-          countedTrips++;
-        }
-      }
-    });
-
-    const hours = Math.floor(totalMins / 60);
-    const mins = totalMins % 60;
-    const totalDurationStr = totalMins > 0 ? `${hours}h ${mins}m` : '—';
-    const avgMins = countedTrips > 0 ? Math.round(totalMins / countedTrips) : 0;
-    const avgDurationStr = avgMins > 0 ? (avgMins >= 60 ? `${Math.floor(avgMins / 60)}h ${avgMins % 60}m` : `${avgMins}m`) : '—';
-
-    return {
-      containers20: count20,
-      containers40: count40,
-      totalDuration: totalDurationStr,
-      avgDuration: avgDurationStr,
-    };
-  }, [filteredTrips]);
-
-  // ─── Flatten into Excel Rows ───
-  // Columns: Date, Time, Driver Identifier, Driver Name, Vehicle No, CHE No, Container, Size of Container, Damage or Not, Load Terminal, Discharge Terminal
-  // Special Rule: When container size is 20FT, pair two 20FT containers into one consolidated row (showing both container numbers),
-  // while allowing single 20FT container rows when only one exists.
-  const excelDataRows: ExcelExportRow[] = useMemo(() => {
-    const rows: ExcelExportRow[] = [];
-
-    filteredTrips.forEach((t) => {
-      const dObj = new Date(t.createdAt || t.startTime || new Date());
-      const dateFormatted = isNaN(dObj.getTime())
-        ? 'TODAY'
-        : dObj.toISOString().split('T')[0];
-      const timeFormatted = isNaN(dObj.getTime())
-        ? '00:00'
-        : dObj.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
-
-      const driverIdentifier = t.driverCode || t.driverId || 'DRV-00001';
-      const driverName = t.driverName || 'Kamal Perera';
-      const vMatch = findFleetVehicle(t.vehicleNumber);
-      const vehicleNo = t.vehicleNumber || vMatch?.vehicleNumber || 'LY-6439';
-      const cheNo = resolveCheNumber(vehicleNo, t.chassisNumber || t.chaiNumber);
-      const loadTerminal = t.sourceTerminal || 'CICT';
-
-      const timing = getTripTimingDetails(t);
-      const startTime = timing.startTime || t.operationTime || timeFormatted;
-      const endTime = timing.isCompleted ? timing.endTime : (timing.isPending ? 'Discharged' : 'In progress');
-      const duration = timing.duration || (timing.isCompleted ? '45m' : 'In progress');
-      const dispatchDate = t.operationDate || (t.startTime ? t.startTime.slice(0, 10) : dateFormatted);
-      const dispatchTime = t.dispatchTime || t.operationTime || timeFormatted;
-      const completedDate = t.endTime ? t.endTime.slice(0, 10) : t.dischargedAt ? t.dischargedAt.slice(0, 10) : (t.status === 'COMPLETED' ? dispatchDate : '—');
-
-      const containers = t.containers || [];
-      if (containers.length === 0) {
-        rows.push({
-          date: dateFormatted,
-          time: timeFormatted,
-          startTime,
-          endTime,
-          duration,
-          dispatchDate,
-          dispatchTime,
-          completedDate,
-          driverIdentifier,
-          driverName,
-          vehicleNo,
-          cheNo,
-          container: 'N/A',
-          sizeOfContainer: '—',
-          containerType: t.isReturn ? 'RETURN' : 'STANDARD',
-          damageOrNot: 'NO DAMAGE',
-          loadTerminal,
-          dischargeTerminal: t.destTerminal || 'JCT',
-          tripNumber: t.tripNumber || t.id,
-          status: t.status,
-        });
-        return;
-      }
-
-      // Separate 20FT and non-20FT containers
-      const twentyFtContainers: any[] = [];
-      const otherContainers: any[] = [];
-
-      containers.forEach((c: any) => {
-        const sizeStr = (c.size || '').toUpperCase();
-        if (sizeStr.includes('20')) {
-          twentyFtContainers.push(c);
-        } else {
-          otherContainers.push(c);
-        }
-      });
-
-      // 1. Process 20FT containers: Pair them into 2x 20FT rows when possible
-      for (let i = 0; i < twentyFtContainers.length; i += 2) {
-        const c1 = twentyFtContainers[i];
-        const c2 = twentyFtContainers[i + 1];
-
-        if (c2) {
-          // Pair of two 20FT containers
-          const isC1Damaged =
-            c1.damageStatus === 'DAMAGED' ||
-            (c1.remarks && /damage/i.test(c1.remarks));
-          const isC2Damaged =
-            c2.damageStatus === 'DAMAGED' ||
-            (c2.remarks && /damage/i.test(c2.remarks));
-
-          const damageOrNot = isC1Damaged || isC2Damaged ? 'DAMAGED' : 'NO DAMAGE';
-          const containerStr = `${c1.containerNumber || 'N/A'} / ${c2.containerNumber || 'N/A'}`;
-          const destStr =
-            c1.destTerminal && c2.destTerminal && c1.destTerminal !== c2.destTerminal
-              ? `${c1.destTerminal}, ${c2.destTerminal}`
-              : c1.destTerminal || t.destTerminal || 'JCT';
-
-          const isRet = !!c1.isReturn || !!c2.isReturn || c1.cargoType === 'RETURN' || c2.cargoType === 'RETURN' || !!t.isReturn;
-
-          rows.push({
-            date: dateFormatted,
-            time: timeFormatted,
-            startTime,
-            endTime,
-            duration,
-            dispatchDate,
-            dispatchTime,
-            completedDate,
-            driverIdentifier,
-            driverName,
-            vehicleNo,
-            cheNo,
-            container: containerStr,
-            sizeOfContainer: '2x 20FT',
-            containerType: isRet ? 'RETURN' : 'STANDARD',
-            damageOrNot,
-            loadTerminal,
-            dischargeTerminal: destStr,
-            tripNumber: t.tripNumber || t.id,
-            status: t.status,
-          });
-        } else {
-          // Single 20FT container
-          const isDamaged =
-            c1.damageStatus === 'DAMAGED' ||
-            (c1.remarks && /damage/i.test(c1.remarks)) ||
-            (t.notes && /damage/i.test(t.notes));
-
-          const isRet = !!c1.isReturn || c1.cargoType === 'RETURN' || !!t.isReturn;
-
-          rows.push({
-            date: dateFormatted,
-            time: timeFormatted,
-            startTime,
-            endTime,
-            duration,
-            dispatchDate,
-            dispatchTime,
-            completedDate,
-            driverIdentifier,
-            driverName,
-            vehicleNo,
-            cheNo,
-            container: c1.containerNumber || 'N/A',
-            sizeOfContainer: '20FT',
-            containerType: isRet ? 'RETURN' : 'STANDARD',
-            damageOrNot: isDamaged ? 'DAMAGED' : 'NO DAMAGE',
-            loadTerminal,
-            dischargeTerminal: c1.destTerminal || t.destTerminal || 'JCT',
-            tripNumber: t.tripNumber || t.id,
-            status: t.status,
-          });
+    for (const t of trips) {
+      if (t.containers && Array.isArray(t.containers)) {
+        for (const c of t.containers) {
+          const sz = (c.size || '').toUpperCase();
+          if (sz.includes('20')) {
+            count20++;
+          } else {
+            count40++;
+          }
         }
       }
 
-      // 2. Process other containers (40FT, 40HC, etc.)
-      otherContainers.forEach((c: any) => {
-        const isDamaged =
-          c.damageStatus === 'DAMAGED' ||
-          (c.remarks && /damage/i.test(c.remarks)) ||
-          (t.notes && /damage/i.test(t.notes));
-
-        const isRet = !!c.isReturn || c.cargoType === 'RETURN' || !!t.isReturn;
-
-        rows.push({
-          date: dateFormatted,
-          time: timeFormatted,
-          startTime,
-          endTime,
-          duration,
-          dispatchDate,
-          dispatchTime,
-          completedDate,
-          driverIdentifier,
-          driverName,
-          vehicleNo,
-          cheNo,
-          container: (c.containerNumber || 'N/A').replace(/[^A-Za-z0-9]/g, '').toUpperCase(),
-          sizeOfContainer: c.size || '40FT',
-          containerType: isRet ? 'RETURN' : 'STANDARD',
-          damageOrNot: isDamaged ? 'DAMAGED' : 'NO DAMAGE',
-          loadTerminal,
-          dischargeTerminal: c.destTerminal || t.destTerminal || 'JCT',
-          tripNumber: t.tripNumber || t.id,
-          status: t.status,
-        });
-      });
-    });
-
-    // Terminal-wise Sorting (Default: by Discharge Terminal, secondary by Date & Time)
-    if (sortField === 'DISCHARGE_TERMINAL') {
-      rows.sort((a, b) => {
-        const termCmp = (a.dischargeTerminal || '').localeCompare(b.dischargeTerminal || '');
-        if (termCmp !== 0) return termCmp;
-        return `${b.date} ${b.time}`.localeCompare(`${a.date} ${a.time}`);
-      });
-    } else {
-      rows.sort((a, b) => `${b.date} ${b.time}`.localeCompare(`${a.date} ${a.time}`));
+      const dur = t.durationMinutes;
+      if (dur != null && dur >= 0) {
+        totalMinutes += dur;
+        tripsWithDuration++;
+      } else if (t.startTime && t.endTime) {
+        const s = new Date(t.startTime).getTime();
+        const e = new Date(t.endTime).getTime();
+        if (e >= s) {
+          const diff = Math.round((e - s) / (1000 * 60));
+          totalMinutes += diff;
+          tripsWithDuration++;
+        }
+      }
     }
 
-    return rows;
-  }, [filteredTrips, sortField]);
+    const avgMinutes = tripsWithDuration > 0 ? Math.round(totalMinutes / tripsWithDuration) : 0;
 
-  // Metrics
-  const totalContainers = excelDataRows.length;
-  const returnContainersCount = excelDataRows.filter((r) => r.containerType === 'RETURN').length;
-  const damagedCount = excelDataRows.filter((r) => r.damageOrNot === 'DAMAGED').length;
-  const completedTripsCount = filteredTrips.filter(
-    (t) => t.status === 'COMPLETED' || t.status === 'APPROVED'
-  ).length;
+    return {
+      totalTrips,
+      count20,
+      count40,
+      totalDurationFormatted: formatDurationText(totalMinutes),
+      avgDurationFormatted: tripsWithDuration > 0 ? formatDurationText(avgMinutes) : '-',
+    };
+  }, [trips]);
 
-  // ─── Export to Excel (.XLS / CSV) function ───
+  // Grouped Trips
+  const groupedTrips = useMemo(() => {
+    if (groupBy === 'NONE') {
+      return [{ key: 'ALL', title: 'All Filtered Trips', items: trips }];
+    }
+
+    const map = new Map<string, TripResponse[]>();
+
+    for (const t of trips) {
+      let groupKey = 'Other';
+      if (groupBy === 'DRIVER') {
+        groupKey = t.driverName || t.driverCode || 'Unassigned Driver';
+      } else if (groupBy === 'VEHICLE') {
+        groupKey = t.vehicleNumber || 'Unassigned Vehicle';
+      } else if (groupBy === 'DATE') {
+        groupKey = formatDateColombo(t.startTime || t.createdAt);
+      }
+
+      if (!map.has(groupKey)) {
+        map.set(groupKey, []);
+      }
+      map.get(groupKey)!.push(t);
+    }
+
+    const groups: { key: string; title: string; items: TripResponse[] }[] = [];
+    map.forEach((items, key) => {
+      groups.push({ key, title: key, items });
+    });
+
+    return groups;
+  }, [trips, groupBy]);
+
+  // Export as Excel Spreadsheet (.xls XML format)
   const handleExportExcel = () => {
-    if (excelDataRows.length === 0) {
+    if (trips.length === 0) {
       Alert.alert('Empty Report', 'There are no rows matching your selected filters to export.');
       return;
     }
 
-    // Generate XML-based Microsoft Excel Spreadsheet (Native .xls format with styled formatting)
-    const xmlRows = excelDataRows.map((r, idx) => `
+    const xmlRows = trips
+      .map((t, idx) => {
+        const containersStr = (t.containers || []).map((c) => c.containerNumber).join(', ') || '-';
+        const sizesStr = (t.containers || []).map((c) => c.size || '40FT').join(', ') || '-';
+        const dateStr = formatDateColombo(t.startTime || t.createdAt);
+        const startStr = formatTimeColombo(t.startTime || t.createdAt);
+        const endStr = formatTimeColombo(t.endTime);
+        const durationStr = formatDurationText(t.durationMinutes, t.startTime, t.endTime);
+
+        return `
       <Row>
         <Cell><Data ss:Type="Number">${idx + 1}</Data></Cell>
-        <Cell><Data ss:Type="String">${r.date}</Data></Cell>
-        <Cell><Data ss:Type="String">${r.startTime || r.time}</Data></Cell>
-        <Cell><Data ss:Type="String">${r.dispatchDate || r.date}</Data></Cell>
-        <Cell><Data ss:Type="String">${r.dispatchTime || '—'}</Data></Cell>
-        <Cell><Data ss:Type="String">${r.completedDate || '—'}</Data></Cell>
-        <Cell><Data ss:Type="String">${r.tripNumber}</Data></Cell>
-        <Cell><Data ss:Type="String">${r.driverIdentifier}</Data></Cell>
-        <Cell><Data ss:Type="String">${r.driverName}</Data></Cell>
-        <Cell><Data ss:Type="String">${r.vehicleNo}</Data></Cell>
-        <Cell><Data ss:Type="String">${r.cheNo}</Data></Cell>
-        <Cell><Data ss:Type="String">${r.container}</Data></Cell>
-        <Cell><Data ss:Type="String">${r.sizeOfContainer}</Data></Cell>
-        <Cell><Data ss:Type="String">${r.containerType === 'RETURN' ? 'RETURN CONTAINER' : 'STANDARD FREIGHT'}</Data></Cell>
-        <Cell><Data ss:Type="String">${r.damageOrNot}</Data></Cell>
-        <Cell><Data ss:Type="String">${r.loadTerminal}</Data></Cell>
-        <Cell><Data ss:Type="String">${r.dischargeTerminal}</Data></Cell>
-        <Cell><Data ss:Type="String">${r.status}</Data></Cell>
-      </Row>`).join('');
+        <Cell><Data ss:Type="String">${t.tripNumber || '-'}</Data></Cell>
+        <Cell><Data ss:Type="String">${dateStr}</Data></Cell>
+        <Cell><Data ss:Type="String">${t.driverName || t.driverCode || '-'}</Data></Cell>
+        <Cell><Data ss:Type="String">${t.vehicleNumber || '-'}</Data></Cell>
+        <Cell><Data ss:Type="String">${t.chassisNumber || '-'}</Data></Cell>
+        <Cell><Data ss:Type="String">${containersStr}</Data></Cell>
+        <Cell><Data ss:Type="String">${sizesStr}</Data></Cell>
+        <Cell><Data ss:Type="String">${t.sourceTerminal || '-'}</Data></Cell>
+        <Cell><Data ss:Type="String">${t.destTerminal || '-'}</Data></Cell>
+        <Cell><Data ss:Type="String">${startStr}</Data></Cell>
+        <Cell><Data ss:Type="String">${endStr}</Data></Cell>
+        <Cell><Data ss:Type="String">${durationStr}</Data></Cell>
+        <Cell><Data ss:Type="String">${t.status}</Data></Cell>
+      </Row>`;
+      })
+      .join('');
 
     const excelXML = `<?xml version="1.0"?>
 <?mso-application progid="Excel.Sheet"?>
@@ -640,30 +287,26 @@ export default function SupervisorReports() {
  <Styles>
   <Style ss:ID="Header">
    <Font ss:Bold="1" ss:Color="#FFFFFF"/>
-   <Interior ss:Color="#0A3641" ss:Pattern="Solid"/>
+   <Interior ss:Color="#0F766E" ss:Pattern="Solid"/>
    <Alignment ss:Horizontal="Center"/>
   </Style>
  </Styles>
- <Worksheet ss:Name="ITT Dispatch Report">
+ <Worksheet ss:Name="ITT Trips Report">
   <Table>
    <Row ss:StyleID="Header">
     <Cell><Data ss:Type="String">#</Data></Cell>
-    <Cell><Data ss:Type="String">Operation Date</Data></Cell>
-    <Cell><Data ss:Type="String">Start Time</Data></Cell>
-    <Cell><Data ss:Type="String">Dispatch Date</Data></Cell>
-    <Cell><Data ss:Type="String">Dispatch Time</Data></Cell>
-    <Cell><Data ss:Type="String">Completed Date</Data></Cell>
-    <Cell><Data ss:Type="String">Trip Number</Data></Cell>
-    <Cell><Data ss:Type="String">Driver ID</Data></Cell>
-    <Cell><Data ss:Type="String">Driver Name</Data></Cell>
+    <Cell><Data ss:Type="String">Trip No</Data></Cell>
+    <Cell><Data ss:Type="String">Date</Data></Cell>
+    <Cell><Data ss:Type="String">Driver</Data></Cell>
     <Cell><Data ss:Type="String">Vehicle No</Data></Cell>
-    <Cell><Data ss:Type="String">CHE / SCK No</Data></Cell>
-    <Cell><Data ss:Type="String">Container Number</Data></Cell>
+    <Cell><Data ss:Type="String">Chassis/CHE</Data></Cell>
+    <Cell><Data ss:Type="String">Container No</Data></Cell>
     <Cell><Data ss:Type="String">Size</Data></Cell>
-    <Cell><Data ss:Type="String">Container Type</Data></Cell>
-    <Cell><Data ss:Type="String">Damage Status</Data></Cell>
-    <Cell><Data ss:Type="String">Load Terminal</Data></Cell>
-    <Cell><Data ss:Type="String">Discharge Terminal</Data></Cell>
+    <Cell><Data ss:Type="String">Origin</Data></Cell>
+    <Cell><Data ss:Type="String">Destination</Data></Cell>
+    <Cell><Data ss:Type="String">Start Time</Data></Cell>
+    <Cell><Data ss:Type="String">End Time</Data></Cell>
+    <Cell><Data ss:Type="String">Duration</Data></Cell>
     <Cell><Data ss:Type="String">Status</Data></Cell>
    </Row>
    ${xmlRows}
@@ -671,7 +314,7 @@ export default function SupervisorReports() {
  </Worksheet>
 </Workbook>`;
 
-    const fileName = `SMART_ITT_Dispatch_Report_${selectedDate || 'ALL_DATES'}_${selectedTerminal}_${selectedDriver}.xls`;
+    const fileName = `SMART_ITT_Report_${new Date().toISOString().slice(0, 10)}.xls`;
 
     if (Platform.OS === 'web' && typeof window !== 'undefined' && typeof document !== 'undefined') {
       const blob = new Blob([excelXML], { type: 'application/vnd.ms-excel;charset=utf-8' });
@@ -683,2117 +326,655 @@ export default function SupervisorReports() {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      Alert.alert('Excel Export Complete', `Report downloaded as "${fileName}". Contains ${excelDataRows.length} container records.`);
+      Alert.alert('Excel Export Complete', `Report downloaded as "${fileName}". Contains ${trips.length} records.`);
     } else {
-      Alert.alert(
-        'Excel Export Generated',
-        `Successfully generated "${fileName}" with ${excelDataRows.length} rows.`
-      );
+      Alert.alert('Excel Export Generated', `Generated "${fileName}" with ${trips.length} rows.`);
     }
   };
 
-  // ─── Export as Printable PDF Report function ───
+  // Export as Printable PDF / HTML Report
   const handleExportPdf = () => {
-    if (excelDataRows.length === 0) {
+    if (trips.length === 0) {
       Alert.alert('Empty Report', 'There are no rows matching your selected filters to export.');
       return;
     }
 
-    const reportTitle = `SMART ITT — Official Dispatch & Terminal Operations Report`;
-    const genDate = new Date().toLocaleString();
-    const filterSummary = `Date: ${selectedDate || 'All Recorded Dates'} | Discharge Terminal: ${selectedTerminal} | Driver: ${selectedDriver} | Sorting: ${sortField === 'DISCHARGE_TERMINAL' ? 'Terminal-wise (Discharge Terminal)' : 'Date/Time'}`;
+    const tableRows = trips
+      .map((t, i) => {
+        const containersStr = (t.containers || []).map((c) => c.containerNumber).join(', ') || '-';
+        const sizesStr = (t.containers || []).map((c) => c.size || '40FT').join(', ') || '-';
+        const dateStr = formatDateColombo(t.startTime || t.createdAt);
+        const startStr = formatTimeColombo(t.startTime || t.createdAt);
+        const endStr = formatTimeColombo(t.endTime);
+        const durationStr = formatDurationText(t.durationMinutes, t.startTime, t.endTime);
 
-    const tableRows = excelDataRows.map((r, i) => `
-      <tr style="background-color: ${i % 2 === 0 ? '#f8fafd' : '#ffffff'};">
-        <td style="text-align: center; font-weight: bold; padding: 6px 8px;">${i + 1}</td>
-        <td style="padding: 6px 8px;"><b>${r.date}</b><br/><small style="color: #00838f; font-weight: bold;">Start: ${r.startTime || r.time}</small></td>
-        <td style="padding: 6px 8px;"><b>${r.dispatchDate || r.date}</b><br/><small style="color: #2e7d32; font-weight: bold;">Disp: ${r.dispatchTime || '—'}</small></td>
-        <td style="padding: 6px 8px; color: #546e7a;">${r.completedDate || '—'}</td>
-        <td style="padding: 6px 8px; font-weight: 600; color: #005662;">${r.tripNumber}</td>
-        <td style="padding: 6px 8px;">${r.driverName}<br/><small style="color: #666;">ID: ${r.driverIdentifier}</small></td>
-        <td style="padding: 6px 8px;"><b>${r.vehicleNo}</b></td>
-        <td style="padding: 6px 8px; font-weight: bold; color: #00838f;">${r.cheNo}</td>
-        <td style="padding: 6px 8px; font-family: monospace; font-weight: bold;">${r.container}</td>
-        <td style="padding: 6px 8px; text-align: center;"><span style="background: #e0f2f1; padding: 2px 6px; border-radius: 4px; font-size: 11px;">${r.sizeOfContainer}</span></td>
-        <td style="padding: 6px 8px; text-align: center;"><span style="background: ${r.containerType === 'RETURN' ? '#fff8e1' : '#e0f7fa'}; color: ${r.containerType === 'RETURN' ? '#b78103' : '#006064'}; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold;">${r.containerType === 'RETURN' ? '🔄 RETURN' : '📦 STANDARD'}</span></td>
-        <td style="padding: 6px 8px; text-align: center; color: ${r.damageOrNot === 'DAMAGED' ? '#d32f2f' : '#2e7d32'}; font-weight: bold;">${r.damageOrNot}</td>
-        <td style="padding: 6px 8px;">${r.loadTerminal} ➔ ${r.dischargeTerminal}</td>
-        <td style="padding: 6px 8px; text-align: center;"><span style="background: #e8f5e9; color: #1b5e20; padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 11px;">${r.status}</span></td>
-      </tr>
-    `).join('');
+        return `
+      <tr style="background-color: ${i % 2 === 0 ? '#f7f9fa' : '#ffffff'};">
+        <td style="padding: 6px 8px; font-weight: bold; text-align: center;">${i + 1}</td>
+        <td style="padding: 6px 8px; font-weight: 600; color: #0F766E;">${t.tripNumber || '-'}</td>
+        <td style="padding: 6px 8px;">${dateStr}</td>
+        <td style="padding: 6px 8px;">${t.driverName || t.driverCode || '-'}</td>
+        <td style="padding: 6px 8px; font-weight: 600;">${t.vehicleNumber || '-'}</td>
+        <td style="padding: 6px 8px; font-family: monospace;">${containersStr}</td>
+        <td style="padding: 6px 8px; text-align: center;">${sizesStr}</td>
+        <td style="padding: 6px 8px;">${t.sourceTerminal || '-'} ➔ ${t.destTerminal || '-'}</td>
+        <td style="padding: 6px 8px;">${startStr}</td>
+        <td style="padding: 6px 8px;">${endStr}</td>
+        <td style="padding: 6px 8px; font-weight: 600;">${durationStr}</td>
+        <td style="padding: 6px 8px; text-align: center;">${t.status}</td>
+      </tr>`;
+      })
+      .join('');
 
     const htmlContent = `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8"/>
-  <title>${reportTitle}</title>
+  <title>SMART ITT — Operations & Dispatch Report</title>
   <style>
     @media print {
-      @page { size: landscape; margin: 12mm; }
+      @page { size: landscape; margin: 10mm; }
       body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      margin: 20px;
-      color: #1a202c;
-      font-size: 12px;
-    }
-    .header-bar {
-      border-bottom: 3px solid #00838f;
-      padding-bottom: 12px;
-      margin-bottom: 16px;
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-end;
-    }
-    .title {
-      font-size: 20px;
-      font-weight: 800;
-      color: #004d40;
-      letter-spacing: -0.5px;
-      margin: 0;
-    }
-    .subtitle {
-      font-size: 12px;
-      color: #546e7a;
-      margin-top: 4px;
-    }
-    .meta-box {
-      background: #eceff1;
-      border-radius: 6px;
-      padding: 10px 14px;
-      margin-bottom: 16px;
-      font-size: 11px;
-      display: flex;
-      justify-content: space-between;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 11px;
-    }
-    th {
-      background-color: #004d40;
-      color: #ffffff;
-      padding: 8px;
-      text-align: left;
-      font-weight: bold;
-      border: 1px solid #00332c;
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-    td {
-      border: 1px solid #cfd8dc;
-    }
-    .footer {
-      margin-top: 24px;
-      padding-top: 10px;
-      border-top: 1px solid #cfd8dc;
-      font-size: 10px;
-      color: #78909c;
-      display: flex;
-      justify-content: space-between;
-    }
-    .print-btn {
-      background: #00838f;
-      color: white;
-      border: none;
-      padding: 8px 16px;
-      border-radius: 4px;
-      font-weight: bold;
-      cursor: pointer;
-      margin-bottom: 15px;
-    }
-    @media print {
-      .print-btn { display: none; }
-    }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 15px; color: #1F2D33; font-size: 11px; }
+    .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #0F766E; padding-bottom: 8px; margin-bottom: 12px; }
+    .title { font-size: 18px; font-weight: 700; color: #0F766E; }
+    .meta { font-size: 10px; color: #6B7C85; }
+    .kpi-row { display: flex; gap: 12px; margin-bottom: 12px; }
+    .kpi-card { border: 1px solid #E5EAEC; background: #F7F9FA; padding: 6px 12px; border-radius: 6px; }
+    .kpi-val { font-size: 14px; font-weight: bold; color: #0F766E; }
+    .kpi-lbl { font-size: 9px; color: #6B7C85; text-transform: uppercase; }
+    table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+    th { background: #0F766E; color: #ffffff; text-align: left; padding: 6px 8px; font-size: 10px; font-weight: 600; }
+    td { border-bottom: 1px solid #E5EAEC; }
   </style>
 </head>
 <body>
-  <button class="print-btn" onclick="window.print()">🖨️ PRINT / SAVE AS PDF</button>
-  <div class="header-bar">
+  <div class="header">
     <div>
-      <h1 class="title">🚛 SMART ITT — INTER-TERMINAL LOGISTICS REPORT</h1>
-      <div class="subtitle">Port Container Handling Equipment & Vehicle Telematics Dispatch Summary</div>
-    </div>
-    <div style="text-align: right; font-size: 11px; color: #546e7a;">
-      <b>PORT TELEMATICS AUTHORITY</b><br/>
-      Generated by: <b>${supervisorName}</b>
+      <div class="title">SMART ITT — Inter-Terminal Transportation Dispatch Report</div>
+      <div class="meta">Generated: ${new Date().toLocaleString()} · Timezone: Asia/Colombo</div>
     </div>
   </div>
-
-  <div class="meta-box">
-    <div><b>Filters Applied:</b> ${filterSummary}</div>
-    <div><b>Total Container Records:</b> ${excelDataRows.length} | <b>Damaged:</b> ${damagedCount} | <b>Generated:</b> ${genDate}</div>
+  <div class="kpi-row">
+    <div class="kpi-card"><div class="kpi-val">${summary.totalTrips}</div><div class="kpi-lbl">Total Trips</div></div>
+    <div class="kpi-card"><div class="kpi-val">20FT: ${summary.count20} | 40FT: ${summary.count40}</div><div class="kpi-lbl">Containers</div></div>
+    <div class="kpi-card"><div class="kpi-val">${summary.totalDurationFormatted}</div><div class="kpi-lbl">Total Duration</div></div>
+    <div class="kpi-card"><div class="kpi-val">${summary.avgDurationFormatted}</div><div class="kpi-lbl">Average Duration</div></div>
   </div>
-
   <table>
     <thead>
       <tr>
-        <th style="width: 30px; text-align: center;">#</th>
-        <th>Date / Start & Disp</th>
-        <th>Trip #</th>
-        <th>Driver Info</th>
+        <th>#</th>
+        <th>Trip No</th>
+        <th>Date</th>
+        <th>Driver</th>
         <th>Vehicle No</th>
-        <th>CHE / SCK No</th>
-        <th>Container No</th>
-        <th style="text-align: center;">Size</th>
-        <th style="text-align: center;">Container Type</th>
-        <th style="text-align: center;">Condition</th>
-        <th>Terminal Route</th>
-        <th style="text-align: center;">Status</th>
+        <th>Container(s)</th>
+        <th>Size</th>
+        <th>Route</th>
+        <th>Start</th>
+        <th>End</th>
+        <th>Duration</th>
+        <th>Status</th>
       </tr>
     </thead>
     <tbody>
       ${tableRows}
     </tbody>
   </table>
-
-  <div class="footer">
-    <div>SMART ITT SYSTEM — Confidential Port Logistics Operations Document</div>
-    <div>Page 1 of 1 · Verified Telematics Dispatch Data</div>
-  </div>
-
   <script>
-    // Automatically trigger print dialog when opened
-    window.addEventListener('load', () => {
-      setTimeout(() => { window.print(); }, 400);
-    });
+    window.onload = function() { window.print(); };
   </script>
 </body>
 </html>`;
 
-    if (Platform.OS === 'web' && typeof window !== 'undefined' && typeof document !== 'undefined') {
-      const printWindow = window.open('', '_blank');
-      if (printWindow) {
-        printWindow.document.open();
-        printWindow.document.write(htmlContent);
-        printWindow.document.close();
-      } else {
-        // Fallback to downloadable HTML that opens directly in browser print
-        const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = `SMART_ITT_Report_${selectedDate || 'ALL'}.html`;
-        link.click();
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      const printWin = window.open('', '_blank');
+      if (printWin) {
+        printWin.document.write(htmlContent);
+        printWin.document.close();
       }
     } else {
       Alert.alert(
-        'PDF Export Generated',
-        `Report with ${excelDataRows.length} container records compiled.\nUse the web portal or browser print preview to save as PDF.`
+        'Printable PDF Prepared',
+        `PDF layout prepared with ${trips.length} rows. Please use browser print on Web.`
       );
     }
   };
 
-  const supervisorName = user?.name || user?.fullName || 'Nimal Silva';
-  const supervisorInitials = supervisorName
-    .split(' ')
-    .map((n: string) => n[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase();
-
   return (
-    <View style={styles.container}>
+    <View style={[styles.screen, { paddingTop: topInset, paddingBottom: bottomInset }]}>
+      {/* 1. Header */}
+      <View style={styles.header}>
+        <View>
+          <Text style={styles.headerTitle}>Operations & Reports</Text>
+          <Text style={styles.headerSub}>
+            Live Port ITT dispatch records · Timezone Asia/Colombo
+          </Text>
+        </View>
+        <View style={styles.headerActions}>
+          <TouchableOpacity
+            style={styles.exportBtn}
+            onPress={handleExportExcel}
+            activeOpacity={0.88}
+          >
+            <Ionicons name="document-text-outline" size={15} color={colors.primary} />
+            <Text style={styles.exportBtnText}>Excel</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.exportBtn, styles.exportBtnPdf]}
+            onPress={handleExportPdf}
+            activeOpacity={0.88}
+          >
+            <Ionicons name="print-outline" size={15} color="#FFFFFF" />
+            <Text style={styles.exportBtnPdfText}>PDF</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* 2. Shared Combinable FilterBar */}
+      <FilterBar
+        filters={filters}
+        onChange={setFilters}
+        driverOptions={driverOptions}
+        vehicleOptions={vehicleOptions}
+      />
+
       <ScrollView
+        style={styles.scroll}
         contentContainerStyle={[
-          styles.scroll,
-          {
-            paddingTop: Math.max(topInset, 16),
-            paddingBottom: Math.max(bottomInset + 30, 48),
-            paddingHorizontal: containerPaddingHorizontal,
-            maxWidth: contentMaxWidth,
-            width: '100%',
-            alignSelf: 'center',
-          },
+          styles.scrollContent,
+          { maxWidth: contentMaxWidth, paddingHorizontal: containerPaddingHorizontal },
         ]}
-        showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#2563EB" />}
-        keyboardShouldPersistTaps="handled"
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       >
-        {/* ─── 1. SUPERVISOR HEADER ─── */}
-        <View style={styles.header}>
-          <View style={styles.headerLeft}>
-            <View style={styles.avatarCircle}>
-              <Text style={styles.avatarText}>{supervisorInitials}</Text>
-            </View>
-            <View>
-              <Text style={styles.supervisorNameText}>{supervisorName}</Text>
-              <View style={styles.roleDateRow}>
-                <View style={styles.rolePill}>
-                  <Text style={styles.rolePillText}>PORT OPERATIONS SUPERVISOR</Text>
-                </View>
-                <Text style={styles.dateText}>SCK ITT DISPATCH AUDIT</Text>
-              </View>
-            </View>
-          </View>
-
-          <View style={styles.badgeWrap}>
-            <Ionicons name="shield-checkmark" size={13} color="#2563EB" />
-            <Text style={styles.badgeText}>AUDIT ENGINE</Text>
-          </View>
-        </View>
-
-        {/* ─── 2. SUPERVISOR FILTERS PANEL ─── */}
-        <View style={styles.filterCard}>
-          <View style={styles.filterCardHeader}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <Ionicons name="filter" size={16} color="#2563EB" />
-              <Text style={styles.filterCardTitle}>SUPERVISOR AUDIT FILTERS</Text>
-            </View>
-            {(selectedDate || dateRangeStart || selectedTerminal !== 'ALL' || selectedDriver !== 'ALL') && (
-              <TouchableOpacity
-                style={styles.resetBtn}
-                onPress={() => {
-                  handleClearAllDates();
-                  setSelectedTerminal('ALL');
-                  setSelectedDriver('ALL');
-                }}
-              >
-                <Ionicons name="reload" size={12} color="#feb300" />
-                <Text style={styles.resetBtnText}>RESET FILTERS</Text>
-              </TouchableOpacity>
-            )}
-          </View>
-
-          {/* ── A. CALENDAR DATE, WEEK & MONTH SELECTOR ── */}
-          <View style={styles.filterBlock}>
-            <View style={styles.filterLabelRow}>
-              <Ionicons name="calendar" size={14} color="#2563EB" />
-              <Text style={styles.filterLabel}>SELECT DATE / WEEK / MONTH (CALENDAR)</Text>
-              {activeDateFilterLabel && (
-                <View style={styles.activeFilterPill}>
-                  <Text style={styles.activeFilterPillText}>{activeDateFilterLabel}</Text>
-                </View>
-              )}
-            </View>
-
-            {/* Mode selection tabs: SINGLE DAY | WEEKLY | MONTHLY | CUSTOM RANGE */}
-            <View style={styles.dateModeTabRow}>
-              <TouchableOpacity
-                style={[styles.dateModeTab, dateFilterMode === 'SINGLE' && styles.dateModeTabActive]}
-                onPress={() => setDateFilterMode('SINGLE')}
-                activeOpacity={0.8}
-              >
-                <Ionicons name="today" size={12} color={dateFilterMode === 'SINGLE' ? '#FFFFFF' : '#849396'} />
-                <Text style={[styles.dateModeTabText, dateFilterMode === 'SINGLE' && styles.dateModeTabTextActive]}>
-                  DAY
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[styles.dateModeTab, dateFilterMode === 'WEEK' && styles.dateModeTabActive]}
-                onPress={() => setDateFilterMode('WEEK')}
-                activeOpacity={0.8}
-              >
-                <Ionicons name="time" size={12} color={dateFilterMode === 'WEEK' ? '#FFFFFF' : '#849396'} />
-                <Text style={[styles.dateModeTabText, dateFilterMode === 'WEEK' && styles.dateModeTabTextActive]}>
-                  WEEK
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[styles.dateModeTab, dateFilterMode === 'MONTH' && styles.dateModeTabActive]}
-                onPress={() => setDateFilterMode('MONTH')}
-                activeOpacity={0.8}
-              >
-                <Ionicons name="calendar-number" size={12} color={dateFilterMode === 'MONTH' ? '#FFFFFF' : '#849396'} />
-                <Text style={[styles.dateModeTabText, dateFilterMode === 'MONTH' && styles.dateModeTabTextActive]}>
-                  MONTH
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[styles.dateModeTab, dateFilterMode === 'RANGE' && styles.dateModeTabActive]}
-                onPress={() => setDateFilterMode('RANGE')}
-                activeOpacity={0.8}
-              >
-                <Ionicons name="git-commit" size={12} color={dateFilterMode === 'RANGE' ? '#FFFFFF' : '#849396'} />
-                <Text style={[styles.dateModeTabText, dateFilterMode === 'RANGE' && styles.dateModeTabTextActive]}>
-                  CUSTOM RANGE
-                </Text>
-              </TouchableOpacity>
-            </View>
-
-            {/* Quick Presets Carousel depending on Mode */}
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.presetsScroll}>
-              <TouchableOpacity
-                style={[
-                  styles.presetChip,
-                  selectedDate === formatDateISO(new Date()) && !dateRangeStart && styles.presetChipActive,
-                ]}
-                onPress={() => handleSelectSingleDay(formatDateISO(new Date()))}
-                activeOpacity={0.8}
-              >
-                <Text style={[
-                  styles.presetChipText,
-                  selectedDate === formatDateISO(new Date()) && !dateRangeStart && styles.presetChipTextActive,
-                ]}>
-                  TODAY
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[
-                  styles.presetChip,
-                  dateRangeStart &&
-                  dateRangeEnd === formatDateISO(new Date()) &&
-                  Math.round((new Date(dateRangeEnd).getTime() - new Date(dateRangeStart).getTime()) / (1000 * 3600 * 24)) === 7 &&
-                  styles.presetChipActive,
-                ]}
-                onPress={() => handleSelectWeekPreset(7)}
-                activeOpacity={0.8}
-              >
-                <Text style={[
-                  styles.presetChipText,
-                  dateRangeStart &&
-                  dateRangeEnd === formatDateISO(new Date()) &&
-                  Math.round((new Date(dateRangeEnd).getTime() - new Date(dateRangeStart).getTime()) / (1000 * 3600 * 24)) === 7 &&
-                  styles.presetChipTextActive,
-                ]}>
-                  LAST 7 DAYS (WEEK)
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[
-                  styles.presetChip,
-                  dateRangeStart &&
-                  dateRangeEnd === formatDateISO(new Date()) &&
-                  Math.round((new Date(dateRangeEnd).getTime() - new Date(dateRangeStart).getTime()) / (1000 * 3600 * 24)) === 14 &&
-                  styles.presetChipActive,
-                ]}
-                onPress={() => handleSelectWeekPreset(14)}
-                activeOpacity={0.8}
-              >
-                <Text style={[
-                  styles.presetChipText,
-                  dateRangeStart &&
-                  dateRangeEnd === formatDateISO(new Date()) &&
-                  Math.round((new Date(dateRangeEnd).getTime() - new Date(dateRangeStart).getTime()) / (1000 * 3600 * 24)) === 14 &&
-                  styles.presetChipTextActive,
-                ]}>
-                  LAST 14 DAYS (2 WEEKS)
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[
-                  styles.presetChip,
-                  dateRangeStart &&
-                  dateRangeEnd === formatDateISO(new Date()) &&
-                  Math.round((new Date(dateRangeEnd).getTime() - new Date(dateRangeStart).getTime()) / (1000 * 3600 * 24)) >= 28 &&
-                  Math.round((new Date(dateRangeEnd).getTime() - new Date(dateRangeStart).getTime()) / (1000 * 3600 * 24)) <= 31 &&
-                  styles.presetChipActive,
-                ]}
-                onPress={() => handleSelectMonthPreset(1)}
-                activeOpacity={0.8}
-              >
-                <Text style={[
-                  styles.presetChipText,
-                  dateRangeStart &&
-                  dateRangeEnd === formatDateISO(new Date()) &&
-                  Math.round((new Date(dateRangeEnd).getTime() - new Date(dateRangeStart).getTime()) / (1000 * 3600 * 24)) >= 28 &&
-                  Math.round((new Date(dateRangeEnd).getTime() - new Date(dateRangeStart).getTime()) / (1000 * 3600 * 24)) <= 31 &&
-                  styles.presetChipTextActive,
-                ]}>
-                  LAST 30 DAYS (MONTH)
-                </Text>
-              </TouchableOpacity>
-
-              {/* September 20 to October 20 Window as explicitly requested by user */}
-              <TouchableOpacity
-                style={[
-                  styles.presetChip,
-                  dateRangeStart === '2026-09-20' && dateRangeEnd === '2026-10-20' && styles.presetChipActive,
-                ]}
-                onPress={() => handleSelectCustomRange('2026-09-20', '2026-10-20')}
-                activeOpacity={0.8}
-              >
-                <Text style={[
-                  styles.presetChipText,
-                  dateRangeStart === '2026-09-20' && dateRangeEnd === '2026-10-20' && styles.presetChipTextActive,
-                ]}>
-                  SEP 20 ➔ OCT 20 (MONTH WINDOW)
-                </Text>
-              </TouchableOpacity>
-
-              {/* October Month Full */}
-              <TouchableOpacity
-                style={[
-                  styles.presetChip,
-                  dateRangeStart === '2026-10-01' && dateRangeEnd === '2026-10-31' && styles.presetChipActive,
-                ]}
-                onPress={() => handleSelectCustomRange('2026-10-01', '2026-10-31')}
-                activeOpacity={0.8}
-              >
-                <Text style={[
-                  styles.presetChipText,
-                  dateRangeStart === '2026-10-01' && dateRangeEnd === '2026-10-31' && styles.presetChipTextActive,
-                ]}>
-                  OCTOBER 2026
-                </Text>
-              </TouchableOpacity>
-
-              {/* September Month Full */}
-              <TouchableOpacity
-                style={[
-                  styles.presetChip,
-                  dateRangeStart === '2026-09-01' && dateRangeEnd === '2026-09-30' && styles.presetChipActive,
-                ]}
-                onPress={() => handleSelectCustomRange('2026-09-01', '2026-09-30')}
-                activeOpacity={0.8}
-              >
-                <Text style={[
-                  styles.presetChipText,
-                  dateRangeStart === '2026-09-01' && dateRangeEnd === '2026-09-30' && styles.presetChipTextActive,
-                ]}>
-                  SEPTEMBER 2026
-                </Text>
-              </TouchableOpacity>
-            </ScrollView>
-
-            {/* Calendar trigger button showing the selected date or range */}
-            <View style={styles.dateControlRow}>
-              <TouchableOpacity
-                style={[styles.calendarPickerBtn, (selectedDate || dateRangeStart) ? styles.calendarPickerBtnActive : null]}
-                onPress={() => setCalendarModalVisible(true)}
-                activeOpacity={0.8}
-              >
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
-                  <Ionicons
-                    name="calendar-outline"
-                    size={18}
-                    color={(selectedDate || dateRangeStart) ? '#FFFFFF' : '#2563EB'}
-                  />
-                  <Text
-                    style={[styles.calendarPickerBtnText, (selectedDate || dateRangeStart) ? styles.calendarPickerBtnTextActive : null]}
-                    numberOfLines={1}
-                  >
-                    {activeDateFilterLabel || 'Open Interactive Calendar (Pick Day / Week / Month)'}
-                  </Text>
-                </View>
-                <Ionicons name="chevron-down" size={16} color={(selectedDate || dateRangeStart) ? '#FFFFFF' : '#849396'} />
-              </TouchableOpacity>
-
-              {(selectedDate || dateRangeStart) && (
-                <TouchableOpacity style={styles.clearDateBtn} onPress={handleClearAllDates}>
-                  <Ionicons name="close-circle" size={18} color="#ff5252" />
-                  <Text style={styles.clearDateText}>CLEAR DATES</Text>
-                </TouchableOpacity>
-              )}
-            </View>
-          </View>
-
-          {/* ── B. DISCHARGE TERMINAL SELECTOR ── */}
-          <View style={styles.filterBlock}>
-            <View style={styles.filterLabelRow}>
-              <Ionicons name="boat" size={14} color="#2563EB" />
-              <Text style={styles.filterLabel}>SELECT DISCHARGE TERMINAL (DESTINATION)</Text>
-              {selectedTerminal !== 'ALL' && (
-                <View style={styles.activeFilterPill}>
-                  <Text style={styles.activeFilterPillText}>DISCHARGE: {selectedTerminal}</Text>
-                </View>
-              )}
-            </View>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipsScroll}>
-              {ALL_TERMINALS.map((term) => {
-                const isActive = selectedTerminal === term;
-                return (
-                  <TouchableOpacity
-                    key={term}
-                    style={[styles.terminalChip, isActive && styles.terminalChipActive]}
-                    onPress={() => setSelectedTerminal(term)}
-                    activeOpacity={0.8}
-                  >
-                    <Ionicons
-                      name={term === 'ALL' ? 'layers' : 'boat'}
-                      size={13}
-                      color={isActive ? '#FFFFFF' : '#849396'}
-                    />
-                    <Text style={[styles.terminalChipText, isActive && styles.terminalChipTextActive]}>
-                      {term === 'ALL' ? 'ALL DISCHARGE TERMINALS' : term}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </ScrollView>
-          </View>
-
-          {/* ── C. DRIVER SELECTOR ── */}
-          <View style={styles.filterBlock}>
-            <View style={styles.filterLabelRow}>
-              <Ionicons name="person" size={14} color="#2563EB" />
-              <Text style={styles.filterLabel}>SELECT DRIVER (OPERATOR CODE)</Text>
-              {selectedDriver !== 'ALL' && (
-                <View style={styles.activeFilterPill}>
-                  <Text style={styles.activeFilterPillText}>{selectedDriver}</Text>
-                </View>
-              )}
-            </View>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipsScroll}>
-              {driverOptions.map((drv) => {
-                const isActive = selectedDriver === drv.id;
-                return (
-                  <TouchableOpacity
-                    key={drv.id}
-                    style={[styles.driverChip, isActive && styles.driverChipActive]}
-                    onPress={() => setSelectedDriver(drv.id)}
-                    activeOpacity={0.8}
-                  >
-                    <Ionicons
-                      name="person-circle"
-                      size={14}
-                      color={isActive ? '#432c00' : '#849396'}
-                    />
-                    <Text style={[styles.driverChipText, isActive && styles.driverChipTextActive]}>
-                      {drv.label}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </ScrollView>
-          </View>
-
-          {/* ── D. VEHICLE SELECTOR (NEW) ── */}
-          <View style={styles.filterBlock}>
-            <View style={styles.filterLabelRow}>
-              <Ionicons name="bus" size={14} color="#0F766E" />
-              <Text style={styles.filterLabel}>SELECT VEHICLE (TRUCK)</Text>
-              {selectedVehicle !== 'ALL' && (
-                <View style={styles.activeFilterPill}>
-                  <Text style={styles.activeFilterPillText}>{selectedVehicle}</Text>
-                </View>
-              )}
-            </View>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipsScroll}>
-              {vehicleOptions.map((veh) => {
-                const isActive = selectedVehicle === veh;
-                return (
-                  <TouchableOpacity
-                    key={veh}
-                    style={[styles.terminalChip, isActive && styles.terminalChipActive]}
-                    onPress={() => setSelectedVehicle(veh)}
-                    activeOpacity={0.8}
-                  >
-                    <Ionicons
-                      name="bus-outline"
-                      size={13}
-                      color={isActive ? '#FFFFFF' : '#849396'}
-                    />
-                    <Text style={[styles.terminalChipText, isActive && styles.terminalChipTextActive]}>
-                      {veh === 'ALL' ? 'ALL VEHICLES' : veh}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </ScrollView>
-          </View>
-
-          {/* ── E. STATUS SELECTOR ── */}
-          <View style={styles.filterBlock}>
-            <View style={styles.filterLabelRow}>
-              <Ionicons name="checkmark-circle" size={14} color="#0F766E" />
-              <Text style={styles.filterLabel}>SELECT STATUS</Text>
-              {selectedStatus !== 'ALL' && (
-                <View style={styles.activeFilterPill}>
-                  <Text style={styles.activeFilterPillText}>{selectedStatus}</Text>
-                </View>
-              )}
-            </View>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipsScroll}>
-              {[
-                { id: 'ALL', label: 'ALL STATUSES' },
-                { id: 'COMPLETED', label: 'COMPLETED' },
-                { id: 'IN_PROGRESS', label: 'IN PROGRESS' },
-                { id: 'PENDING_APPROVAL', label: 'PENDING APPROVAL' },
-              ].map((st) => {
-                const isActive = selectedStatus === st.id;
-                return (
-                  <TouchableOpacity
-                    key={st.id}
-                    style={[styles.terminalChip, isActive && styles.terminalChipActive]}
-                    onPress={() => setSelectedStatus(st.id)}
-                    activeOpacity={0.8}
-                  >
-                    <Text style={[styles.terminalChipText, isActive && styles.terminalChipTextActive]}>
-                      {st.label}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </ScrollView>
-          </View>
-        </View>
-
-        {/* ─── 3. METRICS SUMMARY BAR (EXTRA REQUIREMENT B) ─── */}
-        <View style={styles.summaryBar}>
+        {/* 3. Summary Strip */}
+        <View style={styles.summaryStrip}>
           <View style={styles.summaryItem}>
-            <Text style={styles.summaryNumber}>{filteredTrips.length}</Text>
-            <Text style={styles.summaryLabel}>TRIPS</Text>
+            <Text style={styles.summaryLabel}>Total Trips</Text>
+            <Text style={styles.summaryValue}>{summary.totalTrips}</Text>
           </View>
           <View style={styles.summaryDivider} />
           <View style={styles.summaryItem}>
-            <Text style={[styles.summaryNumber, { color: '#0F766E' }]}>{summaryMetrics.containers20} / {summaryMetrics.containers40}</Text>
-            <Text style={styles.summaryLabel}>20FT / 40FT</Text>
+            <Text style={styles.summaryLabel}>Containers</Text>
+            <Text style={styles.summaryValue}>
+              20FT: <Text style={styles.summaryHighlight}>{summary.count20}</Text> · 40FT:{' '}
+              <Text style={styles.summaryHighlight}>{summary.count40}</Text>
+            </Text>
           </View>
           <View style={styles.summaryDivider} />
           <View style={styles.summaryItem}>
-            <Text style={[styles.summaryNumber, { color: '#0F766E' }]}>{summaryMetrics.totalDuration}</Text>
-            <Text style={styles.summaryLabel}>TOTAL DURATION</Text>
+            <Text style={styles.summaryLabel}>Total Duration</Text>
+            <Text style={styles.summaryValue}>{summary.totalDurationFormatted}</Text>
           </View>
           <View style={styles.summaryDivider} />
           <View style={styles.summaryItem}>
-            <Text style={[styles.summaryNumber, { color: '#0F766E' }]}>{summaryMetrics.avgDuration}</Text>
-            <Text style={styles.summaryLabel}>AVG DURATION</Text>
-          </View>
-          <View style={styles.summaryDivider} />
-          <View style={styles.summaryItem}>
-            <Text style={[styles.summaryNumber, { color: '#1E7A45' }]}>{completedTripsCount}</Text>
-            <Text style={styles.summaryLabel}>COMPLETED</Text>
+            <Text style={styles.summaryLabel}>Avg Duration</Text>
+            <Text style={styles.summaryValue}>{summary.avgDurationFormatted}</Text>
           </View>
         </View>
 
-        {/* ─── 4. EXCEL REPORT TABLE HEADER & ACTIONS ─── */}
-        <View style={styles.tableHeaderSection}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-            <View style={styles.excelIconBox}>
-              <Ionicons name="grid" size={16} color="#22ef7e" />
-            </View>
-            <View>
-              <Text style={styles.tableMainTitle}>EXCEL AUDIT DISPATCH SHEET</Text>
-              <Text style={styles.tableSubTitle}>
-                {excelDataRows.length} Dispatch Records · Showing Vehicle No, CHE No & 20FT Dual Pairs
-              </Text>
-            </View>
-          </View>
-
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-            {/* Terminalwise Sorting Toggle Button */}
-            <TouchableOpacity
-              style={[styles.sortBtn, sortField === 'DISCHARGE_TERMINAL' && styles.sortBtnActive]}
-              onPress={() => setSortField((p) => (p === 'DISCHARGE_TERMINAL' ? 'DATE_TIME' : 'DISCHARGE_TERMINAL'))}
-              activeOpacity={0.8}
-            >
-              <Ionicons
-                name="swap-vertical"
-                size={13}
-                color={sortField === 'DISCHARGE_TERMINAL' ? '#FFFFFF' : '#2563EB'}
-              />
-              <Text
-                style={[
-                  styles.sortBtnText,
-                  sortField === 'DISCHARGE_TERMINAL' && styles.sortBtnTextActive,
-                ]}
-              >
-                {sortField === 'DISCHARGE_TERMINAL' ? 'SORTED: DISCHARGE TERMINAL (A-Z)' : 'SORTED: DATE / TIME'}
-              </Text>
-            </TouchableOpacity>
-
-            <View style={styles.viewToggleRow}>
+        {/* 4. Group By Toggle */}
+        <View style={styles.groupByRow}>
+          <Text style={styles.groupByLabel}>Group By:</Text>
+          {(['NONE', 'DRIVER', 'VEHICLE', 'DATE'] as GroupByOption[]).map((opt) => {
+            const active = groupBy === opt;
+            return (
               <TouchableOpacity
-                style={[styles.toggleBtn, viewMode === 'EXCEL' && styles.toggleBtnActive]}
-                onPress={() => setViewMode('EXCEL')}
+                key={opt}
+                style={[styles.groupByBtn, active && styles.groupByBtnActive]}
+                onPress={() => setGroupBy(opt)}
+                activeOpacity={0.7}
               >
-                <Ionicons name="grid-outline" size={14} color={viewMode === 'EXCEL' ? '#FFFFFF' : '#849396'} />
-                <Text style={[styles.toggleBtnText, viewMode === 'EXCEL' && styles.toggleBtnTextActive]}>
-                  EXCEL
+                <Text style={[styles.groupByBtnText, active && styles.groupByBtnTextActive]}>
+                  {opt === 'NONE' ? 'None' : opt.charAt(0) + opt.slice(1).toLowerCase()}
                 </Text>
               </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[styles.toggleBtn, viewMode === 'CARDS' && styles.toggleBtnActive]}
-                onPress={() => setViewMode('CARDS')}
-              >
-                <Ionicons name="albums-outline" size={14} color={viewMode === 'CARDS' ? '#FFFFFF' : '#849396'} />
-                <Text style={[styles.toggleBtnText, viewMode === 'CARDS' && styles.toggleBtnTextActive]}>
-                  CARDS
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
+            );
+          })}
         </View>
 
-        {/* ─── 5. EXCEL SPREADSHEET TABLE ─── */}
-        {viewMode === 'EXCEL' ? (
-          <View style={styles.excelSheetCard}>
-            {excelDataRows.length === 0 ? (
-              <View style={styles.emptyWrap}>
-                <Ionicons name="file-tray-outline" size={36} color="#849396" />
-                <Text style={styles.emptyTitle}>NO RECORDS MATCH YOUR FILTERS</Text>
-                <Text style={styles.emptySubtitle}>
-                  Try selecting a different date from the calendar or choose "ALL" for terminals / drivers.
-                </Text>
-              </View>
-            ) : (
-              <ScrollView horizontal showsHorizontalScrollIndicator={true} nestedScrollEnabled={true}>
-                <View>
-                  {/* Table Header Row */}
-                  <View style={styles.tableRowHeader}>
-                    <Text style={[styles.thCell, { width: 40, textAlign: 'center' }]}>#</Text>
-                    <TouchableOpacity
-                      style={{ width: 95 }}
-                      onPress={() => setSortField('DATE_TIME')}
-                      activeOpacity={0.7}
-                    >
-                      <Text style={[styles.thCell, { width: 95, color: sortField === 'DATE_TIME' ? '#2563EB' : '#bac9cc' }]}>
-                        START DATE {sortField === 'DATE_TIME' ? '▼' : ''}
-                      </Text>
-                    </TouchableOpacity>
-                    <Text style={[styles.thCell, { width: 85 }]}>START TIME</Text>
-                    <Text style={[styles.thCell, { width: 105 }]}>DISPATCH DATE</Text>
-                    <Text style={[styles.thCell, { width: 95 }]}>DISPATCH TIME</Text>
-                    <Text style={[styles.thCell, { width: 110 }]}>COMPLETED DATE</Text>
-                    <Text style={[styles.thCell, { width: 95 }]}>END TIME</Text>
-                    <Text style={[styles.thCell, { width: 90 }]}>DURATION</Text>
-                    <Text style={[styles.thCell, { width: 115 }]}>DRIVER ID</Text>
-                    <Text style={[styles.thCell, { width: 130 }]}>DRIVER NAME</Text>
-                    <Text style={[styles.thCell, { width: 110 }]}>VEHICLE NO</Text>
-                    <Text style={[styles.thCell, { width: 100 }]}>CHE NO</Text>
-                    <Text style={[styles.thCell, { width: 210 }]}>CONTAINER(S)</Text>
-                    <Text style={[styles.thCell, { width: 110 }]}>SIZE</Text>
-                    <Text style={[styles.thCell, { width: 135 }]}>CONTAINER TYPE</Text>
-                    <Text style={[styles.thCell, { width: 115 }]}>DAMAGE OR NOT</Text>
-                    <Text style={[styles.thCell, { width: 105 }]}>LOAD TERMINAL</Text>
-                    <TouchableOpacity
-                      style={{ width: 130 }}
-                      onPress={() => setSortField('DISCHARGE_TERMINAL')}
-                      activeOpacity={0.7}
-                    >
-                      <Text style={[styles.thCell, { width: 130, color: sortField === 'DISCHARGE_TERMINAL' ? '#0F766E' : '#bac9cc' }]}>
-                        DISCHARGE TERMINAL {sortField === 'DISCHARGE_TERMINAL' ? '▲' : ''}
-                      </Text>
-                    </TouchableOpacity>
-                    <Text style={[styles.thCell, { width: 105 }]}>TRIP NUMBER</Text>
-                  </View>
+        {/* 5. Results List */}
+        {loading && !refreshing ? (
+          <View style={styles.loadingBox}>
+            <ActivityIndicator size="small" color={colors.primary} />
+            <Text style={styles.loadingText}>Fetching dispatch reports from server...</Text>
+          </View>
+        ) : trips.length === 0 ? (
+          <View style={styles.emptyBox}>
+            <Ionicons name="document-text-outline" size={36} color={colors.textMuted} />
+            <Text style={styles.emptyText}>
+              No operations or dispatch trips match your selected filters.
+            </Text>
+          </View>
+        ) : (
+          <View style={styles.groupsContainer}>
+            {groupedTrips.map((group) => {
+              const groupTripsCount = group.items.length;
+              let groupDuration = 0;
+              for (const i of group.items) {
+                if (i.durationMinutes) groupDuration += i.durationMinutes;
+              }
 
-                  {/* Table Body Rows */}
-                  {excelDataRows.map((row, idx) => {
-                    const isDamaged = row.damageOrNot === 'DAMAGED';
-                    const isEven = idx % 2 === 0;
-                    const isDual20 = row.sizeOfContainer.includes('2x');
+              return (
+                <View key={group.key} style={styles.groupCard}>
+                  {groupBy !== 'NONE' && (
+                    <View style={styles.groupHeader}>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.groupTitle}>{group.title}</Text>
+                        <Text style={styles.groupMeta}>
+                          {groupTripsCount} trip{groupTripsCount !== 1 ? 's' : ''}
+                          {groupDuration > 0
+                            ? ` · Total Duration: ${formatDurationText(groupDuration)}`
+                            : ''}
+                        </Text>
+                      </View>
+                      <View style={styles.groupCountBadge}>
+                        <Text style={styles.groupCountText}>{groupTripsCount}</Text>
+                      </View>
+                    </View>
+                  )}
+
+                  {group.items.map((trip) => {
+                    const dateStr = formatDateColombo(trip.startTime || trip.createdAt);
+                    const startStr = formatTimeColombo(trip.startTime || trip.createdAt);
+                    const endStr = formatTimeColombo(trip.endTime);
+                    const durationStr = formatDurationText(
+                      trip.durationMinutes,
+                      trip.startTime,
+                      trip.endTime
+                    );
 
                     return (
-                      <View
-                        key={`${row.tripNumber}-${row.container}-${idx}`}
-                        style={[styles.tableRow, isEven ? styles.tableRowEven : styles.tableRowOdd]}
-                      >
-                        <Text style={[styles.tdCell, { width: 40, textAlign: 'center', color: '#849396' }]}>
-                          {idx + 1}
-                        </Text>
-                        <Text style={[styles.tdCell, { width: 95, fontWeight: '700', color: '#0F766E' }]}>
-                          {row.date}
-                        </Text>
-                        <Text style={[styles.tdCell, { width: 85, color: '#0F766E', fontWeight: '700' }]}>
-                          {row.startTime || row.time}
-                        </Text>
-                        <Text style={[styles.tdCell, { width: 105, color: '#8A5A00', fontWeight: '700' }]}>
-                          {row.dispatchDate || row.date}
-                        </Text>
-                        <Text style={[styles.tdCell, { width: 95, color: '#1E7A45', fontWeight: '700' }]}>
-                          {row.dispatchTime || '—'}
-                        </Text>
-                        <Text style={[styles.tdCell, { width: 110, color: '#1E7A45', fontWeight: '700' }]}>
-                          {row.completedDate || '—'}
-                        </Text>
-                        <Text style={[styles.tdCell, { width: 95, color: '#0F766E', fontWeight: '700' }]}>
-                          {row.endTime || '—'}
-                        </Text>
-                        <Text style={[styles.tdCell, { width: 90, color: '#1E7A45', fontWeight: '700' }]}>
-                          {row.duration || '—'}
-                        </Text>
-                        <View style={[styles.tdCellWrap, { width: 115 }]}>
-                          <View style={styles.driverCodeBadge}>
-                            <Text style={styles.driverCodeBadgeText}>{row.driverIdentifier}</Text>
+                      <View key={trip.id} style={styles.tripRow}>
+                        {/* Top: Trip No + Date + Status */}
+                        <View style={styles.rowTop}>
+                          <View style={styles.tripNoWrap}>
+                            <Ionicons name="git-commit-outline" size={14} color={colors.primary} />
+                            <Text style={styles.tripNo}>{trip.tripNumber || 'ITT-TRIP'}</Text>
+                            <Text style={styles.tripDate}>{dateStr}</Text>
                           </View>
+                          <StatusPill status={trip.status} size="sm" />
                         </View>
-                        <Text style={[styles.tdCell, { width: 130, fontWeight: '700', color: '#1E293B' }]}>
-                          {row.driverName}
-                        </Text>
-                        <View style={[styles.tdCellWrap, { width: 110 }]}>
-                          <View style={styles.vehicleBadge}>
-                            <Ionicons name="bus" size={11} color="#feb300" />
-                            <Text style={styles.vehicleBadgeText}>{row.vehicleNo}</Text>
+
+                        {/* Mid Details: Driver & Vehicle */}
+                        <View style={styles.rowMid}>
+                          <View style={styles.midCol}>
+                            <Text style={styles.fieldLabel}>Driver</Text>
+                            <Text style={styles.fieldVal} numberOfLines={1}>
+                              {trip.driverName || trip.driverCode || '-'}
+                            </Text>
                           </View>
-                        </View>
-                        <View style={[styles.tdCellWrap, { width: 100 }]}>
-                          <View style={styles.cheBadge}>
-                            <Ionicons name="hardware-chip" size={10} color="#2563EB" />
-                            <Text style={styles.cheBadgeText}>{row.cheNo}</Text>
+
+                          <View style={styles.midCol}>
+                            <Text style={styles.fieldLabel}>Vehicle / Chassis</Text>
+                            <Text style={styles.fieldVal} numberOfLines={1}>
+                              {trip.vehicleNumber || '-'}
+                              {trip.chassisNumber ? ` (${trip.chassisNumber})` : ''}
+                            </Text>
                           </View>
-                        </View>
-                        <View style={[styles.tdCellWrap, { width: 210 }]}>
-                          <Text style={[styles.containerText, isDual20 ? styles.dualContainerText : null]}>
-                            {row.container}
-                          </Text>
-                          {isDual20 && (
-                            <View style={styles.dualBadgePill}>
-                              <Text style={styles.dualBadgePillText}>2 x 20FT DUAL CARRIED</Text>
-                            </View>
-                          )}
-                        </View>
-                        <View style={[styles.tdCellWrap, { width: 110 }]}>
-                          <View style={[styles.sizePill, isDual20 ? styles.sizePillDual : null]}>
-                            <Text style={[styles.sizePillText, isDual20 ? styles.sizePillTextDual : null]}>
-                              {row.sizeOfContainer}
+
+                          <View style={styles.midCol}>
+                            <Text style={styles.fieldLabel}>Route</Text>
+                            <Text style={styles.fieldVal} numberOfLines={1}>
+                              {trip.sourceTerminal || '-'} ➔ {trip.destTerminal || '-'}
                             </Text>
                           </View>
                         </View>
-                        <View style={[styles.tdCellWrap, { width: 135 }]}>
-                          <View
-                            style={[
-                              styles.dualBadgePill,
-                              row.containerType === 'RETURN'
-                                ? { backgroundColor: 'rgba(254, 179, 0, 0.16)', borderColor: '#feb300' }
-                                : { backgroundColor: '#EFF6FF', borderColor: '#2563EB' },
-                            ]}
-                          >
-                            <Ionicons
-                              name={row.containerType === 'RETURN' ? 'return-down-back' : 'cube-outline'}
-                              size={11}
-                              color={row.containerType === 'RETURN' ? '#feb300' : '#2563EB'}
-                            />
+
+                        {/* Containers */}
+                        {trip.containers && trip.containers.length > 0 && (
+                          <View style={styles.containersWrap}>
+                            {trip.containers.map((c, cIdx) => (
+                              <View key={c.id || cIdx} style={styles.containerBadge}>
+                                <Ionicons name="cube-outline" size={12} color={colors.primary} />
+                                <Text style={styles.containerNumber}>{c.containerNumber}</Text>
+                                <Text style={styles.containerSize}>{c.size || '40FT'}</Text>
+                                {c.damageStatus === 'DAMAGED' && (
+                                  <Text style={styles.damageTag}>DAMAGED</Text>
+                                )}
+                              </View>
+                            ))}
+                          </View>
+                        )}
+
+                        {/* Bottom Timing: Start, End, Duration */}
+                        <View style={styles.timingRow}>
+                          <View style={styles.timingItem}>
+                            <Text style={styles.timingLabel}>Start</Text>
+                            <Text style={styles.timingVal}>{startStr}</Text>
+                          </View>
+                          <View style={styles.timingItem}>
+                            <Text style={styles.timingLabel}>End</Text>
+                            <Text style={styles.timingVal}>{endStr}</Text>
+                          </View>
+                          <View style={styles.timingItem}>
+                            <Text style={styles.timingLabel}>Duration</Text>
                             <Text
                               style={[
-                                styles.dualBadgePillText,
-                                row.containerType === 'RETURN' ? { color: '#feb300' } : { color: '#2563EB' },
+                                styles.timingVal,
+                                durationStr === 'In progress' && styles.inProgressText,
                               ]}
                             >
-                              {row.containerType === 'RETURN' ? '🔄 RETURN' : '📦 STANDARD'}
+                              {durationStr}
                             </Text>
                           </View>
                         </View>
-                        <View style={[styles.tdCellWrap, { width: 115 }]}>
-                          <View style={[styles.damageBadge, isDamaged ? styles.damageBadgeRed : styles.damageBadgeGreen]}>
-                            <Ionicons
-                              name={isDamaged ? 'warning' : 'checkmark-circle'}
-                              size={11}
-                              color={isDamaged ? '#ff5252' : '#22ef7e'}
-                            />
-                            <Text style={[styles.damageBadgeText, isDamaged ? styles.damageTextRed : styles.damageTextGreen]}>
-                              {row.damageOrNot}
-                            </Text>
-                          </View>
-                        </View>
-                        <Text style={[styles.tdCell, { width: 105, fontWeight: '800', color: '#feb300' }]}>
-                          {row.loadTerminal}
-                        </Text>
-                        <Text style={[styles.tdCell, { width: 130, fontWeight: '800', color: '#22ef7e' }]}>
-                          {row.dischargeTerminal}
-                        </Text>
-                        <Text style={[styles.tdCell, { width: 105, fontSize: 10, color: '#849396' }]}>
-                          {row.tripNumber}
-                        </Text>
                       </View>
                     );
                   })}
                 </View>
-              </ScrollView>
-            )}
-          </View>
-        ) : (
-          /* ─── CARDS VIEW ─── */
-          <View style={{ gap: 10 }}>
-            {excelDataRows.length === 0 ? (
-              <View style={styles.emptyWrap}>
-                <Ionicons name="file-tray-outline" size={36} color="#849396" />
-                <Text style={styles.emptyTitle}>NO TRIPS MATCH YOUR SELECTION</Text>
-              </View>
-            ) : (
-              excelDataRows.map((r, i) => (
-                <View key={`${r.tripNumber}-${i}`} style={styles.cardItem}>
-                  <View style={styles.cardItemTop}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                      <View style={styles.driverCodeBadge}>
-                        <Text style={styles.driverCodeBadgeText}>{r.driverIdentifier}</Text>
-                      </View>
-                      <Text style={styles.cardDriverName}>{r.driverName}</Text>
-                    </View>
-                    <View style={[styles.damageBadge, r.damageOrNot === 'DAMAGED' ? styles.damageBadgeRed : styles.damageBadgeGreen]}>
-                      <Text style={[styles.damageBadgeText, r.damageOrNot === 'DAMAGED' ? styles.damageTextRed : styles.damageTextGreen]}>
-                        {r.damageOrNot}
-                      </Text>
-                    </View>
-                  </View>
-
-                  <View style={styles.specBadgesRow}>
-                    <View style={styles.vehicleBadge}>
-                      <Ionicons name="bus" size={11} color="#feb300" />
-                      <Text style={styles.vehicleBadgeText}>Vehicle: {r.vehicleNo}</Text>
-                    </View>
-                    <View style={styles.cheBadge}>
-                      <Ionicons name="hardware-chip" size={10} color="#2563EB" />
-                      <Text style={styles.cheBadgeText}>CHE: {r.cheNo}</Text>
-                    </View>
-                  </View>
-
-                  <View style={[styles.specBadgesRow, { marginTop: 4, flexWrap: 'wrap', gap: 6 }]}>
-                    <View
-                      style={[
-                        styles.dualBadgePill,
-                        r.containerType === 'RETURN'
-                          ? { backgroundColor: 'rgba(254, 179, 0, 0.16)', borderColor: '#feb300' }
-                          : { backgroundColor: '#EFF6FF', borderColor: '#2563EB' },
-                      ]}
-                    >
-                      <Ionicons
-                        name={r.containerType === 'RETURN' ? 'return-down-back' : 'cube-outline'}
-                        size={11}
-                        color={r.containerType === 'RETURN' ? '#feb300' : '#2563EB'}
-                      />
-                      <Text
-                        style={[
-                          styles.dualBadgePillText,
-                          r.containerType === 'RETURN' ? { color: '#feb300' } : { color: '#2563EB' },
-                        ]}
-                      >
-                        {r.containerType === 'RETURN' ? '🔄 RETURN CONTAINER' : '📦 STANDARD FREIGHT'}
-                      </Text>
-                    </View>
-                    <View style={styles.cheBadge}>
-                      <Ionicons name="time" size={10} color="#2563EB" />
-                      <Text style={[styles.cheBadgeText, { color: '#2563EB' }]}>
-                        Start: {r.date} {r.startTime || r.time}
-                      </Text>
-                    </View>
-                    <View style={[styles.cheBadge, { borderColor: 'rgba(34, 239, 126, 0.3)', backgroundColor: 'rgba(34, 239, 126, 0.1)' }]}>
-                      <Ionicons name="send" size={10} color="#22ef7e" />
-                      <Text style={[styles.cheBadgeText, { color: '#22ef7e' }]}>
-                        Disp Date: {r.dispatchDate || r.date} · Disp Time: {r.dispatchTime || '—'}
-                      </Text>
-                    </View>
-                    {r.completedDate ? (
-                      <View style={[styles.cheBadge, { borderColor: 'rgba(56, 239, 125, 0.3)', backgroundColor: 'rgba(56, 239, 125, 0.1)' }]}>
-                        <Ionicons name="checkmark-done" size={10} color="#38ef7d" />
-                        <Text style={[styles.cheBadgeText, { color: '#38ef7d' }]}>
-                          Done Date: {r.completedDate}
-                        </Text>
-                      </View>
-                    ) : null}
-                  </View>
-
-                  <View style={styles.cardRow}>
-                    <Text style={styles.cardLabel}>CONTAINER(S):</Text>
-                    <Text style={styles.cardValCyan}>{r.container} ({r.sizeOfContainer})</Text>
-                  </View>
-
-                  <View style={styles.cardRow}>
-                    <Text style={styles.cardLabel}>TERMINAL ROUTE:</Text>
-                    <Text style={styles.cardValRoute}>
-                      {r.loadTerminal} <Ionicons name="arrow-forward" size={10} color="#2563EB" /> {r.dischargeTerminal}
-                    </Text>
-                  </View>
-
-                  <View style={styles.cardRow}>
-                    <Text style={styles.cardLabel}>DISPATCH STAMP:</Text>
-                    <Text style={styles.cardValWhite}>{r.dispatchDate || r.date} at {r.dispatchTime || '—'}</Text>
-                  </View>
-
-                  <View style={styles.cardRow}>
-                    <Text style={styles.cardLabel}>COMPLETED DATE:</Text>
-                    <Text style={[styles.cardValWhite, { color: r.completedDate ? '#38ef7d' : '#849396' }]}>
-                      {r.completedDate || 'In Progress / Open'}
-                    </Text>
-                  </View>
-
-                  <View style={styles.cardRow}>
-                    <Text style={styles.cardLabel}>START / TRIP:</Text>
-                    <Text style={styles.cardValWhite}>{r.date} {r.startTime || r.time} · {r.tripNumber}</Text>
-                  </View>
-                </View>
-              ))
-            )}
+              );
+            })}
           </View>
         )}
-
-        {/* ─── 6. EXPORT ACTION BUTTONS (PDF & EXCEL) ─── */}
-        <View style={styles.exportSection}>
-          <View style={styles.exportButtonsRow}>
-            {/* EXCEL SPREADSHEET BUTTON */}
-            <TouchableOpacity style={styles.exportExcelBtn} onPress={handleExportExcel} activeOpacity={0.88}>
-              <Ionicons name="document-text" size={18} color="#FFFFFF" />
-              <Text style={styles.exportExcelBtnText}>EXPORT AS EXCEL (.XLS)</Text>
-            </TouchableOpacity>
-
-            {/* PDF DOCUMENT BUTTON */}
-            <TouchableOpacity style={styles.exportPdfBtn} onPress={handleExportPdf} activeOpacity={0.88}>
-              <Ionicons name="print" size={18} color="#ffffff" />
-              <Text style={styles.exportPdfBtnText}>EXPORT AS PDF</Text>
-            </TouchableOpacity>
-          </View>
-
-          <Text style={styles.exportHelpText}>
-            Export includes: Date · Time · Driver ID · Driver Name · Vehicle No · CHE No · Container(s) · Size · Damage · Load Terminal · Discharge Terminal · Status
-          </Text>
-        </View>
-
-        <View style={{ height: 40 }} />
       </ScrollView>
-
-      {/* ─── 7. INTERACTIVE CALENDAR MODAL (DAY / WEEK / MONTH / RANGE) ─── */}
-      <Modal
-        visible={calendarModalVisible}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setCalendarModalVisible(false)}
-      >
-        <View style={styles.modalBackdrop}>
-          <View style={styles.modalCard}>
-            {/* Modal Header */}
-            <View style={styles.modalHeader}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <Ionicons name="calendar" size={18} color="#2563EB" />
-                <Text style={styles.modalTitle}>
-                  {dateFilterMode === 'SINGLE' && 'SELECT SINGLE DATE'}
-                  {dateFilterMode === 'WEEK' && 'SELECT 7-DAY WEEK PERIOD'}
-                  {dateFilterMode === 'MONTH' && 'SELECT MONTHLY WINDOW'}
-                  {dateFilterMode === 'RANGE' && 'SELECT CUSTOM DATE RANGE'}
-                </Text>
-              </View>
-              <TouchableOpacity onPress={() => setCalendarModalVisible(false)} style={styles.closeModalBtn}>
-                <Ionicons name="close" size={20} color="#dde2f0" />
-              </TouchableOpacity>
-            </View>
-
-            {/* Mode Selector Tabs inside Modal */}
-            <View style={styles.modalModeToggleRow}>
-              {(['SINGLE', 'WEEK', 'MONTH', 'RANGE'] as const).map((m) => {
-                const isActive = dateFilterMode === m;
-                const label = m === 'SINGLE' ? 'DAY' : m;
-                return (
-                  <TouchableOpacity
-                    key={m}
-                    style={[styles.modalModeTab, isActive && styles.modalModeTabActive]}
-                    onPress={() => setDateFilterMode(m)}
-                  >
-                    <Text style={[styles.modalModeTabText, isActive && styles.modalModeTabTextActive]}>
-                      {label}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-
-            {/* Instruction prompt for the active mode */}
-            <View style={styles.modalInstructionBanner}>
-              <Ionicons name="information-circle" size={14} color="#2563EB" />
-              <Text style={styles.modalInstructionText}>
-                {dateFilterMode === 'SINGLE' && 'Tap any date to audit trips on that exact day.'}
-                {dateFilterMode === 'WEEK' && 'Tap start date; 7 days will be automatically selected.'}
-                {dateFilterMode === 'MONTH' && 'Tap start date; 30 days window will be automatically selected.'}
-                {dateFilterMode === 'RANGE' && (!dateRangeStart
-                  ? 'Tap the START date of your custom range.'
-                  : !dateRangeEnd
-                  ? `Start: ${dateRangeStart}. Now tap the END date.`
-                  : `Selected: ${dateRangeStart} ➔ ${dateRangeEnd}. Tap another day to reset.`)}
-              </Text>
-            </View>
-
-            {/* Calendar component */}
-            <Calendar
-              current={dateRangeStart || selectedDate || new Date().toISOString().split('T')[0]}
-              onDayPress={(day: { dateString: string }) => {
-                const clickedDate = day.dateString;
-
-                if (dateFilterMode === 'SINGLE') {
-                  handleSelectSingleDay(clickedDate);
-                } else if (dateFilterMode === 'WEEK') {
-                  // Select 7 days from clickedDate
-                  const startD = new Date(clickedDate + 'T00:00:00');
-                  const endD = new Date(startD);
-                  endD.setDate(startD.getDate() + 6);
-                  handleSelectCustomRange(clickedDate, formatDateISO(endD));
-                } else if (dateFilterMode === 'MONTH') {
-                  // Select 30 days window from clickedDate (e.g. Sept 20 to Oct 20)
-                  const startD = new Date(clickedDate + 'T00:00:00');
-                  const endD = new Date(startD);
-                  endD.setDate(startD.getDate() + 30);
-                  handleSelectCustomRange(clickedDate, formatDateISO(endD));
-                } else if (dateFilterMode === 'RANGE') {
-                  // 2-step custom range picker
-                  if (!dateRangeStart || (dateRangeStart && dateRangeEnd)) {
-                    setDateRangeStart(clickedDate);
-                    setDateRangeEnd(null);
-                    setSelectedDate(null);
-                  } else {
-                    if (clickedDate < dateRangeStart) {
-                      setDateRangeStart(clickedDate);
-                      setDateRangeEnd(dateRangeStart);
-                    } else {
-                      setDateRangeEnd(clickedDate);
-                    }
-                    setSelectedDate(null);
-                  }
-                }
-              }}
-              markingType={'period'}
-              markedDates={calendarMarkedDates}
-              theme={{
-                backgroundColor: '#FFFFFF',
-                calendarBackground: '#161c25',
-                textSectionTitleColor: '#2563EB',
-                selectedDayBackgroundColor: '#2563EB',
-                selectedDayTextColor: '#FFFFFF',
-                todayTextColor: '#feb300',
-                dayTextColor: '#dde2f0',
-                textDisabledColor: '#3b494c',
-                arrowColor: '#2563EB',
-                monthTextColor: '#2563EB',
-                indicatorColor: '#2563EB',
-                textDayFontWeight: '700',
-                textMonthFontWeight: '900',
-                textDayHeaderFontWeight: '800',
-                textDayFontSize: 13,
-                textMonthFontSize: 14,
-                textDayHeaderFontSize: 11,
-              }}
-              style={styles.calendarStyle}
-            />
-
-            {/* Selected Range Display Bar inside Modal */}
-            {(dateRangeStart || selectedDate) && (
-              <View style={styles.modalRangeInfoBox}>
-                <Ionicons name="time" size={14} color="#feb300" />
-                <Text style={styles.modalRangeInfoText}>
-                  {activeDateFilterLabel}
-                </Text>
-              </View>
-            )}
-
-            {/* Modal Bottom Actions */}
-            <View style={styles.modalActions}>
-              <TouchableOpacity
-                style={styles.modalPresetBtn}
-                onPress={() => handleSelectCustomRange('2026-09-20', '2026-10-20')}
-              >
-                <Text style={styles.modalPresetBtnText}>SEP 20 - OCT 20</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.modalTodayBtn}
-                onPress={() => {
-                  if (dateFilterMode === 'WEEK') {
-                    handleSelectWeekPreset(7);
-                    setCalendarModalVisible(false);
-                  } else if (dateFilterMode === 'MONTH') {
-                    handleSelectMonthPreset(1);
-                    setCalendarModalVisible(false);
-                  } else {
-                    handleSelectSingleDay(formatDateISO(new Date()));
-                  }
-                }}
-              >
-                <Text style={styles.modalTodayBtnText}>
-                  {dateFilterMode === 'WEEK' ? 'LAST 7 DAYS' : dateFilterMode === 'MONTH' ? 'LAST 30 DAYS' : 'TODAY'}
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.modalAllDatesBtn}
-                onPress={() => {
-                  handleClearAllDates();
-                  setCalendarModalVisible(false);
-                }}
-              >
-                <Text style={styles.modalAllDatesBtnText}>ALL DATES</Text>
-              </TouchableOpacity>
-            </View>
-
-            {/* Apply & Close button when range is picked */}
-            {dateFilterMode === 'RANGE' && dateRangeStart && dateRangeEnd && (
-              <TouchableOpacity
-                style={styles.modalApplyBtn}
-                onPress={() => setCalendarModalVisible(false)}
-              >
-                <Ionicons name="checkmark-circle" size={16} color="#FFFFFF" />
-                <Text style={styles.modalApplyBtnText}>APPLY SELECTED RANGE</Text>
-              </TouchableOpacity>
-            )}
-          </View>
-        </View>
-      </Modal>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  screen: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: colors.background,
   },
-  scroll: {
-    flexGrow: 1,
-    gap: 16,
-  },
-
-  // Header
   header: {
     flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingBottom: 4,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
   },
-  headerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  avatarCircle: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#2563EB',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  avatarText: {
-    color: '#FFFFFF',
-    fontWeight: '900',
+  headerTitle: {
     fontSize: 16,
+    fontWeight: '700',
+    color: colors.textPrimary,
   },
-  supervisorNameText: {
-    color: '#1E293B',
-    fontSize: 15,
-    fontWeight: '800',
-  },
-  roleDateRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
+  headerSub: {
+    fontSize: 11,
+    color: colors.textSecondary,
     marginTop: 2,
   },
-  rolePill: {
-    backgroundColor: '#EFF6FF',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
-  rolePillText: {
-    color: '#2563EB',
-    fontSize: 8,
-    fontWeight: '800',
-  },
-  dateText: {
-    color: '#849396',
-    fontSize: 9,
-    fontWeight: '700',
-  },
-  badgeWrap: {
+  headerActions: {
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: radius.DEFAULT,
-  },
-  badgeText: {
-    color: '#2563EB',
-    fontSize: 9,
-    fontWeight: '800',
-    letterSpacing: 0.6,
-  },
-
-  // Filter Card
-  filterCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: radius.DEFAULT,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    padding: 14,
-    gap: 14,
-  },
-  filterCardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0',
-    paddingBottom: 8,
-  },
-  filterCardTitle: {
-    color: '#2563EB',
-    fontSize: 12,
-    fontWeight: '900',
-    letterSpacing: 0.8,
-  },
-  resetBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: '#EFF6FF',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 4,
-    borderWidth: 1,
-    borderColor: '#feb300',
-  },
-  resetBtnText: {
-    color: '#feb300',
-    fontSize: 9,
-    fontWeight: '800',
-  },
-  filterBlock: {
-    gap: 6,
-  },
-  filterLabelRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  filterLabel: {
-    color: '#849396',
-    fontSize: 10,
-    fontWeight: '800',
-    letterSpacing: 0.6,
-  },
-  activeFilterPill: {
-    backgroundColor: '#EFF6FF',
-    paddingHorizontal: 6,
-    paddingVertical: 1,
-    borderRadius: 3,
-  },
-  activeFilterPillText: {
-    color: '#2563EB',
-    fontSize: 9,
-    fontWeight: '800',
-  },
-
-  // Date controls
-  dateControlRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
     gap: 8,
   },
-  calendarPickerBtn: {
-    flex: 1,
-    height: 40,
-    backgroundColor: '#F8FAFC',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    borderRadius: radius.DEFAULT,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 12,
-  },
-  calendarPickerBtnActive: {
-    backgroundColor: '#2563EB',
-    borderColor: '#2563EB',
-  },
-  calendarPickerBtnText: {
-    color: '#849396',
-    fontSize: 11,
-    fontWeight: '700',
-  },
-  calendarPickerBtnTextActive: {
-    color: '#FFFFFF',
-    fontWeight: '900',
-  },
-  clearDateBtn: {
+  exportBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: 'rgba(255, 82, 82, 0.1)',
-    borderWidth: 1,
-    borderColor: '#ff5252',
-    height: 40,
-    paddingHorizontal: 10,
-    borderRadius: radius.DEFAULT,
-  },
-  clearDateText: {
-    color: '#ff5252',
-    fontSize: 9,
-    fontWeight: '800',
-  },
-
-  // Chips Scroll
-  chipsScroll: {
-    gap: 6,
-    paddingVertical: 2,
-  },
-  terminalChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    backgroundColor: '#F8FAFC',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
     paddingHorizontal: 10,
     paddingVertical: 6,
-    borderRadius: radius.DEFAULT,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.primary,
+    backgroundColor: '#FFFFFF',
   },
-  terminalChipActive: {
-    backgroundColor: '#2563EB',
-    borderColor: '#2563EB',
+  exportBtnText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.primary,
   },
-  terminalChipText: {
-    color: '#849396',
-    fontSize: 10,
-    fontWeight: '800',
+  exportBtnPdf: {
+    backgroundColor: colors.primary,
   },
-  terminalChipTextActive: {
+  exportBtnPdfText: {
+    fontSize: 12,
+    fontWeight: '600',
     color: '#FFFFFF',
-    fontWeight: '900',
   },
-  driverChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    backgroundColor: '#F8FAFC',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: radius.DEFAULT,
+  scroll: {
+    flex: 1,
   },
-  driverChipActive: {
-    backgroundColor: '#feb300',
-    borderColor: '#feb300',
+  scrollContent: {
+    alignSelf: 'center',
+    width: '100%',
+    paddingVertical: spacing.md,
+    gap: spacing.md,
   },
-  driverChipText: {
-    color: '#849396',
-    fontSize: 10,
-    fontWeight: '800',
-  },
-  driverChipTextActive: {
-    color: '#432c00',
-    fontWeight: '900',
-  },
-
-  // Summary Metrics Bar
-  summaryBar: {
+  summaryStrip: {
     flexDirection: 'row',
     backgroundColor: '#FFFFFF',
-    borderRadius: radius.DEFAULT,
+    borderRadius: radius.lg,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
-    paddingVertical: 12,
+    borderColor: colors.border,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
     alignItems: 'center',
-    justifyContent: 'space-around',
+    justifyContent: 'space-between',
   },
   summaryItem: {
+    flex: 1,
     alignItems: 'center',
-  },
-  summaryNumber: {
-    fontSize: 18,
-    fontWeight: '900',
-    color: '#1E293B',
-  },
-  summaryLabel: {
-    fontSize: 8,
-    fontWeight: '800',
-    color: '#849396',
-    marginTop: 2,
-    letterSpacing: 0.6,
   },
   summaryDivider: {
     width: 1,
-    height: 24,
-    backgroundColor: '#242a34',
+    height: 28,
+    backgroundColor: colors.border,
   },
-
-  // Table Header Section
-  tableHeaderSection: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    flexWrap: 'wrap',
-    gap: 8,
+  summaryLabel: {
+    fontSize: 10,
+    textTransform: 'uppercase',
+    color: colors.textMuted,
+    fontWeight: '600',
   },
-  excelIconBox: {
-    width: 30,
-    height: 30,
-    borderRadius: 6,
-    backgroundColor: 'rgba(34, 239, 126, 0.1)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(34, 239, 126, 0.3)',
+  summaryValue: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: colors.textPrimary,
+    marginTop: 2,
   },
-  tableMainTitle: {
-    color: '#22ef7e',
-    fontSize: 12,
-    fontWeight: '900',
-    letterSpacing: 0.8,
-  },
-  tableSubTitle: {
-    color: '#849396',
-    fontSize: 9,
+  summaryHighlight: {
+    color: colors.primary,
     fontWeight: '700',
   },
-  viewToggleRow: {
-    flexDirection: 'row',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    padding: 2,
-  },
-  toggleBtn: {
+  groupByRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
-  },
-  toggleBtnActive: {
-    backgroundColor: '#2563EB',
-  },
-  toggleBtnText: {
-    fontSize: 9,
-    fontWeight: '800',
-    color: '#849396',
-  },
-  toggleBtnTextActive: {
-    color: '#FFFFFF',
-  },
-
-  // Excel Sheet Card
-  excelSheetCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: radius.DEFAULT,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    overflow: 'hidden',
-  },
-  tableRowHeader: {
-    flexDirection: 'row',
-    backgroundColor: '#F8FAFC',
-    borderBottomWidth: 2,
-    borderBottomColor: '#2563EB',
-    paddingVertical: 10,
-    paddingHorizontal: 6,
-    alignItems: 'center',
-  },
-  thCell: {
-    color: '#2563EB',
-    fontSize: 10,
-    fontWeight: '900',
-    letterSpacing: 0.6,
-    paddingHorizontal: 6,
-  },
-  tableRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 10,
-    paddingHorizontal: 6,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0',
-  },
-  tableRowEven: {
-    backgroundColor: '#FFFFFF',
-  },
-  tableRowOdd: {
-    backgroundColor: '#111721',
-  },
-  tdCell: {
-    fontSize: 11,
-    color: '#1E293B',
-    paddingHorizontal: 6,
-  },
-  tdCellWrap: {
-    paddingHorizontal: 6,
-    justifyContent: 'center',
-  },
-  driverCodeBadge: {
-    backgroundColor: '#EFF6FF',
-    borderWidth: 1,
-    borderColor: '#2563EB',
-    borderRadius: 4,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    alignSelf: 'flex-start',
-  },
-  driverCodeBadgeText: {
-    color: '#2563EB',
-    fontSize: 9,
-    fontWeight: '800',
-  },
-  vehicleBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: 'rgba(254, 179, 0, 0.1)',
-    borderWidth: 1,
-    borderColor: 'rgba(254, 179, 0, 0.3)',
-    borderRadius: 4,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    alignSelf: 'flex-start',
-  },
-  vehicleBadgeText: {
-    color: '#feb300',
-    fontSize: 9,
-    fontWeight: '800',
-  },
-  cheBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: '#EFF6FF',
-    borderWidth: 1,
-    borderColor: '#2563EB',
-    borderRadius: 4,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    alignSelf: 'flex-start',
-  },
-  cheBadgeText: {
-    color: '#2563EB',
-    fontSize: 9,
-    fontWeight: '800',
-  },
-  containerText: {
-    color: '#c3f5ff',
-    fontSize: 11,
-    fontWeight: '800',
-  },
-  dualContainerText: {
-    color: '#2563EB',
-    fontWeight: '900',
-  },
-  dualBadgePill: {
-    backgroundColor: '#EFF6FF',
-    borderRadius: 3,
+    gap: 8,
     paddingHorizontal: 4,
-    paddingVertical: 1,
-    marginTop: 2,
-    alignSelf: 'flex-start',
   },
-  dualBadgePillText: {
-    color: '#2563EB',
-    fontSize: 7.5,
-    fontWeight: '900',
+  groupByLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.textSecondary,
   },
-  sizePill: {
-    backgroundColor: '#242a34',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-    alignSelf: 'flex-start',
-  },
-  sizePillDual: {
-    backgroundColor: '#EFF6FF',
+  groupByBtn: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: radius.full,
     borderWidth: 1,
-    borderColor: '#2563EB',
+    borderColor: colors.border,
+    backgroundColor: '#FFFFFF',
   },
-  sizePillText: {
-    color: '#1E293B',
-    fontSize: 9,
-    fontWeight: '800',
+  groupByBtnActive: {
+    backgroundColor: colors.surfaceTeal,
+    borderColor: colors.primary,
   },
-  sizePillTextDual: {
-    color: '#2563EB',
-    fontWeight: '900',
+  groupByBtnText: {
+    fontSize: 11,
+    color: colors.textSecondary,
   },
-  damageBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 3,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-    borderWidth: 1,
-    alignSelf: 'flex-start',
+  groupByBtnTextActive: {
+    color: colors.primary,
+    fontWeight: '700',
   },
-  damageBadgeGreen: {
-    backgroundColor: 'rgba(34, 239, 126, 0.1)',
-    borderColor: '#22ef7e',
-  },
-  damageBadgeRed: {
-    backgroundColor: 'rgba(255, 82, 82, 0.12)',
-    borderColor: '#ff5252',
-  },
-  damageBadgeText: {
-    fontSize: 8,
-    fontWeight: '900',
-  },
-  damageTextGreen: { color: '#22ef7e' },
-  damageTextRed: { color: '#ff5252' },
-
-  // Empty State
-  emptyWrap: {
+  loadingBox: {
     padding: 32,
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
   },
-  emptyTitle: {
-    color: '#1E293B',
+  loadingText: {
     fontSize: 12,
-    fontWeight: '800',
+    color: colors.textSecondary,
   },
-  emptySubtitle: {
-    color: '#849396',
-    fontSize: 10,
-    textAlign: 'center',
-    maxWidth: 320,
-  },
-
-  // Card View Mode
-  cardItem: {
+  emptyBox: {
     backgroundColor: '#FFFFFF',
-    borderRadius: radius.DEFAULT,
+    borderRadius: radius.lg,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
-    padding: 12,
+    borderColor: colors.border,
+    padding: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
     gap: 8,
   },
-  cardItemTop: {
+  emptyText: {
+    fontSize: 13,
+    color: colors.textSecondary,
+    textAlign: 'center',
+  },
+  groupsContainer: {
+    gap: spacing.md,
+  },
+  groupCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    overflow: 'hidden',
+  },
+  groupHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.md,
+    paddingVertical: 10,
+    backgroundColor: colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0',
-    paddingBottom: 6,
+    borderBottomColor: colors.border,
   },
-  cardDriverName: {
-    color: '#1E293B',
-    fontSize: 12,
-    fontWeight: '800',
-  },
-  specBadgesRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  cardRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  cardLabel: {
-    color: '#849396',
-    fontSize: 10,
+  groupTitle: {
+    fontSize: 13,
     fontWeight: '700',
+    color: colors.textPrimary,
   },
-  cardValCyan: {
-    color: '#2563EB',
+  groupMeta: {
     fontSize: 11,
-    fontWeight: '800',
+    color: colors.textMuted,
+    marginTop: 2,
   },
-  cardValRoute: {
-    color: '#feb300',
-    fontSize: 11,
-    fontWeight: '800',
-  },
-  cardValWhite: {
-    color: '#1E293B',
-    fontSize: 10,
-    fontWeight: '600',
-  },
-
-  // Export Section
-  exportSection: {
-    gap: 8,
-    alignItems: 'center',
-    width: '100%',
-  },
-  exportButtonsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    width: '100%',
-  },
-  exportExcelBtn: {
-    flex: 1,
-    backgroundColor: '#22ef7e',
-    height: 48,
-    borderRadius: radius.DEFAULT,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    elevation: 4,
-    shadowColor: '#22ef7e',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 6,
-  },
-  exportExcelBtnText: {
-    color: '#FFFFFF',
-    fontSize: 12,
-    fontWeight: '900',
-    letterSpacing: 0.8,
-  },
-  exportPdfBtn: {
-    flex: 1,
-    backgroundColor: '#00838f',
-    height: 48,
-    borderRadius: radius.DEFAULT,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    elevation: 4,
-    shadowColor: '#2563EB',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 6,
-  },
-  exportPdfBtnText: {
-    color: '#1E293B',
-    fontSize: 12,
-    fontWeight: '900',
-    letterSpacing: 0.8,
-  },
-  exportHelpText: {
-    color: '#849396',
-    fontSize: 9,
-    textAlign: 'center',
-    lineHeight: 14,
-  },
-
-  // Calendar Modal
-  modalBackdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 16,
-  },
-  modalCard: {
-    width: '100%',
-    maxWidth: 380,
-    backgroundColor: '#FFFFFF',
-    borderRadius: radius.DEFAULT,
-    borderWidth: 1,
-    borderColor: '#2563EB',
-    padding: 16,
-    gap: 12,
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0',
-    paddingBottom: 10,
-  },
-  modalTitle: {
-    color: '#2563EB',
-    fontSize: 12,
-    fontWeight: '900',
-    letterSpacing: 0.8,
-  },
-  closeModalBtn: {
-    padding: 4,
-  },
-  calendarStyle: {
-    borderRadius: 8,
-  },
-  modalActions: {
-    flexDirection: 'row',
-    gap: 8,
-    marginTop: 4,
-  },
-  modalTodayBtn: {
-    flex: 1,
-    height: 38,
-    backgroundColor: '#2563EB',
-    borderRadius: radius.DEFAULT,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  modalTodayBtnText: {
-    color: '#FFFFFF',
-    fontWeight: '900',
-    fontSize: 11,
-  },
-  modalAllDatesBtn: {
-    flex: 1,
-    height: 38,
-    backgroundColor: '#EFF6FF',
-    borderRadius: radius.DEFAULT,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  modalAllDatesBtnText: {
-    color: '#1E293B',
-    fontWeight: '800',
-    fontSize: 11,
-  },
-
-  // ─── DATE MODE TABS & PRESETS ───
-  dateModeTabRow: {
-    flexDirection: 'row',
-    backgroundColor: '#F8FAFC',
-    borderRadius: radius.DEFAULT,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    padding: 3,
-    gap: 4,
-  },
-  dateModeTab: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 5,
-    paddingVertical: 7,
-    borderRadius: 6,
-  },
-  dateModeTabActive: {
-    backgroundColor: '#2563EB',
-  },
-  dateModeTabText: {
-    color: '#849396',
-    fontSize: 10,
-    fontWeight: '800',
-    letterSpacing: 0.6,
-  },
-  dateModeTabTextActive: {
-    color: '#FFFFFF',
-    fontWeight: '900',
-  },
-  presetsScroll: {
-    gap: 6,
+  groupCountBadge: {
+    backgroundColor: colors.surfaceTeal,
+    paddingHorizontal: 8,
     paddingVertical: 2,
+    borderRadius: radius.full,
   },
-  presetChip: {
-    backgroundColor: '#F8FAFC',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: radius.DEFAULT,
-  },
-  presetChipActive: {
-    backgroundColor: '#EFF6FF',
-    borderColor: '#2563EB',
-  },
-  presetChipText: {
-    color: '#849396',
-    fontSize: 10,
-    fontWeight: '800',
-  },
-  presetChipTextActive: {
-    color: '#2563EB',
-    fontWeight: '900',
-  },
-
-  // ─── MODAL EXTENSIONS ───
-  modalModeToggleRow: {
-    flexDirection: 'row',
-    backgroundColor: '#F8FAFC',
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    padding: 2,
-    gap: 4,
-  },
-  modalModeTab: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 6,
-    borderRadius: 4,
-  },
-  modalModeTabActive: {
-    backgroundColor: '#2563EB',
-  },
-  modalModeTabText: {
-    color: '#849396',
-    fontSize: 10,
-    fontWeight: '800',
-  },
-  modalModeTabTextActive: {
-    color: '#FFFFFF',
-    fontWeight: '900',
-  },
-  modalInstructionBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: '#EFF6FF',
-    borderWidth: 1,
-    borderColor: '#EFF6FF',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 6,
-  },
-  modalInstructionText: {
-    color: '#c3f5ff',
-    fontSize: 10,
+  groupCountText: {
+    fontSize: 11,
     fontWeight: '700',
-    flex: 1,
+    color: colors.primary,
   },
-  modalRangeInfoBox: {
+  tripRow: {
+    padding: spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+    gap: 8,
+  },
+  rowTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  tripNoWrap: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: 'rgba(254, 179, 0, 0.1)',
-    borderWidth: 1,
-    borderColor: 'rgba(254, 179, 0, 0.3)',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 6,
   },
-  modalRangeInfoText: {
-    color: '#feb300',
-    fontSize: 10,
-    fontWeight: '900',
+  tripNo: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: colors.textPrimary,
   },
-  modalPresetBtn: {
-    flex: 1.2,
-    height: 38,
-    backgroundColor: 'rgba(254, 179, 0, 0.15)',
-    borderWidth: 1,
-    borderColor: '#feb300',
-    borderRadius: radius.DEFAULT,
-    alignItems: 'center',
-    justifyContent: 'center',
+  tripDate: {
+    fontSize: 11,
+    color: colors.textMuted,
+    marginLeft: 4,
   },
-  modalPresetBtnText: {
-    color: '#feb300',
-    fontWeight: '900',
-    fontSize: 10,
-  },
-  modalApplyBtn: {
-    height: 42,
-    backgroundColor: '#2563EB',
-    borderRadius: radius.DEFAULT,
+  rowMid: {
     flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'space-between',
     gap: 8,
-    marginTop: 4,
   },
-  modalApplyBtnText: {
-    color: '#FFFFFF',
-    fontWeight: '900',
+  midCol: {
+    flex: 1,
+  },
+  fieldLabel: {
+    fontSize: 10,
+    color: colors.textMuted,
+    textTransform: 'uppercase',
+  },
+  fieldVal: {
     fontSize: 12,
-    letterSpacing: 0.6,
+    fontWeight: '600',
+    color: colors.textPrimary,
+    marginTop: 1,
   },
-  sortBtn: {
+  containersWrap: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    paddingTop: 4,
+  },
+  containerBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: radius.DEFAULT,
-    backgroundColor: '#EFF6FF',
-    borderWidth: 1,
-    borderColor: '#EFF6FF',
+    gap: 4,
+    backgroundColor: colors.surfaceTeal,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: radius.sm,
   },
-  sortBtnActive: {
-    backgroundColor: '#2563EB',
-    borderColor: '#2563EB',
+  containerNumber: {
+    fontSize: 11,
+    fontWeight: '700',
+    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
+    color: colors.primary,
   },
-  sortBtnText: {
-    color: '#2563EB',
+  containerSize: {
     fontSize: 10,
-    fontWeight: '800',
-    letterSpacing: 0.5,
+    color: colors.textSecondary,
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 4,
+    borderRadius: 3,
   },
-  sortBtnTextActive: {
-    color: '#FFFFFF',
+  damageTag: {
+    fontSize: 9,
+    color: colors.danger,
+    fontWeight: '700',
+    backgroundColor: '#FEE2E2',
+    paddingHorizontal: 4,
+    borderRadius: 3,
+  },
+  timingRow: {
+    flexDirection: 'row',
+    backgroundColor: colors.surface,
+    borderRadius: radius.sm,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    justifyContent: 'space-between',
+    marginTop: 2,
+  },
+  timingItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  timingLabel: {
+    fontSize: 10,
+    color: colors.textMuted,
+    textTransform: 'uppercase',
+  },
+  timingVal: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: colors.textPrimary,
+  },
+  inProgressText: {
+    color: colors.warning,
   },
 });

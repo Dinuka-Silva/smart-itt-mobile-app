@@ -1,57 +1,107 @@
 /**
  * SMART ITT - Trip Date & Time Utilities
- * Formats Start Date/Time and End Date/Time consistently across Driver & Supervisor interfaces.
+ * Timezone: Asia/Colombo (Sri Lanka Standard Time, UTC+05:30)
+ * Formats Start Date/Time and End Date/Time consistently across Driver, Supervisor & Admin.
  */
 
-export function formatTripDate(isoStr?: string, fallbackDate?: string): string {
-  if (isoStr) {
+const TIMEZONE = 'Asia/Colombo';
+
+export function formatDateTimeColombo(dateOrIso?: string | Date | null): string {
+  if (!dateOrIso) return '-';
+  try {
+    const d = typeof dateOrIso === 'string' ? new Date(dateOrIso) : dateOrIso;
+    if (isNaN(d.getTime())) return '-';
+
+    const datePart = d.toLocaleDateString('en-GB', {
+      timeZone: TIMEZONE,
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    }); // e.g. "05 Nov 2026"
+
+    const timePart = d.toLocaleTimeString('en-US', {
+      timeZone: TIMEZONE,
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+    }); // e.g. "02:30 PM"
+
+    return `${datePart}, ${timePart}`;
+  } catch {
+    return typeof dateOrIso === 'string' ? dateOrIso : '-';
+  }
+}
+
+export function formatDateColombo(dateOrIso?: string | Date | null): string {
+  if (!dateOrIso) return '-';
+  try {
+    const d = typeof dateOrIso === 'string' ? new Date(dateOrIso) : dateOrIso;
+    if (isNaN(d.getTime())) return '-';
+
+    return d.toLocaleDateString('en-GB', {
+      timeZone: TIMEZONE,
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    });
+  } catch {
+    return '-';
+  }
+}
+
+export function formatTimeColombo(dateOrIso?: string | Date | null): string {
+  if (!dateOrIso) return '-';
+  try {
+    // If format is like "08:35"
+    if (typeof dateOrIso === 'string' && /^\d{1,2}:\d{2}$/.test(dateOrIso)) {
+      const [h, m] = dateOrIso.split(':').map(Number);
+      const ampm = h >= 12 ? 'PM' : 'AM';
+      const h12 = h % 12 || 12;
+      return `${String(h12).padStart(2, '0')}:${String(m).padStart(2, '0')} ${ampm}`;
+    }
+
+    const d = typeof dateOrIso === 'string' ? new Date(dateOrIso) : dateOrIso;
+    if (isNaN(d.getTime())) return '-';
+
+    return d.toLocaleTimeString('en-US', {
+      timeZone: TIMEZONE,
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+    });
+  } catch {
+    return '-';
+  }
+}
+
+export function formatDurationText(
+  durationMinutes?: number | null,
+  startIso?: string | null,
+  endIso?: string | null
+): string {
+  let minutes: number | null = durationMinutes ?? null;
+
+  if (minutes == null && startIso && endIso) {
     try {
-      const d = new Date(isoStr);
-      if (!isNaN(d.getTime())) {
-        return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      const s = new Date(startIso).getTime();
+      const e = new Date(endIso).getTime();
+      const diff = e - s;
+      if (diff >= 0) {
+        minutes = Math.round(diff / (1000 * 60));
       }
     } catch {}
   }
-  if (fallbackDate) return fallbackDate;
-  return new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-}
 
-export function formatTripTime(timeOrIso?: string, fallbackTime?: string): string {
-  if (!timeOrIso) return fallbackTime || '08:30 AM';
-
-  // If already in "HH:MM" format (e.g. "08:35" or "14:20")
-  if (/^\d{1,2}:\d{2}$/.test(timeOrIso)) {
-    const [h, m] = timeOrIso.split(':').map(Number);
-    const ampm = h >= 12 ? 'PM' : 'AM';
-    const h12 = h % 12 || 12;
-    return `${String(h12).padStart(2, '0')}:${String(m).padStart(2, '0')} ${ampm}`;
+  if (minutes == null) {
+    return 'In progress';
   }
 
-  try {
-    const d = new Date(timeOrIso);
-    if (!isNaN(d.getTime())) {
-      return d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
-    }
-  } catch {}
-
-  return timeOrIso;
-}
-
-export function getTripDuration(startIso?: string, endIso?: string): string | null {
-  if (!startIso || !endIso) return null;
-  try {
-    const s = new Date(startIso).getTime();
-    const e = new Date(endIso).getTime();
-    const diff = e - s;
-    if (diff > 0) {
-      const totalMins = Math.round(diff / (1000 * 60));
-      if (totalMins < 60) return `${totalMins}m`;
-      const hrs = Math.floor(totalMins / 60);
-      const rem = totalMins % 60;
-      return rem > 0 ? `${hrs}h ${rem}m` : `${hrs}h`;
-    }
-  } catch {}
-  return null;
+  if (minutes < 60) {
+    return `${minutes}m`;
+  }
+  const hrs = Math.floor(minutes / 60);
+  const rem = minutes % 60;
+  return rem > 0 ? `${hrs}h ${rem}m` : `${hrs}h`;
 }
 
 export interface TripTimingInfo {
@@ -61,7 +111,7 @@ export interface TripTimingInfo {
   endDate: string;
   endTime: string;
   endFull: string;
-  duration: string | null;
+  duration: string;
   statusBadge: string;
   statusColor: string;
   isCompleted: boolean;
@@ -74,42 +124,56 @@ export function getTripTimingDetails(trip: any): TripTimingInfo {
   const isPending = trip.status === 'PENDING_APPROVAL';
   const isInProgress = trip.status === 'IN_PROGRESS' || trip.status === 'ARRIVED';
 
+  let statusColor = '#0F766E';
+  if (isCompleted) {
+    statusColor = '#059669';
+  } else if (isPending) {
+    statusColor = '#D97706';
+  } else if (trip.status === 'REJECTED') {
+    statusColor = '#DC2626';
+  } else {
+    statusColor = '#0F766E';
+  }
+
   // 1. Started Date & Time
   const startRaw = trip.startTime || trip.createdAt;
-  const startDate = formatTripDate(startRaw, trip.operationDate);
-  const startTime = formatTripTime(startRaw || trip.dispatchTime || trip.operationTime);
-  const startFull = `${startDate} · ${startTime}`;
+  const startDate = formatDateColombo(startRaw);
+  const startTime = formatTimeColombo(startRaw || trip.dispatchTime || trip.operationTime);
+  const startFull = startRaw ? formatDateTimeColombo(startRaw) : '-';
 
   // 2. End Date & Time
   const endRaw = trip.endTime || trip.dischargedAt;
-  let endDate = '';
-  let endTime = '';
-  let endFull = '';
-  let statusBadge = '';
-  let statusColor = '#2563EB';
+  let endDate = '-';
+  let endTime = '-';
+  let endFull = '-';
+  let statusBadge = trip.status || 'UNKNOWN';
 
   if (isCompleted) {
-    endDate = formatTripDate(endRaw, startDate);
-    endTime = formatTripTime(endRaw || trip.operationTime);
-    endFull = `${endDate} · ${endTime}`;
-    statusBadge = 'COMPLETED';
-    statusColor = '#16A34A';
+    endDate = formatDateColombo(endRaw);
+    endTime = formatTimeColombo(endRaw);
+    endFull = endRaw ? formatDateTimeColombo(endRaw) : `${startDate}, ${startTime}`;
+    statusBadge = trip.status === 'APPROVED' ? 'APPROVED' : 'COMPLETED';
   } else if (isPending) {
-    endDate = formatTripDate(endRaw, startDate);
-    endTime = endRaw ? formatTripTime(endRaw) : 'Awaiting Sign-off';
-    endFull = `${endDate} · ${endTime}`;
-    statusBadge = 'DELIVERED (PENDING SIGN-OFF)';
-    statusColor = '#D97706';
+    endDate = formatDateColombo(endRaw);
+    endTime = endRaw ? formatTimeColombo(endRaw) : 'Awaiting Approval';
+    endFull = endRaw ? formatDateTimeColombo(endRaw) : 'Awaiting Approval';
+    statusBadge = 'PENDING APPROVAL';
+  } else if (trip.status === 'REJECTED') {
+    endDate = formatDateColombo(endRaw);
+    endTime = formatTimeColombo(endRaw);
+    endFull = endRaw ? formatDateTimeColombo(endRaw) : '-';
+    statusBadge = 'REJECTED';
   } else {
-    endDate = 'IN TRANSIT';
-    endTime = 'Live Transit';
-    endFull = 'In Progress (Active Transit)';
-    statusBadge = 'LIVE TRANSIT';
-    statusColor = '#2563EB';
+    endDate = 'In Transit';
+    endTime = 'Live';
+    endFull = 'In progress';
+    statusBadge = 'IN PROGRESS';
   }
 
   // 3. Duration
-  const duration = isCompleted ? getTripDuration(startRaw, endRaw) : null;
+  const duration = isCompleted || trip.status === 'REJECTED'
+    ? formatDurationText(trip.durationMinutes, startRaw, endRaw)
+    : 'In progress';
 
   return {
     startDate,
