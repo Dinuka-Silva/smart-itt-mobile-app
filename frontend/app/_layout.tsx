@@ -27,9 +27,14 @@ function RouteSecurityController({ children }: { children: React.ReactNode }) {
   useSessionActivity();
   const segments = useSegments();
   const router = useRouter();
-  const { isAuthenticated, user, touchActivity, logoutTargetRoute } = useAuthStore();
+  const { isAuthenticated, user, touchActivity, logoutTargetRoute, isInitializing, initializeSession } = useAuthStore();
 
   useEffect(() => {
+    initializeSession();
+  }, [initializeSession]);
+
+  useEffect(() => {
+    if (isInitializing) return;
     const segmentList = (segments || []) as string[];
     if (segmentList.length === 0) return;
     const rootGroup = segmentList[0];

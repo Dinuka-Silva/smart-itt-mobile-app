@@ -3,6 +3,7 @@ import { storage } from '../services/storage';
 import apiClient, { registerUnauthorizedHandler } from '../services/api';
 import { biometricService } from '../services/biometricService';
 import { securityAuditService } from '../services/securityAuditService';
+import { credentialStore } from '../services/credentialStore';
 
 export type UserRole = 'DRIVER' | 'SUPERVISOR' | 'ADMIN';
 
@@ -48,12 +49,16 @@ export interface User {
 interface AuthState {
   user: User | null;
   isAuthenticated: boolean;
+  isInitializing: boolean;
+  isOfflineSession: boolean;
+  rememberMe: boolean;
   isSessionLocked: boolean;
   sessionTimeoutMinutes: number;
   lastActiveTimestamp: number;
   isBiometricEnabled: boolean;
   logoutTargetRoute: string | null;
-  login: (user: User) => Promise<void>;
+  initializeSession: () => Promise<boolean>;
+  login: (user: User, rememberMe?: boolean, isOffline?: boolean) => Promise<void>;
   updateUser: (partialUser: Partial<User>) => void;
   setVehicleStatus: (status: 'ACTIVE' | 'MAINTENANCE' | 'INACTIVE') => Promise<void>;
   logout: (targetRoute?: string) => Promise<void>;
@@ -73,29 +78,89 @@ export const useAuthStore = create<AuthState>((set, get) => {
   return {
     user: null,
     isAuthenticated: false,
+    isInitializing: true,
+    isOfflineSession: false,
+    rememberMe: true,
     isSessionLocked: false,
     sessionTimeoutMinutes: 5, // Default 5 minutes auto-lock
     lastActiveTimestamp: Date.now(),
     isBiometricEnabled: false,
     logoutTargetRoute: null,
 
-    login: async (user: User) => {
+    initializeSession: async (): Promise<boolean> => {
       try {
-        await storage.setItem('authToken', user.token);
-        const bioEnabled = await biometricService.isUserBiometricEnabled(user.username || user.driverCode || '');
+        const rememberMeVal = await storage.getItem('itt_remember_me');
+        const isRemembered = rememberMeVal !== 'false'; // Default to true if not set
+
+        const savedSessionJson = await storage.getItem('itt_user_session');
+        const savedToken = await storage.getItem('authToken');
+
+        if (isRemembered && savedSessionJson && savedToken) {
+          const userObj = JSON.parse(savedSessionJson) as User;
+          if (userObj && userObj.role && (userObj.username || userObj.driverCode)) {
+            // Verify account status (active vs suspended)
+            const identifier = userObj.username || userObj.driverCode || '';
+            const statusInfo = await credentialStore.getAccountStatus(identifier);
+            if (statusInfo.status !== 'SUSPENDED' && statusInfo.status !== 'DEACTIVATED') {
+              const bioEnabled = await biometricService.isUserBiometricEnabled(identifier);
+              set({
+                user: { ...userObj, token: savedToken },
+                isAuthenticated: true,
+                isSessionLocked: false,
+                isInitializing: false,
+                rememberMe: true,
+                lastActiveTimestamp: Date.now(),
+                isBiometricEnabled: bioEnabled,
+              });
+              return true;
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('[AuthStore] initializeSession error:', err);
+      }
+
+      set({
+        user: null,
+        isAuthenticated: false,
+        isSessionLocked: false,
+        isInitializing: false,
+      });
+      return false;
+    },
+
+    login: async (user: User, rememberMe: boolean = true, isOffline: boolean = false) => {
+      try {
+        await storage.setItem('authToken', user.token || 'offline-sec-token');
+        await storage.setItem('itt_remember_me', rememberMe ? 'true' : 'false');
+
+        const identifier = user.username || user.driverCode || user.employeeId || '';
+        const bioEnabled = await biometricService.isUserBiometricEnabled(identifier);
+
+        if (rememberMe) {
+          await storage.setItem('itt_user_session', JSON.stringify(user));
+          if (identifier) {
+            await storage.setItem('itt_remembered_username', identifier);
+          }
+        } else {
+          await storage.removeItem('itt_user_session');
+          await storage.removeItem('itt_remembered_username');
+        }
 
         set({
           user: { ...user, vehicleStatus: user.vehicleStatus || 'ACTIVE' },
           isAuthenticated: true,
           isSessionLocked: false,
+          isInitializing: false,
+          isOfflineSession: isOffline,
+          rememberMe,
           lastActiveTimestamp: Date.now(),
           isBiometricEnabled: bioEnabled,
         });
 
         const roleLabel = user.role || 'USER';
         const displayName = user.name || user.fullName || user.username || 'User';
-        const identifier = user.driverCode || user.employeeId || user.username || '';
-        let description = `${roleLabel} logged in: ${displayName} (${identifier})`;
+        let description = `${roleLabel} logged in: ${displayName} (${identifier})${isOffline ? ' [OFFLINE]' : ''}`;
         if (user.role === 'DRIVER' && user.vehicleNumber) {
           description += ` · Truck ${user.vehicleNumber}`;
         } else if (user.role === 'SUPERVISOR') {
@@ -116,11 +181,12 @@ export const useAuthStore = create<AuthState>((set, get) => {
             driverCode: user.driverCode,
             employeeId: user.employeeId,
             vehicleNumber: user.vehicleNumber,
+            isOffline,
           }
         );
 
-        // If user is a driver with assigned vehicle, ensure backend knows it is ACTIVE
-        if (user.role === 'DRIVER' && user.vehicleNumber) {
+        // If online and user is a driver with assigned vehicle, update backend vehicle status
+        if (!isOffline && user.role === 'DRIVER' && user.vehicleNumber) {
           apiClient
             .patch(`/vehicles/by-number/${encodeURIComponent(user.vehicleNumber)}/status`, {
               status: 'ACTIVE',
@@ -128,15 +194,19 @@ export const useAuthStore = create<AuthState>((set, get) => {
             .catch((err: any) => console.warn('[AuthStore] Status update on login failed:', err?.message || err));
         }
       } catch (error) {
-        console.error('Error saving token:', error);
-        set({ user, isAuthenticated: true, isSessionLocked: false, lastActiveTimestamp: Date.now() });
+        console.error('Error saving session:', error);
+        set({ user, isAuthenticated: true, isSessionLocked: false, isInitializing: false, lastActiveTimestamp: Date.now() });
       }
     },
 
     updateUser: (partialUser: Partial<User>) => {
-      set((state) => ({
-        user: state.user ? { ...state.user, ...partialUser } : null,
-      }));
+      set((state) => {
+        const updated = state.user ? { ...state.user, ...partialUser } : null;
+        if (updated && state.rememberMe) {
+          storage.setItem('itt_user_session', JSON.stringify(updated)).catch(() => {});
+        }
+        return { user: updated };
+      });
     },
 
     setVehicleStatus: async (status: 'ACTIVE' | 'MAINTENANCE' | 'INACTIVE') => {
@@ -159,7 +229,9 @@ export const useAuthStore = create<AuthState>((set, get) => {
 
     logout: async (targetRoute?: string) => {
       const currentUser = get().user;
-      if (currentUser?.role === 'DRIVER' && currentUser.vehicleNumber) {
+      const isOffline = get().isOfflineSession;
+
+      if (!isOffline && currentUser?.role === 'DRIVER' && currentUser.vehicleNumber) {
         try {
           await apiClient.patch(`/vehicles/by-number/${encodeURIComponent(currentUser.vehicleNumber)}/status`, {
             status: 'INACTIVE',
@@ -188,13 +260,20 @@ export const useAuthStore = create<AuthState>((set, get) => {
 
       try {
         await storage.removeItem('authToken');
+        await storage.removeItem('itt_user_session');
+        const rememberMeVal = await storage.getItem('itt_remember_me');
+        if (rememberMeVal !== 'true') {
+          await storage.removeItem('itt_remembered_username');
+        }
       } catch (error) {
-        console.error('Error deleting token:', error);
+        console.error('Error clearing session on logout:', error);
       }
+
       set({
         user: null,
         isAuthenticated: false,
         isSessionLocked: false,
+        isOfflineSession: false,
         logoutTargetRoute: targetRoute || null,
         lastActiveTimestamp: Date.now(),
       });

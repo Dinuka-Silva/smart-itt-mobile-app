@@ -15,7 +15,9 @@ export interface UserCredentialRecord {
   suspensionReason?: string;
   // Offline credentials caching (valid 7 days from last successful online login)
   lastOnlineLoginAt?: string;
-  onlineRole?: 'DRIVER' | 'SUPERVISOR';
+  onlineRole?: 'DRIVER' | 'SUPERVISOR' | 'ADMIN';
+  cachedUserProfile?: any; // Complete real user object from backend
+  cachedToken?: string;
   // Legacy migration compatibility fields
   currentPassword?: string;
   previousPasswords?: string[];
@@ -58,7 +60,13 @@ export const credentialStore = {
     const id = normalizeIdentifier(rawUsername);
     if (!id) return null;
     try {
-      const data = await storage.getItem(`${STORAGE_PREFIX}${id}`);
+      let data = await storage.getItem(`${STORAGE_PREFIX}${id}`);
+      if (!data) {
+        const rawUpper = rawUsername.trim().toUpperCase();
+        if (rawUpper !== id) {
+          data = await storage.getItem(`${STORAGE_PREFIX}${rawUpper}`);
+        }
+      }
       if (!data) return null;
 
       const record = JSON.parse(data) as UserCredentialRecord;
@@ -240,6 +248,10 @@ export const credentialStore = {
       hasChangedPassword: true,
       failedAttempts: 0,
       lockedUntil: null,
+      cachedUserProfile: existing?.cachedUserProfile,
+      cachedToken: existing?.cachedToken,
+      lastOnlineLoginAt: existing?.lastOnlineLoginAt,
+      onlineRole: existing?.onlineRole,
     };
 
     const recordJson = JSON.stringify(record);
@@ -290,6 +302,10 @@ export const credentialStore = {
       hasChangedPassword: false, // reset back to default password status
       failedAttempts: 0,
       lockedUntil: null,
+      cachedUserProfile: existing?.cachedUserProfile,
+      cachedToken: existing?.cachedToken,
+      lastOnlineLoginAt: existing?.lastOnlineLoginAt,
+      onlineRole: existing?.onlineRole,
     };
 
     const recordJson = JSON.stringify(record);
@@ -354,7 +370,7 @@ export const credentialStore = {
       await securityAuditService.logEvent(
         'SECURITY_POLICY_VIOLATION',
         rawUsername,
-        `Driver account marked SUSPENDED by Administration.${reason ? ` Reason: ${reason}` : ''}`,
+        `Account marked SUSPENDED by Administration.${reason ? ` Reason: ${reason}` : ''}`,
         'CRITICAL',
         'ADMIN',
         { status: 'SUSPENDED', reason }
@@ -404,15 +420,16 @@ export const credentialStore = {
   },
 
   /**
-   * Caches a salted SHA-256 hash upon successful ONLINE authentication.
-   * Admins are strictly barred from offline authentication.
+   * Caches a salted SHA-256 hash and the authenticated user profile upon successful ONLINE authentication.
+   * Supports Driver, Supervisor, and Admin accounts.
    */
   async cacheOnlineLogin(
     rawUsername: string,
     password: string,
-    role: 'DRIVER' | 'SUPERVISOR' | 'ADMIN'
+    role: 'DRIVER' | 'SUPERVISOR' | 'ADMIN',
+    userProfile?: any,
+    token?: string
   ): Promise<void> {
-    if (role === 'ADMIN') return; // Admin offline login is forbidden
     const id = normalizeIdentifier(rawUsername);
     if (!id || !password) return;
 
@@ -435,7 +452,9 @@ export const credentialStore = {
       failedAttempts: 0,
       lockedUntil: null,
       lastOnlineLoginAt: new Date().toISOString(),
-      onlineRole: role as 'DRIVER' | 'SUPERVISOR',
+      onlineRole: role,
+      cachedUserProfile: userProfile || record?.cachedUserProfile || null,
+      cachedToken: token || userProfile?.token || record?.cachedToken || null,
     };
 
     const recordJson = JSON.stringify(updated);
@@ -444,54 +463,67 @@ export const credentialStore = {
     if (rawUpper !== id) {
       await storage.setItem(`${STORAGE_PREFIX}${rawUpper}`, recordJson);
     }
+
+    // Cross-index all identifier aliases for seamless offline lookup
+    if (userProfile) {
+      const aliases = [
+        userProfile.username,
+        userProfile.driverCode,
+        userProfile.employeeId,
+        userProfile.email,
+      ].filter(Boolean);
+
+      for (const alias of aliases) {
+        const aliasNorm = normalizeIdentifier(alias);
+        if (aliasNorm && aliasNorm !== id) {
+          await storage.setItem(`${STORAGE_PREFIX}${aliasNorm}`, recordJson);
+        }
+      }
+    }
   },
 
   /**
    * Verifies password against the stored salted hash offline.
    * Strict Rules:
-   * 1. Never allow Admin offline login.
-   * 2. Allowed ONLY for drivers/supervisors who previously logged in ONLINE on this device.
+   * 1. Supports Driver, Supervisor, and Admin accounts.
+   * 2. Allowed ONLY for users who previously logged in ONLINE on this device.
    * 3. Cached offline credentials expire after 7 days.
    * 4. Enforces lockout and suspension checks.
-   * 5. No default-password fallbacks ('driver', 'password', etc.).
+   * 5. No default-password bypasses.
+   * 6. Returns user-friendly error messages matching security specifications.
    */
   async verifyOffline(
     rawUsername: string,
     testPassword: string,
-    role: 'DRIVER' | 'SUPERVISOR' | 'ADMIN'
+    role?: 'DRIVER' | 'SUPERVISOR' | 'ADMIN'
   ): Promise<{
     valid: boolean;
     isOldPassword?: boolean;
     isSuspended?: boolean;
+    isExpired?: boolean;
     errorMessage?: string;
+    user?: any;
+    token?: string;
   }> {
-    // 1. Never allow Admin offline login
-    if (role === 'ADMIN') {
-      return {
-        valid: false,
-        errorMessage: 'Offline login is disabled for Administrators. An active network connection to the server is required.',
-      };
-    }
-
-    // 2. Check account suspension status first
+    // 1. Check account suspension status first
     const accStatus = await this.getAccountStatus(rawUsername);
     if (accStatus.status === 'SUSPENDED') {
       const reasonPart = accStatus.reason ? `\n\nReason: ${accStatus.reason}` : '';
       return {
         valid: false,
         isSuspended: true,
-        errorMessage: `ACCOUNT SUSPENDED: Your account has been suspended by Administration.${reasonPart}\n\nYou cannot log in to the SMART ITT system. Please contact the Operations Supervisor or Administration.`,
+        errorMessage: `ACCOUNT SUSPENDED: Your account has been suspended by Administration.${reasonPart}\n\nYou cannot access the SMART ITT system. Please contact the Operations Supervisor or Administration.`,
       };
     }
     if (accStatus.status === 'DEACTIVATED') {
       return {
         valid: false,
         isSuspended: true,
-        errorMessage: 'ACCOUNT DEACTIVATED: This driver profile has been deactivated by Administration. Access denied.',
+        errorMessage: 'ACCOUNT DEACTIVATED: This profile has been deactivated by Administration. Access denied.',
       };
     }
 
-    // 3. Check lockout
+    // 2. Check lockout
     const lockout = await this.getLockoutStatus(rawUsername);
     if (lockout.isLocked) {
       return {
@@ -503,32 +535,35 @@ export const credentialStore = {
     const cleanPass = (testPassword || '').trim();
     const record = await this.getRecord(rawUsername);
 
-    // 4. Require prior successful online login
+    // 3. Require prior successful online login on this device
     if (!record || !record.lastOnlineLoginAt || !record.passwordHash || !record.salt) {
       return {
         valid: false,
-        errorMessage:
-          'Offline login unavailable: You must sign in online at least once on this device while connected to the server.',
+        errorMessage: 'Please connect to the internet and log in once to enable offline access.',
       };
     }
 
-    // 5. Check 7-day expiry
+    // 4. Check 7-day expiry
     const OFFLINE_LOGIN_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
     const lastLoginTime = new Date(record.lastOnlineLoginAt).getTime();
     if (isNaN(lastLoginTime) || Date.now() - lastLoginTime > OFFLINE_LOGIN_MAX_AGE_MS) {
       return {
         valid: false,
-        errorMessage:
-          'Offline login expired: Offline access is valid for 7 days after your last online sign-in. Please connect to the network to sign in.',
+        isExpired: true,
+        errorMessage: 'Your session has expired. Please connect to the internet and log in again.',
       };
     }
 
-    // 6. Test password hash against cached online hash
+    // 5. Test password hash against cached online hash
     const testHash = await hashWithSalt(record.salt, cleanPass);
 
     if (testHash === record.passwordHash) {
       await this.recordSuccessfulAttempt(rawUsername);
-      return { valid: true };
+      return {
+        valid: true,
+        user: record.cachedUserProfile,
+        token: record.cachedToken || 'offline-sec-token',
+      };
     }
 
     // Check if the user entered an old archived password
@@ -546,7 +581,7 @@ export const credentialStore = {
 
     return {
       valid: false,
-      errorMessage: 'Incorrect username or password. Please try again.',
+      errorMessage: 'Invalid username or password.',
     };
   },
 };

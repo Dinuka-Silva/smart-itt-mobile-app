@@ -2,19 +2,24 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { Platform } from 'react-native';
 import axios from 'axios';
 import API_BASE_URL, { API_KEY } from '../config/api';
+import { dataSyncService } from '../services/dataSyncService';
 
-const PING_TIMEOUT_MS = 3000;
+const PING_TIMEOUT_MS = 4000;
 const CHECK_INTERVAL_MS = 15000;
 
 export function useNetworkStatus() {
   const [isOnline, setIsOnline] = useState<boolean>(true);
   const [isChecking, setIsChecking] = useState<boolean>(false);
   const isMounted = useRef(true);
+  const prevOnlineRef = useRef<boolean>(true);
 
   const checkConnection = useCallback(async (): Promise<boolean> => {
     // Immediate browser navigator check if completely disconnected
     if (Platform.OS === 'web' && typeof navigator !== 'undefined' && 'onLine' in navigator && !navigator.onLine) {
-      if (isMounted.current) setIsOnline(false);
+      if (isMounted.current) {
+        setIsOnline(false);
+        prevOnlineRef.current = false;
+      }
       return false;
     }
 
@@ -34,11 +39,22 @@ export function useNetworkStatus() {
       clearTimeout(timer);
       const reachable = res.status >= 200 && res.status < 500;
       if (isMounted.current) {
+        // Automatic reconnection detection: sync pending local data
+        if (!prevOnlineRef.current && reachable) {
+          console.log('[Network] Internet restored. Triggering automatic background sync...');
+          dataSyncService.performDryRun().then((report) => {
+            if (report.pendingUploads.trips.length > 0) {
+              dataSyncService.executeApprovedSync(report).catch(() => {});
+            }
+          }).catch(() => {});
+        }
+        prevOnlineRef.current = reachable;
         setIsOnline(reachable);
       }
       return reachable;
     } catch {
       if (isMounted.current) {
+        prevOnlineRef.current = false;
         setIsOnline(false);
       }
       return false;
@@ -59,7 +75,10 @@ export function useNetworkStatus() {
     if (Platform.OS === 'web' && typeof window !== 'undefined') {
       const handleOnline = () => checkConnection();
       const handleOffline = () => {
-        if (isMounted.current) setIsOnline(false);
+        if (isMounted.current) {
+          prevOnlineRef.current = false;
+          setIsOnline(false);
+        }
       };
       window.addEventListener('online', handleOnline);
       window.addEventListener('offline', handleOffline);
@@ -80,4 +99,3 @@ export function useNetworkStatus() {
 
   return { isOnline, isChecking, checkConnection };
 }
-

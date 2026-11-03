@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { ActivityIndicator, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 
@@ -9,9 +9,15 @@ import { useAuthStore } from '../src/store/authStore';
 export default function Index() {
   const router = useRouter();
   const theme = useTheme();
-  const { isAuthenticated, user } = useAuthStore();
+  const { isAuthenticated, user, isInitializing, initializeSession } = useAuthStore();
 
   useEffect(() => {
+    initializeSession();
+  }, [initializeSession]);
+
+  useEffect(() => {
+    if (isInitializing) return;
+
     if (!isAuthenticated || !user) {
       router.replace('/(auth)/login');
     } else if (user.role === 'DRIVER') {
@@ -21,7 +27,7 @@ export default function Index() {
     } else {
       router.replace('/(supervisor)/(tabs)');
     }
-  }, [isAuthenticated, user, router]);
+  }, [isInitializing, isAuthenticated, user, router]);
 
   return (
     <ThemedView style={styles.container}>

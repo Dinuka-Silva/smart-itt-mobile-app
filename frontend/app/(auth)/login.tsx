@@ -13,10 +13,10 @@ import {
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuthStore } from '../../src/store/authStore';
+import { useAuthStore, User } from '../../src/store/authStore';
 import { authService } from '../../src/services/authService';
 import { credentialStore } from '../../src/services/credentialStore';
-import { adminFleetStore } from '../../src/store/adminFleetStore';
+import { storage } from '../../src/services/storage';
 import { biometricService, BiometricStatus } from '../../src/services/biometricService';
 import { securityAuditService } from '../../src/services/securityAuditService';
 import { ForceChangePasswordModal } from '../../src/components/ForceChangePasswordModal';
@@ -48,6 +48,27 @@ export default function LoginScreen() {
   useEffect(() => {
     biometricService.getStatus().then(setBiometricStatus);
   }, []);
+
+  // Load remembered preferences
+  useEffect(() => {
+    const loadSavedPreferences = async () => {
+      try {
+        const savedRemember = await storage.getItem('itt_remember_me');
+        if (savedRemember !== null) {
+          setRememberMe(savedRemember !== 'false');
+        }
+        if (!params.prefillUser) {
+          const rememberedUser = await storage.getItem('itt_remembered_username');
+          if (rememberedUser) {
+            setUsername(rememberedUser);
+          }
+        }
+      } catch (e) {
+        // ignore
+      }
+    };
+    loadSavedPreferences();
+  }, [params.prefillUser]);
 
   // Lockout countdown timer
   useEffect(() => {
@@ -247,10 +268,10 @@ export default function LoginScreen() {
         return;
       }
 
-      // Cache salted hash for offline login (valid 7 days for drivers/supervisors; never admin)
-      await credentialStore.cacheOnlineLogin(cleanUser, cleanPass, resolvedRole);
+      // Cache salted hash, profile and token for offline login (valid 7 days for all roles)
+      await credentialStore.cacheOnlineLogin(cleanUser, cleanPass, resolvedRole, user, authResponse.token);
 
-      await login(user);
+      await login(user, rememberMe, false);
       if (user.role === 'ADMIN') router.replace('/(admin)/(tabs)');
       else if (user.role === 'SUPERVISOR') router.replace('/(supervisor)/(tabs)');
       else router.replace('/(driver)/(tabs)');
@@ -289,25 +310,22 @@ export default function LoginScreen() {
           ? 'Incorrect password: You entered your old password. Please enter your newly updated password.'
           : lockoutCheck.isLocked
           ? `Account locked due to multiple failed attempts. Try again in ${lockoutCheck.remainingSeconds}s.`
-          : 'Incorrect username or password. Please try again.';
+          : 'Invalid username or password.';
         setErrorMessage(msg);
         Alert.alert(isOld ? 'Old Password Entered' : 'Authentication Failed', msg);
         setLoading(false);
         return;
       }
 
-      // Offline Credential Verification:
+      // 3. Network error or server offline: Attempt secure offline authentication
       const upperUser = cleanUser.toUpperCase();
       const isAdminFormat = upperUser.includes('ADMIN') || upperUser === 'ADMIN@SMARTITT.LK';
       const isSupervisorFormat = isSupervisorIdentified || upperUser === 'SUPERVISOR' || upperUser === 'SUPERVISOR1' || upperUser === 'SUPERVISOR@SMARTITT.LK';
       const role: 'ADMIN' | 'SUPERVISOR' | 'DRIVER' = isAdminFormat ? 'ADMIN' : (isSupervisorFormat ? 'SUPERVISOR' : 'DRIVER');
 
-      // Check if driver is marked suspended in fleet store or local credential store
-      const fleetDriver = adminFleetStore.getDriver(cleanUser);
+      // Check if driver is marked suspended in local credential store
       const credStatus = await credentialStore.getAccountStatus(cleanUser);
-      const isSuspendedLocally = (fleetDriver && fleetDriver.status === 'SUSPENDED') || credStatus.status === 'SUSPENDED';
-
-      if (isSuspendedLocally) {
+      if (credStatus.status === 'SUSPENDED') {
         const reason = credStatus.reason || 'Administrative suspension';
         const suspendMsg = `Account Suspended: Your driver account has been suspended by Administration.${reason ? `\n\nNotice: ${reason}` : ''}\n\nYou cannot access the SMART ITT system. Please contact the Operations Supervisor or Port Administration.`;
         setErrorMessage(suspendMsg);
@@ -317,7 +335,7 @@ export default function LoginScreen() {
           cleanUser,
           `Suspended driver login blocked: ${cleanUser}`,
           'WARNING',
-          'DRIVER'
+          role
         );
         setLoading(false);
         return;
@@ -325,20 +343,7 @@ export default function LoginScreen() {
 
       const isNetworkError = !err?.response || err?.code === 'ERR_NETWORK' || err?.message === 'Network Error' || Boolean(err?.isNetworkError);
 
-      if (role === 'ADMIN') {
-        const adminOfflineMsg = isNetworkError
-          ? 'Unable to connect to server. Please check your network connection.'
-          : 'System Administrator sign-in requires an active network connection to the server. Offline login is disabled.';
-        setErrorMessage(adminOfflineMsg);
-        Alert.alert('Connection Error', adminOfflineMsg, [
-          { text: 'Cancel', style: 'cancel' },
-          { text: 'Retry', onPress: () => handleLogin() }
-        ]);
-        setLoading(false);
-        return;
-      }
-
-      const verifyResult = await credentialStore.verifyOffline(cleanUser, cleanPass, role as any);
+      const verifyResult = await credentialStore.verifyOffline(cleanUser, cleanPass, role);
 
       if (!verifyResult.valid) {
         if (verifyResult.isSuspended) {
@@ -350,25 +355,30 @@ export default function LoginScreen() {
             cleanUser,
             `Suspended driver login blocked: ${cleanUser}`,
             'WARNING',
-            role as any
+            role
           );
           setLoading(false);
           return;
         }
 
-        const lockStatus = await credentialStore.getLockoutStatus(cleanUser);
-        if (lockStatus.isLocked) {
-          setLockoutSeconds(lockStatus.remainingSeconds);
+        if (verifyResult.errorMessage === 'Invalid username or password.') {
+          const lockStatus = await credentialStore.recordFailedAttempt(cleanUser);
+          if (lockStatus.isLocked) {
+            setLockoutSeconds(lockStatus.remainingSeconds);
+            const lockMsg = `Account locked due to multiple failed attempts. Try again in ${lockStatus.remainingSeconds}s.`;
+            setErrorMessage(lockMsg);
+            Alert.alert('Authentication Failed', lockMsg);
+            setLoading(false);
+            return;
+          }
         }
 
-        const errorText = isNetworkError
-          ? 'Unable to connect to server. Please check your network connection.'
-          : verifyResult.errorMessage || 'Incorrect username or password. Please try again.';
+        const errorText = verifyResult.errorMessage || (isNetworkError ? 'Unable to connect to the server. Please try again.' : 'Invalid username or password.');
         setErrorMessage(errorText);
         Alert.alert(
-          isNetworkError ? 'Connection Error' : (verifyResult.isOldPassword ? 'Old Password Entered' : 'Authentication Failed'),
-          isNetworkError ? `${errorText}\n\nPlease check your network connection and try again.` : errorText,
-          isNetworkError
+          isNetworkError && !verifyResult.errorMessage ? 'Connection Error' : 'Authentication Failed',
+          errorText,
+          isNetworkError && !verifyResult.errorMessage
             ? [
                 { text: 'Cancel', style: 'cancel' },
                 { text: 'Retry', onPress: () => handleLogin() }
@@ -379,57 +389,30 @@ export default function LoginScreen() {
         return;
       }
 
-      const isSupervisor = role === 'SUPERVISOR';
+      // Offline credentials verified successfully!
+      await credentialStore.recordSuccessfulAttempt(cleanUser);
 
-      const mockUser = {
-        id: isSupervisor ? 'sup-demo-001' : (fleetDriver?.id || 'demo-user-123'),
-        username: fleetDriver?.username || cleanUser,
-        role: role as any,
-        name: isSupervisor ? 'Nimal Silva (Supervisor)' : (fleetDriver?.fullName || 'Kamal Perera (Driver)'),
-        fullName: isSupervisor ? 'Nimal Silva (Supervisor)' : (fleetDriver?.fullName || 'Kamal Perera (Driver)'),
-        token: 'demo-token-xyz',
-        employeeId: isSupervisor ? (cleanUser.toUpperCase().startsWith('SUP') ? cleanUser.toUpperCase() : 'SUP001') : (fleetDriver?.employeeId || undefined),
-        supervisorId: isSupervisor ? 'sup-123' : undefined,
-        supervisorPortPassExpiryDate: isSupervisor ? '2026-11-18' : undefined,
-        driverId: isSupervisor ? undefined : (fleetDriver?.id || 'driver-123'),
-        driverCode: isSupervisor ? undefined : (fleetDriver?.driverCode || (cleanUser.toUpperCase().startsWith('DRV') ? cleanUser.toUpperCase() : 'DRV-00001')),
-        vehicleNumber: isSupervisor ? undefined : (fleetDriver?.vehicleNumber || 'LY-6439'),
-        chassisNumber: isSupervisor ? undefined : (fleetDriver?.chassisNumber || 'CHE 100'),
-        cheNumber: isSupervisor ? undefined : (fleetDriver?.cheNumber || 'CHE 100'),
-        operator: isSupervisor ? undefined : ((fleetDriver as any)?.operator || 'SCK Logistics'),
-        status: fleetDriver?.status || 'ACTIVE',
-        mobileNumber: fleetDriver?.mobileNumber,
-        email: fleetDriver?.email,
-        nic: fleetDriver?.nic,
-        address: fleetDriver?.address,
-        licenseNumber: fleetDriver?.licenseNumber,
-        licenseExpiryDate: fleetDriver?.licenseExpiryDate,
-        dateOfBirth: fleetDriver?.dateOfBirth,
-        emergencyContactName: fleetDriver?.emergencyContactName,
-        emergencyContactNumber: fleetDriver?.emergencyContactNumber,
-        profilePhoto: fleetDriver?.profilePhoto,
-        coverImage: fleetDriver?.coverImage,
-        driverPortPassExpiryDate: fleetDriver?.driverPortPassExpiryDate,
-        vehiclePortPassExpiryDate: fleetDriver?.vehiclePortPassExpiryDate,
-      };
+      const offlineUser: User = {
+        ...(verifyResult.user || {}),
+        id: verifyResult.user?.id || cleanUser,
+        username: verifyResult.user?.username || cleanUser,
+        role: (verifyResult.user?.role || role) as any,
+        name: verifyResult.user?.name || verifyResult.user?.fullName || cleanUser,
+        token: verifyResult.user?.token || 'offline-sec-token',
+        status: verifyResult.user?.status || 'ACTIVE',
+      } as User;
 
-      if (mockUser.status === 'SUSPENDED') {
+      if (offlineUser.status === 'SUSPENDED') {
         const suspendMsg = 'Account Suspended: Your driver account has been suspended by Administration. You cannot access the SMART ITT system. Please contact the Operations Supervisor or Administration.';
         setErrorMessage(suspendMsg);
         Alert.alert('Account Suspended', suspendMsg);
-        await securityAuditService.logEvent(
-          'LOGIN_FAILED',
-          cleanUser,
-          `Suspended driver login blocked: ${cleanUser}`,
-          'WARNING',
-          'DRIVER'
-        );
         setLoading(false);
         return;
       }
 
-      await login(mockUser as any);
-      if (role === 'SUPERVISOR') router.replace('/(supervisor)/(tabs)');
+      await login(offlineUser, rememberMe, true);
+      if (offlineUser.role === 'ADMIN') router.replace('/(admin)/(tabs)');
+      else if (offlineUser.role === 'SUPERVISOR') router.replace('/(supervisor)/(tabs)');
       else router.replace('/(driver)/(tabs)');
     } finally {
       setLoading(false);
@@ -440,14 +423,14 @@ export default function LoginScreen() {
     setErrorMessage(null);
     const cleanUser = username.trim();
     if (!cleanUser) {
-      setErrorMessage('Please enter your Operator Code first to use Biometrics.');
+      setErrorMessage('Please enter your Operator Code or Username first to use Biometrics.');
+      Alert.alert('Username Required', 'Please enter your Operator Code or Username first to authenticate with Biometrics.');
       return;
     }
 
     // Check if account is suspended before authenticating with biometrics
-    const fleetDriver = adminFleetStore.getDriver(cleanUser);
     const credStatus = await credentialStore.getAccountStatus(cleanUser);
-    if ((fleetDriver && fleetDriver.status === 'SUSPENDED') || credStatus.status === 'SUSPENDED') {
+    if (credStatus.status === 'SUSPENDED') {
       const suspendMsg = 'Account Suspended: Your driver account has been suspended by Administration. Biometric access denied. Please contact Port Administration.';
       setErrorMessage(suspendMsg);
       Alert.alert('Account Suspended', suspendMsg);
@@ -479,65 +462,35 @@ export default function LoginScreen() {
           'INFO'
         );
 
-        const upperUser = cleanUser.toUpperCase();
-        const isAdmin = upperUser.includes('ADMIN');
-        const isSup = isSupervisorIdentified || upperUser.startsWith('SUP');
-        const role = isAdmin ? 'ADMIN' : (isSup ? 'SUPERVISOR' : 'DRIVER');
-
-        if (isAdmin) {
-          const adminBioMsg = 'System Administrator sign-in requires online password verification.';
-          setErrorMessage(adminBioMsg);
-          Alert.alert('Network Required', adminBioMsg);
-          return;
-        }
-
         const credRecord = await credentialStore.getRecord(cleanUser);
-        if (!credRecord || !credRecord.lastOnlineLoginAt) {
-          const msg = 'Biometric sign-in requires a prior successful online sign-in on this device.';
+        if (!credRecord || !credRecord.lastOnlineLoginAt || !credRecord.cachedUserProfile) {
+          const msg = 'Please connect to the internet and log in once to enable offline access.';
           setErrorMessage(msg);
           Alert.alert('Online Sign-In Required', msg);
           return;
         }
+
         const OFFLINE_LOGIN_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
         const lastLoginTime = new Date(credRecord.lastOnlineLoginAt).getTime();
         if (isNaN(lastLoginTime) || Date.now() - lastLoginTime > OFFLINE_LOGIN_MAX_AGE_MS) {
-          const msg = 'Biometric sign-in expired: Please sign in online with your password to re-enable offline access.';
+          const msg = 'Your session has expired. Please connect to the internet and log in again.';
           setErrorMessage(msg);
           Alert.alert('Session Expired', msg);
           return;
         }
 
-        const mockUser = {
-          id: isSup ? 'sup-demo-001' : (isAdmin ? 'admin-root' : (fleetDriver?.id || 'demo-user-123')),
-          username: fleetDriver?.username || cleanUser,
-          role: role as any,
-          name: isSup ? 'Nimal Silva (Supervisor)' : (isAdmin ? 'System Administrator' : (fleetDriver?.fullName || 'Kamal Perera (Driver)')),
-          fullName: isSup ? 'Nimal Silva (Supervisor)' : (isAdmin ? 'System Administrator' : (fleetDriver?.fullName || 'Kamal Perera (Driver)')),
-          token: 'bio-verified-secure-token',
-          driverCode: isSup || isAdmin ? undefined : (fleetDriver?.driverCode || (upperUser.startsWith('DRV') ? upperUser : 'DRV-00001')),
-          employeeId: isSup ? (upperUser.startsWith('SUP') ? upperUser : 'SUP001') : (fleetDriver?.employeeId || undefined),
-          supervisorId: isSup ? 'sup-123' : undefined,
-          supervisorPortPassExpiryDate: isSup ? '2026-11-18' : undefined,
-          vehicleNumber: isSup || isAdmin ? undefined : (fleetDriver?.vehicleNumber || 'LY-6439'),
-          chassisNumber: isSup || isAdmin ? undefined : (fleetDriver?.chassisNumber || 'CHE 100'),
-          cheNumber: isSup || isAdmin ? undefined : (fleetDriver?.cheNumber || 'CHE 100'),
-          status: fleetDriver?.status || 'ACTIVE',
-          mobileNumber: fleetDriver?.mobileNumber,
-          email: fleetDriver?.email,
-          nic: fleetDriver?.nic,
-          address: fleetDriver?.address,
-          licenseNumber: fleetDriver?.licenseNumber,
-          licenseExpiryDate: fleetDriver?.licenseExpiryDate,
-          dateOfBirth: fleetDriver?.dateOfBirth,
-          emergencyContactName: fleetDriver?.emergencyContactName,
-          emergencyContactNumber: fleetDriver?.emergencyContactNumber,
-          profilePhoto: fleetDriver?.profilePhoto,
-          coverImage: fleetDriver?.coverImage,
-          driverPortPassExpiryDate: fleetDriver?.driverPortPassExpiryDate,
-          vehiclePortPassExpiryDate: fleetDriver?.vehiclePortPassExpiryDate,
-        };
+        const userProfile = credRecord.cachedUserProfile;
+        const restoredUser: User = {
+          ...userProfile,
+          id: userProfile.id || credRecord.username,
+          username: credRecord.username,
+          role: (credRecord.onlineRole || 'DRIVER') as any,
+          name: userProfile.name || userProfile.fullName || credRecord.username,
+          token: credRecord.cachedToken || 'bio-verified-secure-token',
+          status: userProfile.status || 'ACTIVE',
+        } as User;
 
-        if (mockUser.status === 'SUSPENDED') {
+        if (restoredUser.status === 'SUSPENDED') {
           const suspendMsg = 'Account Suspended: Your driver account has been suspended by Administration. Biometric access denied. Please contact Port Administration.';
           setErrorMessage(suspendMsg);
           Alert.alert('Account Suspended', suspendMsg);
@@ -545,10 +498,10 @@ export default function LoginScreen() {
         }
 
         await credentialStore.recordSuccessfulAttempt(cleanUser);
-        await login(mockUser as any);
+        await login(restoredUser, rememberMe, false);
 
-        if (role === 'ADMIN') router.replace('/(admin)/(tabs)');
-        else if (role === 'SUPERVISOR') router.replace('/(supervisor)/(tabs)');
+        if (restoredUser.role === 'ADMIN') router.replace('/(admin)/(tabs)');
+        else if (restoredUser.role === 'SUPERVISOR') router.replace('/(supervisor)/(tabs)');
         else router.replace('/(driver)/(tabs)');
       } else if (authResult.error && authResult.error !== 'Authentication cancelled.') {
         setErrorMessage(authResult.error);

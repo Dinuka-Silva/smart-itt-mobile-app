@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuthStore } from '../../src/store/authStore';
+import { useAuthStore, User } from '../../src/store/authStore';
 import { adminFleetStore, AdminDriver } from '../../src/store/adminFleetStore';
 import { authService } from '../../src/services/authService';
 import { credentialStore } from '../../src/services/credentialStore';
@@ -36,7 +36,6 @@ export default function AdminLoginScreen() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [biometricStatus, setBiometricStatus] = useState<BiometricStatus | null>(null);
   const [lockoutSeconds, setLockoutSeconds] = useState<number>(0);
-  const [showDevCredentials, setShowDevCredentials] = useState(false);
 
   // Registered Driver Roster & Usernames Directory (Admin Clearance)
   const [driversRosterVisible, setDriversRosterVisible] = useState(false);
@@ -162,7 +161,7 @@ export default function AdminLoginScreen() {
 
       if (authResponse && authResponse.user && isAdmin) {
         await credentialStore.recordSuccessfulAttempt('ADMIN');
-        await login({
+        const adminUser: User = {
           id: authResponse.user.id || 'admin-root',
           username: cleanUser,
           role: 'ADMIN',
@@ -171,7 +170,10 @@ export default function AdminLoginScreen() {
           token: authResponse.token || 'admin-sec-bearer-token',
           email: cleanUser.includes('@') ? cleanUser : 'admin@smartitt.lk',
           status: 'ACTIVE',
-        });
+        };
+        // Cache credentials for offline login
+        await credentialStore.cacheOnlineLogin('ADMIN', cleanPass, 'ADMIN', adminUser, adminUser.token);
+        await login(adminUser, true, false);
         router.replace('/(admin)/(tabs)');
         return;
       }
@@ -185,22 +187,35 @@ export default function AdminLoginScreen() {
 
       throw new Error('Invalid Admin credentials');
     } catch (err: any) {
-      // Offline fallback for development / setup bootstrap
-      const isAllowedAdminUser = cleanUser.toUpperCase() === 'ADMIN' || cleanUser.toLowerCase() === 'admin@smartitt.lk';
-      const isAllowedAdminPass = cleanPass === 'Admin@123' || cleanPass === 'AdminSecure@2026' || cleanPass.toLowerCase() === 'admin';
+      // 2. If 401 Unauthorized
+      if (err?.response && err.response.status === 401) {
+        const failStatus = await credentialStore.recordFailedAttempt('ADMIN');
+        if (failStatus.isLocked) {
+          setLockoutSeconds(failStatus.remainingSeconds);
+        }
+        const msg = failStatus.isLocked
+          ? `Administrative lockout initiated. Retry in ${failStatus.remainingSeconds}s.`
+          : 'Invalid username or password.';
+        setErrorMessage(msg);
+        Alert.alert('Authentication Failed', msg);
+        setLoading(false);
+        return;
+      }
 
-      if (isAllowedAdminUser && isAllowedAdminPass) {
+      // 3. Offline credential verification via salted SHA-256 hash
+      const offlineResult = await credentialStore.verifyOffline('ADMIN', cleanPass, 'ADMIN');
+      if (offlineResult.valid && offlineResult.user) {
         await credentialStore.recordSuccessfulAttempt('ADMIN');
-        await login({
-          id: 'admin-root-001',
+        const offlineAdminUser: User = {
+          ...offlineResult.user,
+          id: offlineResult.user.id || 'admin-root',
           username: 'ADMIN',
           role: 'ADMIN',
-          name: 'System Administrator',
-          fullName: 'System Administrator',
-          token: 'admin-sec-bearer-token',
-          email: 'admin@smartitt.lk',
+          name: offlineResult.user.name || offlineResult.user.fullName || 'System Administrator',
+          token: offlineResult.user.token || 'admin-sec-bearer-token',
           status: 'ACTIVE',
-        });
+        };
+        await login(offlineAdminUser, true, true);
         router.replace('/(admin)/(tabs)');
         return;
       }
@@ -211,16 +226,19 @@ export default function AdminLoginScreen() {
       }
 
       const isNetworkErr = !err?.response || err?.code === 'ERR_NETWORK' || err?.message === 'Network Error' || Boolean(err?.isNetworkError);
-      const msg = failStatus.isLocked
-        ? `Administrative lockout initiated. Retry in ${failStatus.remainingSeconds}s.`
-        : isNetworkErr
-        ? 'Unable to connect to server. Please check your network connection.'
-        : err?.response?.data?.message || err?.message || 'Authentication failed. Please verify credentials.';
+      let msg = offlineResult.errorMessage;
+      if (!msg) {
+        msg = isNetworkErr ? 'Unable to connect to the server. Please try again.' : 'Invalid username or password.';
+      }
+      if (failStatus.isLocked) {
+        msg = `Administrative lockout initiated. Retry in ${failStatus.remainingSeconds}s.`;
+      }
+
       setErrorMessage(msg);
       Alert.alert(
-        isNetworkErr ? 'Connection Error' : 'Admin Login Failed',
-        isNetworkErr ? `${msg}\n\nPlease check your network connection and try again.` : msg,
-        isNetworkErr
+        isNetworkErr && !offlineResult.errorMessage ? 'Connection Error' : 'Admin Login Failed',
+        msg,
+        isNetworkErr && !offlineResult.errorMessage
           ? [
               { text: 'Cancel', style: 'cancel' },
               { text: 'Retry', onPress: () => handleAdminLogin() },
@@ -245,6 +263,33 @@ export default function AdminLoginScreen() {
     try {
       const result = await biometricService.authenticate('Authenticate as System Administrator');
       if (result.success) {
+        const credRecord = await credentialStore.getRecord('ADMIN');
+        if (!credRecord || !credRecord.lastOnlineLoginAt || !credRecord.cachedUserProfile) {
+          const msg = 'Please connect to the internet and log in once to enable offline access.';
+          setErrorMessage(msg);
+          Alert.alert('Online Sign-In Required', msg);
+          return;
+        }
+
+        const OFFLINE_LOGIN_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
+        const lastLoginTime = new Date(credRecord.lastOnlineLoginAt).getTime();
+        if (isNaN(lastLoginTime) || Date.now() - lastLoginTime > OFFLINE_LOGIN_MAX_AGE_MS) {
+          const msg = 'Your session has expired. Please connect to the internet and log in again.';
+          setErrorMessage(msg);
+          Alert.alert('Session Expired', msg);
+          return;
+        }
+
+        const adminUser: User = {
+          ...credRecord.cachedUserProfile,
+          id: credRecord.cachedUserProfile.id || 'admin-root',
+          username: 'ADMIN',
+          role: 'ADMIN',
+          name: credRecord.cachedUserProfile.name || credRecord.cachedUserProfile.fullName || 'System Administrator',
+          token: credRecord.cachedToken || 'admin-sec-bearer-token',
+          status: 'ACTIVE',
+        };
+
         await securityAuditService.logEvent(
           'BIOMETRIC_AUTH_SUCCESS',
           'ADMIN',
@@ -253,16 +298,7 @@ export default function AdminLoginScreen() {
           'ADMIN'
         );
         await credentialStore.recordSuccessfulAttempt('ADMIN');
-        await login({
-          id: 'admin-root-001',
-          username: 'ADMIN',
-          role: 'ADMIN',
-          name: 'System Administrator',
-          fullName: 'System Administrator',
-          token: 'admin-sec-bearer-token',
-          email: 'admin@smartitt.lk',
-          status: 'ACTIVE',
-        });
+        await login(adminUser, true, false);
         router.replace('/(admin)/(tabs)');
       } else if (result.error && result.error !== 'Authentication cancelled.') {
         setErrorMessage(result.error);
@@ -273,7 +309,6 @@ export default function AdminLoginScreen() {
       setLoading(false);
     }
   };
-
   return (
     <View style={styles.root}>
       {/* Branded Subtle Watermark Background */}
@@ -366,24 +401,7 @@ export default function AdminLoginScreen() {
             <Text style={styles.credentialBannerText}>
               LEVEL 4 PRIVILEGED ACCESS · 256-BIT ENCLAVE
             </Text>
-            <TouchableOpacity
-              onPress={() => {
-                setShowDevCredentials(!showDevCredentials);
-                if (!password) setPassword('Admin@123');
-              }}
-              style={styles.devFillBtn}
-            >
-              <Text style={styles.devFillBtnText}>Demo Fill</Text>
-            </TouchableOpacity>
           </View>
-
-          {showDevCredentials && (
-            <View style={styles.devHelperBox}>
-              <Text style={styles.devHelperText}>
-                Dev Credentials: User <Text style={{ color: '#2563EB', fontWeight: '800' }}>ADMIN</Text> / Pass <Text style={{ color: '#feb300', fontWeight: '800' }}>Admin@123</Text>
-              </Text>
-            </View>
-          )}
 
           <View style={styles.fieldGroup}>
             <Text style={styles.fieldLabel}>Administrator Username</Text>
