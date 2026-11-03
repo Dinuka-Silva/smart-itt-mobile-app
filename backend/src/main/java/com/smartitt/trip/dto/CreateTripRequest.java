@@ -20,5 +20,6 @@ public class CreateTripRequest {
         private String containerNumber;
         private String size; // "20FT" or "40FT"
         private String destTerminal;
+        private Boolean isVerified;
     }
 }

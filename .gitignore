@@ -38,3 +38,10 @@ dist/
 *.sqlite3
 *.dump
 *.sql.gz
+*.mv.db
+backend/data/
+data/
+
+# Uploads & Storage (External Files)
+uploads/
+backend/uploads/

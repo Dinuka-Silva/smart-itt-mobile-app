@@ -1,7 +1,5 @@
 package com.smartitt.trip.dto;
 
-import com.smartitt.container.entity.ContainerStatus;
-import com.smartitt.trip.entity.TripStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -9,7 +7,6 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
 
 @Data
 @Builder
@@ -45,5 +42,10 @@ public class TripResponse {
         private String destTerminal;
         private String status;
         private String unloadedAt;
+        private Boolean isVerified;
+        private String verifiedBy;
+        private LocalDateTime verifiedAt;
+        private String photoStatus;
+        private String photoUrl;
     }
 }

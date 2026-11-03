@@ -20,6 +20,8 @@ import { credentialStore } from '../../../src/services/credentialStore';
 import { adminFleetStore, AdminVehicle } from '../../../src/store/adminFleetStore';
 import { useResponsive } from '../../../src/hooks/useResponsive';
 import { AdminSignOutModal } from '../../../src/components/AdminSignOutModal';
+import { TemporaryPasswordModal } from '../../../src/components/TemporaryPasswordModal';
+import { BulkImportModal } from '../../../src/components/BulkImportModal';
 
 const DRIVER_PHOTO_POOL = [
   'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80',
@@ -52,6 +54,7 @@ export default function AdminDriversScreen() {
 
   // Create Driver Modal
   const [createModalVisible, setCreateModalVisible] = useState(false);
+  const [importModalVisible, setImportModalVisible] = useState(false);
   const [creating, setCreating] = useState(false);
   const [fullName, setFullName] = useState('');
   const [employeeId, setEmployeeId] = useState('');
@@ -63,7 +66,6 @@ export default function AdminDriversScreen() {
   const [selectedVehicleObj, setSelectedVehicleObj] = useState<AdminVehicle | null>(null);
   const [vehiclePickerModalVisible, setVehiclePickerModalVisible] = useState(false);
   const [vehiclePickerSearch, setVehiclePickerSearch] = useState('');
-  const [driverPassword, setDriverPassword] = useState('driver');
 
   // Edit / Action Modal
   const [selectedDriver, setSelectedDriver] = useState<any | null>(null);
@@ -73,40 +75,37 @@ export default function AdminDriversScreen() {
   // Dedicated Password Reset Modal State
   const [resetModalVisible, setResetModalVisible] = useState(false);
   const [driverToReset, setDriverToReset] = useState<any | null>(null);
-  const [newTempPassword, setNewTempPassword] = useState('driver');
+  const [newTempPassword, setNewTempPassword] = useState('');
   const [resettingPassword, setResettingPassword] = useState(false);
+  const [tempCredsModal, setTempCredsModal] = useState<{
+    visible: boolean;
+    username: string;
+    temporaryPassword: string;
+  }>({ visible: false, username: '', temporaryPassword: '' });
 
   const openResetPasswordModal = (driver: any) => {
     setDriverToReset(driver);
-    setNewTempPassword('driver');
+    setNewTempPassword('');
     setResetModalVisible(true);
   };
 
   const handleConfirmResetPassword = async () => {
     if (!driverToReset) return;
-    const pwd = newTempPassword.trim() || 'driver';
     setResettingPassword(true);
     try {
-      await adminFleetStore.resetDriverPassword(driverToReset.id || driverToReset.driverCode, pwd);
-      if (driverToReset.driverCode) {
-        await credentialStore.resetPasswordByAdmin(driverToReset.driverCode, pwd);
-      }
-      if (driverToReset.employeeId) {
-        await credentialStore.resetPasswordByAdmin(driverToReset.employeeId, pwd);
-      }
-
-      if (Platform.OS === 'web') {
-        window.alert(`Password for ${driverToReset.fullName} (${driverToReset.driverCode}) has been reset to default: ${pwd}`);
-      } else {
-        Alert.alert(
-          'Password Reset Successful',
-          `The password for ${driverToReset.fullName} (${driverToReset.driverCode}) has been reset to default:\n\n${pwd}\n\nPlease share this credential with the driver. Account lockouts have been cleared.`
-        );
-      }
+      const res = await adminService.resetDriverPassword(
+        driverToReset.id || driverToReset.driverCode,
+        newTempPassword.trim() || undefined
+      );
       setResetModalVisible(false);
+      setTempCredsModal({
+        visible: true,
+        username: driverToReset.username || driverToReset.driverCode,
+        temporaryPassword: res?.temporaryPassword || 'Generated',
+      });
       if (actionModalVisible) setActionModalVisible(false);
     } catch (err: any) {
-      Alert.alert('Error', err?.message || 'Failed to reset password');
+      Alert.alert('Reset Failed', err?.message || 'Could not reset driver password');
     } finally {
       setResettingPassword(false);
     }
@@ -257,18 +256,16 @@ export default function AdminDriversScreen() {
 
     setCreating(true);
     try {
-      const newDriver = await adminFleetStore.addDriver({
+      const res = await adminService.createDriver({
         fullName: fullName.trim(),
         employeeId: employeeId.trim().toUpperCase(),
         nic: nic.trim(),
         mobileNumber: mobileNumber.trim(),
         drivingLicenceNumber: drivingLicenceNumber.trim().toUpperCase(),
-        vehicleNumber: vehicleNumber ? vehicleNumber.trim().toUpperCase() : 'UNASSIGNED',
-        chassisNumber: chassisNumber ? chassisNumber.trim().toUpperCase() : 'UNASSIGNED',
-        password: driverPassword.trim() || 'driver',
+        vehicleNumber: vehicleNumber && vehicleNumber !== 'UNASSIGNED' ? vehicleNumber.trim().toUpperCase() : null,
+        chassisNumber: chassisNumber && chassisNumber !== 'UNASSIGNED' ? chassisNumber.trim().toUpperCase() : null,
       });
 
-      Alert.alert('Driver Registered Successfully', `Driver ${newDriver.fullName} (${newDriver.driverCode}) has been registered and assigned!`);
       setCreateModalVisible(false);
       // Reset form
       setFullName('');
@@ -280,6 +277,14 @@ export default function AdminDriversScreen() {
       setChassisNumber('');
       setSelectedVehicleObj(null);
       fetchDrivers();
+
+      if (res?.temporaryPassword) {
+        setTempCredsModal({
+          visible: true,
+          username: res.username || res.driverCode,
+          temporaryPassword: res.temporaryPassword,
+        });
+      }
     } catch (err: any) {
       const msg = err?.response?.data?.message || err?.message || 'Failed to create driver';
       Alert.alert('Error', msg);
@@ -307,26 +312,17 @@ export default function AdminDriversScreen() {
 
   const handleResetPassword = async () => {
     if (!selectedDriver) return;
-    Alert.alert(
-      'Reset Password',
-      `Reset password for ${selectedDriver.fullName} (${selectedDriver.driverCode}) to default 'driver'?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Reset',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await adminService.resetDriverPassword(selectedDriver.id, 'driver');
-              Alert.alert('Success', 'Password has been reset to: driver');
-              setActionModalVisible(false);
-            } catch (err: any) {
-              Alert.alert('Error', err?.message || 'Failed to reset password');
-            }
-          },
-        },
-      ]
-    );
+    try {
+      const res = await adminService.resetDriverPassword(selectedDriver.id || selectedDriver.driverCode);
+      setActionModalVisible(false);
+      setTempCredsModal({
+        visible: true,
+        username: selectedDriver.username || selectedDriver.driverCode,
+        temporaryPassword: res?.temporaryPassword || 'Generated',
+      });
+    } catch (err: any) {
+      Alert.alert('Error', err?.message || 'Failed to reset password');
+    }
   };
 
   return (
@@ -344,6 +340,14 @@ export default function AdminDriversScreen() {
         </View>
 
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          <TouchableOpacity
+            style={[styles.createBtn, { backgroundColor: '#0F766E' }]}
+            onPress={() => setImportModalVisible(true)}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="cloud-upload-outline" size={14} color="#F8FAFC" style={{ marginRight: 4 }} />
+            <Text style={styles.createBtnText}>BULK IMPORT</Text>
+          </TouchableOpacity>
           <TouchableOpacity
             style={styles.createBtn}
             onPress={() => setCreateModalVisible(true)}
@@ -557,7 +561,7 @@ export default function AdminDriversScreen() {
                         <Text style={styles.specKey}>CHE / CHASSIS</Text>
                       </View>
                       <Text style={[styles.specVal, { color: '#2563EB' }]}>
-                        {d.cheNumber || d.chassisNumber || 'SCK 100'}
+                        {d.cheNumber || d.chassisNumber || '-'}
                       </Text>
                     </View>
 
@@ -566,7 +570,7 @@ export default function AdminDriversScreen() {
                         <Ionicons name="card" size={10} color="#bac9cc" />
                         <Text style={styles.specKey}>LICENSE NO</Text>
                       </View>
-                      <Text style={styles.specValMono}>{d.licenseNumber || d.drivingLicenceNumber || 'LIC-001234'}</Text>
+                      <Text style={styles.specValMono}>{d.licenseNumber || d.drivingLicenceNumber || '-'}</Text>
                     </View>
 
                     <View style={styles.specBox}>
@@ -574,7 +578,23 @@ export default function AdminDriversScreen() {
                         <Ionicons name="call" size={10} color="#849396" />
                         <Text style={styles.specKey}>MOBILE</Text>
                       </View>
-                      <Text style={styles.specValMono}>{d.mobileNumber || '0779876543'}</Text>
+                      <Text style={styles.specValMono}>{d.mobileNumber || '-'}</Text>
+                    </View>
+                  </View>
+
+                  {/* Account Security & Audit Metadata */}
+                  <View style={styles.auditMetadataRow}>
+                    <View style={styles.auditItem}>
+                      <Text style={styles.auditLabel}>CREATED BY</Text>
+                      <Text style={styles.auditValue}>{d.createdBy || '-'}</Text>
+                    </View>
+                    <View style={styles.auditItem}>
+                      <Text style={styles.auditLabel}>CREATED DATE</Text>
+                      <Text style={styles.auditValue}>{d.createdAt ? new Date(d.createdAt).toLocaleString() : '-'}</Text>
+                    </View>
+                    <View style={styles.auditItem}>
+                      <Text style={styles.auditLabel}>LAST LOGIN</Text>
+                      <Text style={styles.auditValue}>{d.lastLoginAt ? new Date(d.lastLoginAt).toLocaleString() : '-'}</Text>
                     </View>
                   </View>
 
@@ -587,15 +607,15 @@ export default function AdminDriversScreen() {
                         color={d.portPassStatus === 'RENEWAL_DUE' ? '#ffab00' : '#2563EB'}
                       />
                       <Text style={styles.portPassLabel}>
-                        Port Pass: <Text style={[styles.portPassDate, d.portPassStatus === 'RENEWAL_DUE' && { color: '#ffab00' }]}>{d.portPassExpiryDate || '2026-12-31'}</Text>
+                        Port Pass: <Text style={[styles.portPassDate, d.portPassStatus === 'RENEWAL_DUE' && { color: '#ffab00' }]}>{d.portPassExpiryDate || '-'}</Text>
                       </Text>
                     </View>
                     {d.portPassStatus === 'RENEWAL_DUE' ? (
                       <View style={styles.renewalTag}>
-                        <Text style={styles.renewalTagText}>RENEWAL DUE ({d.portPassDaysLeft ?? 10}d)</Text>
+                        <Text style={styles.renewalTagText}>RENEWAL DUE ({d.portPassDaysLeft ?? 0}d)</Text>
                       </View>
                     ) : (
-                      <Text style={styles.passNumTag}>{d.portPassNumber || 'SLPA-DPP'}</Text>
+                      <Text style={styles.passNumTag}>{d.portPassNumber || '-'}</Text>
                     )}
                   </View>
 
@@ -1132,15 +1152,14 @@ export default function AdminDriversScreen() {
                 </TouchableOpacity>
               </View>
 
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Initial Password</Text>
-                <TextInput
-                  style={styles.modalInput}
-                  placeholder="default: driver"
-                  placeholderTextColor="#546e7a"
-                  value={driverPassword}
-                  onChangeText={setDriverPassword}
-                />
+              <View style={[styles.inputGroup, { backgroundColor: '#E3F4F1', padding: 10, borderRadius: 8, borderWidth: 1, borderColor: '#0F766E' }]}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <Ionicons name="shield-checkmark" size={16} color="#0F766E" />
+                  <Text style={{ color: '#0F766E', fontSize: 12, fontWeight: '700' }}>Temporary Password Security</Text>
+                </View>
+                <Text style={{ color: '#1F2D33', fontSize: 11, marginTop: 4 }}>
+                  A cryptographically secure temporary password will be auto-generated and displayed once upon registration.
+                </Text>
               </View>
 
               <TouchableOpacity
@@ -1520,6 +1539,23 @@ export default function AdminDriversScreen() {
       <AdminSignOutModal
         visible={signOutModalVisible}
         onClose={() => setSignOutModalVisible(false)}
+      />
+
+      {/* Temporary Password Display Modal */}
+      <TemporaryPasswordModal
+        visible={tempCredsModal.visible}
+        onClose={() => setTempCredsModal({ visible: false, username: '', temporaryPassword: '' })}
+        username={tempCredsModal.username}
+        temporaryPassword={tempCredsModal.temporaryPassword}
+        roleName="Driver"
+      />
+
+      {/* Bulk Import Modal */}
+      <BulkImportModal
+        visible={importModalVisible}
+        onClose={() => setImportModalVisible(false)}
+        type="drivers"
+        onSuccess={() => fetchDrivers()}
       />
     </View>
   );
@@ -2283,5 +2319,32 @@ const styles = StyleSheet.create({
     color: '#90caf9',
     fontSize: 10.5,
     fontWeight: '800',
+  },
+  auditMetadataRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#F7F9FA',
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#E5EAEC',
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    marginVertical: 4,
+    gap: 8,
+  },
+  auditItem: {
+    flex: 1,
+  },
+  auditLabel: {
+    fontSize: 9.5,
+    fontWeight: '600',
+    color: '#6B7C85',
+    marginBottom: 2,
+  },
+  auditValue: {
+    fontSize: 11,
+    fontWeight: '500',
+    color: '#1F2D33',
   },
 });

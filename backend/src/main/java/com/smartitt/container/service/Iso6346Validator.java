@@ -16,12 +16,26 @@ public class Iso6346Validator {
 
     public static String normalize(String containerNumber) {
         if (containerNumber == null) return "";
-        return containerNumber.replaceAll("[\\s-]", "").toUpperCase().trim();
+        String clean = containerNumber.replaceAll("[^A-Za-z0-9]", "").toUpperCase().trim();
+        return clean.length() > 11 ? clean.substring(0, 11) : clean;
+    }
+
+    public static boolean hasTypoInDigits(String containerNumber) {
+        if (containerNumber == null) return false;
+        String clean = containerNumber.replaceAll("[^A-Za-z0-9]", "").toUpperCase();
+        if (clean.length() > 4) {
+            int end = Math.min(clean.length(), 10);
+            String digitPortion = clean.substring(4, end);
+            return digitPortion.contains("O") || digitPortion.contains("I");
+        }
+        return false;
     }
 
     public static boolean isValidFormat(String containerNumber) {
         String clean = normalize(containerNumber);
-        return clean.matches("^[A-Z]{4}\\d{7}$");
+        if (clean.length() != 11) return false;
+        // 3 owner letters + U/J/Z category letter + 6 serial digits + 1 check digit
+        return clean.matches("^[A-Z]{3}[UJZ]\\d{7}$");
     }
 
     public static int calculateCheckDigit(String containerNumber) {
@@ -44,7 +58,7 @@ public class Iso6346Validator {
         }
 
         int remainder = sum % 11;
-        return remainder % 10;
+        return remainder % 10; // 10 -> 0 per standard
     }
 
     public static boolean isValidCheckDigit(String containerNumber) {
@@ -53,5 +67,16 @@ public class Iso6346Validator {
         int expected = calculateCheckDigit(clean);
         int actual = Character.getNumericValue(clean.charAt(10));
         return expected == actual;
+    }
+
+    public static String suggestValidContainerNumber(String containerNumber) {
+        String clean = normalize(containerNumber);
+        if (clean.length() >= 10 && clean.substring(0, 4).matches("^[A-Z]{3}[UJZ]$") && clean.substring(4, 10).matches("^\\d{6}$")) {
+            int expected = calculateCheckDigit(clean.substring(0, 10));
+            if (expected >= 0) {
+                return clean.substring(0, 10) + expected;
+            }
+        }
+        return null;
     }
 }

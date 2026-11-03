@@ -56,6 +56,9 @@ export interface AdminDriver {
   monthlyTarget?: number;
   monthlyContainers?: number;
   createdAt?: string;
+  createdBy?: string;
+  lastLoginAt?: string;
+  mustChangePassword?: boolean;
   profilePhoto?: string;
   coverImage?: string;
 }
@@ -76,6 +79,9 @@ export interface AdminSupervisor {
   emergencyContactName?: string;
   emergencyContactNumber?: string;
   createdAt?: string;
+  createdBy?: string;
+  lastLoginAt?: string;
+  mustChangePassword?: boolean;
 }
 
 const STORAGE_KEY_CUSTOM_DRIVERS = 'itt_admin_fleet_custom_drivers';
@@ -173,10 +179,12 @@ const INITIAL_DRIVERS: AdminDriver[] = INITIAL_DRIVERS_RAW.map(d => ({
   username: d.driverCode,
 }));
 
+const isDemoEnabled = process.env.EXPO_PUBLIC_DEMO_DATA === 'true';
+
 class AdminFleetStore {
-  private vehicles: AdminVehicle[] = [...INITIAL_VEHICLES];
-  private drivers: AdminDriver[] = [...INITIAL_DRIVERS];
-  private supervisors: AdminSupervisor[] = [...INITIAL_SUPERVISORS];
+  private vehicles: AdminVehicle[] = isDemoEnabled ? [...INITIAL_VEHICLES] : [];
+  private drivers: AdminDriver[] = isDemoEnabled ? [...INITIAL_DRIVERS] : [];
+  private supervisors: AdminSupervisor[] = isDemoEnabled ? [...INITIAL_SUPERVISORS] : [];
   private initialized = false;
   private listeners: Set<() => void> = new Set();
 
@@ -204,6 +212,62 @@ class AdminFleetStore {
   async init(): Promise<void> {
     if (this.initialized) return;
     try {
+      // 0. Load real backend fleet data if available
+      try {
+        const [backendDrivers, backendSupervisors, backendVehicles] = await Promise.all([
+          adminService.getDrivers().catch(() => []),
+          adminService.getSupervisors().catch(() => []),
+          adminService.getVehicles().catch(() => []),
+        ]);
+        if (Array.isArray(backendDrivers) && backendDrivers.length > 0) {
+          this.drivers = backendDrivers.map((d: any) => ({
+            ...d,
+            driverCode: d.driverCode || d.username || d.id,
+            username: d.username || d.driverCode,
+            fullName: d.fullName || d.name || '-',
+            employeeId: d.employeeId || d.driverCode || '-',
+            mobileNumber: d.mobileNumber || d.mobile || '-',
+            nic: d.nic || '-',
+            status: d.status || 'ACTIVE',
+            totalTrips: d.totalTrips || 0,
+            licenseStatus: d.licenseStatus || 'VALID',
+            daysUntilExpiry: d.daysUntilExpiry || 365,
+            portPassStatus: d.portPassStatus || 'VALID',
+            portPassDaysLeft: d.portPassDaysLeft || 365,
+          }));
+        }
+        if (Array.isArray(backendSupervisors) && backendSupervisors.length > 0) {
+          this.supervisors = backendSupervisors.map((s: any) => ({
+            ...s,
+            fullName: s.fullName || s.name || '-',
+            username: s.username || s.employeeId,
+            employeeId: s.employeeId || s.username || '-',
+            mobileNumber: s.mobileNumber || s.mobile || '-',
+            email: s.email || '-',
+            status: s.status || 'ACTIVE',
+            assignedShift: s.assignedShift || 'Day Shift',
+            assignedTerminal: s.assignedTerminal || 'ECT / CICT',
+          }));
+        }
+        if (Array.isArray(backendVehicles) && backendVehicles.length > 0) {
+          this.vehicles = backendVehicles.map((v: any) => ({
+            ...v,
+            vehicleNumber: v.vehicleNumber || '-',
+            chassisNumber: v.chassisNumber || '-',
+            cheNumber: v.cheNumber || v.chassisNumber || '-',
+            operator: v.operator || '-',
+            trailerSize: v.trailerSize || '40FT',
+            status: v.status || 'ACTIVE',
+            totalTrips: v.totalTrips || 0,
+            licenseStatus: v.licenseStatus || 'VALID',
+            daysUntilExpiry: v.daysUntilExpiry || 365,
+            portPassStatus: v.portPassStatus || 'VALID',
+            portPassDaysUntilExpiry: v.portPassDaysUntilExpiry || 365,
+          }));
+        }
+      } catch (err) {
+        console.warn('[AdminFleetStore] Backend fetch error:', err);
+      }
       // 1. Load custom registered drivers
       const rawDrivers = await storage.getItem(STORAGE_KEY_CUSTOM_DRIVERS);
       if (rawDrivers) {
@@ -535,6 +599,10 @@ class AdminFleetStore {
               operator: r.operator || this.drivers[existingIdx].operator,
               trailerSize: r.trailerSize || this.drivers[existingIdx].trailerSize,
               totalTrips: r.totalTrips ?? this.drivers[existingIdx].totalTrips,
+              createdBy: r.createdBy || this.drivers[existingIdx].createdBy,
+              createdAt: r.createdAt || this.drivers[existingIdx].createdAt,
+              lastLoginAt: r.lastLoginAt || this.drivers[existingIdx].lastLoginAt,
+              mustChangePassword: r.mustChangePassword ?? this.drivers[existingIdx].mustChangePassword,
             };
           } else {
             // New driver from remote
@@ -566,6 +634,10 @@ class AdminFleetStore {
               driverPortPassExpiryDate: r.driverPortPassExpiryDate || '2026-11-15',
               vehiclePortPassExpiryDate: r.vehiclePortPassExpiryDate || '2026-11-20',
               totalTrips: r.totalTrips ?? 0,
+              createdBy: r.createdBy || '-',
+              createdAt: r.createdAt || undefined,
+              lastLoginAt: r.lastLoginAt || undefined,
+              mustChangePassword: r.mustChangePassword,
             });
           }
         }
@@ -1173,6 +1245,10 @@ class AdminFleetStore {
               nic: r.nic || this.supervisors[existingIdx].nic,
               assignedTerminal: 'ALL TERMINALS',
               assignedTerminalName: 'Colombo Port Terminals (JCT, CICT, SAGT, ECT, CWIT, UCT)',
+              createdBy: r.createdBy || this.supervisors[existingIdx].createdBy,
+              createdAt: r.createdAt || this.supervisors[existingIdx].createdAt,
+              lastLoginAt: r.lastLoginAt || this.supervisors[existingIdx].lastLoginAt,
+              mustChangePassword: r.mustChangePassword ?? this.supervisors[existingIdx].mustChangePassword,
             };
           } else {
             this.supervisors.push({
@@ -1191,6 +1267,9 @@ class AdminFleetStore {
               emergencyContactName: r.emergencyContactName || 'Port Operations Lead',
               emergencyContactNumber: r.emergencyContactNumber || '0112456789',
               createdAt: r.createdAt || new Date().toISOString(),
+              createdBy: r.createdBy || '-',
+              lastLoginAt: r.lastLoginAt || undefined,
+              mustChangePassword: r.mustChangePassword,
             });
           }
         }

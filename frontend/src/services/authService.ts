@@ -76,6 +76,7 @@ export interface AuthResponse {
   token: string;
   refreshToken?: string;
   driverCode?: string;
+  mustChangePassword?: boolean;
   user: {
     id: string;
     username: string;
@@ -97,6 +98,7 @@ export interface AuthResponse {
     emergencyContactNumber?: string;
     status?: string;
     supervisorPortPassExpiryDate?: string;
+    mustChangePassword?: boolean;
   };
 }
 
@@ -115,6 +117,7 @@ function normalizeAuthResponse(data: any): AuthResponse {
     token: data.token || (data.user?.token),
     refreshToken: data.refreshToken,
     driverCode,
+    mustChangePassword: Boolean(data.mustChangePassword || data.user?.mustChangePassword),
     user: {
       id: data.id || driverData.id || data.user?.id || 'user-1',
       username: data.username || driverCode || data.user?.username || data.email || '',
@@ -145,6 +148,7 @@ function normalizeAuthResponse(data: any): AuthResponse {
       emergencyContactNumber: driverData.emergencyContactNumber || data.emergencyContactNumber,
       status: data.status || driverData.status || data.user?.status || 'ACTIVE',
       supervisorPortPassExpiryDate: data.supervisorPortPassExpiryDate || data.user?.supervisorPortPassExpiryDate,
+      mustChangePassword: Boolean(data.mustChangePassword || data.user?.mustChangePassword),
     },
   };
 }

@@ -17,6 +17,7 @@ import { adminFleetStore } from '../../../src/store/adminFleetStore';
 import { useResponsive } from '../../../src/hooks/useResponsive';
 import { AdminSignOutModal } from '../../../src/components/AdminSignOutModal';
 import { StatusPill } from '../../../src/components/StatusPill';
+import { BulkImportModal } from '../../../src/components/BulkImportModal';
 
 export default function AdminVehiclesScreen() {
   const { topInset, bottomInset, containerPaddingHorizontal } = useResponsive();
@@ -38,6 +39,7 @@ export default function AdminVehiclesScreen() {
 
   // Add Vehicle Modal State
   const [createModalVisible, setCreateModalVisible] = useState(false);
+  const [importModalVisible, setImportModalVisible] = useState(false);
   const [newVehicleNumber, setNewVehicleNumber] = useState('');
   const [newChassisNumber, setNewChassisNumber] = useState('');
   const [newOperator, setNewOperator] = useState<'SCK Logistics' | 'SDR LINK'>('SCK Logistics');
@@ -222,6 +224,14 @@ export default function AdminVehiclesScreen() {
         </View>
 
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          <TouchableOpacity
+            style={[styles.addVehicleBtn, { backgroundColor: '#0F766E' }]}
+            onPress={() => setImportModalVisible(true)}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="cloud-upload-outline" size={16} color="#F8FAFC" />
+            <Text style={styles.addVehicleBtnText}>BULK IMPORT</Text>
+          </TouchableOpacity>
           <TouchableOpacity
             style={styles.addVehicleBtn}
             onPress={() => setCreateModalVisible(true)}
@@ -1145,6 +1155,14 @@ export default function AdminVehiclesScreen() {
       <AdminSignOutModal
         visible={signOutModalVisible}
         onClose={() => setSignOutModalVisible(false)}
+      />
+
+      {/* Bulk Import Modal */}
+      <BulkImportModal
+        visible={importModalVisible}
+        onClose={() => setImportModalVisible(false)}
+        type="vehicles"
+        onSuccess={() => fetchVehicles()}
       />
     </View>
   );

@@ -17,6 +17,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { Calendar } from 'react-native-calendars';
 import { useAuthStore } from '../../../src/store/authStore';
 import { tripService } from '../../../src/services/tripService';
+import { photoService, PhotoUploadResponse } from '../../../src/services/photoService';
+import { adminService } from '../../../src/services/adminService';
 import { useMockTripStore } from '../../../src/store/mockTripStore';
 import { adminFleetStore } from '../../../src/store/adminFleetStore';
 import { securityAuditService } from '../../../src/services/securityAuditService';
@@ -71,6 +73,16 @@ export default function SupervisorMissionDispatcher() {
   const [trips, setTrips] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+
+  // Top Segments: Pending Approval | All Trips
+  const [activeSegment, setActiveSegment] = useState<'PENDING' | 'ALL'>('PENDING');
+
+  // Photo Inspection Modal
+  const [photoModalVisible, setPhotoModalVisible] = useState(false);
+  const [activePhoto, setActivePhoto] = useState<any | null>(null);
+  const [loadingPhoto, setLoadingPhoto] = useState(false);
+  const [photoRejectNote, setPhotoRejectNote] = useState('');
+  const [showRejectNoteInput, setShowRejectNoteInput] = useState(false);
 
   // Filters & Search
   const [searchQuery, setSearchQuery] = useState('');
@@ -300,6 +312,11 @@ export default function SupervisorMissionDispatcher() {
   // Filtered trips for list view (includes Terminal, Vehicle, Status, Search)
   const filteredTrips = useMemo(() => {
     return dateFilteredTrips.filter((t) => {
+      // 0. Top segment filter
+      if (activeSegment === 'PENDING') {
+        if (t.status !== 'PENDING_APPROVAL') return false;
+      }
+
       // 1. Discharge Terminal Filter
       if (selectedTerminal !== 'ALL') {
         const tripDest = getTripDischargeTerminal(t).toUpperCase();
@@ -345,7 +362,7 @@ export default function SupervisorMissionDispatcher() {
 
       return true;
     });
-  }, [dateFilteredTrips, selectedTerminal, selectedVehicle, selectedStatus, searchQuery]);
+  }, [dateFilteredTrips, selectedTerminal, selectedVehicle, selectedStatus, searchQuery, activeSegment]);
 
   // Date-wise grouped trips
   const tripsByDate = useMemo(() => {
@@ -407,6 +424,59 @@ export default function SupervisorMissionDispatcher() {
 
     return Object.values(groups).sort((a, b) => b.dateKey.localeCompare(a.dateKey));
   }, [filteredTrips]);
+
+  const pendingTripsCount = useMemo(() => {
+    return trips.filter((t) => t.status === 'PENDING_APPROVAL').length;
+  }, [trips]);
+
+  const openPhotoModal = async (trip: any, container: any) => {
+    setLoadingPhoto(true);
+    setPhotoModalVisible(true);
+    setShowRejectNoteInput(false);
+    setPhotoRejectNote('');
+    try {
+      const p = await photoService.getPhotoByContainer(trip.id, container.containerNumber);
+      if (p) {
+        setActivePhoto(p);
+      } else {
+        setActivePhoto({
+          id: container.id || 'photo-' + Date.now(),
+          tripId: trip.id,
+          containerNumber: container.containerNumber,
+          verificationStatus: container.photoStatus || (container.isVerified ? 'VERIFIED' : 'PENDING'),
+          uri: container.photoUrl || null,
+        });
+      }
+    } catch {
+      setActivePhoto({
+        id: container.id || 'photo-' + Date.now(),
+        tripId: trip.id,
+        containerNumber: container.containerNumber,
+        verificationStatus: container.photoStatus || (container.isVerified ? 'VERIFIED' : 'PENDING'),
+        uri: container.photoUrl || null,
+      });
+    } finally {
+      setLoadingPhoto(false);
+    }
+  };
+
+  const checkPhotosAndProceed = (trip: any, actionFn: () => Promise<void>) => {
+    const hasUnverified = (trip.containers || []).some(
+      (c: any) => c.isVerified === false || (c.photoStatus && c.photoStatus !== 'VERIFIED')
+    );
+    if (hasUnverified) {
+      Alert.alert(
+        'Photo Verification Pending',
+        'Container photo is unverified or has not been approved. Approve trip anyway?',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Approve Anyway', style: 'destructive', onPress: () => { actionFn(); } },
+        ]
+      );
+    } else {
+      actionFn();
+    }
+  };
 
   const handleDischargeAndComplete = async (trip: any) => {
     const supName = user?.fullName || user?.name || 'Nimal Silva';
@@ -638,8 +708,63 @@ export default function SupervisorMissionDispatcher() {
 
         {/* ─── C. TRIP MONITORING WITH SEARCH & FILTERS ─── */}
         <View style={styles.sectionWrap}>
+          {/* Top Segments: Pending Approval (n) | All Trips */}
+          <View style={styles.topSegmentRow}>
+            <TouchableOpacity
+              style={[
+                styles.topSegmentBtn,
+                activeSegment === 'PENDING' && styles.topSegmentBtnActive,
+              ]}
+              onPress={() => {
+                setActiveSegment('PENDING');
+                setSelectedStatus('PENDING_APPROVAL');
+              }}
+              activeOpacity={0.7}
+            >
+              <Ionicons
+                name="time-outline"
+                size={16}
+                color={activeSegment === 'PENDING' ? '#0F766E' : '#6B7C85'}
+              />
+              <Text
+                style={[
+                  styles.topSegmentBtnText,
+                  activeSegment === 'PENDING' && styles.topSegmentBtnTextActive,
+                ]}
+              >
+                Pending Approval ({pendingTripsCount})
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.topSegmentBtn,
+                activeSegment === 'ALL' && styles.topSegmentBtnActive,
+              ]}
+              onPress={() => {
+                setActiveSegment('ALL');
+                setSelectedStatus('ALL');
+              }}
+              activeOpacity={0.7}
+            >
+              <Ionicons
+                name="list-outline"
+                size={16}
+                color={activeSegment === 'ALL' ? '#0F766E' : '#6B7C85'}
+              />
+              <Text
+                style={[
+                  styles.topSegmentBtnText,
+                  activeSegment === 'ALL' && styles.topSegmentBtnTextActive,
+                ]}
+              >
+                All Trips ({trips.length})
+              </Text>
+            </TouchableOpacity>
+          </View>
+
           <View style={styles.sectionTitleRow}>
-            <Ionicons name="pulse" size={18} color="#2563EB" />
+            <Ionicons name="pulse" size={18} color="#0F766E" />
             <Text style={styles.sectionTitle}>
               INTER-TERMINAL TRIP MONITORING ({filteredTrips.length})
             </Text>
@@ -1009,11 +1134,35 @@ export default function SupervisorMissionDispatcher() {
 
                           {/* Container Manifest Chips */}
                           {t.containers && t.containers.length > 0 && (
-                            <View style={styles.monContainersRow}>
-                              <Ionicons name="cube" size={13} color="#2563EB" />
-                              <Text style={styles.monContainersText}>
-                                {t.containers.map((c: any) => `${c.containerNumber} (${c.size || '20FT'} ➔ ${c.destTerminal || getTripDischargeTerminal(t)})`).join('  •  ')}
-                              </Text>
+                            <View style={{ gap: 6, marginTop: 4 }}>
+                              {t.containers.map((c: any, cIdx: number) => (
+                                <View key={c.id || cIdx} style={styles.monContainerCard}>
+                                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 }}>
+                                    <Ionicons name="cube-outline" size={14} color="#0F766E" />
+                                    <Text style={styles.monContainerNumber}>{c.containerNumber}</Text>
+                                    <Text style={styles.monContainerSize}>{c.size || '20FT'}</Text>
+                                    {c.isVerified === false && (
+                                      <View style={styles.monUnverifiedBadge}>
+                                        <Text style={styles.monUnverifiedText}>Unverified</Text>
+                                      </View>
+                                    )}
+                                    {c.isVerified === true && (
+                                      <View style={styles.monVerifiedBadge}>
+                                        <Text style={styles.monVerifiedText}>Verified ✓</Text>
+                                      </View>
+                                    )}
+                                  </View>
+
+                                  <TouchableOpacity
+                                    style={styles.inspectPhotoBtn}
+                                    onPress={() => openPhotoModal(t, c)}
+                                    activeOpacity={0.7}
+                                  >
+                                    <Ionicons name="camera-outline" size={13} color="#0F766E" />
+                                    <Text style={styles.inspectPhotoBtnText}>Inspect Photo</Text>
+                                  </TouchableOpacity>
+                                </View>
+                              ))}
                             </View>
                           )}
 
@@ -1125,7 +1274,7 @@ export default function SupervisorMissionDispatcher() {
                             <View style={styles.decisionButtonsRow}>
                               <TouchableOpacity
                                 style={styles.approveBtn}
-                                onPress={() => handleDischargeAndComplete(t)}
+                                onPress={() => checkPhotosAndProceed(t, () => handleDischargeAndComplete(t))}
                               >
                                 <Ionicons name="shield-checkmark" size={14} color="#FFFFFF" />
                                 <Text style={styles.approveBtnText}>
@@ -1319,6 +1468,118 @@ export default function SupervisorMissionDispatcher() {
                 <Text style={styles.calendarApplyBtnText}>APPLY FILTER</Text>
               </TouchableOpacity>
             </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* ─── MODAL: CONTAINER PHOTO INSPECTION & VERIFICATION ─── */}
+      <Modal visible={photoModalVisible} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalCard, { maxWidth: 480 }]}>
+            <View style={styles.modalHeader}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <Ionicons name="camera" size={20} color="#0F766E" />
+                <Text style={styles.modalTitle}>CONTAINER PHOTO VERIFICATION</Text>
+              </View>
+              <TouchableOpacity onPress={() => setPhotoModalVisible(false)}>
+                <Ionicons name="close" size={22} color="#849396" />
+              </TouchableOpacity>
+            </View>
+
+            {loadingPhoto ? (
+              <ActivityIndicator size="large" color="#0F766E" style={{ marginVertical: 30 }} />
+            ) : activePhoto ? (
+              <View style={{ gap: 12, marginTop: 10 }}>
+                <View style={{ height: 260, backgroundColor: '#F7F9FA', borderRadius: 8, overflow: 'hidden', borderWidth: 1, borderColor: '#E5EAEC', alignItems: 'center', justifyContent: 'center' }}>
+                  {activePhoto.viewUrl || activePhoto.uri ? (
+                    <Image
+                      source={{ uri: activePhoto.viewUrl || activePhoto.uri }}
+                      style={{ width: '100%', height: '100%' }}
+                      resizeMode="contain"
+                    />
+                  ) : (
+                    <View style={{ alignItems: 'center', gap: 6 }}>
+                      <Ionicons name="image-outline" size={36} color="#A3B1B8" />
+                      <Text style={{ fontSize: 12, color: '#6B7C85' }}>No photo file available on server</Text>
+                    </View>
+                  )}
+                </View>
+
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Text style={{ fontSize: 13, fontWeight: '700', color: '#1F2D33' }}>
+                    Container: {activePhoto.containerNumber || '-'}
+                  </Text>
+                  <View style={{
+                    backgroundColor: activePhoto.verificationStatus === 'VERIFIED' ? '#E6F6EC' : activePhoto.verificationStatus === 'REJECTED' ? '#FDE8E8' : '#FFF4DB',
+                    paddingHorizontal: 8,
+                    paddingVertical: 3,
+                    borderRadius: 12,
+                  }}>
+                    <Text style={{
+                      fontSize: 11,
+                      fontWeight: '700',
+                      color: activePhoto.verificationStatus === 'VERIFIED' ? '#1E7A45' : activePhoto.verificationStatus === 'REJECTED' ? '#B42318' : '#8A5A00',
+                    }}>
+                      {activePhoto.verificationStatus || 'PENDING'}
+                    </Text>
+                  </View>
+                </View>
+
+                {showRejectNoteInput && (
+                  <TextInput
+                    style={styles.rejectionInput}
+                    placeholder="Enter rejection reason (e.g. illegible number, wrong container)..."
+                    placeholderTextColor="#A3B1B8"
+                    value={photoRejectNote}
+                    onChangeText={setPhotoRejectNote}
+                  />
+                )}
+
+                <View style={{ flexDirection: 'row', gap: 10, marginTop: 6 }}>
+                  <TouchableOpacity
+                    style={[styles.modalSubmitBtn, { backgroundColor: '#1E7A45' }]}
+                    onPress={async () => {
+                      try {
+                        await photoService.verifyPhoto(activePhoto.id, { status: 'VERIFIED' });
+                        Alert.alert('Photo Verified', 'Container photo marked as Verified.');
+                        setPhotoModalVisible(false);
+                        await loadTrips();
+                      } catch (e: any) {
+                        Alert.alert('Error', e?.message || 'Failed to verify photo');
+                      }
+                    }}
+                  >
+                    <Ionicons name="checkmark-circle" size={16} color="#FFFFFF" />
+                    <Text style={[styles.modalSubmitBtnText, { color: '#FFFFFF' }]}>Verify Photo</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[styles.modalSubmitBtn, { backgroundColor: '#B42318' }]}
+                    onPress={async () => {
+                      if (!showRejectNoteInput) {
+                        setShowRejectNoteInput(true);
+                        return;
+                      }
+                      try {
+                        await photoService.verifyPhoto(activePhoto.id, { status: 'REJECTED', note: photoRejectNote });
+                        Alert.alert('Photo Rejected', 'Container photo rejected.');
+                        setPhotoModalVisible(false);
+                        setShowRejectNoteInput(false);
+                        setPhotoRejectNote('');
+                        await loadTrips();
+                      } catch (e: any) {
+                        Alert.alert('Error', e?.message || 'Failed to reject photo');
+                      }
+                    }}
+                  >
+                    <Ionicons name="close-circle" size={16} color="#FFFFFF" />
+                    <Text style={[styles.modalSubmitBtnText, { color: '#FFFFFF' }]}>Reject Photo</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ) : (
+              <Text style={{ marginVertical: 20, textAlign: 'center', color: '#6B7C85' }}>No photo available</Text>
+            )}
           </View>
         </View>
       </Modal>
@@ -2059,5 +2320,103 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '900',
     letterSpacing: 0.6,
+  },
+
+  // ─── TOP SEGMENTS ───
+  topSegmentRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 8,
+  },
+  topSegmentBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    height: 42,
+    borderRadius: 8,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E5EAEC',
+  },
+  topSegmentBtnActive: {
+    backgroundColor: '#E3F4F1',
+    borderColor: '#0F766E',
+  },
+  topSegmentBtnText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#6B7C85',
+  },
+  topSegmentBtnTextActive: {
+    color: '#0F766E',
+    fontWeight: '700',
+  },
+
+  // ─── CONTAINER CARDS ───
+  monContainerCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#F7F9FA',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#E5EAEC',
+  },
+  monContainerNumber: {
+    fontSize: 12,
+    fontWeight: '700',
+    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
+    color: '#0F766E',
+  },
+  monContainerSize: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#6B7C85',
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    borderRadius: 3,
+  },
+  monUnverifiedBadge: {
+    backgroundColor: '#FFF4DB',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  monUnverifiedText: {
+    fontSize: 9,
+    fontWeight: '700',
+    color: '#8A5A00',
+  },
+  monVerifiedBadge: {
+    backgroundColor: '#E6F6EC',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  monVerifiedText: {
+    fontSize: 9,
+    fontWeight: '700',
+    color: '#1E7A45',
+  },
+  inspectPhotoBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: '#0F766E',
+  },
+  inspectPhotoBtnText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#0F766E',
   },
 });

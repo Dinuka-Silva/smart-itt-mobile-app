@@ -46,6 +46,16 @@ public class Container {
 
     private String unloadedAt;
 
+    @Column(name = "is_verified")
+    @Builder.Default
+    private Boolean isVerified = true;
+
+    @Column(name = "verified_by")
+    private String verifiedBy;
+
+    @Column(name = "verified_at")
+    private LocalDateTime verifiedAt;
+
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -55,6 +65,7 @@ public class Container {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
         if (status == null) status = ContainerStatus.LOADED;
+        if (isVerified == null) isVerified = true;
     }
 
     @PreUpdate

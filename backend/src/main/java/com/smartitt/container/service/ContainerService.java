@@ -42,6 +42,19 @@ public class ContainerService {
                     .build();
         }
 
+        // Typo guard check (letters O or I inside the 6-digit sequence)
+        if (Iso6346Validator.hasTypoInDigits(containerNumber)) {
+            return ValidateContainerResponse.builder()
+                    .valid(false)
+                    .normalizedNumber(normalized)
+                    .isoFormatValid(false)
+                    .checkDigitValid(false)
+                    .isVerified(false)
+                    .typoWarning("Letter 'O' or 'I' found in numeric sequence. Use 0 / 1 instead.")
+                    .message("Typo guard: Serial digits contain letters 'O' or 'I'. Please use 0 / 1 instead.")
+                    .build();
+        }
+
         boolean formatValid = Iso6346Validator.isValidFormat(normalized);
         int expectedCheckDigit = -1;
         int actualCheckDigit = -1;
@@ -53,7 +66,7 @@ public class ContainerService {
             checkDigitValid = (expectedCheckDigit == actualCheckDigit);
         }
 
-        // STEP 1: Check if input contains symbols
+        // Check if input contains invalid symbols
         if (containerNumber != null && containerNumber.matches(".*[^a-zA-Z0-9].*")) {
             return ValidateContainerResponse.builder()
                     .valid(false)
@@ -61,11 +74,11 @@ public class ContainerService {
                     .isoFormatValid(false)
                     .checkDigitValid(false)
                     .duplicate(false)
-                    .message("Symbols are not allowed. Please enter 7 numbers without symbols (e.g. MSCU7721892).")
+                    .message("Symbols are not allowed. Please enter 4 letters followed by 7 digits (e.g. MSCU7721892).")
                     .build();
         }
 
-        // STEP 2: Check 4 uppercase letters followed by 7 numbers (Total 11 characters)
+        // Check ISO format (3 owner letters + U/J/Z + 6 digits + 1 check digit)
         if (!formatValid) {
             return ValidateContainerResponse.builder()
                     .valid(false)
@@ -73,25 +86,30 @@ public class ContainerService {
                     .isoFormatValid(false)
                     .checkDigitValid(false)
                     .duplicate(false)
-                    .message("Invalid format: Container number must be 4 uppercase letters followed by 7 digits without symbols (e.g., MSCU1234567).")
+                    .message("Invalid format: Container number must be 3 owner letters + U/J/Z category letter + 7 digits (e.g., CSQU3054383).")
                     .build();
         }
 
-        // STEP 3: Check if it is correct according to ISO 6346 standard
+        // Check check digit
+        String suggestion = Iso6346Validator.suggestValidContainerNumber(normalized);
         if (!checkDigitValid) {
             return ValidateContainerResponse.builder()
                     .valid(false)
                     .normalizedNumber(normalized)
+                    .suggestedNumber(suggestion)
                     .isoFormatValid(true)
                     .checkDigitValid(false)
+                    .isVerified(false)
                     .expectedCheckDigit(expectedCheckDigit)
                     .actualCheckDigit(actualCheckDigit)
                     .duplicate(false)
-                    .message("Format Valid (4 Letters + 7 Numbers). ISO 6346 Check Digit Mismatch: Expected " + expectedCheckDigit + ", but found " + actualCheckDigit + ".")
+                    .message("Check digit mismatch: expected " + expectedCheckDigit + ", but found " + actualCheckDigit +
+                            (suggestion != null ? ". Did you mean " + suggestion + "?" : "") +
+                            ". Driver may confirm and save as Unverified.")
                     .build();
         }
 
-        // STEP 4: Check duplicates in active trip or database
+        // Check duplicates in active trip or database
         UUID parsedTripId = null;
         if (tripId != null && !tripId.trim().isEmpty() && !tripId.equals("null") && !tripId.equals("undefined")) {
             try {
@@ -129,7 +147,7 @@ public class ContainerService {
                         .existingTripNumber(t.getTripNumber())
                         .existingTerminal(t.getSourceTerminal())
                         .existingStatus(c.getStatus().name())
-                        .message("Duplicate: Container " + normalized + " is currently loaded on active Trip #" + t.getTripNumber() + " at " + t.getSourceTerminal() + ".")
+                        .message("Duplicate warning: Container " + normalized + " is currently active on Trip #" + t.getTripNumber() + " at " + t.getSourceTerminal() + ".")
                         .build();
             }
         }
@@ -139,11 +157,22 @@ public class ContainerService {
                 .normalizedNumber(normalized)
                 .isoFormatValid(true)
                 .checkDigitValid(true)
+                .isVerified(true)
                 .expectedCheckDigit(expectedCheckDigit)
                 .actualCheckDigit(actualCheckDigit)
                 .duplicate(false)
-                .message("Container " + normalized + " verified successfully (4 letters + 7 numbers without symbols).")
+                .message("Container " + normalized + " verified successfully (ISO 6346 match).")
                 .build();
+    }
+
+    @Transactional
+    public Container markVerified(String id, String verifiedBy) {
+        Container container = containerRepository.findById(UUID.fromString(id))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Container not found"));
+        container.setIsVerified(true);
+        container.setVerifiedBy(verifiedBy != null ? verifiedBy : "SUPERVISOR");
+        container.setVerifiedAt(LocalDateTime.now());
+        return containerRepository.save(container);
     }
 
     @Transactional
@@ -151,7 +180,8 @@ public class ContainerService {
         String normalized = Iso6346Validator.normalize(req.getContainerNumber());
 
         ValidateContainerResponse validation = validateContainer(normalized, req.getTripId());
-        if (!validation.isValid()) {
+        // If not valid and not unverified confirmation
+        if (!validation.isIsoFormatValid()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, validation.getMessage());
         }
 
@@ -167,7 +197,6 @@ public class ContainerService {
             try { driverId = UUID.fromString(driverIdStr); } catch (Exception ignored) {}
         }
 
-        // If no active trip specified, find or create one for this driver
         if (trip == null && driverId != null) {
             List<Trip> activeTrips = tripRepository.findActiveTripsByDriver(driverId);
             if (!activeTrips.isEmpty()) {
@@ -176,7 +205,6 @@ public class ContainerService {
         }
 
         if (trip == null) {
-            // Create a new DRAFT/IN_PROGRESS trip for this manual container
             String sourceTerm = req.getMainTerminal() != null ? req.getMainTerminal() : "CICT";
             String destTerm = req.getDestTerminal() != null ? req.getDestTerminal() : "JCT";
             String vessel = req.getVesselName() != null && !req.getVesselName().trim().isEmpty() ? req.getVesselName().trim() : "MV Colombo Express";
@@ -198,6 +226,8 @@ public class ContainerService {
                 ? ContainerSize.FT_20
                 : ContainerSize.FT_40;
 
+        boolean verified = validation.isCheckDigitValid();
+
         Container container = Container.builder()
                 .containerNumber(normalized)
                 .size(size)
@@ -205,13 +235,14 @@ public class ContainerService {
                 .sourceTerminal(trip.getSourceTerminal())
                 .destTerminal(req.getDestTerminal() != null ? req.getDestTerminal() : trip.getDestTerminal())
                 .status(ContainerStatus.LOADED)
+                .isVerified(verified)
                 .build();
 
         container = containerRepository.save(container);
         trip.getContainers().add(container);
         tripRepository.save(trip);
 
-        log.info("Container {} successfully added to Trip {}", normalized, trip.getTripNumber());
+        log.info("Container {} (verified: {}) successfully added to Trip {}", normalized, verified, trip.getTripNumber());
         return tripService.mapToResponse(trip);
     }
 

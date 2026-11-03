@@ -18,6 +18,8 @@ import { adminFleetStore } from '../../../src/store/adminFleetStore';
 import { securityAuditService } from '../../../src/services/securityAuditService';
 import { useResponsive } from '../../../src/hooks/useResponsive';
 import AdminSignOutModal from '../../../src/components/AdminSignOutModal';
+import { TemporaryPasswordModal } from '../../../src/components/TemporaryPasswordModal';
+import { BulkImportModal } from '../../../src/components/BulkImportModal';
 
 export default function AdminSupervisorsTab() {
   const navigation = useNavigation();
@@ -35,12 +37,17 @@ export default function AdminSupervisorsTab() {
 
   // Create Modal
   const [createModalVisible, setCreateModalVisible] = useState(false);
+  const [importModalVisible, setImportModalVisible] = useState(false);
   const [creating, setCreating] = useState(false);
   const [fullName, setFullName] = useState('');
   const [employeeId, setEmployeeId] = useState('');
   const [nic, setNic] = useState('');
   const [mobileNumber, setMobileNumber] = useState('');
-  const [password, setPassword] = useState('supervisor');
+  const [tempCredsModal, setTempCredsModal] = useState<{
+    visible: boolean;
+    username: string;
+    temporaryPassword: string;
+  }>({ visible: false, username: '', temporaryPassword: '' });
 
   const fetchSupervisors = useCallback(async () => {
     try {
@@ -83,34 +90,30 @@ export default function AdminSupervisorsTab() {
     setCreating(true);
     const empIdFormatted = employeeId.trim().toUpperCase();
     try {
-      const newSupervisor = await adminFleetStore.registerNewSupervisorAccount({
+      const res = await adminService.createSupervisor({
         fullName: fullName.trim(),
         employeeId: empIdFormatted,
         username: empIdFormatted,
         nic: nic.trim(),
         mobileNumber: mobileNumber.trim(),
-        password: password.trim() || 'supervisor',
-        status: 'ACTIVE',
       });
 
-      await securityAuditService.logEvent(
-        'SUPERVISOR_REGISTERED',
-        empIdFormatted,
-        `Administrator registered new Supervisor: ${fullName.trim()} (${empIdFormatted}) · Scope: All Port Terminals · Tel: ${mobileNumber.trim()}`,
-        'INFO',
-        'ADMIN',
-        { role: 'SUPERVISOR', employeeId: empIdFormatted, createdBy: 'ADMIN', fullName: fullName.trim() }
-      );
-
-      Alert.alert('Success', `Supervisor ${fullName} (${empIdFormatted}) registered successfully!`);
       setCreateModalVisible(false);
       setFullName('');
       setEmployeeId('');
       setNic('');
       setMobileNumber('');
       fetchSupervisors();
+
+      if (res?.temporaryPassword) {
+        setTempCredsModal({
+          visible: true,
+          username: res.username || empIdFormatted,
+          temporaryPassword: res.temporaryPassword,
+        });
+      }
     } catch (err: any) {
-      Alert.alert('Error', err?.message || 'Failed to register supervisor');
+      Alert.alert('Error', err?.response?.data?.message || err?.message || 'Failed to register supervisor');
     } finally {
       setCreating(false);
     }
@@ -140,33 +143,17 @@ export default function AdminSupervisorsTab() {
 
   const handleResetPassword = async () => {
     if (!selectedSupervisor) return;
-    Alert.alert(
-      'Reset Password',
-      `Reset password for ${selectedSupervisor.fullName} (${selectedSupervisor.employeeId}) to default 'supervisor'?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Reset',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await adminFleetStore.resetSupervisorPassword(selectedSupervisor.id, 'supervisor');
-              await securityAuditService.logEvent(
-                'PASSWORD_CHANGED',
-                selectedSupervisor.username || selectedSupervisor.employeeId,
-                `Administrator reset password for Supervisor ${selectedSupervisor.fullName} (${selectedSupervisor.employeeId}) to default ('supervisor')`,
-                'INFO',
-                'ADMIN',
-                { role: 'SUPERVISOR', supervisorId: selectedSupervisor.id, resetBy: 'ADMIN' }
-              );
-              Alert.alert('Success', 'Password has been reset to: supervisor');
-            } catch (err: any) {
-              Alert.alert('Error', err?.message || 'Failed to reset password');
-            }
-          },
-        },
-      ]
-    );
+    try {
+      const res = await adminService.resetSupervisorPassword(selectedSupervisor.id || selectedSupervisor.employeeId);
+      setDetailsModalVisible(false);
+      setTempCredsModal({
+        visible: true,
+        username: selectedSupervisor.username || selectedSupervisor.employeeId,
+        temporaryPassword: res?.temporaryPassword || 'Generated',
+      });
+    } catch (err: any) {
+      Alert.alert('Error', err?.message || 'Failed to reset password');
+    }
   };
 
   return (
@@ -179,6 +166,14 @@ export default function AdminSupervisorsTab() {
         </View>
 
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          <TouchableOpacity
+            style={[styles.addBtn, { backgroundColor: '#0F766E' }]}
+            onPress={() => setImportModalVisible(true)}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="cloud-upload-outline" size={15} color="#FFFFFF" style={{ marginRight: 4 }} />
+            <Text style={styles.addBtnText}>IMPORT</Text>
+          </TouchableOpacity>
           <TouchableOpacity
             style={styles.addBtn}
             onPress={() => setCreateModalVisible(true)}
@@ -264,6 +259,21 @@ export default function AdminSupervisorsTab() {
               </View>
 
               <View style={styles.cardDivider} />
+
+              <View style={styles.auditMetadataRow}>
+                <View style={styles.auditItem}>
+                  <Text style={styles.auditLabel}>CREATED BY</Text>
+                  <Text style={styles.auditValue}>{s.createdBy || '-'}</Text>
+                </View>
+                <View style={styles.auditItem}>
+                  <Text style={styles.auditLabel}>CREATED DATE</Text>
+                  <Text style={styles.auditValue}>{s.createdAt ? new Date(s.createdAt).toLocaleString() : '-'}</Text>
+                </View>
+                <View style={styles.auditItem}>
+                  <Text style={styles.auditLabel}>LAST LOGIN</Text>
+                  <Text style={styles.auditValue}>{s.lastLoginAt ? new Date(s.lastLoginAt).toLocaleString() : '-'}</Text>
+                </View>
+              </View>
 
               <View style={styles.cardBottom}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
@@ -529,6 +539,23 @@ export default function AdminSupervisorsTab() {
       <AdminSignOutModal
         visible={signOutModalVisible}
         onClose={() => setSignOutModalVisible(false)}
+      />
+
+      {/* Temporary Password Display Modal */}
+      <TemporaryPasswordModal
+        visible={tempCredsModal.visible}
+        onClose={() => setTempCredsModal({ visible: false, username: '', temporaryPassword: '' })}
+        username={tempCredsModal.username}
+        temporaryPassword={tempCredsModal.temporaryPassword}
+        roleName="Supervisor"
+      />
+
+      {/* Bulk Import Modal */}
+      <BulkImportModal
+        visible={importModalVisible}
+        onClose={() => setImportModalVisible(false)}
+        type="supervisors"
+        onSuccess={() => fetchSupervisors()}
       />
     </View>
   );
@@ -836,5 +863,32 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '800',
     letterSpacing: 0.5,
+  },
+  auditMetadataRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#F7F9FA',
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#E5EAEC',
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    marginVertical: 6,
+    gap: 8,
+  },
+  auditItem: {
+    flex: 1,
+  },
+  auditLabel: {
+    fontSize: 9.5,
+    fontWeight: '600',
+    color: '#6B7C85',
+    marginBottom: 2,
+  },
+  auditValue: {
+    fontSize: 11,
+    fontWeight: '500',
+    color: '#1F2D33',
   },
 });

@@ -47,21 +47,6 @@ export default function SupervisorTabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="trips"
-        options={{
-          title: 'Trips',
-          tabBarIcon: ({ focused }) => (
-            <View style={[styles.iconWrap, focused && styles.iconWrapActive]}>
-              <Ionicons
-                name={focused ? 'swap-horizontal' : 'swap-horizontal-outline'}
-                size={20}
-                color={focused ? '#0F766E' : '#6B7C85'}
-              />
-            </View>
-          ),
-        }}
-      />
-      <Tabs.Screen
         name="drivers"
         options={{
           title: 'Drivers',
@@ -77,6 +62,21 @@ export default function SupervisorTabsLayout() {
         }}
       />
       <Tabs.Screen
+        name="trips"
+        options={{
+          title: 'Trips',
+          tabBarIcon: ({ focused }) => (
+            <View style={[styles.iconWrap, focused && styles.iconWrapActive]}>
+              <Ionicons
+                name={focused ? 'swap-horizontal' : 'swap-horizontal-outline'}
+                size={20}
+                color={focused ? '#0F766E' : '#6B7C85'}
+              />
+            </View>
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="reports"
         options={{
           title: 'Reports',
@@ -84,6 +84,21 @@ export default function SupervisorTabsLayout() {
             <View style={[styles.iconWrap, focused && styles.iconWrapActive]}>
               <Ionicons
                 name={focused ? 'document-text' : 'document-text-outline'}
+                size={20}
+                color={focused ? '#0F766E' : '#6B7C85'}
+              />
+            </View>
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: 'Profile',
+          tabBarIcon: ({ focused }) => (
+            <View style={[styles.iconWrap, focused && styles.iconWrapActive]}>
+              <Ionicons
+                name={focused ? 'person' : 'person-outline'}
                 size={20}
                 color={focused ? '#0F766E' : '#6B7C85'}
               />

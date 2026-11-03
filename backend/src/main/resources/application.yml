@@ -91,3 +91,9 @@ springdoc:
 server:
   port: ${PORT:8080}
 
+app:
+  upload:
+    dir: ${UPLOAD_DIR:./uploads/photos}
+  photos:
+    retention-months: ${PHOTO_RETENTION_MONTHS:0}
+

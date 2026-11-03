@@ -273,7 +273,7 @@ export default function AdminDashboardScreen() {
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.actionIconBtn}
-            onPress={() => router.push('/(admin)/supervisors')}
+            onPress={() => router.push('/(admin)/(tabs)/supervisors')}
             activeOpacity={0.7}
           >
             <Ionicons name="person-circle-outline" size={19} color="#90caf9" />
@@ -793,7 +793,7 @@ export default function AdminDashboardScreen() {
             <>
               <View style={styles.sectionHeaderRow}>
                 <Text style={styles.sectionHeader}>PORT SUPERVISORS FIELD ROSTER ({supervisorsRoster.length})</Text>
-                <TouchableOpacity onPress={() => router.push('/(admin)/supervisors')}>
+                <TouchableOpacity onPress={() => router.push('/(admin)/(tabs)/supervisors')}>
                   <Text style={styles.seeAllText}>Full Directory →</Text>
                 </TouchableOpacity>
               </View>

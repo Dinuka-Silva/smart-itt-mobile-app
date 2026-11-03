@@ -90,13 +90,20 @@ public class TripService {
                         ? ContainerSize.FT_20
                         : ContainerSize.FT_40;
 
+                String cNum = ci.getContainerNumber() != null ? ci.getContainerNumber().toUpperCase().trim() : "MSCU1234567";
+                Boolean verified = ci.getIsVerified();
+                if (verified == null) {
+                    verified = com.smartitt.container.service.Iso6346Validator.isValidCheckDigit(cNum);
+                }
+
                 Container container = Container.builder()
-                        .containerNumber(ci.getContainerNumber() != null ? ci.getContainerNumber().toUpperCase() : "MSCU1234567")
+                        .containerNumber(cNum)
                         .size(size)
                         .trip(trip)
                         .sourceTerminal(req.getSourceTerminal())
                         .destTerminal(ci.getDestTerminal() != null ? ci.getDestTerminal() : req.getDestTerminal())
                         .status(ContainerStatus.LOADED)
+                        .isVerified(verified)
                         .build();
                 containerEntities.add(container);
             }
@@ -303,6 +310,9 @@ public class TripService {
                         .destTerminal(c.getDestTerminal())
                         .status(c.getStatus().name())
                         .unloadedAt(c.getUnloadedAt())
+                        .isVerified(c.getIsVerified() != null ? c.getIsVerified() : true)
+                        .verifiedBy(c.getVerifiedBy())
+                        .verifiedAt(c.getVerifiedAt())
                         .build())
                 .collect(Collectors.toList());
 

@@ -60,6 +60,11 @@ public class DriverProfileResponse {
     private Boolean portPassRenewalDue;
     private String portPassStatus; // VALID, RENEWAL_DUE, EXPIRED
 
+    private Boolean mustChangePassword;
+    private LocalDateTime lastLoginAt;
+    private String createdBy;
+    private String temporaryPassword;
+
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

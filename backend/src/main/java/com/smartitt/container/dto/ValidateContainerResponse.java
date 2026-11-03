@@ -18,6 +18,9 @@ public class ValidateContainerResponse {
     private boolean duplicate;
     private String message;
     private String normalizedNumber;
+    private String suggestedNumber;
+    private String typoWarning;
+    private boolean isVerified;
     private String existingTripNumber;
     private String existingTerminal;
     private String existingStatus;

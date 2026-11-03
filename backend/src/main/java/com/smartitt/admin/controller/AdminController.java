@@ -1,6 +1,8 @@
 package com.smartitt.admin.controller;
 
 import com.smartitt.admin.dto.AdminDashboardResponse;
+import com.smartitt.admin.dto.BulkImportResult;
+import com.smartitt.admin.service.AdminBulkImportService;
 import com.smartitt.admin.service.AdminService;
 import com.smartitt.audit.entity.AuditLog;
 import com.smartitt.driver.dto.DriverProfileResponse;
@@ -10,11 +12,15 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -27,6 +33,7 @@ import java.util.UUID;
 public class AdminController {
 
     private final AdminService adminService;
+    private final AdminBulkImportService bulkImportService;
 
     // ─────────────────────────────────────────────────────────────
     // 1. DASHBOARD
@@ -86,11 +93,11 @@ public class AdminController {
             @RequestBody(required = false) Map<String, String> body) {
         String newPassword = (body != null && body.containsKey("newPassword") && body.get("newPassword") != null && !body.get("newPassword").isBlank())
                 ? body.get("newPassword")
-                : "driver";
-        adminService.resetDriverPassword(id, newPassword);
+                : null;
+        String temporaryPassword = adminService.resetDriverPassword(id, newPassword);
         return ResponseEntity.ok(Map.of(
-                "message", "Driver password successfully reset to default: " + newPassword,
-                "defaultPassword", newPassword
+                "message", "Driver password reset successfully",
+                "temporaryPassword", temporaryPassword
         ));
     }
 
@@ -140,10 +147,15 @@ public class AdminController {
     @Operation(summary = "Reset supervisor password")
     public ResponseEntity<Map<String, String>> resetSupervisorPassword(
             @PathVariable String id,
-            @RequestBody Map<String, String> body) {
-        String newPassword = body.getOrDefault("newPassword", "supervisor");
-        adminService.resetSupervisorPassword(id, newPassword);
-        return ResponseEntity.ok(Map.of("message", "Supervisor password successfully reset"));
+            @RequestBody(required = false) Map<String, String> body) {
+        String newPassword = (body != null && body.containsKey("newPassword") && body.get("newPassword") != null && !body.get("newPassword").isBlank())
+                ? body.get("newPassword")
+                : null;
+        String temporaryPassword = adminService.resetSupervisorPassword(id, newPassword);
+        return ResponseEntity.ok(Map.of(
+                "message", "Supervisor password reset successfully",
+                "temporaryPassword", temporaryPassword
+        ));
     }
 
     // ─────────────────────────────────────────────────────────────
@@ -228,5 +240,38 @@ public class AdminController {
             @RequestParam(required = false) String entityType,
             @RequestParam(required = false) String action) {
         return ResponseEntity.ok(adminService.getAuditLogs(page, size, entityType, action));
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // 8. BULK IMPORT & TEMPLATES
+    // ─────────────────────────────────────────────────────────────
+    @PostMapping(value = "/drivers/import", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "Bulk import drivers from CSV or Excel file")
+    public ResponseEntity<BulkImportResult> importDrivers(@RequestParam("file") MultipartFile file) {
+        return ResponseEntity.ok(bulkImportService.importDrivers(file));
+    }
+
+    @PostMapping(value = "/supervisors/import", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "Bulk import supervisors from CSV or Excel file")
+    public ResponseEntity<BulkImportResult> importSupervisors(@RequestParam("file") MultipartFile file) {
+        return ResponseEntity.ok(bulkImportService.importSupervisors(file));
+    }
+
+    @PostMapping(value = "/vehicles/import", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "Bulk import fleet vehicles from CSV or Excel file")
+    public ResponseEntity<BulkImportResult> importVehicles(@RequestParam("file") MultipartFile file) {
+        return ResponseEntity.ok(bulkImportService.importVehicles(file));
+    }
+
+    @GetMapping("/import/templates/{type}")
+    @Operation(summary = "Download sample CSV template for bulk import (drivers, supervisors, vehicles)")
+    public ResponseEntity<byte[]> downloadTemplate(@PathVariable String type) {
+        String csvContent = bulkImportService.getTemplateCsv(type);
+        byte[] bytes = csvContent.getBytes(StandardCharsets.UTF_8);
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + type + "_template.csv\"")
+                .contentType(MediaType.parseMediaType("text/csv; charset=UTF-8"))
+                .body(bytes);
     }
 }

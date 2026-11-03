@@ -14,6 +14,7 @@ import { colors, radius, spacing, typography } from '../constants/theme';
 
 export type DateFilterOption = 'TODAY' | 'YESTERDAY' | 'THIS_WEEK' | 'THIS_MONTH' | 'CUSTOM' | 'ALL';
 export type StatusFilterOption = 'ALL' | 'PENDING' | 'APPROVED' | 'REJECTED' | 'COMPLETED';
+export type PhotoFilterOption = 'ALL' | 'VERIFIED' | 'PENDING' | 'REJECTED' | 'MISSING';
 
 export interface FilterState {
   date: DateFilterOption;
@@ -24,6 +25,7 @@ export interface FilterState {
   vehicleNumber?: string;
   terminal?: string;
   status: StatusFilterOption;
+  photoStatus?: PhotoFilterOption;
   search?: string;
 }
 
@@ -43,6 +45,7 @@ interface FilterBarProps {
   showVehicleFilter?: boolean;
   showTerminalFilter?: boolean;
   showStatusFilter?: boolean;
+  showPhotoStatusFilter?: boolean;
 }
 
 const DATE_CHIPS: { id: DateFilterOption; label: string }[] = [
@@ -62,6 +65,14 @@ const STATUS_CHIPS: { id: StatusFilterOption; label: string }[] = [
   { id: 'REJECTED', label: 'Rejected' },
 ];
 
+const PHOTO_STATUS_CHIPS: { id: PhotoFilterOption; label: string }[] = [
+  { id: 'ALL', label: 'All Photos' },
+  { id: 'VERIFIED', label: 'Photo Verified' },
+  { id: 'PENDING', label: 'Photo Pending' },
+  { id: 'REJECTED', label: 'Photo Rejected' },
+  { id: 'MISSING', label: 'Photo Missing' },
+];
+
 const DEFAULT_TERMINALS = ['ALL', 'CICT', 'CWIT', 'ECT', 'JCT', 'UCT', 'SAGT'];
 
 function normalizePlate(raw: string): string {
@@ -78,6 +89,7 @@ export function FilterBar({
   showVehicleFilter = true,
   showTerminalFilter = true,
   showStatusFilter = true,
+  showPhotoStatusFilter = false,
 }: FilterBarProps) {
   const [modalType, setModalType] = useState<'DRIVER' | 'VEHICLE' | 'TERMINAL' | 'CUSTOM_DATE' | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -92,6 +104,7 @@ export function FilterBar({
     !!filters.vehicleNumber ||
     (filters.terminal && filters.terminal !== 'ALL') ||
     filters.status !== 'ALL' ||
+    (filters.photoStatus && filters.photoStatus !== 'ALL') ||
     !!filters.search;
 
   const handleClearFilters = () => {
@@ -104,6 +117,7 @@ export function FilterBar({
       vehicleNumber: undefined,
       terminal: undefined,
       status: 'ALL',
+      photoStatus: 'ALL',
       search: undefined,
     });
   };
@@ -377,6 +391,36 @@ export function FilterBar({
               >
                 <Text style={[styles.statusChipText, isActive && styles.statusChipTextActive]}>
                   {st.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+      )}
+
+      {/* 4.1 Photo Status Chips Row */}
+      {showPhotoStatusFilter && (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={[styles.statusChipsScroll, { marginTop: 4 }]}
+        >
+          {PHOTO_STATUS_CHIPS.map((pst) => {
+            const isActive = (filters.photoStatus || 'ALL') === pst.id;
+            return (
+              <TouchableOpacity
+                key={pst.id}
+                style={[styles.statusChip, isActive && styles.statusChipActive]}
+                onPress={() => onChange({ ...filters, photoStatus: pst.id })}
+                activeOpacity={0.7}
+              >
+                <Ionicons
+                  name={pst.id === 'ALL' ? 'images-outline' : 'camera-outline'}
+                  size={12}
+                  color={isActive ? colors.primary : colors.textSecondary}
+                />
+                <Text style={[styles.statusChipText, isActive && styles.statusChipTextActive]}>
+                  {pst.label}
                 </Text>
               </TouchableOpacity>
             );

@@ -297,8 +297,10 @@ const initialTrips: MockTrip[] = [
   },
 ];
 
+const isDemoEnabled = process.env.EXPO_PUBLIC_DEMO_DATA === 'true';
+
 export const useMockTripStore = create<MockTripState>((set, get) => ({
-  mockTrips: initialTrips,
+  mockTrips: isDemoEnabled ? initialTrips : [],
 
   addTrip: (trip) => {
     const resolvedChe = resolveCheNumber(trip.vehicleNumber, trip.chassisNumber || trip.chaiNumber);

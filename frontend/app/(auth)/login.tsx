@@ -19,6 +19,7 @@ import { credentialStore } from '../../src/services/credentialStore';
 import { adminFleetStore } from '../../src/store/adminFleetStore';
 import { biometricService, BiometricStatus } from '../../src/services/biometricService';
 import { securityAuditService } from '../../src/services/securityAuditService';
+import { ForceChangePasswordModal } from '../../src/components/ForceChangePasswordModal';
 import { colors, radius, spacing } from '../../src/theme';
 import { useResponsive } from '../../src/hooks/useResponsive';
 
@@ -28,9 +29,9 @@ export default function LoginScreen() {
   const login = useAuthStore((s) => s.login);
   const { topInset, bottomInset, containerPaddingHorizontal } = useResponsive();
 
-  const [username, setUsername] = useState(params.prefillUser || 'DRV-00001');
+  const [username, setUsername] = useState(params.prefillUser || '');
   const [password, setPassword] = useState(
-    params.prefillUser && params.prefillUser !== 'DRV-00001' ? '' : 'driver'
+    ''
   );
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -40,6 +41,8 @@ export default function LoginScreen() {
   const [biometricStatus, setBiometricStatus] = useState<BiometricStatus | null>(null);
   const [lockoutSeconds, setLockoutSeconds] = useState<number>(0);
   const [isBioEnabledForUser, setIsBioEnabledForUser] = useState(false);
+  const [forceChangePasswordVisible, setForceChangePasswordVisible] = useState(false);
+  const [pendingUserSession, setPendingUserSession] = useState<{ user: any; passwordEntered: string } | null>(null);
 
   // Check device biometric status
   useEffect(() => {
@@ -232,6 +235,14 @@ export default function LoginScreen() {
           'WARNING',
           'DRIVER'
         );
+        setLoading(false);
+        return;
+      }
+
+      // Prompt mandatory password change if flagged on account
+      if (authResponse.mustChangePassword || (authResponse.user as any)?.mustChangePassword) {
+        setPendingUserSession({ user, passwordEntered: cleanPass });
+        setForceChangePasswordVisible(true);
         setLoading(false);
         return;
       }
@@ -831,6 +842,24 @@ export default function LoginScreen() {
           </Text>
         </View>
       </ScrollView>
+
+      {forceChangePasswordVisible && pendingUserSession && (
+        <ForceChangePasswordModal
+          visible={forceChangePasswordVisible}
+          username={pendingUserSession.user.username || username}
+          initialCurrentPassword={pendingUserSession.passwordEntered}
+          onSuccess={async (newPassword) => {
+            const { user } = pendingUserSession;
+            setForceChangePasswordVisible(false);
+            setPendingUserSession(null);
+            await credentialStore.cacheOnlineLogin(user.username, newPassword, user.role);
+            await login(user);
+            if (user.role === 'ADMIN') router.replace('/(admin)/(tabs)');
+            else if (user.role === 'SUPERVISOR') router.replace('/(supervisor)/(tabs)');
+            else router.replace('/(driver)/(tabs)');
+          }}
+        />
+      )}
     </View>
   );
 }

@@ -74,6 +74,15 @@ public class User implements UserDetails {
     @Column(columnDefinition = "TEXT")
     private String coverImage;
 
+    @Column(name = "must_change_password")
+    private Boolean mustChangePassword = false;
+
+    @Column(name = "last_login_at")
+    private LocalDateTime lastLoginAt;
+
+    @Column(name = "created_by", length = 100)
+    private String createdBy;
+
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 

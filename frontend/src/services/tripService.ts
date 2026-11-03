@@ -22,6 +22,11 @@ export interface Container {
   damageStatus?: string;
   cargoType?: string;
   sealNumber?: string;
+  isVerified?: boolean;
+  verifiedBy?: string;
+  verifiedAt?: string;
+  photoStatus?: 'PENDING' | 'VERIFIED' | 'REJECTED' | 'NONE';
+  photoUrl?: string;
 }
 
 export interface CreateTripRequest {
@@ -120,6 +125,13 @@ export const tripService = {
 
   async unloadContainer(tripId: string, containerId: string, unloadedAt: string): Promise<TripResponse> {
     const response = await apiClient.patch<TripResponse>(`/trips/${tripId}/containers/${containerId}/unload`, { unloadedAt });
+    return response.data;
+  },
+
+  async verifyContainer(containerId: string, supervisorId?: string): Promise<any> {
+    const response = await apiClient.patch(`/containers/${containerId}/verify`, null, {
+      params: { verifiedBy: supervisorId },
+    });
     return response.data;
   },
 

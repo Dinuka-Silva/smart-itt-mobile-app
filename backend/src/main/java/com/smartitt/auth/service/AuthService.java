@@ -31,6 +31,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.regex.Pattern;
 
 @Slf4j
@@ -386,6 +387,8 @@ public class AuthService {
         );
 
         String token = jwtUtil.generateAccessToken(user);
+        user.setLastLoginAt(LocalDateTime.now());
+        userRepository.save(user);
         return buildResponse(user, token);
     }
 
@@ -477,6 +480,7 @@ public class AuthService {
 
         // Encode and save new password
         user.setPassword(passwordEncoder.encode(req.getNewPassword().trim()));
+        user.setMustChangePassword(false);
         userRepository.save(user);
         log.info("Password successfully reset for user: {}", user.getUsername());
 
@@ -517,6 +521,7 @@ public class AuthService {
         }
 
         user.setPassword(passwordEncoder.encode(req.getNewPassword().trim()));
+        user.setMustChangePassword(false);
         userRepository.save(user);
         log.info("Password successfully changed for operator: {}", user.getUsername());
 
@@ -605,6 +610,7 @@ public class AuthService {
                 .role(user.getRole().name())
                 .token(token)
                 .status(user.getStatus() != null ? user.getStatus().name() : AccountStatus.ACTIVE.name())
+                .mustChangePassword(Boolean.TRUE.equals(user.getMustChangePassword()))
                 .employeeId(user.getEmployeeId());
 
         if (user instanceof Driver d) {

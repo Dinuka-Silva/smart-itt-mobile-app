@@ -32,6 +32,16 @@ public class ContainerController {
         return ResponseEntity.ok(containerService.validateContainer(containerNumber, tripId));
     }
 
+    @PatchMapping("/{id}/verify")
+    @Operation(summary = "Mark an unverified container as verified (Supervisor/Admin)")
+    public ResponseEntity<Container> verifyContainer(
+            @PathVariable String id,
+            @RequestParam(required = false) String verifiedBy,
+            Authentication auth) {
+        String actor = verifiedBy != null ? verifiedBy : (auth != null ? auth.getName() : "SUPERVISOR");
+        return ResponseEntity.ok(containerService.markVerified(id, actor));
+    }
+
     @PostMapping
     @Operation(summary = "Manually add a verified container to an active trip")
     public ResponseEntity<TripResponse> addManualContainer(

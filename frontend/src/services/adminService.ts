@@ -1,5 +1,28 @@
 import apiClient from './api';
 
+export interface RowError {
+  rowNumber: number;
+  field: string;
+  value: string;
+  errorReason: string;
+}
+
+export interface ImportedCredential {
+  username: string;
+  temporaryPassword: string;
+  role: string;
+  employeeId: string;
+  fullName: string;
+}
+
+export interface BulkImportResult {
+  totalRows: number;
+  importedCount: number;
+  failedCount: number;
+  errors: RowError[];
+  credentials: ImportedCredential[];
+}
+
 export interface AdminDashboardStats {
   totalDrivers: number;
   activeDrivers: number;
@@ -176,6 +199,35 @@ export const adminService = {
   // Terminals
   getTerminals: async (): Promise<any[]> => {
     const res = await apiClient.get<any[]>('/terminals');
+    return res.data;
+  },
+
+  // Bulk Import
+  importDrivers: async (formData: FormData): Promise<BulkImportResult> => {
+    const res = await apiClient.post<BulkImportResult>('/admin/drivers/import', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return res.data;
+  },
+
+  importSupervisors: async (formData: FormData): Promise<BulkImportResult> => {
+    const res = await apiClient.post<BulkImportResult>('/admin/supervisors/import', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return res.data;
+  },
+
+  importVehicles: async (formData: FormData): Promise<BulkImportResult> => {
+    const res = await apiClient.post<BulkImportResult>('/admin/vehicles/import', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return res.data;
+  },
+
+  downloadTemplate: async (type: 'drivers' | 'supervisors' | 'vehicles'): Promise<string> => {
+    const res = await apiClient.get<string>(`/admin/import/templates/${type}`, {
+      responseType: 'text',
+    });
     return res.data;
   },
 };

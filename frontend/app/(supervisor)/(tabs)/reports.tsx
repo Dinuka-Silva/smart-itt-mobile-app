@@ -139,7 +139,26 @@ export default function SharedReportsScreen() {
       };
 
       const data = await tripService.getTrips(queryParams);
-      setTrips(Array.isArray(data) ? data : []);
+      let list = Array.isArray(data) ? data : [];
+      if (filters.photoStatus && filters.photoStatus !== 'ALL') {
+        list = list.filter((t) => {
+          const containers = t.containers || [];
+          if (filters.photoStatus === 'VERIFIED') {
+            return containers.some((c) => c.photoStatus === 'VERIFIED' || c.isVerified);
+          }
+          if (filters.photoStatus === 'PENDING') {
+            return containers.some((c) => c.photoStatus === 'PENDING');
+          }
+          if (filters.photoStatus === 'REJECTED') {
+            return containers.some((c) => c.photoStatus === 'REJECTED');
+          }
+          if (filters.photoStatus === 'MISSING') {
+            return containers.some((c) => !c.photoUrl && (!c.photoStatus || c.photoStatus === 'NONE'));
+          }
+          return true;
+        });
+      }
+      setTrips(list);
     } catch (err) {
       console.warn('[Reports] Error fetching trips:', err);
       // Fallback empty if network error
@@ -253,6 +272,7 @@ export default function SharedReportsScreen() {
       .map((t, idx) => {
         const containersStr = (t.containers || []).map((c) => c.containerNumber).join(', ') || '-';
         const sizesStr = (t.containers || []).map((c) => c.size || '40FT').join(', ') || '-';
+        const photoStatusStr = (t.containers || []).map((c) => c.photoStatus || (c.isVerified ? 'VERIFIED' : 'NONE')).join(', ') || '-';
         const dateStr = formatDateColombo(t.startTime || t.createdAt);
         const startStr = formatTimeColombo(t.startTime || t.createdAt);
         const endStr = formatTimeColombo(t.endTime);
@@ -268,6 +288,7 @@ export default function SharedReportsScreen() {
         <Cell><Data ss:Type="String">${t.chassisNumber || '-'}</Data></Cell>
         <Cell><Data ss:Type="String">${containersStr}</Data></Cell>
         <Cell><Data ss:Type="String">${sizesStr}</Data></Cell>
+        <Cell><Data ss:Type="String">${photoStatusStr}</Data></Cell>
         <Cell><Data ss:Type="String">${t.sourceTerminal || '-'}</Data></Cell>
         <Cell><Data ss:Type="String">${t.destTerminal || '-'}</Data></Cell>
         <Cell><Data ss:Type="String">${startStr}</Data></Cell>
@@ -302,6 +323,7 @@ export default function SharedReportsScreen() {
     <Cell><Data ss:Type="String">Chassis/CHE</Data></Cell>
     <Cell><Data ss:Type="String">Container No</Data></Cell>
     <Cell><Data ss:Type="String">Size</Data></Cell>
+    <Cell><Data ss:Type="String">Photo Status</Data></Cell>
     <Cell><Data ss:Type="String">Origin</Data></Cell>
     <Cell><Data ss:Type="String">Destination</Data></Cell>
     <Cell><Data ss:Type="String">Start Time</Data></Cell>
@@ -348,6 +370,7 @@ export default function SharedReportsScreen() {
       'Chassis/CHE',
       'Container No',
       'Size',
+      'Photo Status',
       'Origin',
       'Destination',
       'Start Time',
@@ -361,6 +384,7 @@ export default function SharedReportsScreen() {
     const csvRows = trips.map((t, idx) => {
       const containersStr = (t.containers || []).map((c) => c.containerNumber).join('; ') || '-';
       const sizesStr = (t.containers || []).map((c) => c.size || '40FT').join('; ') || '-';
+      const photoStatusStr = (t.containers || []).map((c) => c.photoStatus || (c.isVerified ? 'VERIFIED' : 'NONE')).join('; ') || '-';
       const dateStr = formatDateColombo(t.startTime || t.createdAt);
       const startStr = formatTimeColombo(t.startTime || t.createdAt);
       const endStr = formatTimeColombo(t.endTime);
@@ -375,6 +399,7 @@ export default function SharedReportsScreen() {
         escapeCsv(t.chassisNumber || '-'),
         escapeCsv(containersStr),
         escapeCsv(sizesStr),
+        escapeCsv(photoStatusStr),
         escapeCsv(t.sourceTerminal || '-'),
         escapeCsv(t.destTerminal || '-'),
         escapeCsv(startStr),
@@ -414,6 +439,7 @@ export default function SharedReportsScreen() {
       .map((t, i) => {
         const containersStr = (t.containers || []).map((c) => c.containerNumber).join(', ') || '-';
         const sizesStr = (t.containers || []).map((c) => c.size || '40FT').join(', ') || '-';
+        const photoStatusStr = (t.containers || []).map((c) => c.photoStatus || (c.isVerified ? 'VERIFIED' : 'NONE')).join(', ') || '-';
         const dateStr = formatDateColombo(t.startTime || t.createdAt);
         const startStr = formatTimeColombo(t.startTime || t.createdAt);
         const endStr = formatTimeColombo(t.endTime);
@@ -428,6 +454,7 @@ export default function SharedReportsScreen() {
         <td style="padding: 6px 8px; font-weight: 600;">${t.vehicleNumber || '-'}</td>
         <td style="padding: 6px 8px; font-family: monospace;">${containersStr}</td>
         <td style="padding: 6px 8px; text-align: center;">${sizesStr}</td>
+        <td style="padding: 6px 8px; text-align: center;">${photoStatusStr}</td>
         <td style="padding: 6px 8px;">${t.sourceTerminal || '-'} ➔ ${t.destTerminal || '-'}</td>
         <td style="padding: 6px 8px;">${startStr}</td>
         <td style="padding: 6px 8px;">${endStr}</td>
@@ -483,6 +510,7 @@ export default function SharedReportsScreen() {
         <th>Vehicle No</th>
         <th>Container(s)</th>
         <th>Size</th>
+        <th>Photo</th>
         <th>Route</th>
         <th>Start</th>
         <th>End</th>
@@ -558,6 +586,7 @@ export default function SharedReportsScreen() {
         onChange={setFilters}
         driverOptions={driverOptions}
         vehicleOptions={vehicleOptions}
+        showPhotoStatusFilter={true}
       />
 
       <ScrollView
@@ -710,6 +739,25 @@ export default function SharedReportsScreen() {
                                 <Ionicons name="cube-outline" size={12} color={colors.primary} />
                                 <Text style={styles.containerNumber}>{c.containerNumber}</Text>
                                 <Text style={styles.containerSize}>{c.size || '40FT'}</Text>
+                                {c.isVerified === false && (
+                                  <View style={styles.unverifiedTag}>
+                                    <Text style={styles.unverifiedTagText}>UNVERIFIED</Text>
+                                  </View>
+                                )}
+                                <View style={styles.photoTag}>
+                                  <Ionicons
+                                    name={c.photoStatus === 'VERIFIED' ? 'checkmark-circle' : c.photoStatus === 'PENDING' ? 'time' : 'camera-outline'}
+                                    size={10}
+                                    color={c.photoStatus === 'VERIFIED' ? colors.success : c.photoStatus === 'PENDING' ? colors.warning : colors.textMuted}
+                                  />
+                                  <Text style={[
+                                    styles.photoTagText,
+                                    c.photoStatus === 'VERIFIED' && { color: colors.success },
+                                    c.photoStatus === 'PENDING' && { color: colors.warning },
+                                  ]}>
+                                    {c.photoStatus === 'VERIFIED' ? 'Photo ✓' : c.photoStatus === 'PENDING' ? 'Photo Pending' : c.photoStatus === 'REJECTED' ? 'Photo Rejected' : 'No Photo'}
+                                  </Text>
+                                </View>
                                 {c.damageStatus === 'DAMAGED' && (
                                   <Text style={styles.damageTag}>DAMAGED</Text>
                                 )}
@@ -1020,6 +1068,31 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     paddingHorizontal: 4,
     borderRadius: 3,
+  },
+  unverifiedTag: {
+    backgroundColor: '#FEF3C7',
+    paddingHorizontal: 4,
+    paddingVertical: 1,
+    borderRadius: 3,
+  },
+  unverifiedTagText: {
+    fontSize: 8.5,
+    fontWeight: '800',
+    color: '#D97706',
+  },
+  photoTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 4,
+    paddingVertical: 1,
+    borderRadius: 3,
+  },
+  photoTagText: {
+    fontSize: 8.5,
+    fontWeight: '700',
+    color: colors.textSecondary,
   },
   damageTag: {
     fontSize: 9,

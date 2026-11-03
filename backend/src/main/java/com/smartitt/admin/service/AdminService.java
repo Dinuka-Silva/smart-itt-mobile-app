@@ -3,6 +3,7 @@ package com.smartitt.admin.service;
 import com.smartitt.admin.dto.AdminDashboardResponse;
 import com.smartitt.audit.entity.AuditLog;
 import com.smartitt.audit.service.AuditLogService;
+import com.smartitt.common.util.PasswordGenerator;
 import com.smartitt.container.entity.Container;
 import com.smartitt.container.entity.ContainerSize;
 import com.smartitt.container.repository.ContainerRepository;
@@ -65,6 +66,16 @@ public class AdminService {
             }
         } catch (Exception ignored) {}
         return UUID.fromString("00000000-0000-0000-0000-000000000000");
+    }
+
+    private String getCurrentActorUsername() {
+        try {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            if (auth != null && auth.getPrincipal() instanceof User u) {
+                return u.getUsername() != null ? u.getUsername() : u.getFullName();
+            }
+        } catch (Exception ignored) {}
+        return "admin";
     }
 
     // ─────────────────────────────────────────────────────────────
@@ -206,15 +217,28 @@ public class AdminService {
             driverCode = generateNextDriverCode();
         }
 
+        String username = (String) req.get("username");
+        if (username == null || username.isBlank()) {
+            username = driverCode;
+        }
+
+        if (userRepository.existsByUsernameIgnoreCase(username)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Username already registered: " + username);
+        }
+
+        String rawPassword = (password != null && !password.isBlank()) ? password : PasswordGenerator.generateTemporaryPassword();
+
         Driver driver = new Driver();
         driver.setFullName(fullName);
         driver.setEmployeeId(employeeId);
         driver.setDriverCode(driverCode);
-        driver.setUsername(driverCode);
+        driver.setUsername(username);
         driver.setNic(nic);
         driver.setMobileNumber(mobileNumber);
         driver.setEmail(email != null && !email.isBlank() ? email : driverCode.toLowerCase() + "@smartitt.lk");
-        driver.setPassword(passwordEncoder.encode(password != null && !password.isBlank() ? password : "driver"));
+        driver.setPassword(passwordEncoder.encode(rawPassword));
+        driver.setMustChangePassword(true);
+        driver.setCreatedBy(getCurrentActorUsername());
         driver.setRole(Role.DRIVER);
         driver.setStatus(AccountStatus.ACTIVE);
         driver.setDrivingLicenceNumber(drivingLicenceNumber);
@@ -241,7 +265,9 @@ public class AdminService {
         auditLogService.log(getCurrentActorId(), "ADMIN", "CREATE_DRIVER", "DRIVER", saved.getId().toString(),
                 "Created driver: " + saved.getFullName() + " (" + saved.getDriverCode() + ")");
 
-        return mapDriverToProfile(saved);
+        DriverProfileResponse response = mapDriverToProfile(saved);
+        response.setTemporaryPassword(rawPassword);
+        return response;
     }
 
     @Transactional
@@ -301,14 +327,16 @@ public class AdminService {
     }
 
     @Transactional
-    public void resetDriverPassword(String id, String newPassword) {
-        String pwd = (newPassword != null && !newPassword.isBlank()) ? newPassword : "driver";
+    public String resetDriverPassword(String id, String newPassword) {
+        String pwd = (newPassword != null && !newPassword.isBlank()) ? newPassword : PasswordGenerator.generateTemporaryPassword();
         Driver driver = findDriver(id);
         driver.setPassword(passwordEncoder.encode(pwd));
+        driver.setMustChangePassword(true);
         driverRepository.save(driver);
 
         auditLogService.log(getCurrentActorId(), "ADMIN", "RESET_DRIVER_PASSWORD", "DRIVER", driver.getId().toString(),
-                "Password reset by Admin for " + driver.getDriverCode() + " (" + driver.getFullName() + ") to default: '" + pwd + "'");
+                "Password reset by Admin for " + driver.getDriverCode() + " (" + driver.getFullName() + ")");
+        return pwd;
     }
 
     private String generateNextDriverCode() {
@@ -361,6 +389,11 @@ public class AdminService {
                 .address(d.getAddress())
                 .profilePhoto(d.getProfilePhoto())
                 .coverImage(d.getCoverImage())
+                .mustChangePassword(d.getMustChangePassword())
+                .lastLoginAt(d.getLastLoginAt())
+                .createdBy(d.getCreatedBy())
+                .createdAt(d.getCreatedAt())
+                .updatedAt(d.getUpdatedAt())
                 .build();
     }
 
@@ -415,14 +448,26 @@ public class AdminService {
         if (userRepository.existsByMobileNumber(mobileNumber)) throw new ResponseStatusException(HttpStatus.CONFLICT, "Mobile number already exists");
         if (email != null && !email.isBlank() && userRepository.existsByEmail(email)) throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already exists");
 
+        String username = (String) req.get("username");
+        if (username == null || username.isBlank()) {
+            username = employeeId;
+        }
+        if (userRepository.existsByUsernameIgnoreCase(username)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Username already exists: " + username);
+        }
+
+        String rawPassword = (password != null && !password.isBlank()) ? password : PasswordGenerator.generateTemporaryPassword();
+
         Supervisor sup = new Supervisor();
         sup.setFullName(fullName);
         sup.setEmployeeId(employeeId);
-        sup.setUsername(employeeId);
+        sup.setUsername(username);
         sup.setNic(nic);
         sup.setMobileNumber(mobileNumber);
         sup.setEmail(email != null && !email.isBlank() ? email : employeeId.toLowerCase() + "@smartitt.lk");
-        sup.setPassword(passwordEncoder.encode(password != null && !password.isBlank() ? password : "supervisor"));
+        sup.setPassword(passwordEncoder.encode(rawPassword));
+        sup.setMustChangePassword(true);
+        sup.setCreatedBy(getCurrentActorUsername());
         sup.setRole(Role.SUPERVISOR);
         sup.setStatus(AccountStatus.ACTIVE);
 
@@ -435,7 +480,9 @@ public class AdminService {
         auditLogService.log(getCurrentActorId(), "ADMIN", "CREATE_SUPERVISOR", "SUPERVISOR", saved.getId().toString(),
                 "Created supervisor: " + saved.getFullName() + " (" + saved.getEmployeeId() + ")");
 
-        return mapSupervisorToDto(saved);
+        Map<String, Object> dto = mapSupervisorToDto(saved);
+        dto.put("temporaryPassword", rawPassword);
+        return dto;
     }
 
     @Transactional
@@ -486,13 +533,16 @@ public class AdminService {
     }
 
     @Transactional
-    public void resetSupervisorPassword(String id, String newPassword) {
+    public String resetSupervisorPassword(String id, String newPassword) {
+        String pwd = (newPassword != null && !newPassword.isBlank()) ? newPassword : PasswordGenerator.generateTemporaryPassword();
         Supervisor sup = findSupervisor(id);
-        sup.setPassword(passwordEncoder.encode(newPassword));
+        sup.setPassword(passwordEncoder.encode(pwd));
+        sup.setMustChangePassword(true);
         supervisorRepository.save(sup);
 
         auditLogService.log(getCurrentActorId(), "ADMIN", "RESET_SUPERVISOR_PASSWORD", "SUPERVISOR", sup.getId().toString(),
                 "Password reset by Admin for supervisor " + sup.getEmployeeId());
+        return pwd;
     }
 
     private Supervisor findSupervisor(String id) {
@@ -519,7 +569,11 @@ public class AdminService {
         map.put("assignedTerminal", s.getAssignedTerminal() != null ? s.getAssignedTerminal().getCode() : null);
         map.put("assignedTerminalName", s.getAssignedTerminal() != null ? s.getAssignedTerminal().getName() : null);
         map.put("address", s.getAddress());
+        map.put("mustChangePassword", s.getMustChangePassword());
+        map.put("lastLoginAt", s.getLastLoginAt());
+        map.put("createdBy", s.getCreatedBy());
         map.put("createdAt", s.getCreatedAt());
+        map.put("updatedAt", s.getUpdatedAt());
         return map;
     }
 
