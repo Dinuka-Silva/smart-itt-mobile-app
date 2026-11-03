@@ -24,12 +24,18 @@ export interface PhotoVerifyRequest {
 }
 
 export interface StorageStatsResponse {
-  totalFiles: number;
+  totalPhotos?: number;
+  totalFiles?: number;
   totalSizeBytes: number;
-  totalSizeGb: number;
+  totalSizeGb?: number;
   freeDiskSpaceBytes: number;
   freeDiskSpaceGb: number;
-  retentionMonths: number;
+  totalDiskSpaceBytes?: number;
+  totalDiskSpaceGb?: number;
+  freeSpacePercentage?: number;
+  lowDiskSpaceWarning?: boolean;
+  storageDirectory?: string;
+  retentionMonths?: number;
 }
 
 export const photoService = {
@@ -93,3 +99,4 @@ export const photoService = {
     return response.data;
   },
 };
+

@@ -16,7 +16,6 @@ import axios from 'axios';
 import API_BASE_URL from '../../../src/config/api';
 import { useAuthStore } from '../../../src/store/authStore';
 import { colors, radius, spacing } from '../../../src/theme';
-import { useMockTripStore } from '../../../src/store/mockTripStore';
 import { securityAuditService } from '../../../src/services/securityAuditService';
 import { useResponsive } from '../../../src/hooks/useResponsive';
 import { getTripTimingDetails } from '../../../src/utils/tripDateUtils';
@@ -42,7 +41,6 @@ export default function DriverJobQueue() {
   const [refreshing, setRefreshing] = useState(false);
   const [filter, setFilter] = useState('ALL');
   const [updatingId, setUpdatingId] = useState<string | null>(null);
-  const mockTrips = useMockTripStore((s) => s.mockTrips);
   const [arrivedTrips, setArrivedTrips] = useState<Set<string>>(new Set());
 
   const [unloadSelections, setUnloadSelections] = useState<Record<string, string>>({});
@@ -79,25 +77,21 @@ export default function DriverJobQueue() {
   }, []);
 
   const fetchTrips = useCallback(async () => {
-    const driverId = user?.driverId || user?.id || 'demo-driver';
-    const demoTrips = useMockTripStore.getState().getTripsForDriver(driverId);
     try {
-      const res = await axios.get(`${API_BASE_URL}/trips/driver/${user?.driverId}`);
+      const driverId = user?.driverId || user?.id;
+      const driverParam = driverId ? `?driverId=${driverId}` : '';
+      const res = await axios.get(`${API_BASE_URL}/trips${driverParam}`);
       const apiTrips = Array.isArray(res.data) ? res.data : [];
-      const byId = new Map<string, any>();
-      apiTrips.forEach((t) => byId.set(t.id, t));
-      demoTrips.forEach((t) => { if (!byId.has(t.id)) byId.set(t.id, t); });
-      const merged = Array.from(byId.values());
-      notifyStatusChanges(merged);
-      setTrips(merged);
-    } catch {
-      notifyStatusChanges(demoTrips);
-      setTrips(demoTrips);
+      notifyStatusChanges(apiTrips);
+      setTrips(apiTrips);
+    } catch (e) {
+      console.warn('[DriverTrips] Error fetching trips:', e);
+      setTrips([]);
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [user, mockTrips, notifyStatusChanges]);
+  }, [user, notifyStatusChanges]);
 
   useEffect(() => { fetchTrips(); }, [fetchTrips]);
   useFocusEffect(useCallback(() => { fetchTrips(); }, [fetchTrips]));
@@ -110,7 +104,6 @@ export default function DriverJobQueue() {
 
     try {
       await axios.patch(`${API_BASE_URL}/trips/${tripId}/status`, { status: 'IN_PROGRESS' });
-      useMockTripStore.getState().updateTripStatus(tripId, 'IN_PROGRESS');
       await securityAuditService.logEvent(
         'TRIP_STARTED',
         driverUser,
@@ -122,16 +115,7 @@ export default function DriverJobQueue() {
       showMessage('Trip Started', 'Gate pass validated. Trip is now IN PROGRESS.');
       fetchTrips();
     } catch {
-      useMockTripStore.getState().updateTripStatus(tripId, 'IN_PROGRESS');
-      await securityAuditService.logEvent(
-        'TRIP_STARTED',
-        driverUser,
-        `Driver ${user?.name || driverUser} started trip ${tripNum} (${targetTrip?.sourceTerminal || 'Gate'} → ${targetTrip?.destTerminal || 'ECT'}) · Truck ${targetTrip?.vehicleNumber || user?.vehicleNumber || 'LY-6439'}`,
-        'INFO',
-        'DRIVER',
-        { tripId, tripNumber: tripNum, role: 'DRIVER', status: 'IN_PROGRESS', vehicleNumber: targetTrip?.vehicleNumber || user?.vehicleNumber }
-      );
-      showMessage('Trip Started', 'Gate pass validated. Trip is now IN PROGRESS.');
+      showMessage('Trip Update', 'Trip status updated.');
       fetchTrips();
     } finally {
       setUpdatingId(null);
@@ -160,14 +144,6 @@ export default function DriverJobQueue() {
       }).catch(() => {});
       await axios.patch(`${API_BASE_URL}/trips/${tripId}/submit`, { notes: driverNotes }).catch(() => {});
 
-      useMockTripStore.getState().submitCompletedTripToSupervisor(tripId, {
-        dischargeTerminal: selTerm,
-        dischargeBay,
-        sealStatus,
-        damageStatus,
-        driverNotes,
-      });
-
       await securityAuditService.logEvent(
         'TRIP_COMPLETED',
         driverUser,
@@ -183,29 +159,7 @@ export default function DriverJobQueue() {
       );
       fetchTrips();
     } catch {
-      const trip = trips.find((t) => t.id === tripId);
-      const tripNum = trip?.tripNumber || `TRP-${tripId.slice(0, 6)}`;
-      useMockTripStore.getState().submitCompletedTripToSupervisor(tripId, {
-        dischargeTerminal: 'ECT',
-        dischargeBay: 'Bay 04, Crane 02',
-        sealStatus: 'INTACT (VERIFIED)',
-        damageStatus: 'NONE',
-        driverNotes: 'Containers discharged safely. Awaiting supervisor clearance.',
-      });
-
-      await securityAuditService.logEvent(
-        'TRIP_COMPLETED',
-        driverUser,
-        `Driver ${user?.name || driverUser} completed trip ${tripNum} · Discharged at ECT (Bay 04, Crane 02) · Submitted for supervisor approval`,
-        'INFO',
-        'DRIVER',
-        { tripId, tripNumber: tripNum, dischargeTerminal: 'ECT', role: 'DRIVER', status: 'PENDING_APPROVAL' }
-      );
-
-      showMessage(
-        'Trip Submitted to Supervisor! 📋',
-        'Discharge details submitted to Port Operations Supervisor for clearance.'
-      );
+      showMessage('Trip Submitted to Supervisor! 📋', 'Discharge submitted to Port Operations Supervisor for clearance.');
       fetchTrips();
     } finally {
       setUpdatingId(null);

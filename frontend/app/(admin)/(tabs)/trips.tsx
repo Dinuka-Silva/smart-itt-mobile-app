@@ -14,8 +14,6 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { adminService } from '../../../src/services/adminService';
 import { useResponsive } from '../../../src/hooks/useResponsive';
-import { useMockTripStore } from '../../../src/store/mockTripStore';
-import { adminFleetStore } from '../../../src/store/adminFleetStore';
 import {
   getTripDischargeTerminal,
   getTripTimingInfo,
@@ -25,7 +23,6 @@ import {
 
 export default function AdminTripsScreen() {
   const { topInset, bottomInset, containerPaddingHorizontal } = useResponsive();
-  const mockTrips = useMockTripStore((s) => s.mockTrips);
 
   const [trips, setTrips] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -48,25 +45,7 @@ export default function AdminTripsScreen() {
         statusFilter === 'ALL' ? undefined : statusFilter,
         terminalFilter === 'ALL' ? undefined : terminalFilter
       );
-      const apiList = Array.isArray(data) ? data : [];
-      const byId = new Map<string, any>();
-      apiList.forEach((t) => byId.set(t.id || t.tripNumber, t));
-
-      // Real-time synchronization: Merge with mockTripStore so trips added or updated by Driver appear instantly
-      mockTrips.forEach((t) => {
-        const key = t.id || t.tripNumber;
-        if (!byId.has(key)) {
-          byId.set(key, t);
-        } else {
-          // If local has more recent status update (e.g. COMPLETED or ARRIVED), prioritize it
-          const remote = byId.get(key);
-          if (t.status === 'COMPLETED' || t.status === 'ARRIVED' || t.status === 'PENDING_APPROVAL') {
-            byId.set(key, { ...remote, ...t });
-          }
-        }
-      });
-
-      let list = Array.from(byId.values());
+      let list = Array.isArray(data) ? data : [];
       if (statusFilter !== 'ALL') {
         list = list.filter((t) => t.status === statusFilter);
       }
@@ -98,61 +77,24 @@ export default function AdminTripsScreen() {
         });
       }
       setTrips(list);
-    } catch {
-      let list = [...mockTrips];
-      if (statusFilter !== 'ALL') {
-        list = list.filter((t) => t.status === statusFilter);
-      }
-      if (terminalFilter !== 'ALL') {
-        list = list.filter((t) =>
-          t.sourceTerminal === terminalFilter ||
-          getTripDischargeTerminal(t).includes(terminalFilter) ||
-          (t.containers || []).some((c: any) => c.destTerminal === terminalFilter)
-        );
-      }
-      if (vehicleFilter !== 'ALL') {
-        const targetV = vehicleFilter.toUpperCase().replace(/[\s-]/g, '');
-        list = list.filter((t) => {
-          const v = (t.vehicleNumber || '').toUpperCase().replace(/[\s-]/g, '');
-          return v === targetV;
-        });
-      }
-      if (search && search.trim()) {
-        const q = search.trim().toLowerCase();
-        list = list.filter((t) =>
-          (t.tripNumber && t.tripNumber.toLowerCase().includes(q)) ||
-          (t.vehicleNumber && t.vehicleNumber.toLowerCase().includes(q)) ||
-          (t.vesselName && t.vesselName.toLowerCase().includes(q)) ||
-          (t.driverName && t.driverName.toLowerCase().includes(q)) ||
-          (t.driverCode && t.driverCode.toLowerCase().includes(q)) ||
-          (t.containers && t.containers.some((c: any) =>
-            (typeof c === 'string' ? c : c.containerNumber || '').toLowerCase().includes(q)
-          ))
-        );
-      }
-      setTrips(list);
+    } catch (e) {
+      console.warn('[AdminTrips] Error fetching trips:', e);
+      setTrips([]);
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [search, statusFilter, terminalFilter, vehicleFilter, mockTrips]);
+  }, [search, statusFilter, terminalFilter, vehicleFilter]);
 
   const vehicleOptions = React.useMemo(() => {
     const plates = new Set<string>();
-    mockTrips.forEach((t) => {
+    trips.forEach((t) => {
       if (t.vehicleNumber && t.vehicleNumber !== 'UNASSIGNED') {
         plates.add(t.vehicleNumber.toUpperCase().trim());
       }
     });
-    try {
-      (adminFleetStore.getAllVehiclesList() || []).forEach((v: any) => {
-        if (v.vehicleNumber && v.vehicleNumber !== 'UNASSIGNED') {
-          plates.add(v.vehicleNumber.toUpperCase().trim());
-        }
-      });
-    } catch {}
     return ['ALL', ...Array.from(plates).sort()];
-  }, [mockTrips]);
+  }, [trips]);
 
   useEffect(() => {
     fetchTrips();
@@ -172,19 +114,13 @@ export default function AdminTripsScreen() {
 
     setActionLoading(true);
     try {
-      try {
-        await adminService.actionTrip(selectedTrip.id, status, actionReason.trim() || undefined);
-      } catch {}
-      useMockTripStore.getState().updateTripStatus(selectedTrip.id, status as any);
+      await adminService.actionTrip(selectedTrip.id, status, actionReason.trim() || undefined);
       Alert.alert('Action Applied', `Trip ${selectedTrip.tripNumber || selectedTrip.id} marked as ${status}`);
       setModalVisible(false);
       setActionReason('');
       fetchTrips();
-    } catch {
-      useMockTripStore.getState().updateTripStatus(selectedTrip.id, status as any);
-      Alert.alert('Action Applied (Local)', `Trip ${selectedTrip.tripNumber || selectedTrip.id} marked as ${status}`);
-      setModalVisible(false);
-      fetchTrips();
+    } catch (e: any) {
+      Alert.alert('Action Failed', e?.response?.data?.message || e?.message || 'Failed to update trip on server.');
     } finally {
       setActionLoading(false);
     }

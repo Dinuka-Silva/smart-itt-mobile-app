@@ -79,3 +79,4 @@ public class ContainerPhoto {
         if (deleted == null) deleted = false;
     }
 }
+

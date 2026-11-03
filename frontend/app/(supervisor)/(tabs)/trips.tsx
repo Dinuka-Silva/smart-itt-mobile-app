@@ -19,8 +19,6 @@ import { useAuthStore } from '../../../src/store/authStore';
 import { tripService } from '../../../src/services/tripService';
 import { photoService, PhotoUploadResponse } from '../../../src/services/photoService';
 import { adminService } from '../../../src/services/adminService';
-import { useMockTripStore } from '../../../src/store/mockTripStore';
-import { adminFleetStore } from '../../../src/store/adminFleetStore';
 import { securityAuditService } from '../../../src/services/securityAuditService';
 import { colors, radius, spacing } from '../../../src/theme';
 import { resolveCheNumber, resolveOperator } from '../../../src/config/fleet';
@@ -210,25 +208,19 @@ export default function SupervisorMissionDispatcher() {
   const [rejectionReason, setRejectionReason] = useState('');
   const [submittingDecision, setSubmittingDecision] = useState(false);
 
-  const mockTrips = useMockTripStore((s) => s.mockTrips);
-
   const loadTrips = useCallback(async () => {
     try {
       const apiTrips = await tripService.getTrips();
       const list = Array.isArray(apiTrips) ? apiTrips : [];
-      const byId = new Map<string, any>();
-      list.forEach((t) => byId.set(t.id, t));
-      mockTrips.forEach((t) => {
-        if (!byId.has(t.id)) byId.set(t.id, t);
-      });
-      setTrips(Array.from(byId.values()));
-    } catch {
-      setTrips(mockTrips);
+      setTrips(list);
+    } catch (e) {
+      console.warn('[SupervisorTrips] Error loading trips:', e);
+      setTrips([]);
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [mockTrips]);
+  }, []);
 
   useEffect(() => {
     loadTrips();
@@ -299,13 +291,6 @@ export default function SupervisorMissionDispatcher() {
         plates.add(t.vehicleNumber.toUpperCase().trim());
       }
     });
-    try {
-      (adminFleetStore.getAllVehiclesList() || []).forEach((v: any) => {
-        if (v.vehicleNumber && v.vehicleNumber !== 'UNASSIGNED') {
-          plates.add(v.vehicleNumber.toUpperCase().trim());
-        }
-      });
-    } catch {}
     return ['ALL', ...Array.from(plates).sort()];
   }, [trips]);
 
@@ -485,7 +470,6 @@ export default function SupervisorMissionDispatcher() {
 
     try {
       await tripService.approveTrip(trip.id, user?.id || 'sup-001', 'Container discharged and trip approved');
-      useMockTripStore.getState().approveTripBySupervisor(trip.id, supName, 'Delivery confirmed & approved by Operations Supervisor');
 
       await securityAuditService.logEvent(
         'TRIP_APPROVED',
@@ -498,20 +482,8 @@ export default function SupervisorMissionDispatcher() {
 
       Alert.alert('Delivery Confirmed & Approved ✅', `Trip ${trip.tripNumber || trip.id} is confirmed. Driver completed container count (+1 towards 300 target) and main system metrics have been updated.`);
       await loadTrips();
-    } catch {
-      useMockTripStore.getState().approveTripBySupervisor(trip.id, supName, 'Delivery confirmed & approved by Operations Supervisor');
-
-      await securityAuditService.logEvent(
-        'TRIP_APPROVED',
-        supUser,
-        `Supervisor ${supName} (${supUser}) confirmed delivery & approved trip ${tripNum} (${trip?.driverName || trip?.driverId || 'Driver'}) · Discharge: ${trip?.destTerminal || 'ECT'}`,
-        'INFO',
-        'SUPERVISOR',
-        { tripId: trip?.id, tripNumber: tripNum, role: 'SUPERVISOR', driver: trip?.driverName, status: 'APPROVED' }
-      );
-
-      Alert.alert('Delivery Confirmed & Approved ✅', `Trip ${trip.tripNumber || trip.id} is confirmed. Driver completed container count (+1 towards 300 target) and main system metrics have been updated.`);
-      await loadTrips();
+    } catch (e: any) {
+      Alert.alert('Error', e?.response?.data?.message || e?.message || 'Failed to complete trip on server.');
     }
   };
 
@@ -523,7 +495,6 @@ export default function SupervisorMissionDispatcher() {
 
     try {
       await tripService.approveTrip(trip.id, user?.id || 'sup-001', 'Approved by Operations Supervisor');
-      useMockTripStore.getState().updateTripStatus(trip.id, 'APPROVED');
 
       await securityAuditService.logEvent(
         'TRIP_APPROVED',
@@ -536,20 +507,8 @@ export default function SupervisorMissionDispatcher() {
 
       Alert.alert('Gate Pass Approved', `Trip ${trip.tripNumber || trip.id} is approved.`);
       await loadTrips();
-    } catch {
-      useMockTripStore.getState().updateTripStatus(trip.id, 'APPROVED');
-
-      await securityAuditService.logEvent(
-        'TRIP_APPROVED',
-        supUser,
-        `Supervisor ${supName} (${supUser}) approved gate movement for trip ${tripNum} (${trip?.driverName || 'Driver'})`,
-        'INFO',
-        'SUPERVISOR',
-        { tripId: trip?.id, tripNumber: tripNum, role: 'SUPERVISOR', driver: trip?.driverName, status: 'APPROVED' }
-      );
-
-      Alert.alert('Gate Pass Approved (Local)', `Trip ${trip.tripNumber || trip.id} is approved.`);
-      await loadTrips();
+    } catch (e: any) {
+      Alert.alert('Error', e?.response?.data?.message || e?.message || 'Failed to approve trip on server.');
     }
   };
 
@@ -572,7 +531,6 @@ export default function SupervisorMissionDispatcher() {
 
     try {
       await tripService.rejectTrip(tripToReject.id, user?.id || 'sup-001', rejectionReason.trim());
-      useMockTripStore.getState().updateTripStatus(tripToReject.id, 'REJECTED');
 
       await securityAuditService.logEvent(
         'TRIP_REJECTED',
@@ -586,21 +544,8 @@ export default function SupervisorMissionDispatcher() {
       setRejectModalVisible(false);
       Alert.alert('Trip Rejected', `Trip ${tripToReject.tripNumber || tripToReject.id} rejected.`);
       await loadTrips();
-    } catch {
-      useMockTripStore.getState().updateTripStatus(tripToReject.id, 'REJECTED');
-
-      await securityAuditService.logEvent(
-        'TRIP_REJECTED',
-        supUser,
-        `Supervisor ${supName} (${supUser}) rejected trip ${tripNum} (${tripToReject?.driverName || 'Driver'}). Reason: ${rejectionReason.trim()}`,
-        'WARNING',
-        'SUPERVISOR',
-        { tripId: tripToReject?.id, tripNumber: tripNum, role: 'SUPERVISOR', reason: rejectionReason.trim(), status: 'REJECTED' }
-      );
-
-      setRejectModalVisible(false);
-      Alert.alert('Trip Rejected (Local)', `Trip ${tripToReject.tripNumber || tripToReject.id} rejected.`);
-      await loadTrips();
+    } catch (e: any) {
+      Alert.alert('Error', e?.response?.data?.message || e?.message || 'Failed to reject trip on server.');
     } finally {
       setSubmittingDecision(false);
     }

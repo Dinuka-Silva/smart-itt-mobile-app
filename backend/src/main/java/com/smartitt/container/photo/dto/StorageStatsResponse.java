@@ -21,3 +21,4 @@ public class StorageStatsResponse {
     private boolean lowDiskSpaceWarning; // Amber warning when below 20%
     private String storageDirectory;
 }
+

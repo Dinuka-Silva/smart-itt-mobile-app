@@ -33,6 +33,7 @@ target/
 ### Secrets & Logs ###
 .env
 .env.*
+!.env.example
 *.log
 *.pem
 *.key

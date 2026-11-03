@@ -18,7 +18,6 @@ import { driverService } from '../../../src/services/driverService';
 import apiClient from '../../../src/services/api';
 import { Colors, Typography, Layout, Spacing } from '../../../src/constants/theme';
 import { useResponsive } from '../../../src/hooks/useResponsive';
-import { useMockTripStore } from '../../../src/store/mockTripStore';
 import { resolveCheNumber, resolveOperator } from '../../../src/config/fleet';
 import {
   validateContainerNumber,
@@ -282,65 +281,18 @@ export default function NewTripScreen() {
         }).catch((e) => console.warn('C2 Photo upload error:', e));
       }
 
-      // Update local cache as verified confirmed
-      useMockTripStore.getState().addTrip({
-        id: created.id || `TRP-${Date.now()}`,
-        tripNumber: created.tripNumber || created.id || `ITT-${Date.now()}`,
-        driverId: user?.driverId || user?.id || 'driver',
-        driverCode: user?.driverCode || user?.username || '-',
-        driverName: driverName,
-        vehicleNumber: assignedVeh,
-        chassisNumber: assignedChe,
-        operator: assignedOp,
-        vesselName: vesselName.trim(),
-        sourceTerminal,
-        destTerminal: destString,
-        notes: notes.trim() || undefined,
-        status: 'IN_PROGRESS',
-        containers: tripContainers.map((c) => ({ ...c, status: 'IN_TRANSIT' })),
-        startTime: new Date().toISOString(),
-        createdAt: new Date().toISOString(),
-      });
-
       Alert.alert('Trip Started', 'Mission registered on live server. Drive safely.', [
         { text: 'OK', onPress: () => router.replace('/(driver)/(tabs)') },
       ]);
     } catch (err: any) {
-      console.warn('Backend offline — queuing trip as PENDING_SYNC:', err);
-
+      console.warn('Backend error registering trip:', err);
       // Save to recent quick-pick list
       saveRecentContainerNumber(c1Clean).catch(() => {});
       if (loadConfig === '2x20FT') saveRecentContainerNumber(c2Clean).catch(() => {});
 
-      // Requirement 2: Do NOT show as confirmed. Mark as PENDING_SYNC for retry.
-      const queuedId = `OFFLINE-${Date.now()}`;
-      useMockTripStore.getState().addTrip({
-        id: queuedId,
-        tripNumber: queuedId,
-        driverId: user?.driverId || user?.id || 'driver',
-        driverCode: user?.driverCode || user?.username || '-',
-        driverName: driverName,
-        vehicleNumber: assignedVeh,
-        chassisNumber: assignedChe,
-        operator: assignedOp,
-        vesselName: vesselName.trim(),
-        sourceTerminal,
-        destTerminal: destString,
-        notes: notes.trim() || undefined,
-        status: 'PENDING_APPROVAL', // Marked as pending sync/approval, not confirmed completed
-        containers: tripContainers.map((c) => ({
-          ...c,
-          status: 'PENDING_SYNC',
-          photoUri: c.containerNumber === c1Clean ? c1Photo?.uri : c2Photo?.uri,
-        })),
-        startTime: new Date().toISOString(),
-        createdAt: new Date().toISOString(),
-      });
-
       Alert.alert(
-        'Offline — Trip Queued',
-        'Could not reach central server. Trip has been marked as "Pending Sync" and will automatically synchronize when connection is restored.',
-        [{ text: 'OK', onPress: () => router.replace('/(driver)/(tabs)') }]
+        'Submission Failed',
+        err?.response?.data?.message || err?.message || 'Could not reach server to register trip. Please try again.'
       );
     } finally {
       setLoading(false);

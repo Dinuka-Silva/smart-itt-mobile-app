@@ -8,6 +8,8 @@ export interface TripFilterParams {
   startDate?: string;
   endDate?: string;
   search?: string;
+  photoStatus?: string;
+  unverifiedOnly?: boolean | string;
 }
 
 export interface Container {

@@ -21,7 +21,6 @@ import { tripService } from '../../../src/services/tripService';
 import { dashboardService, DriverDashboardStats } from '../../../src/services/dashboardService';
 import { driverService } from '../../../src/services/driverService';
 import { Colors, Typography, Layout, Spacing } from '../../../src/constants/theme';
-import { adminFleetStore } from '../../../src/store/adminFleetStore';
 import axios from 'axios';
 import API_BASE_URL from '../../../src/config/api';
 import { useResponsive } from '../../../src/hooks/useResponsive';
@@ -56,9 +55,7 @@ export default function DriverHomeDashboard() {
 
   // Administrative Suspension Status
   const isSuspended = useMemo(() => {
-    if (user?.status === 'SUSPENDED') return true;
-    const fleetDriver = adminFleetStore.getDriver(user?.driverCode || user?.username || '');
-    return fleetDriver?.status === 'SUSPENDED';
+    return user?.status === 'SUSPENDED';
   }, [user]);
 
   // Modals state

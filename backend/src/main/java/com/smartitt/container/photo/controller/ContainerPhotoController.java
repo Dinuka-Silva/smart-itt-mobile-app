@@ -103,3 +103,4 @@ public class ContainerPhotoController {
         return ResponseEntity.ok(photoService.getStorageStats());
     }
 }
+

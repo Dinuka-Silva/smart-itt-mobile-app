@@ -136,29 +136,12 @@ export default function SharedReportsScreen() {
         startDate,
         endDate,
         search: filters.search || undefined,
+        photoStatus: filters.photoStatus && filters.photoStatus !== 'ALL' ? filters.photoStatus : undefined,
+        unverifiedOnly: filters.unverifiedOnly ? true : undefined,
       };
 
       const data = await tripService.getTrips(queryParams);
-      let list = Array.isArray(data) ? data : [];
-      if (filters.photoStatus && filters.photoStatus !== 'ALL') {
-        list = list.filter((t) => {
-          const containers = t.containers || [];
-          if (filters.photoStatus === 'VERIFIED') {
-            return containers.some((c) => c.photoStatus === 'VERIFIED' || c.isVerified);
-          }
-          if (filters.photoStatus === 'PENDING') {
-            return containers.some((c) => c.photoStatus === 'PENDING');
-          }
-          if (filters.photoStatus === 'REJECTED') {
-            return containers.some((c) => c.photoStatus === 'REJECTED');
-          }
-          if (filters.photoStatus === 'MISSING') {
-            return containers.some((c) => !c.photoUrl && (!c.photoStatus || c.photoStatus === 'NONE'));
-          }
-          return true;
-        });
-      }
-      setTrips(list);
+      setTrips(Array.isArray(data) ? data : []);
     } catch (err) {
       console.warn('[Reports] Error fetching trips:', err);
       // Fallback empty if network error

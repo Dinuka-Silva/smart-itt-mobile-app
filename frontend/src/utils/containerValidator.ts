@@ -294,3 +294,4 @@ export async function saveRecentContainerNumber(containerNumber: string): Promis
     console.warn('Failed to save recent container number:', e);
   }
 }
+

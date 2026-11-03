@@ -15,3 +15,4 @@ public class PhotoVerifyRequest {
     private String status; // VERIFIED or REJECTED
     private String note;   // Mandatory if REJECTED
 }
+

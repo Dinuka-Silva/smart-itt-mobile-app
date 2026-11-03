@@ -27,3 +27,4 @@ public class PhotoUploadResponse {
     private LocalDateTime verifiedAt;
     private String verificationNote;
 }
+

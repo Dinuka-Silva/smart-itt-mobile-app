@@ -37,3 +37,4 @@ CREATE TABLE IF NOT EXISTS container_photos (
 
 CREATE INDEX IF NOT EXISTS idx_container_photos_trip ON container_photos(trip_id);
 CREATE INDEX IF NOT EXISTS idx_container_photos_status ON container_photos(verification_status);
+

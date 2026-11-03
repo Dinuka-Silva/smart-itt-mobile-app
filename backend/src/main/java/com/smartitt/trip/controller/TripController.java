@@ -36,8 +36,10 @@ public class TripController {
             @RequestParam(required = false) String terminal,
             @RequestParam(required = false) String startDate,
             @RequestParam(required = false) String endDate,
-            @RequestParam(required = false) String search) {
-        return ResponseEntity.ok(tripService.getAllTrips(driverId, status, vehicleNumber, terminal, startDate, endDate, search));
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String photoStatus,
+            @RequestParam(required = false) Boolean unverifiedOnly) {
+        return ResponseEntity.ok(tripService.getAllTrips(driverId, status, vehicleNumber, terminal, startDate, endDate, search, photoStatus, unverifiedOnly));
     }
 
     @GetMapping("/{id}")

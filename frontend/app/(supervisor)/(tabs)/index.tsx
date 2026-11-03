@@ -19,7 +19,6 @@ import { useAuthStore } from '../../../src/store/authStore';
 import { tripService } from '../../../src/services/tripService';
 import { dashboardService, SupervisorDashboardStats } from '../../../src/services/dashboardService';
 import { driverService, DriverProfile } from '../../../src/services/driverService';
-import { useMockTripStore } from '../../../src/store/mockTripStore';
 import { colors, radius, spacing } from '../../../src/theme';
 import { resolveCheNumber, resolveOperator, findFleetVehicle } from '../../../src/config/fleet';
 import { useResponsive } from '../../../src/hooks/useResponsive';
@@ -93,8 +92,6 @@ export default function SupervisorHomeDashboard() {
   const [reportModalVisible, setReportModalVisible] = useState(false);
   const [damageReviewModalVisible, setDamageReviewModalVisible] = useState(false);
 
-  const mockTrips = useMockTripStore((s) => s.mockTrips);
-
   // Fetch live supervisor data
   const loadDashboardData = useCallback(async () => {
     try {
@@ -104,16 +101,12 @@ export default function SupervisorHomeDashboard() {
       // 2. Fetch live trips from backend
       const apiTrips = await tripService.getTrips();
       const tripList = Array.isArray(apiTrips) ? apiTrips : [];
-      const byId = new Map<string, any>();
-      tripList.forEach((t) => byId.set(t.id, t));
-      mockTrips.forEach((t) => { if (!byId.has(t.id)) byId.set(t.id, t); });
-      const mergedTrips = Array.from(byId.values());
-      setTrips(mergedTrips);
+      setTrips(tripList);
 
-      const compTripsCount = mergedTrips.filter((t) => t.status === 'COMPLETED' || t.status === 'APPROVED').length;
-      const inProgCount = mergedTrips.filter((t) => t.status === 'IN_PROGRESS' || t.status === 'ARRIVED').length;
-      const pendingCount = mergedTrips.filter((t) => t.status === 'PENDING_APPROVAL').length;
-      const totalConts = mergedTrips
+      const compTripsCount = tripList.filter((t) => t.status === 'COMPLETED' || t.status === 'APPROVED').length;
+      const inProgCount = tripList.filter((t) => t.status === 'IN_PROGRESS' || t.status === 'ARRIVED').length;
+      const pendingCount = tripList.filter((t) => t.status === 'PENDING_APPROVAL').length;
+      const totalConts = tripList
         .filter((t) => t.status === 'COMPLETED' || t.status === 'APPROVED')
         .reduce((acc, t) => acc + (t.containers?.length || 1), 0);
 
@@ -122,7 +115,7 @@ export default function SupervisorHomeDashboard() {
         completedTripsToday: compTripsCount,
         activeTrips: inProgCount,
         tripsPendingApproval: pendingCount,
-        totalTripsToday: mergedTrips.length,
+        totalTripsToday: tripList.length,
         totalContainersTransportedToday: totalConts > 0 ? totalConts : dashMetrics.totalContainersTransportedToday,
       });
 
@@ -178,22 +171,11 @@ export default function SupervisorHomeDashboard() {
         ]);
       }
     } catch (e) {
-      console.warn('Dashboard loading fallback:', e);
-      setTrips(mockTrips);
-      const compTripsCount = mockTrips.filter((t) => t.status === 'COMPLETED' || t.status === 'APPROVED').length;
-      const inProgCount = mockTrips.filter((t) => t.status === 'IN_PROGRESS' || t.status === 'ARRIVED').length;
-      const pendingCount = mockTrips.filter((t) => t.status === 'PENDING_APPROVAL').length;
-      setStats((prev) => ({
-        ...prev,
-        completedTripsToday: compTripsCount,
-        activeTrips: inProgCount,
-        tripsPendingApproval: pendingCount,
-        totalTripsToday: mockTrips.length,
-      }));
+      console.warn('[SupervisorDashboard] Dashboard loading error:', e);
     } finally {
       setRefreshing(false);
     }
-  }, [mockTrips]);
+  }, []);
 
   useEffect(() => { loadDashboardData(); }, [loadDashboardData]);
 
@@ -291,19 +273,13 @@ export default function SupervisorHomeDashboard() {
   const handleApproveTrip = async (trip: any) => {
     try {
       await tripService.approveTrip(trip.id, user?.id || 'sup-001', 'Delivery confirmed & trip approved by Operations Supervisor');
-      useMockTripStore.getState().approveTripBySupervisor(trip.id, supervisorName, 'Delivery confirmed & trip approved by Operations Supervisor');
       Alert.alert(
         'Trip Delivery Confirmed & Approved ✅',
         `Trip ${trip.tripNumber || trip.id} is confirmed. Driver completed container count (+1 towards 300 target) and main system metrics have been updated!`
       );
       await loadDashboardData();
-    } catch {
-      useMockTripStore.getState().approveTripBySupervisor(trip.id, supervisorName, 'Delivery confirmed & trip approved by Operations Supervisor');
-      Alert.alert(
-        'Trip Delivery Confirmed & Approved ✅',
-        `Trip ${trip.tripNumber || trip.id} is confirmed. Driver completed container count (+1 towards 300 target) and main system metrics have been updated!`
-      );
-      await loadDashboardData();
+    } catch (e: any) {
+      Alert.alert('Approval Error', e?.response?.data?.message || e?.message || 'Failed to approve trip on server.');
     }
   };
 
@@ -322,15 +298,11 @@ export default function SupervisorHomeDashboard() {
     setSubmittingDecision(true);
     try {
       await tripService.rejectTrip(tripToReject.id, user?.id || 'sup-001', rejectionReason.trim());
-      useMockTripStore.getState().rejectTripBySupervisor(tripToReject.id, supervisorName, rejectionReason.trim());
       setRejectModalVisible(false);
       Alert.alert('Trip Rejected', `Trip ${tripToReject.tripNumber} rejected: ${rejectionReason}`);
       await loadDashboardData();
-    } catch {
-      useMockTripStore.getState().rejectTripBySupervisor(tripToReject.id, supervisorName, rejectionReason.trim());
-      setRejectModalVisible(false);
-      Alert.alert('Trip Rejected (Local)', `Trip ${tripToReject.tripNumber} rejected.`);
-      await loadDashboardData();
+    } catch (e: any) {
+      Alert.alert('Rejection Error', e?.response?.data?.message || e?.message || 'Failed to reject trip on server.');
     } finally {
       setSubmittingDecision(false);
     }

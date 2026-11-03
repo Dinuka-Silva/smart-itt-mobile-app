@@ -14,7 +14,6 @@ import { Ionicons } from '@expo/vector-icons';
 import API_BASE_URL from '../../../src/config/api';
 import { useAuthStore } from '../../../src/store/authStore';
 import { colors } from '../../../src/theme';
-import { useMockTripStore } from '../../../src/store/mockTripStore';
 import { useFocusEffect } from 'expo-router';
 import { useResponsive } from '../../../src/hooks/useResponsive';
 
@@ -32,21 +31,14 @@ export default function DriverContainers() {
 
   const fetchContainers = useCallback(async () => {
     try {
-      const driverId = user?.driverId || user?.id || 'demo-driver';
-      const demoTrips = useMockTripStore.getState().getTripsForDriver(driverId);
-
-      const driverParam = user?.driverId ? `?driverId=${user.driverId}` : '';
+      const driverId = user?.driverId || user?.id;
+      const driverParam = driverId ? `?driverId=${driverId}` : '';
       const res = await axios.get(`${API_BASE_URL}/trips${driverParam}`);
       const apiTrips = Array.isArray(res.data) ? res.data : [];
 
-      const byId = new Map<string, any>();
-      apiTrips.forEach((t) => byId.set(t.id, t));
-      demoTrips.forEach((t) => { if (!byId.has(t.id)) byId.set(t.id, t); });
-      const mergedTrips = Array.from(byId.values());
-
       // Flatten all containers from all trips, enriched with trip info
       const allContainers: any[] = [];
-      for (const trip of mergedTrips) {
+      for (const trip of apiTrips) {
         for (const c of trip.containers || []) {
           allContainers.push({
             ...c,
@@ -60,33 +52,10 @@ export default function DriverContainers() {
         }
       }
 
-      if (allContainers.length > 0) {
-        setContainers(allContainers);
-      } else {
-        setContainers(getFallbackContainers());
-      }
-    } catch {
-      const driverId = user?.driverId || user?.id || 'demo-driver';
-      const demoTrips = useMockTripStore.getState().getTripsForDriver(driverId);
-      const allContainers: any[] = [];
-      for (const trip of demoTrips) {
-        for (const c of trip.containers || []) {
-          allContainers.push({
-            ...c,
-            tripNumber: trip.tripNumber,
-            vesselName: trip.vesselName,
-            sourceTerminal: trip.sourceTerminal,
-            destTerminal: c.destTerminal || trip.destTerminal,
-            tripStatus: trip.status,
-            tripDate: trip.operationDate || trip.createdAt || trip.startTime || new Date().toISOString(),
-          });
-        }
-      }
-      if (allContainers.length > 0) {
-        setContainers(allContainers);
-      } else {
-        setContainers(getFallbackContainers());
-      }
+      setContainers(allContainers);
+    } catch (e) {
+      console.warn('[DriverContainers] Failed to load live containers:', e);
+      setContainers([]);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -388,33 +357,6 @@ export default function DriverContainers() {
       </Modal>
     </ScrollView>
   );
-}
-
-function getFallbackContainers() {
-  return [
-    {
-      id: 'fb-1',
-      containerNumber: 'MSCU7721892',
-      size: 'FT_40',
-      tripNumber: 'TRP-1001',
-      vesselName: 'MSC Aurora',
-      sourceTerminal: 'ECT',
-      destTerminal: 'JCT',
-      status: 'IN_TRANSIT',
-      tripStatus: 'IN_PROGRESS',
-    },
-    {
-      id: 'fb-2',
-      containerNumber: 'MSKU4412091',
-      size: 'FT_20',
-      tripNumber: 'TRP-1002',
-      vesselName: 'Maersk Line',
-      sourceTerminal: 'JCT',
-      destTerminal: 'UCT',
-      status: 'LOADED',
-      tripStatus: 'COMPLETED',
-    },
-  ];
 }
 
 const styles = StyleSheet.create({

@@ -17,7 +17,6 @@ import axios from 'axios';
 import API_BASE_URL from '../../../src/config/api';
 import { useAuthStore } from '../../../src/store/authStore';
 import { tripService } from '../../../src/services/tripService';
-import { useMockTripStore } from '../../../src/store/mockTripStore';
 import { radius, spacing } from '../../../src/theme';
 import { resolveCheNumber, resolveOperator } from '../../../src/config/fleet';
 import { useResponsive } from '../../../src/hooks/useResponsive';
@@ -40,16 +39,10 @@ export default function SupervisorApprovals() {
     try {
       const res = await axios.get(`${API_BASE_URL}/trips?status=PENDING_APPROVAL`);
       const apiList = Array.isArray(res.data) ? res.data : [];
-      const mockList = useMockTripStore.getState().getPendingTrips();
-      const byId = new Map<string, any>();
-      apiList.forEach((t) => byId.set(t.id, t));
-      mockList.forEach((t) => {
-        if (!byId.has(t.id)) byId.set(t.id, t);
-      });
-      setTrips(Array.from(byId.values()));
-    } catch {
-      const mockTrips = useMockTripStore.getState().getPendingTrips();
-      setTrips(mockTrips);
+      setTrips(apiList);
+    } catch (e) {
+      console.warn('[SupervisorApprovals] Error fetching pending:', e);
+      setTrips([]);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -77,19 +70,13 @@ export default function SupervisorApprovals() {
     setProcessingId(tripId);
     try {
       await tripService.approveTrip(tripId, user?.supervisorId || user?.id || 'sup-001', 'Delivery confirmed & approved by Operations Supervisor');
-      useMockTripStore.getState().approveTripBySupervisor(tripId, supervisorName, 'Delivery confirmed & approved by Operations Supervisor');
       Alert.alert(
         'Trip Confirmed & Completed! ✅',
         `Trip ${tripId} delivery has been approved. Driver completed container count (+1 towards 300 target) and main system metrics have been updated.`
       );
       fetchPending();
-    } catch {
-      useMockTripStore.getState().approveTripBySupervisor(tripId, supervisorName, 'Delivery confirmed & approved by Operations Supervisor');
-      Alert.alert(
-        'Trip Confirmed & Completed! ✅',
-        `Trip ${tripId} delivery has been approved. Driver completed container count (+1 towards 300 target) and main system metrics have been updated.`
-      );
-      fetchPending();
+    } catch (e: any) {
+      Alert.alert('Approval Error', e?.response?.data?.message || e?.message || 'Failed to approve trip on server.');
     } finally {
       setProcessingId(null);
     }
@@ -112,15 +99,11 @@ export default function SupervisorApprovals() {
     setProcessingId(tripId);
     try {
       await tripService.rejectTrip(tripId, user?.supervisorId || user?.id || 'sup-001', rejectionReason.trim());
-      useMockTripStore.getState().rejectTripBySupervisor(tripId, supervisorName, rejectionReason.trim());
       setRejectModalVisible(false);
       Alert.alert('Trip Rejected', `Trip ${tripToReject.tripNumber || tripId} has been rejected.`);
       fetchPending();
-    } catch {
-      useMockTripStore.getState().rejectTripBySupervisor(tripId, supervisorName, rejectionReason.trim());
-      setRejectModalVisible(false);
-      Alert.alert('Trip Rejected (Local)', `Trip ${tripToReject.tripNumber || tripId} has been rejected.`);
-      fetchPending();
+    } catch (e: any) {
+      Alert.alert('Rejection Error', e?.response?.data?.message || e?.message || 'Failed to reject trip on server.');
     } finally {
       setProcessingId(null);
     }

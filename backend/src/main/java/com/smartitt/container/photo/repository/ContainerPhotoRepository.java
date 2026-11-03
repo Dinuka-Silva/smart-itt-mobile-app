@@ -25,3 +25,4 @@ public interface ContainerPhotoRepository extends JpaRepository<ContainerPhoto, 
     @Query("SELECT COALESCE(SUM(p.sizeBytes), 0) FROM ContainerPhoto p WHERE p.deleted = false")
     Long sumSizeBytesWhereDeletedFalse();
 }
+

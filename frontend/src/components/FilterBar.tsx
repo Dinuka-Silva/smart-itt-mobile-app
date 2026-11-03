@@ -26,6 +26,7 @@ export interface FilterState {
   terminal?: string;
   status: StatusFilterOption;
   photoStatus?: PhotoFilterOption;
+  unverifiedOnly?: boolean;
   search?: string;
 }
 

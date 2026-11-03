@@ -4,6 +4,8 @@ import com.smartitt.container.entity.Container;
 import com.smartitt.container.entity.ContainerSize;
 import com.smartitt.container.entity.ContainerStatus;
 import com.smartitt.container.repository.ContainerRepository;
+import com.smartitt.container.photo.entity.ContainerPhoto;
+import com.smartitt.container.photo.repository.ContainerPhotoRepository;
 import com.smartitt.trip.dto.CreateTripRequest;
 import com.smartitt.trip.dto.TripResponse;
 import com.smartitt.trip.entity.Trip;
@@ -32,6 +34,7 @@ public class TripService {
     private final ContainerRepository containerRepository;
     private final UserRepository userRepository;
     private final DriverRepository driverRepository;
+    private final ContainerPhotoRepository photoRepository;
 
     private UUID resolveDriverUuid(String driverIdStr) {
         if (driverIdStr == null || driverIdStr.isBlank() || "ALL".equalsIgnoreCase(driverIdStr)) {
@@ -120,10 +123,14 @@ public class TripService {
     }
 
     public List<TripResponse> getAllTrips(String driverId, String status) {
-        return getAllTrips(driverId, status, null, null, null, null, null);
+        return getAllTrips(driverId, status, null, null, null, null, null, null, null);
     }
 
     public List<TripResponse> getAllTrips(String driverId, String status, String vehicleNumber, String terminal, String startDate, String endDate, String search) {
+        return getAllTrips(driverId, status, vehicleNumber, terminal, startDate, endDate, search, null, null);
+    }
+
+    public List<TripResponse> getAllTrips(String driverId, String status, String vehicleNumber, String terminal, String startDate, String endDate, String search, String photoStatus, Boolean unverifiedOnly) {
         List<Trip> trips = tripRepository.findAllByOrderByCreatedAtDesc();
 
         if (driverId != null && !driverId.isBlank() && !"ALL".equalsIgnoreCase(driverId)) {
@@ -200,7 +207,35 @@ public class TripService {
             ).collect(Collectors.toList());
         }
 
-        return trips.stream().map(this::mapToResponse).collect(Collectors.toList());
+        List<TripResponse> responses = trips.stream().map(this::mapToResponse).collect(Collectors.toList());
+
+        if (Boolean.TRUE.equals(unverifiedOnly)) {
+            responses = responses.stream().filter(t ->
+                    t.getContainers() != null && t.getContainers().stream().anyMatch(c -> !Boolean.TRUE.equals(c.getIsVerified()))
+            ).collect(Collectors.toList());
+        }
+
+        if (photoStatus != null && !photoStatus.isBlank() && !"ALL".equalsIgnoreCase(photoStatus)) {
+            String pUpper = photoStatus.trim().toUpperCase();
+            responses = responses.stream().filter(t -> {
+                List<TripResponse.ContainerResponse> containers = t.getContainers() != null ? t.getContainers() : List.of();
+                if ("VERIFIED".equals(pUpper)) {
+                    return containers.stream().anyMatch(c -> "VERIFIED".equalsIgnoreCase(c.getPhotoStatus()) || Boolean.TRUE.equals(c.getIsVerified()));
+                }
+                if ("PENDING".equals(pUpper)) {
+                    return containers.stream().anyMatch(c -> "PENDING".equalsIgnoreCase(c.getPhotoStatus()));
+                }
+                if ("REJECTED".equals(pUpper)) {
+                    return containers.stream().anyMatch(c -> "REJECTED".equalsIgnoreCase(c.getPhotoStatus()));
+                }
+                if ("MISSING".equals(pUpper)) {
+                    return containers.stream().anyMatch(c -> c.getPhotoUrl() == null && (c.getPhotoStatus() == null || "NONE".equalsIgnoreCase(c.getPhotoStatus())));
+                }
+                return true;
+            }).collect(Collectors.toList());
+        }
+
+        return responses;
     }
 
     public TripResponse getTripById(String id) {
@@ -302,18 +337,38 @@ public class TripService {
 
     public TripResponse mapToResponse(Trip trip) {
         List<TripResponse.ContainerResponse> containers = trip.getContainers().stream()
-                .map(c -> TripResponse.ContainerResponse.builder()
-                        .id(c.getId().toString())
-                        .containerNumber(c.getContainerNumber())
-                        .size(c.getSize() == ContainerSize.FT_20 ? "20FT" : "40FT")
-                        .sourceTerminal(c.getSourceTerminal())
-                        .destTerminal(c.getDestTerminal())
-                        .status(c.getStatus().name())
-                        .unloadedAt(c.getUnloadedAt())
-                        .isVerified(c.getIsVerified() != null ? c.getIsVerified() : true)
-                        .verifiedBy(c.getVerifiedBy())
-                        .verifiedAt(c.getVerifiedAt())
-                        .build())
+                .map(c -> {
+                    String photoUrl = null;
+                    String photoStatus = "NONE";
+                    if (photoRepository != null && trip.getId() != null) {
+                        String cleanNum = c.getContainerNumber() != null ? c.getContainerNumber().trim().toUpperCase() : "";
+                        var photoOpt = photoRepository.findFirstByTripIdAndContainerNumberAndDeletedFalseOrderByUploadedAtDesc(
+                                trip.getId(), cleanNum);
+                        if (photoOpt.isPresent()) {
+                            var p = photoOpt.get();
+                            photoUrl = "/api/v1/container-photos/" + p.getId();
+                            photoStatus = p.getVerificationStatus() != null ? p.getVerificationStatus() : "PENDING";
+                        }
+                    }
+                    if ("NONE".equals(photoStatus) && Boolean.TRUE.equals(c.getIsVerified())) {
+                        photoStatus = "VERIFIED";
+                    }
+
+                    return TripResponse.ContainerResponse.builder()
+                            .id(c.getId().toString())
+                            .containerNumber(c.getContainerNumber())
+                            .size(c.getSize() == ContainerSize.FT_20 ? "20FT" : "40FT")
+                            .sourceTerminal(c.getSourceTerminal())
+                            .destTerminal(c.getDestTerminal())
+                            .status(c.getStatus().name())
+                            .unloadedAt(c.getUnloadedAt())
+                            .isVerified(c.getIsVerified() != null ? c.getIsVerified() : true)
+                            .verifiedBy(c.getVerifiedBy())
+                            .verifiedAt(c.getVerifiedAt())
+                            .photoUrl(photoUrl)
+                            .photoStatus(photoStatus)
+                            .build();
+                })
                 .collect(Collectors.toList());
 
         String driverName = getDriverNameForTrip(trip);

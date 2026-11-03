@@ -16,7 +16,8 @@ import { adminService, AdminDashboardStats } from '../../../src/services/adminSe
 import { adminFleetStore, AdminVehicle, AdminDriver } from '../../../src/store/adminFleetStore';
 import { useResponsive } from '../../../src/hooks/useResponsive';
 import { AdminSignOutModal } from '../../../src/components/AdminSignOutModal';
-import { useMockTripStore } from '../../../src/store/mockTripStore';
+import { tripService } from '../../../src/services/tripService';
+import { photoService, StorageStatsResponse } from '../../../src/services/photoService';
 import {
   getTripDischargeTerminal,
   getTripTimingInfo,
@@ -30,12 +31,12 @@ export default function AdminDashboardScreen() {
   const router = useRouter();
   const { topInset, bottomInset, containerPaddingHorizontal } = useResponsive();
   const { user, lockSession } = useAuthStore();
-  const mockTrips = useMockTripStore((s) => s.mockTrips);
 
   const [activeSection, setActiveSection] = useState<DashboardSection>('OVERVIEW');
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [stats, setStats] = useState<AdminDashboardStats | null>(null);
+  const [storageStats, setStorageStats] = useState<StorageStatsResponse | null>(null);
   const [vehicles, setVehicles] = useState<AdminVehicle[]>([]);
   const [drivers, setDrivers] = useState<AdminDriver[]>([]);
   const [trips, setTrips] = useState<any[]>([]);
@@ -45,10 +46,21 @@ export default function AdminDashboardScreen() {
 
   const fetchDashboardData = useCallback(async () => {
     try {
-      // 1. Load active fleet, driver & supervisor state
-      const vList = await adminFleetStore.getVehicles();
-      const dList = await adminFleetStore.getDrivers();
-      const sList = await adminFleetStore.getSupervisors();
+      // 1. Load active fleet, driver & supervisor state from backend first
+      let vList: any[] = [];
+      let dList: any[] = [];
+      let sList: any[] = [];
+      try {
+        [vList, dList, sList] = await Promise.all([
+          adminService.getVehicles(),
+          adminService.getDrivers(),
+          adminService.getSupervisors(),
+        ]);
+      } catch {
+        vList = await adminFleetStore.getVehicles();
+        dList = await adminFleetStore.getDrivers();
+        sList = await adminFleetStore.getSupervisors();
+      }
       setVehicles(vList);
       setDrivers(dList);
 
@@ -72,10 +84,24 @@ export default function AdminDashboardScreen() {
       const activeDrivers = dList.filter((d) => d.status === 'ACTIVE').length;
       const activeSupervisors = sList.filter((s) => s.status === 'ACTIVE').length;
 
-      // Real-time trip metrics from mockTripStore
-      const currentTrips = useMockTripStore.getState().mockTrips;
+      // 2. Fetch real-time trips and storage statistics
+      let currentTrips: any[] = [];
+      try {
+        currentTrips = await tripService.getTrips();
+        setTrips(currentTrips);
+      } catch (err) {
+        console.warn('[AdminDashboard] Trip fetch error:', err);
+      }
+
+      try {
+        const sStats = await photoService.getStorageStats();
+        setStorageStats(sStats);
+      } catch (err) {
+        console.warn('[AdminDashboard] Storage stats fetch error:', err);
+      }
+
       const inProg = currentTrips.filter((t) => t.status === 'IN_PROGRESS' || t.status === 'ARRIVED').length;
-      const pend = currentTrips.filter((t) => t.status === 'PENDING_APPROVAL').length;
+      const pend = currentTrips.filter((t) => t.status === 'PENDING_APPROVAL' || t.status === 'PENDING').length;
       const comp = currentTrips.filter((t) => t.status === 'COMPLETED' || t.status === 'APPROVED').length;
       const rej = currentTrips.filter((t) => t.status === 'REJECTED').length;
       let totCont = 0;
@@ -84,7 +110,7 @@ export default function AdminDashboardScreen() {
       const termMap: Record<string, number> = { CICT: 0, CWIT: 0, ECT: 0, JCT: 0, UCT: 0, SAGT: 0 };
       currentTrips.forEach((t) => {
         if (t.sourceTerminal && termMap[t.sourceTerminal] !== undefined) termMap[t.sourceTerminal]++;
-        (t.containers || []).forEach((c) => {
+        (t.containers || []).forEach((c: any) => {
           totCont++;
           if (c.size === '20FT') c20++;
           else c40++;
@@ -155,68 +181,7 @@ export default function AdminDashboardScreen() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [mockTrips]);
-
-  function getInitialMockTrips() {
-    return [
-      {
-        id: 't-101',
-        tripNumber: 'TRIP-2026-0041',
-        sourceTerminal: 'JCT',
-        destTerminal: 'CICT',
-        vesselName: 'EVER GIVEN V.042',
-        vehicleNumber: 'LY-2345',
-        chassisNumber: 'SCK 101',
-        driverName: 'Sunil Shantha',
-        containers: ['MSKU9876543'],
-        containerSize: '40FT',
-        status: 'COMPLETED',
-        time: '10:14 AM',
-      },
-      {
-        id: 't-102',
-        tripNumber: 'TRIP-2026-0042',
-        sourceTerminal: 'CICT',
-        destTerminal: 'ECT',
-        vesselName: 'MAERSK MC-KINNEY',
-        vehicleNumber: 'LY-3456',
-        chassisNumber: 'SCK 102',
-        driverName: 'Kamal Perera',
-        containers: ['CMAU1122334', 'CMAU1122335'],
-        containerSize: '20FT x2',
-        status: 'PENDING_APPROVAL',
-        time: '11:20 AM',
-      },
-      {
-        id: 't-103',
-        tripNumber: 'TRIP-2026-0043',
-        sourceTerminal: 'SAGT',
-        destTerminal: 'CWIT',
-        vesselName: 'MSC OSCAR V.812',
-        vehicleNumber: 'LY-4567',
-        chassisNumber: 'SCK 103',
-        driverName: 'Nuwan Jayasinghe',
-        containers: ['TGHU5544332'],
-        containerSize: '40FT',
-        status: 'IN_PROGRESS',
-        time: '11:45 AM',
-      },
-      {
-        id: 't-104',
-        tripNumber: 'TRIP-2026-0044',
-        sourceTerminal: 'ECT',
-        destTerminal: 'JCT',
-        vesselName: 'CMA CGM ANTOINE',
-        vehicleNumber: 'LY-5678',
-        chassisNumber: 'SCK 104',
-        driverName: 'Pradeep Kumara',
-        containers: ['MEDU7788990'],
-        containerSize: '40FT',
-        status: 'PENDING_APPROVAL',
-        time: '12:05 PM',
-      },
-    ];
-  }
+  }, []);
 
   useEffect(() => {
     fetchDashboardData();
@@ -479,6 +444,62 @@ export default function AdminDashboardScreen() {
                     </View>
                   );
                 })}
+              </View>
+
+              {/* Photo Storage Infrastructure & Disk Stats Card */}
+              <View style={styles.sectionHeaderRow}>
+                <Text style={styles.sectionHeader}>PHOTO STORAGE & RETENTION</Text>
+                {storageStats?.lowDiskSpaceWarning && (
+                  <View style={styles.storageWarningBadge}>
+                    <Ionicons name="warning" size={12} color="#D97706" style={{ marginRight: 4 }} />
+                    <Text style={styles.storageWarningText}>LOW DISK SPACE</Text>
+                  </View>
+                )}
+              </View>
+
+              <View style={styles.storageCard}>
+                <View style={styles.storageStatRow}>
+                  <View style={styles.storageStatItem}>
+                    <Text style={styles.storageStatNum}>
+                      {storageStats ? (storageStats.totalPhotos ?? storageStats.totalFiles ?? 0) : '-'}
+                    </Text>
+                    <Text style={styles.storageStatLabel}>Total Photos</Text>
+                    <Text style={styles.storageStatSub}>Container verification</Text>
+                  </View>
+
+                  <View style={styles.dividerVertical} />
+
+                  <View style={styles.storageStatItem}>
+                    <Text style={[styles.storageStatNum, { color: '#0F766E' }]}>
+                      {storageStats
+                        ? `${((storageStats.totalSizeBytes || 0) / (1024 * 1024)).toFixed(1)} MB`
+                        : '-'}
+                    </Text>
+                    <Text style={styles.storageStatLabel}>Total Size</Text>
+                    <Text style={styles.storageStatSub}>
+                      {storageStats?.totalSizeGb ? `${storageStats.totalSizeGb.toFixed(2)} GB` : 'Disk usage'}
+                    </Text>
+                  </View>
+
+                  <View style={styles.dividerVertical} />
+
+                  <View style={styles.storageStatItem}>
+                    <Text style={[styles.storageStatNum, { color: storageStats?.lowDiskSpaceWarning ? '#D97706' : '#0F766E' }]}>
+                      {storageStats ? `${(storageStats.freeDiskSpaceGb || 0).toFixed(1)} GB` : '-'}
+                    </Text>
+                    <Text style={styles.storageStatLabel}>Free Space</Text>
+                    <Text style={styles.storageStatSub}>
+                      {storageStats?.freeSpacePercentage ? `${storageStats.freeSpacePercentage.toFixed(0)}% available` : 'Available disk'}
+                    </Text>
+                  </View>
+                </View>
+
+                <View style={styles.storageMetaRow}>
+                  <Ionicons name="folder-open-outline" size={13} color="#0F766E" />
+                  <Text style={styles.storageMetaText} numberOfLines={1}>
+                    Dir: {storageStats?.storageDirectory || './uploads/photos'} • Retention: 0 (Keep Forever)
+                  </Text>
+                </View>
               </View>
 
               {/* Recent ITT Movements Preview */}
@@ -1094,7 +1115,74 @@ const styles = StyleSheet.create({
   dividerVertical: {
     width: 1,
     height: 40,
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    backgroundColor: '#E5EAEC',
+  },
+  storageCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#E5EAEC',
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  storageWarningBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FEF3C7',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 12,
+  },
+  storageWarningText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#D97706',
+  },
+  storageStatRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  storageStatItem: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  storageStatNum: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#1A202C',
+  },
+  storageStatLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#4A5568',
+    marginTop: 2,
+  },
+  storageStatSub: {
+    fontSize: 10,
+    color: '#718096',
+    marginTop: 2,
+  },
+  storageMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F7F9FA',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 6,
+    marginTop: 12,
+    gap: 6,
+  },
+  storageMetaText: {
+    fontSize: 10,
+    color: '#4A5568',
+    fontWeight: '500',
+    flex: 1,
   },
   terminalCard: {
     backgroundColor: '#FFFFFF',

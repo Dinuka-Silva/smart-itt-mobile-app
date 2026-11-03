@@ -13,7 +13,7 @@ import java.util.Date;
 @Component
 public class JwtUtil {
 
-    @Value("${jwt.secret}")
+    @Value("${jwt.secret:${app.jwt.secret:smartitt-jwt-256bit-secure-token-production-fleet-key-2026-auth}}")
     private String jwtSecret;
 
     @Value("${jwt.expiration}")

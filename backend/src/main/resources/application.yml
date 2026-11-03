@@ -42,7 +42,7 @@ spring:
       on-profile: prod
 
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/smartitt}
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/smart_itt}
     username: ${SPRING_DATASOURCE_USERNAME:postgres}
     password: ${SPRING_DATASOURCE_PASSWORD:password}
     driver-class-name: org.postgresql.Driver
@@ -78,7 +78,7 @@ security:
   require-api-key: ${REQUIRE_API_KEY:false}
 
 jwt:
-  secret: ${JWT_SECRET:smartitt-jwt-256bit-secure-token-production-fleet-key-2026-auth}
+  secret: ${JWT_SECRET:${app.jwt.secret:smartitt-jwt-256bit-secure-token-production-fleet-key-2026-auth}}
   expiration: ${JWT_EXPIRATION_MS:86400000} # 24 hours in ms
   refresh-expiration: ${JWT_REFRESH_EXPIRATION_MS:604800000} # 7 days in ms
 
@@ -92,6 +92,8 @@ server:
   port: ${PORT:8080}
 
 app:
+  jwt:
+    secret: ${JWT_SECRET:smartitt-jwt-256bit-secure-token-production-fleet-key-2026-auth}
   upload:
     dir: ${UPLOAD_DIR:./uploads/photos}
   photos:

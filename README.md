@@ -268,6 +268,78 @@ npx expo start
 
 ---
 
+## 💾 Backup & Disaster Recovery Guide
+
+To ensure high availability and business continuity for SCK Logistics terminal operations, follow this operational backup and recovery protocol.
+
+### 1. PostgreSQL Database Backup (`pg_dump`)
+
+#### Scheduled Nightly Dump (Compressed Archive):
+```bash
+# Set credentials and target directory
+BACKUP_DIR="/var/backups/smart_itt"
+TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
+mkdir -p "$BACKUP_DIR"
+
+# Perform compressed binary backup with blobls and schema
+PGPASSWORD="${SPRING_DATASOURCE_PASSWORD:-password}" pg_dump \
+  -h "${DB_HOST:-localhost}" \
+  -p "${DB_PORT:-5432}" \
+  -U "${SPRING_DATASOURCE_USERNAME:-postgres}" \
+  -d "${DB_NAME:-smart_itt}" \
+  -F c -b -v \
+  -f "$BACKUP_DIR/smart_itt_${TIMESTAMP}.dump"
+```
+
+#### Automated Cron Configuration (`/etc/cron.d/smart_itt_backup`):
+```cron
+# Run daily at 02:00 AM UTC (Off-peak terminal hours)
+0 2 * * * root /usr/local/bin/backup_smart_itt_db.sh >> /var/log/smart_itt_backup.log 2>&1
+```
+
+#### Database Restoration (`pg_restore`):
+```bash
+# Terminate existing connections (if needed) and restore database
+PGPASSWORD="${SPRING_DATASOURCE_PASSWORD:-password}" pg_restore \
+  -h "${DB_HOST:-localhost}" \
+  -p "${DB_PORT:-5432}" \
+  -U "${SPRING_DATASOURCE_USERNAME:-postgres}" \
+  -d "${DB_NAME:-smart_itt}" \
+  -c -v "$BACKUP_DIR/smart_itt_20261103_020000.dump"
+```
+
+---
+
+### 2. Container Photo Archive (`uploads/photos`)
+
+Container inspection photos are stored outside the database as disk files under `app.upload.dir` (default: `./uploads/photos`) and indexed in `.gitignore`.
+
+#### Folder Archiving & Offsite Sync:
+```bash
+# Create compressed tarball of all photo assets
+PHOTO_DIR="./uploads/photos"
+ARCHIVE_DIR="/var/backups/photos"
+TIMESTAMP=$(date +"%Y%m%d")
+mkdir -p "$ARCHIVE_DIR"
+
+tar -czf "$ARCHIVE_DIR/container_photos_${TIMESTAMP}.tar.gz" -C "$PHOTO_DIR" .
+
+# Remote synchronization to offsite cloud storage / S3 bucket
+# aws s3 sync ./uploads/photos s3://sck-logistics-photo-backups/photos/ --delete
+```
+
+#### Photo Retention Configuration:
+- Configured in `application.yml` via `app.photos.retention-months` (environment variable `PHOTO_RETENTION_MONTHS`).
+- `PHOTO_RETENTION_MONTHS=0` keeps photos forever (regulatory audit requirement).
+
+---
+
+### 3. Disaster Recovery Objectives
+- **RPO (Recovery Point Objective)**: $\le 1$ hour (hourly WAL archiving or nightly automated dumps).
+- **RTO (Recovery Time Objective)**: $\le 30$ minutes for full system recovery onto standby infrastructure.
+
+---
+
 ## 📄 License & Attribution
 
 This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
