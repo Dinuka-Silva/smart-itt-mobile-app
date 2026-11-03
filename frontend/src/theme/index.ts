@@ -2,6 +2,7 @@ import {
   Colors,
   Spacing,
   Typography,
+  typography,
   Layout,
   Fonts,
   BottomTabInset,
@@ -66,12 +67,14 @@ function mapPalette(p: Palette) {
     navyMid: '#374151',
     navyLight: '#6B7C85',
     surfaceAlt: '#F7F9FA',
+    surfaceTeal: '#E3F4F1',
     card: '#FFFFFF', // Cards / Nav
     cardElevated: '#FFFFFF',
     border: '#E5EAEC', // 1px Border
     borderLight: '#F7F9FA',
     borderAccent: '#0F766E',
     text: '#1F2D33', // Main Text
+    textPrimary: '#1F2D33',
     textSecondary: '#6B7C85', // Secondary Text
     textMuted: '#A3B1B8', // Hint
     textHint: '#A3B1B8',
@@ -213,6 +216,7 @@ export {
   Colors,
   Spacing,
   Typography,
+  typography,
   Layout,
   Fonts,
   BottomTabInset,

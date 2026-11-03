@@ -98,3 +98,53 @@ export const Spacing = {
 
 export const BottomTabInset = Platform.select({ ios: 50, android: 80 }) ?? 0;
 export const MaxContentWidth = 800;
+
+export const typography = Typography;
+export const spacing = {
+  ...Spacing,
+  xs: Spacing.half,
+  sm: Spacing.one,
+  md: Spacing.two,
+  lg: Spacing.three,
+  xl: Spacing.four,
+  gutter: Layout.screenPadding,
+  margin: Layout.screenPadding,
+};
+export const radius = {
+  xs: 4,
+  sm: 6,
+  md: Layout.radius,
+  lg: 16,
+  xl: 20,
+  pill: 9999,
+  full: 9999,
+};
+
+export const colors = {
+  ...Colors.light,
+  primary: '#0F766E', // Primary Teal
+  accent: '#0F766E',
+  accentSoft: '#E3F4F1',
+  surface: '#FFFFFF',
+  surfaceDim: '#F7F9FA',
+  surfaceBright: '#FFFFFF',
+  surfaceContainerLowest: '#FFFFFF',
+  surfaceContainerLow: '#F7F9FA',
+  surfaceContainer: '#E3F4F1',
+  surfaceContainerHigh: '#E5EAEC',
+  surfaceContainerHighest: '#D5DCDE',
+  card: '#FFFFFF',
+  border: '#E5EAEC',
+  text: '#1F2D33',
+  textPrimary: '#1F2D33',
+  textSecondary: '#6B7C85',
+  textMuted: '#A3B1B8',
+  teal: '#0F766E',
+  tealLight: '#E3F4F1',
+  surfaceTeal: '#E3F4F1',
+  white: '#FFFFFF',
+  success: '#1E7A45',
+  warning: '#8A5A00',
+  danger: '#B42318',
+  dangerContainer: '#FDE8E8',
+};
