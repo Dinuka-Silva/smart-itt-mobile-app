@@ -687,48 +687,11 @@ public class AdminService {
     // 5. TRIPS & ITT OPERATIONS
     // ─────────────────────────────────────────────────────────────
     public List<TripResponse> getAllTrips(String search, String status, String terminal, String startDate, String endDate) {
-        List<Trip> trips = tripRepository.findAllByOrderByCreatedAtDesc();
+        return getAllTrips(search, status, terminal, null, null, startDate, endDate);
+    }
 
-        if (status != null && !status.isBlank() && !"ALL".equalsIgnoreCase(status)) {
-            try {
-                TripStatus st = TripStatus.valueOf(status.toUpperCase());
-                trips = trips.stream().filter(t -> t.getStatus() == st).collect(Collectors.toList());
-            } catch (Exception ignored) {}
-        }
-
-        if (terminal != null && !terminal.isBlank() && !"ALL".equalsIgnoreCase(terminal)) {
-            String termUpper = terminal.trim().toUpperCase();
-            trips = trips.stream().filter(t ->
-                    termUpper.equalsIgnoreCase(t.getSourceTerminal()) ||
-                    termUpper.equalsIgnoreCase(t.getDestTerminal())
-            ).collect(Collectors.toList());
-        }
-
-        if (startDate != null && !startDate.isBlank()) {
-            try {
-                LocalDateTime start = LocalDate.parse(startDate).atStartOfDay();
-                trips = trips.stream().filter(t -> t.getCreatedAt() != null && !t.getCreatedAt().isBefore(start)).collect(Collectors.toList());
-            } catch (Exception ignored) {}
-        }
-
-        if (endDate != null && !endDate.isBlank()) {
-            try {
-                LocalDateTime end = LocalDate.parse(endDate).plusDays(1).atStartOfDay();
-                trips = trips.stream().filter(t -> t.getCreatedAt() != null && t.getCreatedAt().isBefore(end)).collect(Collectors.toList());
-            } catch (Exception ignored) {}
-        }
-
-        if (search != null && !search.isBlank()) {
-            String q = search.trim().toLowerCase();
-            trips = trips.stream().filter(t ->
-                    (t.getTripNumber() != null && t.getTripNumber().toLowerCase().contains(q)) ||
-                    (t.getVehicleNumber() != null && t.getVehicleNumber().toLowerCase().contains(q)) ||
-                    (t.getVesselName() != null && t.getVesselName().toLowerCase().contains(q)) ||
-                    (t.getContainers() != null && t.getContainers().stream().anyMatch(c -> c.getContainerNumber() != null && c.getContainerNumber().toLowerCase().contains(q)))
-            ).collect(Collectors.toList());
-        }
-
-        return trips.stream().map(tripService::mapToResponse).collect(Collectors.toList());
+    public List<TripResponse> getAllTrips(String search, String status, String terminal, String vehicleNumber, String driverId, String startDate, String endDate) {
+        return tripService.getAllTrips(driverId, status, vehicleNumber, terminal, startDate, endDate, search);
     }
 
     public TripResponse getTripById(String id) {

@@ -29,6 +29,7 @@ public class TripResponse {
     private String notes;
     private LocalDateTime startTime;
     private LocalDateTime endTime;
+    private Long durationMinutes;
     private LocalDateTime createdAt;
     private List<ContainerResponse> containers;
 

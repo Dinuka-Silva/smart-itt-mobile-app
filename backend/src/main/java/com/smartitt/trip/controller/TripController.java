@@ -28,11 +28,16 @@ public class TripController {
     }
 
     @GetMapping
-    @Operation(summary = "Get all trips (filterable by driverId and status)")
+    @Operation(summary = "Get all trips with comprehensive server-side filtering")
     public ResponseEntity<List<TripResponse>> getTrips(
             @RequestParam(required = false) String driverId,
-            @RequestParam(required = false) String status) {
-        return ResponseEntity.ok(tripService.getAllTrips(driverId, status));
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String vehicleNumber,
+            @RequestParam(required = false) String terminal,
+            @RequestParam(required = false) String startDate,
+            @RequestParam(required = false) String endDate,
+            @RequestParam(required = false) String search) {
+        return ResponseEntity.ok(tripService.getAllTrips(driverId, status, vehicleNumber, terminal, startDate, endDate, search));
     }
 
     @GetMapping("/{id}")

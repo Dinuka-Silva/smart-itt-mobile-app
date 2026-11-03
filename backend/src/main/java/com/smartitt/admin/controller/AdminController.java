@@ -182,9 +182,11 @@ public class AdminController {
             @RequestParam(required = false) String search,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String terminal,
+            @RequestParam(required = false) String vehicleNumber,
+            @RequestParam(required = false) String driverId,
             @RequestParam(required = false) String startDate,
             @RequestParam(required = false) String endDate) {
-        return ResponseEntity.ok(adminService.getAllTrips(search, status, terminal, startDate, endDate));
+        return ResponseEntity.ok(adminService.getAllTrips(search, status, terminal, vehicleNumber, driverId, startDate, endDate));
     }
 
     @GetMapping("/trips/{id}")

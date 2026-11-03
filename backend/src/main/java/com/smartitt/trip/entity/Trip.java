@@ -53,6 +53,9 @@ public class Trip {
     private LocalDateTime startTime;
     private LocalDateTime endTime;
 
+    @Column(name = "duration_minutes")
+    private Long durationMinutes;
+
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
