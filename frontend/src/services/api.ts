@@ -8,7 +8,7 @@ const apiClient = axios.create({
     'Content-Type': 'application/json',
     'X-API-KEY': API_KEY,
   },
-  timeout: 15000,
+  timeout: 20000,
 });
 
 // Listener for 401 unauthorized session expiry
@@ -17,6 +17,42 @@ let unauthorizedHandler: UnauthorizedHandler | null = null;
 
 export function registerUnauthorizedHandler(handler: UnauthorizedHandler) {
   unauthorizedHandler = handler;
+}
+
+/**
+ * Extracts a clean, user-friendly error message from an API or network error.
+ */
+export function getApiErrorMessage(
+  error: any,
+  fallback = 'Unable to connect to server. Please check your network connection.'
+): string {
+  if (!error) return fallback;
+
+  // Network connection failures (offline, backend down, unreachable IP, timeout)
+  if (
+    !error.response ||
+    error.isNetworkError ||
+    error.message === 'Network Error' ||
+    error.code === 'ERR_NETWORK' ||
+    error.code === 'ECONNABORTED' ||
+    error.code === 'ETIMEDOUT'
+  ) {
+    return 'Unable to connect to server. Please check your network connection.';
+  }
+
+  // Server returned an error response
+  if (error.response?.data) {
+    const data = error.response.data;
+    if (typeof data === 'string' && data.length < 200) return data;
+    if (data.message && typeof data.message === 'string') return data.message;
+    if (data.error && typeof data.error === 'string') return data.error;
+  }
+
+  if (error.message && typeof error.message === 'string' && !error.message.includes('object Object')) {
+    return error.message;
+  }
+
+  return fallback;
 }
 
 // Request interceptor to add auth token
@@ -56,10 +92,15 @@ apiClient.interceptors.response.use(
         console.warn(`[API] Server responded with error status ${status}`);
       }
     } else if (error.request) {
-      // Request made but offline / timeout
-      console.warn('[Network] Host unreachable or request timed out.');
+      // Request made but offline / timeout / connection refused
+      console.warn(`[Network] Connection failed to ${error.config?.baseURL || ''}${error.config?.url || ''}:`, error.message);
+      (error as any).isNetworkError = true;
+      (error as any).userFriendlyMessage =
+        'Unable to connect to server. Please check your network connection.';
     } else {
-      console.warn('[Network] Request configuration error.');
+      console.warn('[Network] Request configuration error:', error.message);
+      (error as any).userFriendlyMessage =
+        'Unable to connect to server. Please check your network connection.';
     }
     return Promise.reject(error);
   }

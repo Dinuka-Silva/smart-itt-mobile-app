@@ -47,7 +47,8 @@ public class TripService {
                     .map(Driver::getId)
                     .orElseGet(() -> userRepository.findByIdentifier(driverIdStr)
                             .map(User::getId)
-                            .orElseGet(() -> driverRepository.findAll().stream().findFirst().map(Driver::getId).orElse(null)));
+                            .orElseGet(() -> driverRepository.findAll().stream().findFirst().map(Driver::getId)
+                                    .orElse(null)));
         }
     }
 
@@ -58,7 +59,8 @@ public class TripService {
 
         UUID driverUuid = resolveDriverUuid(req.getDriverId());
 
-        // Validate chassis capacity: 1 trip can carry only 1x 40FT OR up to 2x 20FT containers
+        // Validate chassis capacity: 1 trip can carry only 1x 40FT OR up to 2x 20FT
+        // containers
         if (req.getContainers() != null && !req.getContainers().isEmpty()) {
             long count20 = req.getContainers().stream()
                     .filter(c -> "20FT".equalsIgnoreCase(c.getSize()))
@@ -93,7 +95,8 @@ public class TripService {
                         ? ContainerSize.FT_20
                         : ContainerSize.FT_40;
 
-                String cNum = ci.getContainerNumber() != null ? ci.getContainerNumber().toUpperCase().trim() : "MSCU1234567";
+                String cNum = ci.getContainerNumber() != null ? ci.getContainerNumber().toUpperCase().trim()
+                        : "MSCU1234567";
                 Boolean verified = ci.getIsVerified();
                 if (verified == null) {
                     verified = com.smartitt.container.service.Iso6346Validator.isValidCheckDigit(cNum);
@@ -118,7 +121,8 @@ public class TripService {
     }
 
     public static String normalizePlate(String plate) {
-        if (plate == null) return "";
+        if (plate == null)
+            return "";
         return plate.replaceAll("[^A-Za-z0-9]", "").toUpperCase();
     }
 
@@ -126,7 +130,8 @@ public class TripService {
         return getAllTrips(driverId, status, null, null, null, null, null, null, null);
     }
 
-    public List<TripResponse> getAllTrips(String driverId, String status, String vehicleNumber, String terminal, String startDate, String endDate, String search) {
+    public List<TripResponse> getAllTrips(String driverId, String status, String vehicleNumber, String terminal,
+            String startDate, String endDate, String search) {
         return getAllTrips(driverId, status, vehicleNumber, terminal, startDate, endDate, search, null, null);
     }
 
@@ -149,28 +154,34 @@ public class TripService {
         if (status != null && !status.isBlank() && !"ALL".equalsIgnoreCase(status)) {
             String sUpper = status.trim().toUpperCase();
             trips = trips.stream().filter(t -> {
-                if (t.getStatus() == null) return false;
+                if (t.getStatus() == null)
+                    return false;
                 String st = t.getStatus().name();
-                if (st.equalsIgnoreCase(sUpper)) return true;
-                if ("PENDING".equals(sUpper) && "PENDING_APPROVAL".equals(st)) return true;
-                if ("PENDING_APPROVAL".equals(sUpper) && "PENDING".equals(st)) return true;
+                if (st.equalsIgnoreCase(sUpper))
+                    return true;
+                if ("PENDING".equals(sUpper) && "PENDING_APPROVAL".equals(st))
+                    return true;
+                if ("PENDING_APPROVAL".equals(sUpper) && "PENDING".equals(st))
+                    return true;
                 return false;
             }).collect(Collectors.toList());
         }
 
         if (vehicleNumber != null && !vehicleNumber.isBlank() && !"ALL".equalsIgnoreCase(vehicleNumber)) {
             String cleanVeh = normalizePlate(vehicleNumber);
-            trips = trips.stream().filter(t -> normalizePlate(t.getVehicleNumber()).contains(cleanVeh)).collect(Collectors.toList());
+            trips = trips.stream().filter(t -> normalizePlate(t.getVehicleNumber()).contains(cleanVeh))
+                    .collect(Collectors.toList());
         }
 
         if (terminal != null && !terminal.isBlank() && !"ALL".equalsIgnoreCase(terminal)) {
             String termUpper = terminal.trim().toUpperCase();
-            trips = trips.stream().filter(t ->
-                    termUpper.equalsIgnoreCase(t.getSourceTerminal()) ||
+            trips = trips.stream().filter(t -> termUpper.equalsIgnoreCase(t.getSourceTerminal()) ||
                     termUpper.equalsIgnoreCase(t.getDestTerminal()) ||
-                    (t.getContainers() != null && t.getContainers().stream().anyMatch(c ->
-                            termUpper.equalsIgnoreCase(c.getSourceTerminal()) || termUpper.equalsIgnoreCase(c.getDestTerminal())))
-            ).collect(Collectors.toList());
+                    (t.getContainers() != null
+                            && t.getContainers().stream()
+                                    .anyMatch(c -> termUpper.equalsIgnoreCase(c.getSourceTerminal())
+                                            || termUpper.equalsIgnoreCase(c.getDestTerminal()))))
+                    .collect(Collectors.toList());
         }
 
         if (startDate != null && !startDate.isBlank()) {
@@ -181,7 +192,8 @@ public class TripService {
                     LocalDateTime tripTime = t.getStartTime() != null ? t.getStartTime() : t.getCreatedAt();
                     return tripTime != null && !tripTime.isBefore(start);
                 }).collect(Collectors.toList());
-            } catch (Exception ignored) {}
+            } catch (Exception ignored) {
+            }
         }
 
         if (endDate != null && !endDate.isBlank()) {
@@ -192,19 +204,24 @@ public class TripService {
                     LocalDateTime tripTime = t.getStartTime() != null ? t.getStartTime() : t.getCreatedAt();
                     return tripTime != null && tripTime.isBefore(end);
                 }).collect(Collectors.toList());
-            } catch (Exception ignored) {}
+            } catch (Exception ignored) {
+            }
         }
 
         if (search != null && !search.isBlank()) {
             String q = search.trim().toLowerCase();
             String qNorm = normalizePlate(search);
-            trips = trips.stream().filter(t ->
-                    (t.getTripNumber() != null && t.getTripNumber().toLowerCase().contains(q)) ||
-                    (t.getVehicleNumber() != null && (t.getVehicleNumber().toLowerCase().contains(q) || (!qNorm.isEmpty() && normalizePlate(t.getVehicleNumber()).contains(qNorm)))) ||
-                    (t.getVesselName() != null && t.getVesselName().toLowerCase().contains(q)) ||
-                    (getDriverNameForTrip(t) != null && getDriverNameForTrip(t).toLowerCase().contains(q)) ||
-                    (t.getContainers() != null && t.getContainers().stream().anyMatch(c -> c.getContainerNumber() != null && c.getContainerNumber().toLowerCase().contains(q)))
-            ).collect(Collectors.toList());
+            trips = trips
+                    .stream().filter(t -> (t.getTripNumber() != null && t.getTripNumber().toLowerCase().contains(q)) ||
+                            (t.getVehicleNumber() != null && (t.getVehicleNumber().toLowerCase().contains(q)
+                                    || (!qNorm.isEmpty() && normalizePlate(t.getVehicleNumber()).contains(qNorm))))
+                            ||
+                            (t.getVesselName() != null && t.getVesselName().toLowerCase().contains(q)) ||
+                            (getDriverNameForTrip(t) != null && getDriverNameForTrip(t).toLowerCase().contains(q)) ||
+                            (t.getContainers() != null && t.getContainers().stream()
+                                    .anyMatch(c -> c.getContainerNumber() != null
+                                            && c.getContainerNumber().toLowerCase().contains(q))))
+                    .collect(Collectors.toList());
         }
 
         List<TripResponse> responses = trips.stream().map(this::mapToResponse).collect(Collectors.toList());
@@ -281,7 +298,8 @@ public class TripService {
         }
 
         if (trip.getStartTime() != null && trip.getEndTime() != null) {
-            trip.setDurationMinutes(Math.max(0L, java.time.Duration.between(trip.getStartTime(), trip.getEndTime()).toMinutes()));
+            trip.setDurationMinutes(
+                    Math.max(0L, java.time.Duration.between(trip.getStartTime(), trip.getEndTime()).toMinutes()));
         }
 
         return mapToResponse(tripRepository.save(trip));
@@ -312,7 +330,8 @@ public class TripService {
             trip.setStatus(TripStatus.COMPLETED);
             trip.setEndTime(LocalDateTime.now());
             if (trip.getStartTime() != null) {
-                trip.setDurationMinutes(Math.max(0L, java.time.Duration.between(trip.getStartTime(), trip.getEndTime()).toMinutes()));
+                trip.setDurationMinutes(
+                        Math.max(0L, java.time.Duration.between(trip.getStartTime(), trip.getEndTime()).toMinutes()));
             }
             tripRepository.save(trip);
         }
@@ -327,7 +346,8 @@ public class TripService {
     }
 
     public String getDriverNameForTrip(Trip trip) {
-        if (trip == null || trip.getDriverId() == null) return null;
+        if (trip == null || trip.getDriverId() == null)
+            return null;
         return userRepository.findById(trip.getDriverId())
                 .map(User::getFullName)
                 .orElseGet(() -> driverRepository.findById(trip.getDriverId())

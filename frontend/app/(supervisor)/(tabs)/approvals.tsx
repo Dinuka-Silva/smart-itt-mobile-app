@@ -13,8 +13,8 @@ import {
   Modal,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import axios from 'axios';
-import API_BASE_URL from '../../../src/config/api';
+import apiClient from '../../../src/services/api';
+import { NetworkErrorView } from '../../../src/components/NetworkErrorView';
 import { useAuthStore } from '../../../src/store/authStore';
 import { tripService } from '../../../src/services/tripService';
 import { radius, spacing } from '../../../src/theme';
@@ -34,14 +34,17 @@ export default function SupervisorApprovals() {
   const [rejectModalVisible, setRejectModalVisible] = useState(false);
   const [tripToReject, setTripToReject] = useState<any | null>(null);
   const [rejectionReason, setRejectionReason] = useState<string>('');
+  const [networkError, setNetworkError] = useState(false);
 
   const fetchPending = useCallback(async () => {
     try {
-      const res = await axios.get(`${API_BASE_URL}/trips?status=PENDING_APPROVAL`);
+      setNetworkError(false);
+      const res = await apiClient.get('/trips?status=PENDING_APPROVAL');
       const apiList = Array.isArray(res.data) ? res.data : [];
       setTrips(apiList);
     } catch (e) {
       console.warn('[SupervisorApprovals] Error fetching pending:', e);
+      setNetworkError(true);
       setTrips([]);
     } finally {
       setLoading(false);
@@ -160,6 +163,8 @@ export default function SupervisorApprovals() {
 
           {loading ? (
             <ActivityIndicator size="large" color="#2563EB" style={{ marginVertical: 30 }} />
+          ) : networkError && trips.length === 0 ? (
+            <NetworkErrorView onRetry={fetchPending} isRetrying={refreshing} />
           ) : trips.length === 0 ? (
             <View style={styles.emptyCard}>
               <Ionicons name="checkmark-done-circle" size={36} color="#22ef7e" />

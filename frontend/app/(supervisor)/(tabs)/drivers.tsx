@@ -15,8 +15,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRouter } from 'expo-router';
-import axios from 'axios';
-import API_BASE_URL from '../../../src/config/api';
+import apiClient from '../../../src/services/api';
 import { useAuthStore } from '../../../src/store/authStore';
 import { adminFleetStore } from '../../../src/store/adminFleetStore';
 import { securityAuditService } from '../../../src/services/securityAuditService';
@@ -126,7 +125,7 @@ export default function SupervisorDrivers() {
     };
 
     try {
-      await axios.put(`${API_BASE_URL}/drivers/${drvId}`, payload);
+      await apiClient.put(`/drivers/${drvId}`, payload);
       await adminFleetStore.updateDriverDetails(drvId, payload);
       setDrivers((prev) =>
         prev.map((d) => (d.id === drvId || d.driverCode === drvId ? { ...d, ...payload } : d))
@@ -260,7 +259,7 @@ export default function SupervisorDrivers() {
 
     setUpdatingStatus(true);
     try {
-      await axios.patch(`${API_BASE_URL}/drivers/${drv.id}/status`, { status: newStatus });
+      await apiClient.patch(`/drivers/${drv.id}/status`, { status: newStatus });
       await adminFleetStore.updateDriverStatus(drv.id || drv.driverCode, newStatus);
       await securityAuditService.logEvent(
         'DRIVER_STATUS_UPDATED',

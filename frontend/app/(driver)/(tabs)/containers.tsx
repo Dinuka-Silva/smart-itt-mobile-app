@@ -9,9 +9,9 @@ import {
   TouchableOpacity,
   Modal,
 } from 'react-native';
-import axios from 'axios';
 import { Ionicons } from '@expo/vector-icons';
-import API_BASE_URL from '../../../src/config/api';
+import apiClient from '../../../src/services/api';
+import { NetworkErrorView } from '../../../src/components/NetworkErrorView';
 import { useAuthStore } from '../../../src/store/authStore';
 import { colors } from '../../../src/theme';
 import { useFocusEffect } from 'expo-router';
@@ -28,12 +28,14 @@ export default function DriverContainers() {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string>('All');
   const [selectedTerminal, setSelectedTerminal] = useState<string>('All');
+  const [networkError, setNetworkError] = useState(false);
 
   const fetchContainers = useCallback(async () => {
     try {
+      setNetworkError(false);
       const driverId = user?.driverId || user?.id;
       const driverParam = driverId ? `?driverId=${driverId}` : '';
-      const res = await axios.get(`${API_BASE_URL}/trips${driverParam}`);
+      const res = await apiClient.get(`/trips${driverParam}`);
       const apiTrips = Array.isArray(res.data) ? res.data : [];
 
       // Flatten all containers from all trips, enriched with trip info
@@ -55,6 +57,7 @@ export default function DriverContainers() {
       setContainers(allContainers);
     } catch (e) {
       console.warn('[DriverContainers] Failed to load live containers:', e);
+      setNetworkError(true);
       setContainers([]);
     } finally {
       setLoading(false);
@@ -224,6 +227,10 @@ export default function DriverContainers() {
 
       {loading ? (
         <ActivityIndicator size="large" color="#0F766E" style={{ marginTop: 30 }} />
+      ) : networkError && containers.length === 0 ? (
+        <View style={{ marginHorizontal: containerPaddingHorizontal }}>
+          <NetworkErrorView onRetry={fetchContainers} isRetrying={refreshing} />
+        </View>
       ) : filteredContainers.length === 0 ? (
         <View style={[styles.emptyBox, { marginHorizontal: containerPaddingHorizontal }]}>
           <Ionicons name="cube-outline" size={42} color="#A3B1B8" style={{ marginBottom: 12 }} />

@@ -210,11 +210,23 @@ export default function AdminLoginScreen() {
         setLockoutSeconds(failStatus.remainingSeconds);
       }
 
+      const isNetworkErr = !err?.response || err?.code === 'ERR_NETWORK' || err?.message === 'Network Error' || Boolean(err?.isNetworkError);
       const msg = failStatus.isLocked
         ? `Administrative lockout initiated. Retry in ${failStatus.remainingSeconds}s.`
+        : isNetworkErr
+        ? 'Unable to connect to server. Please check your network connection.'
         : err?.response?.data?.message || err?.message || 'Authentication failed. Please verify credentials.';
       setErrorMessage(msg);
-      Alert.alert('Admin Login Failed', msg);
+      Alert.alert(
+        isNetworkErr ? 'Connection Error' : 'Admin Login Failed',
+        isNetworkErr ? `${msg}\n\nPlease check your network connection and try again.` : msg,
+        isNetworkErr
+          ? [
+              { text: 'Cancel', style: 'cancel' },
+              { text: 'Retry', onPress: () => handleAdminLogin() },
+            ]
+          : [{ text: 'OK' }]
+      );
     } finally {
       setLoading(false);
     }
@@ -318,8 +330,19 @@ export default function AdminLoginScreen() {
         <View style={styles.card}>
           {errorMessage ? (
             <View style={styles.errorBox}>
-              <Ionicons name="alert-circle" size={16} color="#ff5252" />
-              <Text style={styles.errorText}>{errorMessage}</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, gap: 6 }}>
+                <Ionicons name="alert-circle" size={16} color="#ff5252" />
+                <Text style={styles.errorText}>{errorMessage}</Text>
+              </View>
+              {errorMessage.includes('Unable to connect') && (
+                <TouchableOpacity
+                  onPress={() => handleAdminLogin()}
+                  style={{ backgroundColor: '#0F766E', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6 }}
+                  activeOpacity={0.7}
+                >
+                  <Text style={{ color: '#FFFFFF', fontSize: 12, fontWeight: '700' }}>Retry</Text>
+                </TouchableOpacity>
+              )}
             </View>
           ) : null}
 

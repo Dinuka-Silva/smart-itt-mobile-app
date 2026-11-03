@@ -21,8 +21,7 @@ import { tripService } from '../../../src/services/tripService';
 import { dashboardService, DriverDashboardStats } from '../../../src/services/dashboardService';
 import { driverService } from '../../../src/services/driverService';
 import { Colors, Typography, Layout, Spacing } from '../../../src/constants/theme';
-import axios from 'axios';
-import API_BASE_URL from '../../../src/config/api';
+import apiClient from '../../../src/services/api';
 import { useResponsive } from '../../../src/hooks/useResponsive';
 import { getTripTimingDetails } from '../../../src/utils/tripDateUtils';
 import { getTripDischargeTerminal } from '../../../src/utils/tripTerminalUtils';
@@ -205,7 +204,7 @@ export default function DriverHomeDashboard() {
   const handleStartActiveTrip = async (tripId: string) => {
     setActionInProgress(true);
     try {
-      await axios.patch(`${API_BASE_URL}/trips/${tripId}/status`, { status: 'IN_PROGRESS' });
+      await apiClient.patch(`/trips/${tripId}/status`, { status: 'IN_PROGRESS' });
       await loadData();
       Alert.alert('Trip Started', 'Trip is now IN PROGRESS. Drive safely.');
     } catch (err) {
@@ -251,7 +250,7 @@ export default function DriverHomeDashboard() {
       const finalNotes = driverCompletionNotes.trim() || 'Discharged cargo safely at destination berth.';
 
       // Official server API calls
-      await axios.patch(`${API_BASE_URL}/trips/${tripId}/complete`, {
+      await apiClient.patch(`/trips/${tripId}/complete`, {
         dischargeTerminal: finalDest,
         dischargeBay: finalBay,
         sealStatus,
@@ -259,7 +258,7 @@ export default function DriverHomeDashboard() {
         driverNotes: finalNotes,
       });
 
-      await axios.patch(`${API_BASE_URL}/trips/${tripId}/submit`, {
+      await apiClient.patch(`/trips/${tripId}/submit`, {
         notes: finalNotes,
       });
 

@@ -12,8 +12,8 @@ import {
 } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import axios from 'axios';
-import API_BASE_URL from '../../../src/config/api';
+import apiClient from '../../../src/services/api';
+import { NetworkErrorView } from '../../../src/components/NetworkErrorView';
 import { useAuthStore } from '../../../src/store/authStore';
 import { colors, radius, spacing } from '../../../src/theme';
 import { securityAuditService } from '../../../src/services/securityAuditService';
@@ -42,6 +42,7 @@ export default function DriverJobQueue() {
   const [filter, setFilter] = useState('ALL');
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [arrivedTrips, setArrivedTrips] = useState<Set<string>>(new Set());
+  const [networkError, setNetworkError] = useState(false);
 
   const [unloadSelections, setUnloadSelections] = useState<Record<string, string>>({});
   const prevStatusRef = useRef<Record<string, string>>({});
@@ -78,14 +79,16 @@ export default function DriverJobQueue() {
 
   const fetchTrips = useCallback(async () => {
     try {
+      setNetworkError(false);
       const driverId = user?.driverId || user?.id;
       const driverParam = driverId ? `?driverId=${driverId}` : '';
-      const res = await axios.get(`${API_BASE_URL}/trips${driverParam}`);
+      const res = await apiClient.get(`/trips${driverParam}`);
       const apiTrips = Array.isArray(res.data) ? res.data : [];
       notifyStatusChanges(apiTrips);
       setTrips(apiTrips);
     } catch (e) {
       console.warn('[DriverTrips] Error fetching trips:', e);
+      setNetworkError(true);
       setTrips([]);
     } finally {
       setLoading(false);
@@ -103,7 +106,7 @@ export default function DriverJobQueue() {
     const driverUser = user?.username || user?.driverCode || user?.employeeId || 'DRIVER';
 
     try {
-      await axios.patch(`${API_BASE_URL}/trips/${tripId}/status`, { status: 'IN_PROGRESS' });
+      await apiClient.patch(`/trips/${tripId}/status`, { status: 'IN_PROGRESS' });
       await securityAuditService.logEvent(
         'TRIP_STARTED',
         driverUser,
@@ -135,14 +138,14 @@ export default function DriverJobQueue() {
       const damageStatus = trip?.damageStatus || 'NONE';
       const driverNotes = trip?.driverCompletionNotes || 'Containers discharged safely at destination terminal berth. Seals verified.';
 
-      await axios.patch(`${API_BASE_URL}/trips/${tripId}/complete`, {
+      await apiClient.patch(`/trips/${tripId}/complete`, {
         dischargeTerminal: selTerm,
         dischargeBay,
         sealStatus,
         damageStatus,
         driverNotes,
       }).catch(() => {});
-      await axios.patch(`${API_BASE_URL}/trips/${tripId}/submit`, { notes: driverNotes }).catch(() => {});
+      await apiClient.patch(`/trips/${tripId}/submit`, { notes: driverNotes }).catch(() => {});
 
       await securityAuditService.logEvent(
         'TRIP_COMPLETED',
@@ -267,6 +270,10 @@ export default function DriverJobQueue() {
         {/* ─── 5. Job Queue List ─── */}
         {loading ? (
           <ActivityIndicator size="large" color={colors.primaryContainer} style={{ marginTop: 24 }} />
+        ) : networkError && trips.length === 0 ? (
+          <View style={{ marginHorizontal: 16 }}>
+            <NetworkErrorView onRetry={fetchTrips} isRetrying={refreshing} />
+          </View>
         ) : filteredTrips.length === 0 ? (
           <View style={styles.emptyBox}>
             <Ionicons name="cube-outline" size={36} color="#3b494c" />

@@ -323,10 +323,17 @@ export default function LoginScreen() {
         return;
       }
 
+      const isNetworkError = !err?.response || err?.code === 'ERR_NETWORK' || err?.message === 'Network Error' || Boolean(err?.isNetworkError);
+
       if (role === 'ADMIN') {
-        const adminOfflineMsg = 'System Administrator sign-in requires an active network connection to the server. Offline login is disabled.';
+        const adminOfflineMsg = isNetworkError
+          ? 'Unable to connect to server. Please check your network connection.'
+          : 'System Administrator sign-in requires an active network connection to the server. Offline login is disabled.';
         setErrorMessage(adminOfflineMsg);
-        Alert.alert('Network Required', adminOfflineMsg);
+        Alert.alert('Connection Error', adminOfflineMsg, [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Retry', onPress: () => handleLogin() }
+        ]);
         setLoading(false);
         return;
       }
@@ -354,12 +361,19 @@ export default function LoginScreen() {
           setLockoutSeconds(lockStatus.remainingSeconds);
         }
 
-        const errorText =
-          verifyResult.errorMessage || 'Incorrect username or password. Please try again.';
+        const errorText = isNetworkError
+          ? 'Unable to connect to server. Please check your network connection.'
+          : verifyResult.errorMessage || 'Incorrect username or password. Please try again.';
         setErrorMessage(errorText);
         Alert.alert(
-          verifyResult.isOldPassword ? 'Old Password Entered' : 'Authentication Failed',
-          errorText
+          isNetworkError ? 'Connection Error' : (verifyResult.isOldPassword ? 'Old Password Entered' : 'Authentication Failed'),
+          isNetworkError ? `${errorText}\n\nPlease check your network connection and try again.` : errorText,
+          isNetworkError
+            ? [
+                { text: 'Cancel', style: 'cancel' },
+                { text: 'Retry', onPress: () => handleLogin() }
+              ]
+            : [{ text: 'OK' }]
         );
         setLoading(false);
         return;
@@ -626,8 +640,19 @@ export default function LoginScreen() {
           {/* Inline Error Message Banner */}
           {errorMessage ? (
             <View style={styles.errorBanner}>
-              <Ionicons name="alert-circle" size={16} color="#ff4d4f" />
-              <Text style={styles.errorText}>{errorMessage}</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, gap: 6 }}>
+                <Ionicons name="alert-circle" size={16} color="#ff4d4f" />
+                <Text style={styles.errorText}>{errorMessage}</Text>
+              </View>
+              {errorMessage.includes('Unable to connect') && (
+                <TouchableOpacity
+                  onPress={() => handleLogin()}
+                  style={{ backgroundColor: '#0F766E', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6 }}
+                  activeOpacity={0.7}
+                >
+                  <Text style={{ color: '#FFFFFF', fontSize: 12, fontWeight: '700' }}>Retry</Text>
+                </TouchableOpacity>
+              )}
             </View>
           ) : null}
 

@@ -522,8 +522,8 @@ export default function AdminDashboardScreen() {
                           trip.status === 'COMPLETED' || trip.status === 'APPROVED'
                             ? styles.statusPillGreen
                             : trip.status === 'PENDING_APPROVAL'
-                            ? styles.statusPillAmber
-                            : styles.statusPillCyan,
+                              ? styles.statusPillAmber
+                              : styles.statusPillCyan,
                         ]}
                       >
                         <Text style={styles.statusPillText}>{trip.status}</Text>
@@ -587,8 +587,8 @@ export default function AdminDashboardScreen() {
                           trip.status === 'COMPLETED' || trip.status === 'APPROVED'
                             ? styles.statusPillGreen
                             : trip.status === 'PENDING_APPROVAL'
-                            ? styles.statusPillAmber
-                            : styles.statusPillCyan,
+                              ? styles.statusPillAmber
+                              : styles.statusPillCyan,
                         ]}
                       >
                         <Text style={styles.statusPillText}>{trip.status}</Text>
@@ -676,12 +676,12 @@ export default function AdminDashboardScreen() {
                         <Text style={styles.tripDetailVal}>
                           {Array.isArray(trip.containers)
                             ? trip.containers
-                                .map((c: any) =>
-                                  typeof c === 'string'
-                                    ? c
-                                    : `${c.containerNumber || 'Cont'} (${c.size || '20FT'}${c.destTerminal ? ` ➔ ${c.destTerminal}` : ''})`
-                                )
-                                .join(', ')
+                              .map((c: any) =>
+                                typeof c === 'string'
+                                  ? c
+                                  : `${c.containerNumber || 'Cont'} (${c.size || '20FT'}${c.destTerminal ? ` ➔ ${c.destTerminal}` : ''})`
+                              )
+                              .join(', ')
                             : '1 unit'}{' '}
                           ({trip.containerSize || '40FT'})
                         </Text>
