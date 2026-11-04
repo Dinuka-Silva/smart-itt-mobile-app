@@ -32,10 +32,10 @@ jobs:
           cache: 'maven'
 
       - name: Grant Execute Permission to Maven Wrapper
-        run: chmod +x mvnw
+        run: chmod +x mvnw || true
 
       - name: Build and Run Backend JUnit 5 Tests
-        run: ./mvnw test -B --no-transfer-progress
+        run: mvn test -B --no-transfer-progress
 
       - name: Archive Test Results (Surefire Reports)
         if: always()

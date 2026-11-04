@@ -1,0 +1,22 @@
+#!/bin/sh
+# ----------------------------------------------------------------------------
+# Apache Maven Wrapper startup shell script
+# ----------------------------------------------------------------------------
+
+set -e
+
+# Find directory containing script
+DIRNAME=$(dirname "$0")
+[ -z "$DIRNAME" ] && DIRNAME="."
+
+WRAPPER_JAR="$DIRNAME/.mvn/wrapper/maven-wrapper.jar"
+WRAPPER_LAUNCHER="org.apache.maven.wrapper.MavenWrapperMain"
+
+# If mvn command exists in PATH, prefer it; otherwise use java + wrapper jar
+if command -v mvn >/dev/null 2>&1; then
+    exec mvn "$@"
+elif [ -n "$JAVA_HOME" ] && [ -x "$JAVA_HOME/bin/java" ]; then
+    exec "$JAVA_HOME/bin/java" -classpath "$WRAPPER_JAR" "-Dmaven.multiModuleProjectDirectory=$DIRNAME" "$WRAPPER_LAUNCHER" "$@"
+else
+    exec java -classpath "$WRAPPER_JAR" "-Dmaven.multiModuleProjectDirectory=$DIRNAME" "$WRAPPER_LAUNCHER" "$@"
+fi
