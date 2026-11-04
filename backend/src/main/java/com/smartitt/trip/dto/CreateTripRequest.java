@@ -13,6 +13,7 @@ public class CreateTripRequest {
     private String sourceTerminal;
     private String destTerminal;
     private String notes;
+    private String status;
     private List<ContainerInput> containers;
 
     @Data

@@ -107,12 +107,12 @@ export default function DriverHomeDashboard() {
       setTrips(list);
 
       // 2. Compute dynamic stats from live trips
-      const completedCount = list.filter((t) => t.status === 'COMPLETED' || t.status === 'APPROVED').length;
+      const completedCount = list.filter((t) => t.status === 'COMPLETED' || t.status === 'APPROVED' || t.status === 'SUPERVISOR_CONFIRMED').length;
       const activeCount = list.filter((t) => t.status === 'IN_PROGRESS' || t.status === 'ARRIVED').length;
-      const pendingCount = list.filter((t) => t.status === 'PENDING_APPROVAL').length;
+      const pendingCount = list.filter((t) => t.status === 'PENDING_APPROVAL' || t.status === 'PENDING_SUPERVISOR_CONFIRMATION').length;
       let containersDelivered = 0;
       list.forEach((t) => {
-        if (t.status === 'COMPLETED' || t.status === 'APPROVED') {
+        if (t.status === 'COMPLETED' || t.status === 'APPROVED' || t.status === 'SUPERVISOR_CONFIRMED') {
           containersDelivered += (t.containers?.length || 1);
         }
       });
@@ -132,7 +132,7 @@ export default function DriverHomeDashboard() {
         tripsPendingApproval: pendingCount,
         approvedAllowance: completedCount * 2500,
         pendingAllowance: pendingCount * 2500,
-        activeTrip: list.find((t) => ['IN_PROGRESS', 'ARRIVED', 'PENDING_APPROVAL', 'APPROVED'].includes(t.status)) || null,
+        activeTrip: list.find((t) => ['IN_PROGRESS', 'ARRIVED', 'PENDING_APPROVAL', 'PENDING_SUPERVISOR_CONFIRMATION', 'SUPERVISOR_REJECTED', 'REJECTED'].includes(t.status)) || null,
       });
 
       // 3. Fetch driver profile if available
@@ -157,7 +157,7 @@ export default function DriverHomeDashboard() {
 
   // Strict activeTrip computation: strictly IN_PROGRESS, ARRIVED, PENDING_APPROVAL, or APPROVED
   const activeTrip = useMemo(() => {
-    return trips.find((t) => ['IN_PROGRESS', 'ARRIVED', 'PENDING_APPROVAL', 'APPROVED'].includes(t.status)) || null;
+    return trips.find((t) => ['IN_PROGRESS', 'ARRIVED', 'PENDING_APPROVAL', 'PENDING_SUPERVISOR_CONFIRMATION', 'SUPERVISOR_REJECTED', 'REJECTED'].includes(t.status)) || null;
   }, [trips]);
 
   // Clean real profile data - no fake demo defaults
@@ -249,17 +249,13 @@ export default function DriverHomeDashboard() {
       const finalBay = dischargeBay.trim() || 'Bay 04, Crane 02';
       const finalNotes = driverCompletionNotes.trim() || 'Discharged cargo safely at destination berth.';
 
-      // Official server API calls
-      await apiClient.patch(`/trips/${tripId}/complete`, {
+      // Official server API call
+      await tripService.completeTrip(tripId, {
         dischargeTerminal: finalDest,
         dischargeBay: finalBay,
         sealStatus,
         damageStatus: cargoDamageStatus,
         driverNotes: finalNotes,
-      });
-
-      await apiClient.patch(`/trips/${tripId}/submit`, {
-        notes: finalNotes,
       });
 
       const nowTime = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
@@ -488,16 +484,6 @@ export default function DriverHomeDashboard() {
 
             {/* ONE Primary Action Button based on status */}
             <View style={{ marginTop: 8 }}>
-              {activeTrip.status === 'APPROVED' && (
-                <AppButton
-                  label="Start Trip"
-                  onPress={() => handleStartActiveTrip(activeTrip.id)}
-                  variant="primary"
-                  iconName="play-circle-outline"
-                  loading={actionInProgress}
-                />
-              )}
-
               {(activeTrip.status === 'IN_PROGRESS' || activeTrip.status === 'ARRIVED') && (
                 <AppButton
                   label="Complete Trip"
@@ -508,12 +494,37 @@ export default function DriverHomeDashboard() {
                 />
               )}
 
-              {activeTrip.status === 'PENDING_APPROVAL' && (
+              {(activeTrip.status === 'PENDING_APPROVAL' || activeTrip.status === 'PENDING_SUPERVISOR_CONFIRMATION') && (
                 <View style={styles.pendingStrip}>
-                  <Ionicons name="time-outline" size={16} color={theme.warning} />
+                  <Ionicons name="time-outline" size={16} color="#173B70" />
                   <Text style={styles.pendingStripText}>
-                    Awaiting Supervisor Sign-off
+                    Awaiting Supervisor Confirmation
                   </Text>
+                </View>
+              )}
+
+              {(activeTrip.status === 'REJECTED' || activeTrip.status === 'SUPERVISOR_REJECTED') && (
+                <View style={{ gap: 8 }}>
+                  <View style={[styles.pendingStrip, { backgroundColor: '#F8FAFC', borderColor: '#173B70', borderWidth: 1 }]}>
+                    <Ionicons name="alert-circle-outline" size={18} color="#173B70" />
+                    <View style={{ flex: 1 }}>
+                      <Text style={[styles.pendingStripText, { fontWeight: '700' }]}>
+                        Trip Rejected by Supervisor
+                      </Text>
+                      {!!activeTrip.rejectionReason && (
+                        <Text style={{ fontSize: 12, color: '#173B70', marginTop: 2 }}>
+                          Reason: {activeTrip.rejectionReason}
+                        </Text>
+                      )}
+                    </View>
+                  </View>
+                  <AppButton
+                    label="Review & Resubmit Trip"
+                    onPress={() => handleOpenDischargeModal(activeTrip)}
+                    variant="primary"
+                    iconName="refresh-outline"
+                    loading={actionInProgress}
+                  />
                 </View>
               )}
             </View>

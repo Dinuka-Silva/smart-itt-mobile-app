@@ -39,9 +39,15 @@ public class DashboardController {
         LocalDateTime endOfDay = startOfDay.plusDays(1);
 
         long inProgress = tripRepository.countByStatus(TripStatus.IN_PROGRESS);
-        long completed = tripRepository.countByStatus(TripStatus.COMPLETED);
-        long pending = tripRepository.countByStatus(TripStatus.PENDING_APPROVAL);
-        long approved = tripRepository.countByStatus(TripStatus.APPROVED);
+        long completed = tripRepository.countByStatus(TripStatus.COMPLETED)
+                + tripRepository.countByStatus(TripStatus.SUPERVISOR_CONFIRMED)
+                + tripRepository.countByStatus(TripStatus.APPROVED);
+        long pending = tripRepository.countByStatus(TripStatus.PENDING_APPROVAL)
+                + tripRepository.countByStatus(TripStatus.PENDING_SUPERVISOR_CONFIRMATION);
+        long approved = tripRepository.countByStatus(TripStatus.APPROVED)
+                + tripRepository.countByStatus(TripStatus.SUPERVISOR_CONFIRMED);
+        long rejected = tripRepository.countByStatus(TripStatus.REJECTED)
+                + tripRepository.countByStatus(TripStatus.SUPERVISOR_REJECTED);
 
         Map<String, Object> stats = new LinkedHashMap<>();
         stats.put("totalTripsToday", tripRepository.countTodayTrips(startOfDay, endOfDay));
@@ -49,7 +55,7 @@ public class DashboardController {
         stats.put("tripsPendingApproval", pending);
         stats.put("completedTripsToday", completed);
         stats.put("approvedTrips", approved);
-        stats.put("rejectedTrips", tripRepository.countByStatus(TripStatus.REJECTED));
+        stats.put("rejectedTrips", rejected);
         stats.put("totalContainersTransportedToday", containerRepository.count());
         stats.put("registeredDrivers", driverRepository.count());
         stats.put("activeDrivers", driverRepository.findByStatus(AccountStatus.ACTIVE).size());
@@ -81,7 +87,8 @@ public class DashboardController {
         if (dId != null) {
             activeTrips = tripRepository.countByDriverIdAndStatus(dId, TripStatus.IN_PROGRESS);
             completedToday = tripRepository.countCompletedTodayByDriver(dId, startOfDay, endOfDay);
-            pendingApprovals = tripRepository.countByDriverIdAndStatus(dId, TripStatus.PENDING_APPROVAL);
+            pendingApprovals = tripRepository.countByDriverIdAndStatus(dId, TripStatus.PENDING_APPROVAL)
+                    + tripRepository.countByDriverIdAndStatus(dId, TripStatus.PENDING_SUPERVISOR_CONFIRMATION);
 
             List<Trip> activeList = tripRepository.findActiveTripsByDriver(dId);
             if (!activeList.isEmpty()) {

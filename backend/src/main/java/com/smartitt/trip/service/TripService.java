@@ -94,6 +94,15 @@ public class TripService {
         String sourceTerm = req.getSourceTerminal() != null && !req.getSourceTerminal().isBlank() ? req.getSourceTerminal().trim() : "CICT";
         String destTerm = req.getDestTerminal() != null && !req.getDestTerminal().isBlank() ? req.getDestTerminal().trim() : "JCT";
 
+        TripStatus initialStatus = TripStatus.IN_PROGRESS;
+        if (req.getStatus() != null && !req.getStatus().isBlank()) {
+            try {
+                initialStatus = TripStatus.valueOf(req.getStatus().trim().toUpperCase());
+            } catch (IllegalArgumentException ignored) {
+                initialStatus = TripStatus.IN_PROGRESS;
+            }
+        }
+
         Trip trip = Trip.builder()
                 .tripNumber(tripNumber)
                 .driverId(driverUuid)
@@ -102,7 +111,7 @@ public class TripService {
                 .chassisNumber(chassisNumber)
                 .sourceTerminal(sourceTerm)
                 .destTerminal(destTerm)
-                .status(TripStatus.PENDING_APPROVAL)
+                .status(initialStatus)
                 .notes(req.getNotes())
                 .startTime(LocalDateTime.now())
                 .build();
@@ -178,9 +187,14 @@ public class TripService {
                 String st = t.getStatus().name();
                 if (st.equalsIgnoreCase(sUpper))
                     return true;
-                if ("PENDING".equals(sUpper) && "PENDING_APPROVAL".equals(st))
+                if (("PENDING".equals(sUpper) || "PENDING_APPROVAL".equals(sUpper) || "PENDING_SUPERVISOR_CONFIRMATION".equals(sUpper))
+                        && (st.equals("PENDING_APPROVAL") || st.equals("PENDING_SUPERVISOR_CONFIRMATION")))
                     return true;
-                if ("PENDING_APPROVAL".equals(sUpper) && "PENDING".equals(st))
+                if (("APPROVED".equals(sUpper) || "SUPERVISOR_CONFIRMED".equals(sUpper) || "COMPLETED".equals(sUpper))
+                        && (st.equals("APPROVED") || st.equals("SUPERVISOR_CONFIRMED") || st.equals("COMPLETED")))
+                    return true;
+                if (("REJECTED".equals(sUpper) || "SUPERVISOR_REJECTED".equals(sUpper))
+                        && (st.equals("REJECTED") || st.equals("SUPERVISOR_REJECTED")))
                     return true;
                 return false;
             }).collect(Collectors.toList());
@@ -280,15 +294,121 @@ public class TripService {
         return mapToResponse(trip);
     }
 
+    public UUID resolveSupervisorUuid(String supervisorIdStr) {
+        if (supervisorIdStr == null || supervisorIdStr.isBlank()) return null;
+        try {
+            return UUID.fromString(supervisorIdStr);
+        } catch (Exception e) {
+            return userRepository.findByIdentifier(supervisorIdStr).map(User::getId).orElse(null);
+        }
+    }
+
+    public String resolveSupervisorName(String supervisorIdStr) {
+        if (supervisorIdStr == null || supervisorIdStr.isBlank()) return "Operations Supervisor";
+        try {
+            UUID id = UUID.fromString(supervisorIdStr);
+            return userRepository.findById(id).map(User::getFullName)
+                    .orElseGet(() -> userRepository.findByIdentifier(supervisorIdStr).map(User::getFullName)
+                            .orElse(supervisorIdStr));
+        } catch (Exception e) {
+            return userRepository.findByIdentifier(supervisorIdStr).map(User::getFullName).orElse(supervisorIdStr);
+        }
+    }
+
+    @Transactional
+    public TripResponse completeTrip(String id, java.util.Map<String, Object> body) {
+        Trip trip = tripRepository.findById(UUID.fromString(id))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Trip not found"));
+
+        if (trip.getStatus() == TripStatus.PENDING_SUPERVISOR_CONFIRMATION
+                || trip.getStatus() == TripStatus.SUPERVISOR_CONFIRMED
+                || trip.getStatus() == TripStatus.PENDING_APPROVAL
+                || trip.getStatus() == TripStatus.APPROVED) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Trip has already been submitted for supervisor confirmation and is locked.");
+        }
+
+        trip.setStatus(TripStatus.PENDING_SUPERVISOR_CONFIRMATION);
+        trip.setEndTime(LocalDateTime.now());
+        if (trip.getStartTime() != null) {
+            trip.setDurationMinutes(Math.max(0L, java.time.Duration.between(trip.getStartTime(), trip.getEndTime()).toMinutes()));
+        }
+
+        if (body != null) {
+            if (body.get("dischargeBay") != null) {
+                trip.setDischargeBay(body.get("dischargeBay").toString());
+            }
+            if (body.get("sealStatus") != null) {
+                trip.setSealStatus(body.get("sealStatus").toString());
+            }
+            if (body.get("damageStatus") != null) {
+                trip.setDamageStatus(body.get("damageStatus").toString());
+            }
+            if (body.get("driverNotes") != null) {
+                trip.setDriverCompletionNotes(body.get("driverNotes").toString());
+            } else if (body.get("notes") != null) {
+                trip.setDriverCompletionNotes(body.get("notes").toString());
+            }
+            if (body.get("dischargeTerminal") != null && !body.get("dischargeTerminal").toString().isBlank()) {
+                trip.setDestTerminal(body.get("dischargeTerminal").toString().trim());
+            }
+        }
+
+        // Discharge all containers on trip
+        trip.getContainers().forEach(c -> {
+            c.setStatus(ContainerStatus.DISCHARGED);
+            if (c.getUnloadedAt() == null) {
+                c.setUnloadedAt(LocalDateTime.now().toString());
+            }
+            containerRepository.save(c);
+        });
+
+        Trip saved = tripRepository.save(trip);
+        return mapToResponse(saved);
+    }
+
     @Transactional
     public TripResponse updateTripStatus(String id, String newStatus, String supervisorId, String reason) {
         Trip trip = tripRepository.findById(UUID.fromString(id))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Trip not found"));
 
-        TripStatus status = TripStatus.valueOf(newStatus);
+        TripStatus status;
+        try {
+            status = TripStatus.valueOf(newStatus);
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid status: " + newStatus);
+        }
 
-        if (status == TripStatus.APPROVED) {
-            trip.setStatus(TripStatus.APPROVED);
+        if (status == TripStatus.APPROVED || status == TripStatus.SUPERVISOR_CONFIRMED) {
+            trip.setStatus(TripStatus.SUPERVISOR_CONFIRMED);
+            trip.setConfirmedAt(LocalDateTime.now());
+            if (supervisorId != null && !supervisorId.isBlank()) {
+                trip.setSupervisorId(resolveSupervisorUuid(supervisorId));
+                trip.setSupervisorName(resolveSupervisorName(supervisorId));
+            }
+            if (trip.getEndTime() == null) {
+                trip.setEndTime(LocalDateTime.now());
+            }
+            trip.getContainers().forEach(c -> {
+                c.setStatus(ContainerStatus.DISCHARGED);
+                if (c.getUnloadedAt() == null) {
+                    c.setUnloadedAt(LocalDateTime.now().toString());
+                }
+                containerRepository.save(c);
+            });
+        } else if (status == TripStatus.REJECTED || status == TripStatus.SUPERVISOR_REJECTED) {
+            if (reason == null || reason.trim().isBlank()) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Mandatory rejection reason is required to reject a trip");
+            }
+            trip.setStatus(TripStatus.SUPERVISOR_REJECTED);
+            trip.setRejectionReason(reason.trim());
+            trip.setConfirmedAt(LocalDateTime.now());
+            if (supervisorId != null && !supervisorId.isBlank()) {
+                trip.setSupervisorId(resolveSupervisorUuid(supervisorId));
+                trip.setSupervisorName(resolveSupervisorName(supervisorId));
+            }
+            if (trip.getEndTime() == null) {
+                trip.setEndTime(LocalDateTime.now());
+            }
         } else if (status == TripStatus.IN_PROGRESS) {
             trip.setStatus(TripStatus.IN_PROGRESS);
             if (trip.getStartTime() == null) {
@@ -298,9 +418,23 @@ public class TripService {
                 c.setStatus(ContainerStatus.IN_TRANSIT);
                 containerRepository.save(c);
             });
+        } else if (status == TripStatus.PENDING_APPROVAL || status == TripStatus.PENDING_SUPERVISOR_CONFIRMATION) {
+            trip.setStatus(TripStatus.PENDING_SUPERVISOR_CONFIRMATION);
+            if (trip.getEndTime() == null) {
+                trip.setEndTime(LocalDateTime.now());
+            }
+            trip.getContainers().forEach(c -> {
+                c.setStatus(ContainerStatus.DISCHARGED);
+                if (c.getUnloadedAt() == null) {
+                    c.setUnloadedAt(LocalDateTime.now().toString());
+                }
+                containerRepository.save(c);
+            });
         } else if (status == TripStatus.COMPLETED) {
-            trip.setStatus(TripStatus.COMPLETED);
-            trip.setEndTime(LocalDateTime.now());
+            trip.setStatus(TripStatus.SUPERVISOR_CONFIRMED);
+            if (trip.getEndTime() == null) {
+                trip.setEndTime(LocalDateTime.now());
+            }
             trip.getContainers().forEach(c -> {
                 c.setStatus(ContainerStatus.DISCHARGED);
                 if (c.getUnloadedAt() == null) {
@@ -310,10 +444,6 @@ public class TripService {
             });
         } else {
             trip.setStatus(status);
-        }
-
-        if (status == TripStatus.REJECTED) {
-            trip.setEndTime(LocalDateTime.now());
         }
 
         if (trip.getStartTime() != null && trip.getEndTime() != null) {
@@ -432,6 +562,14 @@ public class TripService {
                 .startTime(trip.getStartTime())
                 .endTime(trip.getEndTime())
                 .durationMinutes(duration)
+                .dischargeBay(trip.getDischargeBay())
+                .sealStatus(trip.getSealStatus())
+                .damageStatus(trip.getDamageStatus())
+                .driverCompletionNotes(trip.getDriverCompletionNotes())
+                .supervisorId(trip.getSupervisorId() != null ? trip.getSupervisorId().toString() : null)
+                .supervisorName(trip.getSupervisorName())
+                .confirmedAt(trip.getConfirmedAt())
+                .rejectionReason(trip.getRejectionReason())
                 .createdAt(trip.getCreatedAt())
                 .containers(containers)
                 .build();

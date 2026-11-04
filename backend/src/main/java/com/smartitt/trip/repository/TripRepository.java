@@ -35,9 +35,9 @@ public interface TripRepository extends JpaRepository<Trip, UUID> {
 
     long countByDriverIdAndStatus(UUID driverId, TripStatus status);
 
-    @Query("SELECT COUNT(t) FROM Trip t WHERE t.driverId = :driverId AND (t.status = 'COMPLETED' OR t.status = 'APPROVED') AND t.createdAt BETWEEN :start AND :end")
+    @Query("SELECT COUNT(t) FROM Trip t WHERE t.driverId = :driverId AND (t.status = 'COMPLETED' OR t.status = 'APPROVED' OR t.status = 'SUPERVISOR_CONFIRMED') AND t.createdAt BETWEEN :start AND :end")
     long countCompletedTodayByDriver(@Param("driverId") UUID driverId, @Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 
-    @Query("SELECT t FROM Trip t WHERE t.driverId = :driverId AND (t.status = 'IN_PROGRESS' OR t.status = 'DRAFT' OR t.status = 'PENDING_APPROVAL') ORDER BY t.createdAt DESC")
+    @Query("SELECT t FROM Trip t WHERE t.driverId = :driverId AND (t.status = 'IN_PROGRESS' OR t.status = 'DRAFT' OR t.status = 'PENDING_APPROVAL' OR t.status = 'PENDING_SUPERVISOR_CONFIRMATION') ORDER BY t.createdAt DESC")
     List<Trip> findActiveTripsByDriver(@Param("driverId") UUID driverId);
 }

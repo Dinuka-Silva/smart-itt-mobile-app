@@ -58,6 +58,13 @@ export interface TripResponse {
   startTime?: string;
   endTime?: string;
   durationMinutes?: number;
+  dischargeBay?: string;
+  sealStatus?: string;
+  damageStatus?: string;
+  driverCompletionNotes?: string;
+  supervisorId?: string;
+  supervisorName?: string;
+  confirmedAt?: string;
   createdAt: string;
   updatedAt: string;
   containers: Container[];
@@ -67,7 +74,7 @@ export interface TripResponse {
 }
 
 export interface ApproveTripRequest {
-  status: 'APPROVED' | 'REJECTED';
+  status: 'SUPERVISOR_CONFIRMED' | 'SUPERVISOR_REJECTED' | 'APPROVED' | 'REJECTED';
   supervisorId: string;
   reason?: string;
 }
@@ -99,9 +106,21 @@ export const tripService = {
     return response.data;
   },
 
+  async completeTrip(id: string, details?: {
+    dischargeBay?: string;
+    dischargeTerminal?: string;
+    sealStatus?: string;
+    damageStatus?: string;
+    driverNotes?: string;
+    notes?: string;
+  }): Promise<TripResponse> {
+    const response = await apiClient.post<TripResponse>(`/trips/${id}/complete`, details);
+    return response.data;
+  },
+
   async approveTrip(id: string, requestOrSupervisorId: ApproveTripRequest | string, reason?: string): Promise<TripResponse> {
     const payload: ApproveTripRequest = typeof requestOrSupervisorId === 'string'
-      ? { status: 'APPROVED', supervisorId: requestOrSupervisorId, reason }
+      ? { status: 'SUPERVISOR_CONFIRMED', supervisorId: requestOrSupervisorId, reason }
       : requestOrSupervisorId;
     const response = await apiClient.post<TripResponse>(`/trips/${id}/approve`, payload);
     return response.data;
@@ -109,7 +128,7 @@ export const tripService = {
 
   async rejectTrip(id: string, supervisorId: string, reason: string): Promise<TripResponse> {
     const response = await apiClient.post<TripResponse>(`/trips/${id}/approve`, {
-      status: 'REJECTED',
+      status: 'SUPERVISOR_REJECTED',
       supervisorId,
       reason,
     });

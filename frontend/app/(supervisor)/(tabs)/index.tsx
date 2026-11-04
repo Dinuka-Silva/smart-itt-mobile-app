@@ -103,11 +103,11 @@ export default function SupervisorHomeDashboard() {
       const tripList = Array.isArray(apiTrips) ? apiTrips : [];
       setTrips(tripList);
 
-      const compTripsCount = tripList.filter((t) => t.status === 'COMPLETED' || t.status === 'APPROVED').length;
+      const compTripsCount = tripList.filter((t) => t.status === 'COMPLETED' || t.status === 'APPROVED' || t.status === 'SUPERVISOR_CONFIRMED').length;
       const inProgCount = tripList.filter((t) => t.status === 'IN_PROGRESS' || t.status === 'ARRIVED').length;
-      const pendingCount = tripList.filter((t) => t.status === 'PENDING_APPROVAL').length;
+      const pendingCount = tripList.filter((t) => t.status === 'PENDING_APPROVAL' || t.status === 'PENDING_SUPERVISOR_CONFIRMATION').length;
       const totalConts = tripList
-        .filter((t) => t.status === 'COMPLETED' || t.status === 'APPROVED')
+        .filter((t) => t.status === 'COMPLETED' || t.status === 'APPROVED' || t.status === 'SUPERVISOR_CONFIRMED')
         .reduce((acc, t) => acc + (t.containers?.length || 1), 0);
 
       setStats({
@@ -266,7 +266,7 @@ export default function SupervisorHomeDashboard() {
 
   // Trips pending supervisor approval
   const pendingTrips = useMemo(() => {
-    return trips.filter((t) => t.status === 'PENDING_APPROVAL');
+    return trips.filter((t) => t.status === 'PENDING_APPROVAL' || t.status === 'PENDING_SUPERVISOR_CONFIRMATION');
   }, [trips]);
 
   // Approval actions
@@ -708,7 +708,7 @@ export default function SupervisorHomeDashboard() {
           <View style={styles.sectionTitleRow}>
             <Ionicons name="shield-checkmark" size={18} color="#173B70" />
             <Text style={styles.sectionTitle}>
-              PENDING DELIVERY CONFIRMATION & APPROVALS ({pendingTrips.length})
+              COMPLETED TRIPS – PENDING CONFIRMATION ({pendingTrips.length})
             </Text>
           </View>
 
@@ -887,7 +887,7 @@ export default function SupervisorHomeDashboard() {
                       onPress={() => handleApproveTrip(trip)}
                     >
                       <Ionicons name="checkmark-circle" size={16} color="#FFFFFF" />
-                      <Text style={styles.approveBtnText}>CONFIRM & APPROVE TRIP</Text>
+                      <Text style={styles.approveBtnText}>CONFIRM TRIP</Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity
@@ -1178,7 +1178,7 @@ export default function SupervisorHomeDashboard() {
             <View style={styles.modalHeader}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                 <Ionicons name="alert-circle" size={20} color="#173B70" />
-                <Text style={styles.modalTitle}>REJECT TRIP SUBMISSION</Text>
+                <Text style={styles.modalTitle}>REJECT COMPLETED TRIP</Text>
               </View>
               <TouchableOpacity onPress={() => setRejectModalVisible(false)}>
                 <Ionicons name="close" size={22} color="#173B70" />

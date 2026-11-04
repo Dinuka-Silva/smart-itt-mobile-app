@@ -102,10 +102,15 @@ public class AdminService {
 
         long todayTrips = tripRepository.countTodayTrips(startOfDay, endOfDay);
         long inProgress = tripRepository.countByStatus(TripStatus.IN_PROGRESS);
-        long pending = tripRepository.countByStatus(TripStatus.PENDING_APPROVAL);
-        long completed = tripRepository.countByStatus(TripStatus.COMPLETED);
-        long approved = tripRepository.countByStatus(TripStatus.APPROVED);
-        long rejected = tripRepository.countByStatus(TripStatus.REJECTED);
+        long pending = tripRepository.countByStatus(TripStatus.PENDING_APPROVAL)
+                + tripRepository.countByStatus(TripStatus.PENDING_SUPERVISOR_CONFIRMATION);
+        long completed = tripRepository.countByStatus(TripStatus.COMPLETED)
+                + tripRepository.countByStatus(TripStatus.SUPERVISOR_CONFIRMED)
+                + tripRepository.countByStatus(TripStatus.APPROVED);
+        long approved = tripRepository.countByStatus(TripStatus.APPROVED)
+                + tripRepository.countByStatus(TripStatus.SUPERVISOR_CONFIRMED);
+        long rejected = tripRepository.countByStatus(TripStatus.REJECTED)
+                + tripRepository.countByStatus(TripStatus.SUPERVISOR_REJECTED);
         long totalTrips = tripRepository.count();
 
         List<Container> allContainers = containerRepository.findAll();

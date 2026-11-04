@@ -47,7 +47,13 @@ export default function AdminTripsScreen() {
       );
       let list = Array.isArray(data) ? data : [];
       if (statusFilter !== 'ALL') {
-        list = list.filter((t) => t.status === statusFilter);
+        list = list.filter((t) => {
+          if (t.status === statusFilter) return true;
+          if (statusFilter === 'PENDING_SUPERVISOR_CONFIRMATION' && (t.status === 'PENDING_APPROVAL' || t.status === 'PENDING_SUPERVISOR_CONFIRMATION')) return true;
+          if (statusFilter === 'SUPERVISOR_CONFIRMED' && (t.status === 'SUPERVISOR_CONFIRMED' || t.status === 'APPROVED' || t.status === 'COMPLETED')) return true;
+          if (statusFilter === 'SUPERVISOR_REJECTED' && (t.status === 'SUPERVISOR_REJECTED' || t.status === 'REJECTED')) return true;
+          return false;
+        });
       }
       if (terminalFilter !== 'ALL') {
         list = list.filter((t) =>
@@ -156,7 +162,7 @@ export default function AdminTripsScreen() {
 
         {/* Status Filter Scroll */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterScroll}>
-          {['ALL', 'PENDING_APPROVAL', 'IN_PROGRESS', 'APPROVED', 'COMPLETED', 'REJECTED'].map((st) => (
+          {['ALL', 'IN_PROGRESS', 'PENDING_SUPERVISOR_CONFIRMATION', 'SUPERVISOR_CONFIRMED', 'SUPERVISOR_REJECTED'].map((st) => (
             <TouchableOpacity
               key={st}
               style={[styles.pill, statusFilter === st && styles.pillActive]}
@@ -164,7 +170,7 @@ export default function AdminTripsScreen() {
               activeOpacity={0.7}
             >
               <Text style={[styles.pillText, statusFilter === st && styles.pillTextActive]}>
-                {st.replace('_', ' ')}
+                {st === 'PENDING_SUPERVISOR_CONFIRMATION' ? 'PENDING CONFIRMATION' : st === 'SUPERVISOR_CONFIRMED' ? 'CONFIRMED' : st === 'SUPERVISOR_REJECTED' ? 'REJECTED' : st.replace('_', ' ')}
               </Text>
             </TouchableOpacity>
           ))}

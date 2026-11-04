@@ -120,17 +120,18 @@ export interface TripTimingInfo {
 }
 
 export function getTripTimingDetails(trip: any): TripTimingInfo {
-  const isCompleted = trip.status === 'COMPLETED' || trip.status === 'APPROVED';
-  const isPending = trip.status === 'PENDING_APPROVAL';
+  const isCompleted = trip.status === 'COMPLETED' || trip.status === 'APPROVED' || trip.status === 'SUPERVISOR_CONFIRMED';
+  const isPending = trip.status === 'PENDING_APPROVAL' || trip.status === 'PENDING_SUPERVISOR_CONFIRMATION';
   const isInProgress = trip.status === 'IN_PROGRESS' || trip.status === 'ARRIVED';
+  const isRejected = trip.status === 'REJECTED' || trip.status === 'SUPERVISOR_REJECTED';
 
   let statusColor = '#173B70';
   if (isCompleted) {
-    statusColor = '#059669';
+    statusColor = '#173B70';
   } else if (isPending) {
-    statusColor = '#D97706';
-  } else if (trip.status === 'REJECTED') {
-    statusColor = '#DC2626';
+    statusColor = '#173B70';
+  } else if (isRejected) {
+    statusColor = '#173B70';
   } else {
     statusColor = '#173B70';
   }
@@ -152,13 +153,13 @@ export function getTripTimingDetails(trip: any): TripTimingInfo {
     endDate = formatDateColombo(endRaw);
     endTime = formatTimeColombo(endRaw);
     endFull = endRaw ? formatDateTimeColombo(endRaw) : `${startDate}, ${startTime}`;
-    statusBadge = trip.status === 'APPROVED' ? 'APPROVED' : 'COMPLETED';
+    statusBadge = trip.status === 'SUPERVISOR_CONFIRMED' || trip.status === 'APPROVED' ? 'CONFIRMED' : 'COMPLETED';
   } else if (isPending) {
     endDate = formatDateColombo(endRaw);
-    endTime = endRaw ? formatTimeColombo(endRaw) : 'Awaiting Approval';
-    endFull = endRaw ? formatDateTimeColombo(endRaw) : 'Awaiting Approval';
-    statusBadge = 'PENDING APPROVAL';
-  } else if (trip.status === 'REJECTED') {
+    endTime = endRaw ? formatTimeColombo(endRaw) : 'Awaiting Confirmation';
+    endFull = endRaw ? formatDateTimeColombo(endRaw) : 'Awaiting Confirmation';
+    statusBadge = 'PENDING CONFIRMATION';
+  } else if (isRejected) {
     endDate = formatDateColombo(endRaw);
     endTime = formatTimeColombo(endRaw);
     endFull = endRaw ? formatDateTimeColombo(endRaw) : '-';
@@ -171,7 +172,7 @@ export function getTripTimingDetails(trip: any): TripTimingInfo {
   }
 
   // 3. Duration
-  const duration = isCompleted || trip.status === 'REJECTED'
+  const duration = isCompleted || isRejected
     ? formatDurationText(trip.durationMinutes, startRaw, endRaw)
     : 'In progress';
 

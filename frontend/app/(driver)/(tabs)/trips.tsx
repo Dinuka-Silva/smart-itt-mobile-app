@@ -59,14 +59,14 @@ export default function DriverJobQueue() {
 
       if (!prevStatus || notifiedRef.current.has(notifyKey)) return;
 
-      if (prevStatus === 'PENDING_APPROVAL' && nextStatus === 'IN_PROGRESS') {
+      if ((prevStatus === 'PENDING_APPROVAL' || prevStatus === 'PENDING_SUPERVISOR_CONFIRMATION') && (nextStatus === 'SUPERVISOR_CONFIRMED' || nextStatus === 'APPROVED' || nextStatus === 'COMPLETED')) {
         notifiedRef.current.add(notifyKey);
-        showMessage('Trip Confirmed', `Supervisor confirmed trip ${tripNum}.\nYou can proceed.`);
+        showMessage('Trip Confirmed', `Supervisor confirmed trip ${tripNum}.\nDriver allowance credited.`);
       }
 
-      if (prevStatus === 'PENDING_APPROVAL' && nextStatus === 'REJECTED') {
+      if ((prevStatus === 'PENDING_APPROVAL' || prevStatus === 'PENDING_SUPERVISOR_CONFIRMATION') && (nextStatus === 'REJECTED' || nextStatus === 'SUPERVISOR_REJECTED')) {
         notifiedRef.current.add(notifyKey);
-        showMessage('Trip Rejected', `Supervisor rejected trip ${tripNum}.`);
+        showMessage('Trip Rejected', `Supervisor rejected trip ${tripNum}.\nReason: ${trip.rejectionReason || 'Review required'}`);
       }
     });
 
@@ -138,14 +138,13 @@ export default function DriverJobQueue() {
       const damageStatus = trip?.damageStatus || 'NONE';
       const driverNotes = trip?.driverCompletionNotes || 'Containers discharged safely at destination terminal berth. Seals verified.';
 
-      await apiClient.patch(`/trips/${tripId}/complete`, {
+      await apiClient.post(`/trips/${tripId}/complete`, {
         dischargeTerminal: selTerm,
         dischargeBay,
         sealStatus,
         damageStatus,
         driverNotes,
       }).catch(() => {});
-      await apiClient.patch(`/trips/${tripId}/submit`, { notes: driverNotes }).catch(() => {});
 
       await securityAuditService.logEvent(
         'TRIP_COMPLETED',
@@ -173,15 +172,15 @@ export default function DriverJobQueue() {
     handleCompleteTrip(tripId);
   };
 
-  const completedCount = trips.filter((t) => t.status === 'COMPLETED' || t.status === 'APPROVED').length;
+  const completedCount = trips.filter((t) => t.status === 'COMPLETED' || t.status === 'APPROVED' || t.status === 'SUPERVISOR_CONFIRMED').length;
   const inProgressCount = trips.filter((t) => t.status === 'IN_PROGRESS').length;
-  const pendingCount = trips.filter((t) => t.status === 'PENDING_APPROVAL').length;
+  const pendingCount = trips.filter((t) => t.status === 'PENDING_APPROVAL' || t.status === 'PENDING_SUPERVISOR_CONFIRMATION').length;
 
   const filteredTrips = trips.filter((t) => {
     if (filter === 'ALL') return true;
     if (filter === 'ACTIVE') return t.status === 'IN_PROGRESS';
-    if (filter === 'PENDING') return t.status === 'PENDING_APPROVAL';
-    if (filter === 'DONE') return t.status === 'COMPLETED' || t.status === 'APPROVED';
+    if (filter === 'PENDING') return t.status === 'PENDING_APPROVAL' || t.status === 'PENDING_SUPERVISOR_CONFIRMATION';
+    if (filter === 'DONE') return t.status === 'COMPLETED' || t.status === 'APPROVED' || t.status === 'SUPERVISOR_CONFIRMED';
     return true;
   });
 

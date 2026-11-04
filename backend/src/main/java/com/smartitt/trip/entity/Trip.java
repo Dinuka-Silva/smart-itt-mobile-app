@@ -56,6 +56,30 @@ public class Trip {
     @Column(name = "duration_minutes")
     private Long durationMinutes;
 
+    @Column(name = "discharge_bay")
+    private String dischargeBay;
+
+    @Column(name = "seal_status")
+    private String sealStatus;
+
+    @Column(name = "damage_status")
+    private String damageStatus;
+
+    @Column(name = "driver_completion_notes", columnDefinition = "TEXT")
+    private String driverCompletionNotes;
+
+    @Column(name = "supervisor_id")
+    private UUID supervisorId;
+
+    @Column(name = "supervisor_name")
+    private String supervisorName;
+
+    @Column(name = "confirmed_at")
+    private LocalDateTime confirmedAt;
+
+    @Column(name = "rejection_reason", columnDefinition = "TEXT")
+    private String rejectionReason;
+
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 

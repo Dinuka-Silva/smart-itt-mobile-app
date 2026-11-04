@@ -27,6 +27,14 @@ public class TripResponse {
     private LocalDateTime startTime;
     private LocalDateTime endTime;
     private Long durationMinutes;
+    private String dischargeBay;
+    private String sealStatus;
+    private String damageStatus;
+    private String driverCompletionNotes;
+    private String supervisorId;
+    private String supervisorName;
+    private LocalDateTime confirmedAt;
+    private String rejectionReason;
     private LocalDateTime createdAt;
     private List<ContainerResponse> containers;
 

@@ -253,16 +253,17 @@ export const useDriverMessageStore = create<DriverMessageState>((set, get) => ({
       const route = `${t.sourceTerminal || 'CICT'} → ${t.destTerminal || 'JCT'}`;
       const msgId = `trip-sync-${t.id}`;
 
-      if (t.status === 'IN_PROGRESS' || t.status === 'COMPLETED' || t.status === 'APPROVED') {
-        if (!byId.has(msgId)) {
-          byId.set(msgId, {
-            id: msgId,
-            category: 'DISPATCH',
+      if (t.status === 'SUPERVISOR_CONFIRMED' || t.status === 'APPROVED') {
+        const confId = `trip-conf-${t.id}`;
+        if (!byId.has(confId)) {
+          byId.set(confId, {
+            id: confId,
+            category: 'SUPERVISOR',
             priority: 'SUCCESS',
-            sender: 'Supervisor Dispatch',
-            senderRole: 'Port Gate & Mission Control',
-            title: `Trip ${tripNum} Confirmed & Authorized`,
-            message: `Supervisor approved route ${route}. Gate pass active. Proceed to destination terminal.`,
+            sender: t.supervisorName || 'Operations Supervisor',
+            senderRole: 'Port Operations Gate Control',
+            title: `Trip ${tripNum} Confirmed by Supervisor`,
+            message: `Supervisor confirmed trip ${tripNum} (${route}). Discharge manifest and container seals approved. Driver allowance credited.`,
             time: 'Live',
             timestamp: Date.now(),
             read: false,
@@ -271,22 +272,23 @@ export const useDriverMessageStore = create<DriverMessageState>((set, get) => ({
               tripId: t.id,
               tripNumber: tripNum,
               terminal: t.destTerminal,
-              containerNumber: t.containers?.map((c: any) => c.containerNumber).join(', ') || 'Containers Assigned',
-              actionRequired: 'Proceed with ITT Transfer',
+              allowanceAmount: 'LKR 2,500',
+              containerNumber: t.containers?.map((c: any) => c.containerNumber).join(', ') || 'Containers Confirmed',
+              actionRequired: 'Mission Completed Successfully',
             },
           });
         }
-      } else if (t.status === 'REJECTED') {
+      } else if (t.status === 'SUPERVISOR_REJECTED' || t.status === 'REJECTED') {
         const rejId = `trip-rej-${t.id}`;
         if (!byId.has(rejId)) {
           byId.set(rejId, {
             id: rejId,
-            category: 'DISPATCH',
+            category: 'SUPERVISOR',
             priority: 'URGENT',
-            sender: 'Supervisor Dispatch',
-            senderRole: 'Port Gate Control',
-            title: `Trip ${tripNum} Rejected`,
-            message: `Supervisor rejected trip ${tripNum} (${route}). Reason: Document or seal verification needed. Contact supervisor immediately.`,
+            sender: t.supervisorName || 'Operations Supervisor',
+            senderRole: 'Port Gate & Safety Control',
+            title: `Trip ${tripNum} Rejected by Supervisor`,
+            message: `Supervisor rejected trip ${tripNum} (${route}). Reason: ${t.rejectionReason || 'Discharge verification failed. Please review notes and resubmit.'}`,
             time: 'Live',
             timestamp: Date.now(),
             read: false,
@@ -294,7 +296,29 @@ export const useDriverMessageStore = create<DriverMessageState>((set, get) => ({
             metadata: {
               tripId: t.id,
               tripNumber: tripNum,
-              actionRequired: 'Contact Shift Supervisor',
+              actionRequired: 'Review Details and Resubmit',
+            },
+          });
+        }
+      } else if (t.status === 'PENDING_SUPERVISOR_CONFIRMATION' || t.status === 'PENDING_APPROVAL') {
+        const pendId = `trip-pend-${t.id}`;
+        if (!byId.has(pendId)) {
+          byId.set(pendId, {
+            id: pendId,
+            category: 'DISPATCH',
+            priority: 'NORMAL',
+            sender: 'Central Dispatch Tower',
+            senderRole: 'Discharge Manifest System',
+            title: `Trip ${tripNum} Awaiting Confirmation`,
+            message: `Discharge manifest submitted for route ${route}. Awaiting operations supervisor confirmation.`,
+            time: 'Live',
+            timestamp: Date.now(),
+            read: false,
+            acknowledged: false,
+            metadata: {
+              tripId: t.id,
+              tripNumber: tripNum,
+              actionRequired: 'Awaiting Supervisor Sign-off',
             },
           });
         }

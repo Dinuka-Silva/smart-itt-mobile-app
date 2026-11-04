@@ -53,7 +53,7 @@ public class TripController {
      * Frontend POST /trips/{id}/approve with { status: "APPROVED"|"REJECTED", supervisorId, reason }
      */
     @PostMapping("/{id}/approve")
-    @Operation(summary = "Approve or reject a trip (supervisor)")
+    @Operation(summary = "Confirm or reject a completed trip (supervisor)")
     public ResponseEntity<TripResponse> approveTripDecision(
             @PathVariable String id,
             @RequestBody Map<String, String> body) {
@@ -64,12 +64,38 @@ public class TripController {
     }
 
     /**
-     * Submit a completed trip for approval — frontend can call this to move to PENDING_APPROVAL
+     * Driver finishes trip, records actual completion timestamp, discharge manifest and submits for supervisor confirmation
      */
+    @PostMapping("/{id}/complete")
+    @Operation(summary = "Complete trip with container discharge and submit for supervisor confirmation")
+    public ResponseEntity<TripResponse> completeTripPost(
+            @PathVariable String id,
+            @RequestBody(required = false) Map<String, Object> body) {
+        return ResponseEntity.ok(tripService.completeTrip(id, body));
+    }
+
+    @PatchMapping("/{id}/complete")
+    @Operation(summary = "Complete trip with container discharge and submit for supervisor confirmation")
+    public ResponseEntity<TripResponse> completeTripPatch(
+            @PathVariable String id,
+            @RequestBody(required = false) Map<String, Object> body) {
+        return ResponseEntity.ok(tripService.completeTrip(id, body));
+    }
+
     @PostMapping("/{id}/submit")
-    @Operation(summary = "Submit a completed trip for supervisor approval")
-    public ResponseEntity<TripResponse> submitForApproval(@PathVariable String id) {
-        return ResponseEntity.ok(tripService.updateTripStatus(id, "PENDING_APPROVAL", null, null));
+    @Operation(summary = "Submit a completed trip for supervisor confirmation")
+    public ResponseEntity<TripResponse> submitForApprovalPost(
+            @PathVariable String id,
+            @RequestBody(required = false) Map<String, Object> body) {
+        return ResponseEntity.ok(tripService.completeTrip(id, body));
+    }
+
+    @PatchMapping("/{id}/submit")
+    @Operation(summary = "Submit a completed trip for supervisor confirmation")
+    public ResponseEntity<TripResponse> submitForApprovalPatch(
+            @PathVariable String id,
+            @RequestBody(required = false) Map<String, Object> body) {
+        return ResponseEntity.ok(tripService.completeTrip(id, body));
     }
 
     /**
@@ -90,14 +116,6 @@ public class TripController {
     @Operation(summary = "Get trips for a driver")
     public ResponseEntity<List<TripResponse>> getTripsByDriver(@PathVariable String driverId) {
         return ResponseEntity.ok(tripService.getAllTrips(driverId, null));
-    }
-
-    @PatchMapping("/{id}/complete")
-    @Operation(summary = "Complete trip with container discharge")
-    public ResponseEntity<TripResponse> completeTrip(
-            @PathVariable String id,
-            @RequestBody(required = false) Map<String, Object> body) {
-        return ResponseEntity.ok(tripService.updateTripStatus(id, "COMPLETED", null, null));
     }
 
     @PatchMapping("/{id}/status")

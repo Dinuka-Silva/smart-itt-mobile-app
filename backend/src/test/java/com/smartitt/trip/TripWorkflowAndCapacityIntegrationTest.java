@@ -164,12 +164,12 @@ class TripWorkflowAndCapacityIntegrationTest extends BaseIntegrationTest {
     }
 
     @Test
-    @DisplayName("Complete End-to-End Workflow: Create -> Approve -> In Progress -> Complete")
+    @DisplayName("Driver Starts Immediately Without Supervisor -> Completes Trip -> Supervisor Confirms Workflow")
     void testEndToEndTripWorkflow() throws Exception {
         String driverToken = obtainToken("DRV-00001", "driver");
         String supervisorToken = obtainToken("supervisor@smartitt.lk", "supervisor");
 
-        // Step 1: Driver creates a trip
+        // Step 1: Driver creates trip — starts immediately as IN_PROGRESS without ANY supervisor blocker
         CreateTripRequest req = new CreateTripRequest();
         req.setDriverId("DRV-00001");
         req.setSourceTerminal("CICT");
@@ -187,39 +187,108 @@ class TripWorkflowAndCapacityIntegrationTest extends BaseIntegrationTest {
                         .headers(authHeader(driverToken))
                         .content(objectMapper.writeValueAsString(req)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.status", is("PENDING_APPROVAL")))
+                .andExpect(jsonPath("$.status", is("IN_PROGRESS")))
                 .andReturn();
 
         JsonNode createdTrip = objectMapper.readTree(createResult.getResponse().getContentAsString());
         String tripId = createdTrip.get("id").asText();
         assertNotNull(tripId);
 
-        // Step 2: Supervisor sees and approves the trip
-        Map<String, String> approveBody = Map.of(
-                "status", "APPROVED",
+        // Step 2: Driver completes trip with discharge manifest details -> enters PENDING_SUPERVISOR_CONFIRMATION
+        Map<String, Object> completeBody = Map.of(
+                "dischargeBay", "Bay 04, Crane 02",
+                "sealStatus", "INTACT",
+                "damageStatus", "NONE",
+                "driverNotes", "Cargo discharged safely at destination berth"
+        );
+
+        mockMvc.perform(patch("/api/v1/trips/" + tripId + "/complete")
+                        .headers(authHeader(driverToken))
+                        .content(objectMapper.writeValueAsString(completeBody)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status", is("PENDING_SUPERVISOR_CONFIRMATION")))
+                .andExpect(jsonPath("$.dischargeBay", is("Bay 04, Crane 02")))
+                .andExpect(jsonPath("$.sealStatus", is("INTACT")))
+                .andExpect(jsonPath("$.endTime", notNullValue()));
+
+        // Duplicate complete call is rejected / locked
+        mockMvc.perform(patch("/api/v1/trips/" + tripId + "/complete")
+                        .headers(authHeader(driverToken))
+                        .content(objectMapper.writeValueAsString(completeBody)))
+                .andExpect(status().isBadRequest());
+
+        // Step 3: Supervisor confirms completed trip -> transitions to SUPERVISOR_CONFIRMED
+        Map<String, String> confirmBody = Map.of(
+                "status", "SUPERVISOR_CONFIRMED",
                 "supervisorId", "SUP001",
-                "reason", "Approved for transport transit"
+                "reason", "Discharge verified and confirmed"
         );
 
         mockMvc.perform(post("/api/v1/trips/" + tripId + "/approve")
                         .headers(authHeader(supervisorToken))
-                        .content(objectMapper.writeValueAsString(approveBody)))
+                        .content(objectMapper.writeValueAsString(confirmBody)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status", is("APPROVED")));
+                .andExpect(jsonPath("$.status", is("SUPERVISOR_CONFIRMED")))
+                .andExpect(jsonPath("$.confirmedAt", notNullValue()));
+    }
 
-        // Step 3: Trip starts (moves to IN_PROGRESS)
-        Map<String, String> startBody = Map.of("status", "IN_PROGRESS");
-        mockMvc.perform(patch("/api/v1/trips/" + tripId + "/status")
+    @Test
+    @DisplayName("Supervisor Rejection Flow: Mandatory reason required and records SUPERVISOR_REJECTED")
+    void testSupervisorRejectionWithReason() throws Exception {
+        String driverToken = obtainToken("DRV-00001", "driver");
+        String supervisorToken = obtainToken("supervisor@smartitt.lk", "supervisor");
+
+        // Driver creates and completes trip
+        CreateTripRequest req = new CreateTripRequest();
+        req.setDriverId("DRV-00001");
+        req.setSourceTerminal("CWIT");
+        req.setDestTerminal("ECT");
+        req.setVesselName("Ever Given");
+        req.setVehicleNumber("LY-6439");
+
+        CreateTripRequest.ContainerInput c1 = new CreateTripRequest.ContainerInput();
+        c1.setContainerNumber("MSCU7721892");
+        c1.setSize("20FT");
+        c1.setIsVerified(true);
+        req.setContainers(List.of(c1));
+
+        MvcResult createResult = mockMvc.perform(post("/api/v1/trips")
                         .headers(authHeader(driverToken))
-                        .content(objectMapper.writeValueAsString(startBody)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status", is("IN_PROGRESS")));
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isCreated())
+                .andReturn();
 
-        // Step 4: Trip completes (all containers discharged)
+        String tripId = objectMapper.readTree(createResult.getResponse().getContentAsString()).get("id").asText();
+
         mockMvc.perform(patch("/api/v1/trips/" + tripId + "/complete")
                         .headers(authHeader(driverToken)))
+                .andExpect(status().isOk());
+
+        // Attempt rejection without reason -> 400 Bad Request
+        Map<String, String> rejectWithoutReason = Map.of(
+                "status", "SUPERVISOR_REJECTED",
+                "supervisorId", "SUP001",
+                "reason", ""
+        );
+
+        mockMvc.perform(post("/api/v1/trips/" + tripId + "/approve")
+                        .headers(authHeader(supervisorToken))
+                        .content(objectMapper.writeValueAsString(rejectWithoutReason)))
+                .andExpect(status().isBadRequest());
+
+        // Rejection with mandatory reason -> succeeds
+        Map<String, String> rejectWithReason = Map.of(
+                "status", "SUPERVISOR_REJECTED",
+                "supervisorId", "SUP001",
+                "reason", "Discharge bay mismatch. Container placed in staging area."
+        );
+
+        mockMvc.perform(post("/api/v1/trips/" + tripId + "/approve")
+                        .headers(authHeader(supervisorToken))
+                        .content(objectMapper.writeValueAsString(rejectWithReason)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status", is("COMPLETED")));
+                .andExpect(jsonPath("$.status", is("SUPERVISOR_REJECTED")))
+                .andExpect(jsonPath("$.rejectionReason", containsString("Discharge bay mismatch")));
     }
 
     @Test

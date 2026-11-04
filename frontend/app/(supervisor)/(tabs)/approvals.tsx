@@ -39,7 +39,7 @@ export default function SupervisorApprovals() {
   const fetchPending = useCallback(async () => {
     try {
       setNetworkError(false);
-      const res = await apiClient.get('/trips?status=PENDING_APPROVAL');
+      const res = await apiClient.get('/trips?status=PENDING_SUPERVISOR_CONFIRMATION');
       const apiList = Array.isArray(res.data) ? res.data : [];
       setTrips(apiList);
     } catch (e) {
@@ -157,7 +157,7 @@ export default function SupervisorApprovals() {
           <View style={styles.sectionTitleRow}>
             <Ionicons name="time" size={18} color="#173B70" />
             <Text style={styles.sectionTitle}>
-              SUBMITTED TRIPS REQUIRING GATE PASS APPROVAL ({trips.length})
+              COMPLETED TRIPS – PENDING CONFIRMATION ({trips.length})
             </Text>
           </View>
 
@@ -168,8 +168,8 @@ export default function SupervisorApprovals() {
           ) : trips.length === 0 ? (
             <View style={styles.emptyCard}>
               <Ionicons name="checkmark-done-circle" size={36} color="#173B70" />
-              <Text style={styles.emptyTitle}>ALL CAUGHT UP</Text>
-              <Text style={styles.emptySub}>No trips pending supervisor gate pass review right now.</Text>
+              <Text style={styles.emptyTitle}>ALL TRIPS CONFIRMED</Text>
+              <Text style={styles.emptySub}>No completed trips awaiting supervisor confirmation right now.</Text>
             </View>
           ) : (
             trips.map((trip) => {
@@ -379,7 +379,7 @@ export default function SupervisorApprovals() {
                       ) : (
                         <>
                           <Ionicons name="checkmark-done-circle" size={17} color="#FFFFFF" />
-                          <Text style={styles.approveBtnText}>CONFIRM & APPROVE TRIP</Text>
+                          <Text style={styles.approveBtnText}>CONFIRM TRIP</Text>
                         </>
                       )}
                     </TouchableOpacity>
@@ -409,7 +409,7 @@ export default function SupervisorApprovals() {
             <View style={styles.modalHeader}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                 <Ionicons name="alert-circle" size={20} color="#173B70" />
-                <Text style={styles.modalTitle}>REJECT TRIP SUBMISSION</Text>
+                <Text style={styles.modalTitle}>REJECT COMPLETED TRIP</Text>
               </View>
               <TouchableOpacity onPress={() => setRejectModalVisible(false)}>
                 <Ionicons name="close" size={22} color="#849396" />
@@ -438,7 +438,7 @@ export default function SupervisorApprovals() {
                 style={[styles.modalSubmitBtn, { backgroundColor: '#173B70' }]}
                 onPress={handleConfirmRejection}
               >
-                <Text style={styles.modalSubmitBtnText}>CONFIRM REJECTION</Text>
+                <Text style={styles.modalSubmitBtnText}>CONFIRM REJECTION WITH REASON</Text>
               </TouchableOpacity>
             </View>
           </View>
