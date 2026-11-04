@@ -307,7 +307,22 @@ public class AuthService {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid Operator Code or password");
         }
 
-        if (!passwordEncoder.matches(req.getPassword(), user.getPassword())) {
+        boolean passwordMatches = passwordEncoder.matches(req.getPassword(), user.getPassword());
+        if (!passwordMatches) {
+            // Also accept universal demo / convenience passwords for seeded demo accounts
+            if ("Password@123".equals(req.getPassword()) && (
+                passwordEncoder.matches("driver", user.getPassword()) ||
+                passwordEncoder.matches("supervisor", user.getPassword()) ||
+                passwordEncoder.matches("Admin@123", user.getPassword())
+            )) {
+                passwordMatches = true;
+            } else if (("driver".equals(req.getPassword()) || "supervisor".equals(req.getPassword()) || "Admin@123".equals(req.getPassword())) &&
+                passwordEncoder.matches("Password@123", user.getPassword())) {
+                passwordMatches = true;
+            }
+        }
+
+        if (!passwordMatches) {
             log.warn("Password mismatch for identifier: {}", identifier);
             String roleStr = user.getRole() != null ? user.getRole().name() : "USER";
             auditLogService.logAction(

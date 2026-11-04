@@ -609,6 +609,49 @@ export default function LoginScreen() {
             </View>
           ) : null}
 
+          {/* Quick Demo Operator Accounts */}
+          <View style={styles.quickFillBar}>
+            <Text style={styles.quickFillLabel}>Demo Accounts:</Text>
+            <TouchableOpacity
+              style={[styles.quickChip, isDriverIdentified && styles.quickChipActiveCyan]}
+              onPress={() => {
+                setUsername('DRV-00001');
+                setPassword('driver');
+                setErrorMessage(null);
+              }}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="car-sport" size={12} color="#173B70" />
+              <Text style={styles.quickChipTextCyan}>Driver (DRV-00001)</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.quickChip, isSupervisorIdentified && styles.quickChipActiveAmber]}
+              onPress={() => {
+                setUsername('SUP001');
+                setPassword('supervisor');
+                setErrorMessage(null);
+              }}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="shield-checkmark" size={12} color="#173B70" />
+              <Text style={styles.quickChipTextAmber}>Supervisor (SUP001)</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.quickChip}
+              onPress={() => {
+                setUsername('admin@smartitt.lk');
+                setPassword('Admin@123');
+                setErrorMessage(null);
+              }}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="key" size={12} color="#173B70" />
+              <Text style={styles.quickChipTextAmber}>Admin</Text>
+            </TouchableOpacity>
+          </View>
+
           {/* Username Field */}
           <View style={styles.labelRow}>
             <Text style={styles.inputLabel}>username:</Text>
@@ -899,7 +942,7 @@ const styles = StyleSheet.create({
   brandSubtitle: {
     fontSize: 13,
     fontWeight: '400',
-    color: '#5A779D',
+    color: '#3A567F',
     textAlign: 'center',
   },
   onlineBadge: {
@@ -1026,7 +1069,7 @@ const styles = StyleSheet.create({
   authTabTextInactive: {
     fontSize: 12,
     fontWeight: '500',
-    color: '#5A779D',
+    color: '#3A567F',
     letterSpacing: 0.2,
   },
   quickFillBar: {
@@ -1035,12 +1078,12 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: 6,
     paddingVertical: 4,
-    marginBottom: 2,
+    marginBottom: 10,
   },
   quickFillLabel: {
     fontSize: 11,
     fontWeight: '600',
-    color: '#5A779D',
+    color: '#3A567F',
     marginRight: 2,
   },
   quickChip: {
@@ -1086,7 +1129,7 @@ const styles = StyleSheet.create({
   quickChipResetText: {
     fontSize: 11,
     fontWeight: '500',
-    color: '#5A779D',
+    color: '#3A567F',
   },
   labelRow: {
     flexDirection: 'row',
@@ -1097,7 +1140,7 @@ const styles = StyleSheet.create({
   inputLabel: {
     fontSize: 13,
     fontWeight: '500',
-    color: '#5A779D',
+    color: '#3A567F',
   },
   roleMiniTag: {
     flexDirection: 'row',
@@ -1186,7 +1229,7 @@ const styles = StyleSheet.create({
   rememberText: {
     fontSize: 13,
     fontWeight: '500',
-    color: '#5A779D',
+    color: '#3A567F',
   },
   forgotBtn: {
     flexDirection: 'row',
@@ -1258,7 +1301,7 @@ const styles = StyleSheet.create({
   },
   createAccountPrompt: {
     fontSize: 13,
-    color: '#5A779D',
+    color: '#3A567F',
     fontWeight: '400',
   },
   createAccountLink: {
