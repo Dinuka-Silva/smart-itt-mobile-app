@@ -112,13 +112,21 @@ export default function RootLayout() {
   });
 
   useEffect(() => {
+    // Hide native splash screen once font resources are loaded, with a 2s safety safeguard
+    const timer = setTimeout(() => {
+      SplashScreen.hideAsync().catch(() => {});
+    }, 2000);
+
     if (fontsLoaded || fontError) {
+      clearTimeout(timer);
       SplashScreen.hideAsync().catch(() => {});
     }
+
+    return () => clearTimeout(timer);
   }, [fontsLoaded, fontError]);
 
   if (!fontsLoaded && !fontError) {
-    return null;
+    return <View style={{ flex: 1, backgroundColor: '#FFFFFF' }} />;
   }
 
   return (

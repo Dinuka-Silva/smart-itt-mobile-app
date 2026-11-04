@@ -69,6 +69,8 @@ interface AuthState {
   setBiometricEnabled: (enabled: boolean) => Promise<void>;
 }
 
+let initSessionInFlight: Promise<boolean> | null = null;
+
 export const useAuthStore = create<AuthState>((set, get) => {
   // Register 401 unauth handler
   registerUnauthorizedHandler(() => {
@@ -87,46 +89,77 @@ export const useAuthStore = create<AuthState>((set, get) => {
     isBiometricEnabled: false,
     logoutTargetRoute: null,
 
-    initializeSession: async (): Promise<boolean> => {
-      try {
-        const rememberMeVal = await storage.getItem('itt_remember_me');
-        const isRemembered = rememberMeVal !== 'false'; // Default to true if not set
-
-        const savedSessionJson = await storage.getItem('itt_user_session');
-        const savedToken = await storage.getItem('authToken');
-
-        if (isRemembered && savedSessionJson && savedToken) {
-          const userObj = JSON.parse(savedSessionJson) as User;
-          if (userObj && userObj.role && (userObj.username || userObj.driverCode)) {
-            // Verify account status (active vs suspended)
-            const identifier = userObj.username || userObj.driverCode || '';
-            const statusInfo = await credentialStore.getAccountStatus(identifier);
-            if (statusInfo.status !== 'SUSPENDED' && statusInfo.status !== 'DEACTIVATED') {
-              const bioEnabled = await biometricService.isUserBiometricEnabled(identifier);
-              set({
-                user: { ...userObj, token: savedToken },
-                isAuthenticated: true,
-                isSessionLocked: false,
-                isInitializing: false,
-                rememberMe: true,
-                lastActiveTimestamp: Date.now(),
-                isBiometricEnabled: bioEnabled,
-              });
-              return true;
-            }
-          }
-        }
-      } catch (err) {
-        console.warn('[AuthStore] initializeSession error:', err);
+    initializeSession: (): Promise<boolean> => {
+      // Reuse in-flight promise to prevent duplicate concurrent initialization
+      if (initSessionInFlight) {
+        return initSessionInFlight;
       }
 
-      set({
-        user: null,
-        isAuthenticated: false,
-        isSessionLocked: false,
-        isInitializing: false,
-      });
-      return false;
+      initSessionInFlight = (async (): Promise<boolean> => {
+        try {
+          // Safety timeout safeguard: 3.5s maximum to guarantee the app never hangs indefinitely
+          const timeoutPromise = new Promise<boolean>((_, reject) => {
+            setTimeout(() => reject(new Error('Session init timeout')), 3500);
+          });
+
+          const sessionRestorePromise = (async (): Promise<boolean> => {
+            // Parallelize disk/SecureStore lookups
+            const [rememberMeVal, savedSessionJson, savedToken] = await Promise.all([
+              storage.getItem('itt_remember_me'),
+              storage.getItem('itt_user_session'),
+              storage.getItem('authToken'),
+            ]);
+
+            const isRemembered = rememberMeVal !== 'false'; // Default to true if not explicitly false
+
+            if (isRemembered && savedSessionJson && savedToken) {
+              const userObj = JSON.parse(savedSessionJson) as User;
+              if (userObj && userObj.role && (userObj.username || userObj.driverCode)) {
+                const identifier = userObj.username || userObj.driverCode || '';
+
+                // Parallelize account status & biometric checks
+                const [statusInfo, bioEnabled] = await Promise.all([
+                  credentialStore.getAccountStatus(identifier),
+                  biometricService.isUserBiometricEnabled(identifier),
+                ]);
+
+                if (statusInfo.status !== 'SUSPENDED' && statusInfo.status !== 'DEACTIVATED') {
+                  set({
+                    user: { ...userObj, token: savedToken },
+                    isAuthenticated: true,
+                    isSessionLocked: false,
+                    isInitializing: false,
+                    rememberMe: true,
+                    lastActiveTimestamp: Date.now(),
+                    isBiometricEnabled: bioEnabled,
+                  });
+                  return true;
+                }
+              }
+            }
+            return false;
+          })();
+
+          const restored = await Promise.race([sessionRestorePromise, timeoutPromise]);
+          if (restored) {
+            return true;
+          }
+        } catch (err) {
+          console.warn('[AuthStore] initializeSession handled error/timeout:', err);
+        } finally {
+          initSessionInFlight = null;
+        }
+
+        set({
+          user: null,
+          isAuthenticated: false,
+          isSessionLocked: false,
+          isInitializing: false,
+        });
+        return false;
+      })();
+
+      return initSessionInFlight;
     },
 
     login: async (user: User, rememberMe: boolean = true, isOffline: boolean = false) => {
