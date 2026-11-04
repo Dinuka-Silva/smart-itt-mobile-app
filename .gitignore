@@ -45,3 +45,6 @@ data/
 # Uploads & Storage (External Files)
 uploads/
 backend/uploads/
+
+# Tool Modernization Hooks
+.github/modernize/
