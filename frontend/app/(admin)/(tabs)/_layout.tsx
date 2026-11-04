@@ -6,28 +6,51 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function AdminTabsLayout() {
   const insets = useSafeAreaInsets();
-  const bottomInset = Math.max(insets.bottom, 12);
+  const bottomInset = Math.max(insets.bottom, Platform.OS === 'android' ? 8 : 12);
 
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarStyle: {
-          backgroundColor: '#FFFFFF',
-          borderTopColor: '#E5EAEC',
-          borderTopWidth: 1,
-          elevation: 0,
-          shadowOpacity: 0,
-          height: 60 + bottomInset,
-          paddingBottom: bottomInset,
-          paddingTop: 6,
-        },
         tabBarActiveTintColor: '#0F766E',
         tabBarInactiveTintColor: '#6B7C85',
+        tabBarStyle: {
+          backgroundColor: '#FFFFFF',
+          borderTopWidth: 1,
+          borderTopColor: '#E5EAEC',
+          height: Platform.select({
+            ios: 62 + bottomInset,
+            android: 64 + (insets.bottom > 0 ? insets.bottom : 8),
+            default: 64,
+          }),
+          paddingBottom: Platform.select({
+            ios: bottomInset,
+            android: insets.bottom > 0 ? insets.bottom + 4 : 8,
+            default: 8,
+          }),
+          paddingTop: 8,
+          elevation: 8,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: -2 },
+          shadowOpacity: 0.05,
+          shadowRadius: 4,
+        },
+        tabBarItemStyle: {
+          justifyContent: 'center',
+          alignItems: 'center',
+          paddingVertical: 2,
+        },
+        tabBarIconStyle: {
+          width: 48,
+          height: 28,
+          justifyContent: 'center',
+          alignItems: 'center',
+        },
         tabBarLabelStyle: {
           fontSize: 11,
           fontWeight: '600',
-          marginTop: 2,
+          marginTop: 3,
+          textAlign: 'center',
         },
       }}
     >
@@ -41,6 +64,7 @@ export default function AdminTabsLayout() {
                 name={focused ? 'home' : 'home-outline'}
                 size={20}
                 color={focused ? '#0F766E' : '#6B7C85'}
+                style={{ textAlign: 'center' }}
               />
             </View>
           ),
@@ -56,6 +80,7 @@ export default function AdminTabsLayout() {
                 name={focused ? 'people' : 'people-outline'}
                 size={20}
                 color={focused ? '#0F766E' : '#6B7C85'}
+                style={{ textAlign: 'center' }}
               />
             </View>
           ),
@@ -71,6 +96,7 @@ export default function AdminTabsLayout() {
                 name={focused ? 'shield-checkmark' : 'shield-checkmark-outline'}
                 size={20}
                 color={focused ? '#0F766E' : '#6B7C85'}
+                style={{ textAlign: 'center' }}
               />
             </View>
           ),
@@ -86,6 +112,7 @@ export default function AdminTabsLayout() {
                 name={focused ? 'bus' : 'bus-outline'}
                 size={20}
                 color={focused ? '#0F766E' : '#6B7C85'}
+                style={{ textAlign: 'center' }}
               />
             </View>
           ),
@@ -101,6 +128,7 @@ export default function AdminTabsLayout() {
                 name={focused ? 'document-text' : 'document-text-outline'}
                 size={20}
                 color={focused ? '#0F766E' : '#6B7C85'}
+                style={{ textAlign: 'center' }}
               />
             </View>
           ),
@@ -118,9 +146,12 @@ export default function AdminTabsLayout() {
 
 const styles = StyleSheet.create({
   iconWrap: {
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 8,
+    width: 44,
+    height: 28,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'visible',
   },
   iconWrapActive: {
     backgroundColor: '#E3F4F1',

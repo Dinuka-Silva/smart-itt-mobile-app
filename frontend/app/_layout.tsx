@@ -6,6 +6,8 @@ import { StatusBar } from 'expo-status-bar';
 import { Platform, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useFonts } from 'expo-font';
+import * as SplashScreen from 'expo-splash-screen';
+import { Ionicons } from '@expo/vector-icons';
 
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { applyGlobalTypography } from '../src/theme/typography';
@@ -98,12 +100,26 @@ function RouteSecurityController({ children }: { children: React.ReactNode }) {
   );
 }
 
+// Prevent auto-hiding the splash screen until font resources are ready
+SplashScreen.preventAutoHideAsync().catch(() => {});
+
 export default function RootLayout() {
   const colorScheme = useColorScheme();
-  useFonts({
+  const [fontsLoaded, fontError] = useFonts({
+    ...Ionicons.font,
     ionicons: require('@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/Ionicons.ttf'),
     Ionicons: require('@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/Ionicons.ttf'),
   });
+
+  useEffect(() => {
+    if (fontsLoaded || fontError) {
+      SplashScreen.hideAsync().catch(() => {});
+    }
+  }, [fontsLoaded, fontError]);
+
+  if (!fontsLoaded && !fontError) {
+    return null;
+  }
 
   return (
     <SafeAreaProvider>

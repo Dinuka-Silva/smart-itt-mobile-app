@@ -194,7 +194,7 @@ public class ContainerService {
 
         UUID driverId = null;
         if (driverIdStr != null && !driverIdStr.trim().isEmpty()) {
-            try { driverId = UUID.fromString(driverIdStr); } catch (Exception ignored) {}
+            driverId = tripService.resolveDriverUuid(driverIdStr.trim());
         }
 
         if (trip == null && driverId != null) {
@@ -225,6 +225,23 @@ public class ContainerService {
         ContainerSize size = (req.getSize() != null && req.getSize().toUpperCase().contains("20"))
                 ? ContainerSize.FT_20
                 : ContainerSize.FT_40;
+
+        if (trip.getContainers() != null && !trip.getContainers().isEmpty()) {
+            long count20 = trip.getContainers().stream()
+                    .filter(c -> c.getSize() == ContainerSize.FT_20)
+                    .count();
+            long count40 = trip.getContainers().stream()
+                    .filter(c -> c.getSize() == ContainerSize.FT_40)
+                    .count();
+            long new20 = size == ContainerSize.FT_20 ? 1 : 0;
+            long new40 = size == ContainerSize.FT_40 ? 1 : 0;
+            long total20 = count20 + new20;
+            long total40 = count40 + new40;
+            if (total40 > 1 || (total40 >= 1 && total20 > 0) || total20 > 2) {
+                throw new IllegalArgumentException(
+                        "Chassis capacity exceeded: A single trip can carry only 1 40FT container OR up to 2 20FT containers.");
+            }
+        }
 
         boolean verified = validation.isCheckDigitValid();
 

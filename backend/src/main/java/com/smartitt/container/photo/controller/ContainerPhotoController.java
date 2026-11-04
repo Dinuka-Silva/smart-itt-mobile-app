@@ -14,6 +14,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -76,6 +77,7 @@ public class ContainerPhotoController {
     }
 
     @PatchMapping("/{id}/verify")
+    @PreAuthorize("hasAnyRole('SUPERVISOR', 'ADMIN')")
     @Operation(summary = "Verify or Reject a container photo (Supervisor or Admin)")
     public ResponseEntity<PhotoUploadResponse> verifyPhoto(
             @PathVariable String id,
@@ -87,6 +89,7 @@ public class ContainerPhotoController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Soft-delete a photo record (Admin only)")
     public ResponseEntity<Void> softDeletePhoto(
             @PathVariable String id,
@@ -98,6 +101,7 @@ public class ContainerPhotoController {
     }
 
     @GetMapping("/storage/stats")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Get photo storage metrics and disk capacity (Admin)")
     public ResponseEntity<StorageStatsResponse> getStorageStats() {
         return ResponseEntity.ok(photoService.getStorageStats());

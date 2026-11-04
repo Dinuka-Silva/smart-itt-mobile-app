@@ -67,8 +67,7 @@ public class AdminController {
         return ResponseEntity.status(HttpStatus.CREATED).body(adminService.createDriver(req));
     }
 
-    @PutMapping("/drivers/{id}")
-    @PatchMapping("/drivers/{id}")
+    @RequestMapping(value = "/drivers/{id}", method = {RequestMethod.PUT, RequestMethod.PATCH})
     @Operation(summary = "Update driver details")
     public ResponseEntity<DriverProfileResponse> updateDriver(
             @PathVariable String id,
@@ -124,8 +123,7 @@ public class AdminController {
         return ResponseEntity.status(HttpStatus.CREATED).body(adminService.createSupervisor(req));
     }
 
-    @PutMapping("/supervisors/{id}")
-    @PatchMapping("/supervisors/{id}")
+    @RequestMapping(value = "/supervisors/{id}", method = {RequestMethod.PUT, RequestMethod.PATCH})
     @Operation(summary = "Update supervisor details")
     public ResponseEntity<Map<String, Object>> updateSupervisor(
             @PathVariable String id,
@@ -176,8 +174,7 @@ public class AdminController {
         return ResponseEntity.status(HttpStatus.CREATED).body(adminService.createVehicle(req));
     }
 
-    @PutMapping("/vehicles/{id}")
-    @PatchMapping("/vehicles/{id}")
+    @RequestMapping(value = "/vehicles/{id}", method = {RequestMethod.PUT, RequestMethod.PATCH})
     @Operation(summary = "Update vehicle details, status, or driver assignment")
     public ResponseEntity<VehicleResponse> updateVehicle(
             @PathVariable UUID id,

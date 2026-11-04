@@ -70,10 +70,7 @@ public class DashboardController {
         LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
         LocalDateTime endOfDay = startOfDay.plusDays(1);
 
-        UUID dId = null;
-        try {
-            dId = UUID.fromString(driverId);
-        } catch (Exception ignored) {}
+        UUID dId = tripService.resolveDriverUuid(driverId);
 
         long activeTrips = 0;
         long completedToday = 0;

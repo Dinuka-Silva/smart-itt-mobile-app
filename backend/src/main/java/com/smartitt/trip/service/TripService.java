@@ -36,7 +36,7 @@ public class TripService {
     private final DriverRepository driverRepository;
     private final ContainerPhotoRepository photoRepository;
 
-    private UUID resolveDriverUuid(String driverIdStr) {
+    public UUID resolveDriverUuid(String driverIdStr) {
         if (driverIdStr == null || driverIdStr.isBlank() || "ALL".equalsIgnoreCase(driverIdStr)) {
             return driverRepository.findAll().stream().findFirst().map(Driver::getId).orElse(null);
         }
@@ -75,14 +75,33 @@ public class TripService {
         }
 
         // Driver loads containers → confirms trip → waits for supervisor
+        String vesselName = (req.getVesselName() != null && !req.getVesselName().isBlank())
+                ? req.getVesselName().trim()
+                : "MV Colombo Express";
+
+        String vehicleNumber = req.getVehicleNumber();
+        String chassisNumber = req.getChassisNumber();
+        if ((vehicleNumber == null || vehicleNumber.isBlank()) && driverUuid != null) {
+            vehicleNumber = driverRepository.findById(driverUuid).map(Driver::getVehicleNumber).orElse(null);
+        }
+        if ((chassisNumber == null || chassisNumber.isBlank()) && driverUuid != null) {
+            chassisNumber = driverRepository.findById(driverUuid).map(Driver::getChassisNumber).orElse(null);
+        }
+        if (chassisNumber == null || chassisNumber.isBlank()) {
+            chassisNumber = "SCK 100";
+        }
+
+        String sourceTerm = req.getSourceTerminal() != null && !req.getSourceTerminal().isBlank() ? req.getSourceTerminal().trim() : "CICT";
+        String destTerm = req.getDestTerminal() != null && !req.getDestTerminal().isBlank() ? req.getDestTerminal().trim() : "JCT";
+
         Trip trip = Trip.builder()
                 .tripNumber(tripNumber)
                 .driverId(driverUuid)
-                .vehicleNumber(req.getVehicleNumber())
-                .vesselName(req.getVesselName())
-                .chassisNumber(req.getChassisNumber())
-                .sourceTerminal(req.getSourceTerminal())
-                .destTerminal(req.getDestTerminal())
+                .vehicleNumber(vehicleNumber)
+                .vesselName(vesselName)
+                .chassisNumber(chassisNumber)
+                .sourceTerminal(sourceTerm)
+                .destTerminal(destTerm)
                 .status(TripStatus.PENDING_APPROVAL)
                 .notes(req.getNotes())
                 .startTime(LocalDateTime.now())
