@@ -848,7 +848,7 @@ export default function DriverProfileScreen() {
                       >
                         {driverPortPassExpiryDate}
                       </Text>
-                      <Text style={{ fontSize: 10, color: driverPortPassRenewalDue ? '#173B70' : '#849396', marginTop: 2 }}>
+                      <Text style={{ fontSize: 10, color: driverPortPassRenewalDue ? '#173B70' : '#3A567F', marginTop: 2 }}>
                         {driverPortPassDaysLeft <= 0 ? 'EXPIRED' : `${driverPortPassDaysLeft} days remaining ${driverPortPassRenewalDue ? '(RENEW NOW)' : ''}`}
                       </Text>
                     </View>
@@ -863,7 +863,7 @@ export default function DriverProfileScreen() {
                       >
                         {vehiclePortPassExpiryDate}
                       </Text>
-                      <Text style={{ fontSize: 10, color: vehiclePortPassRenewalDue ? '#173B70' : '#849396', marginTop: 2 }}>
+                      <Text style={{ fontSize: 10, color: vehiclePortPassRenewalDue ? '#173B70' : '#3A567F', marginTop: 2 }}>
                         {vehiclePortPassDaysLeft <= 0 ? 'EXPIRED' : `${vehiclePortPassDaysLeft} days remaining ${vehiclePortPassRenewalDue ? '(RENEW NOW)' : ''}`}
                       </Text>
                     </View>
@@ -1091,8 +1091,8 @@ export default function DriverProfileScreen() {
 
             {/* ─── Sign Out ─── */}
             <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout} activeOpacity={0.88}>
-              <Ionicons name="log-out-outline" size={20} color={colors.white} />
-              <Text style={styles.logoutText}>Sign Out</Text>
+              <Ionicons name="log-out-outline" size={20} color="#B91C1C" />
+              <Text style={styles.logoutText}>Sign Out of Driver Cockpit</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -1161,7 +1161,7 @@ export default function DriverProfileScreen() {
                 <TextInput
                   style={styles.urlInput}
                   placeholder="https://example.com/photo.jpg"
-                  placeholderTextColor="#849396"
+                  placeholderTextColor="#3A567F"
                   value={customUrlInput}
                   onChangeText={setCustomUrlInput}
                   autoCapitalize="none"
@@ -1181,7 +1181,7 @@ export default function DriverProfileScreen() {
                 style={styles.resetBtn}
                 onPress={() => handleSavePhotoChange('')}
               >
-                <Ionicons name="refresh" size={14} color="#849396" />
+                <Ionicons name="refresh" size={14} color="#3A567F" />
                 <Text style={styles.resetBtnText}>Reset to Default System Theme</Text>
               </TouchableOpacity>
 
@@ -1206,7 +1206,7 @@ export default function DriverProfileScreen() {
                 <Ionicons name="create-outline" size={20} color="#173B70" />
                 <View>
                   <Text style={styles.modalTitle}>EDIT DRIVER CREDENTIALS</Text>
-                  <Text style={{ fontSize: 11, color: '#849396' }}>Update your official driver and vehicle data</Text>
+                  <Text style={{ fontSize: 11, color: '#3A567F' }}>Update your official driver and vehicle data</Text>
                 </View>
               </View>
               <TouchableOpacity onPress={() => setEditModalVisible(false)} style={styles.modalCloseBtn}>
@@ -1222,7 +1222,7 @@ export default function DriverProfileScreen() {
                 value={formFullName}
                 onChangeText={setFormFullName}
                 placeholder="Driver Full Name"
-                placeholderTextColor="#849396"
+                placeholderTextColor="#3A567F"
               />
 
               {/* Mobile & Email */}
@@ -1234,7 +1234,7 @@ export default function DriverProfileScreen() {
                     value={formMobileNumber}
                     onChangeText={setFormMobileNumber}
                     placeholder="+94 77 XXXXXXX"
-                    placeholderTextColor="#849396"
+                    placeholderTextColor="#3A567F"
                   />
                 </View>
                 <View style={{ flex: 1 }}>
@@ -1244,7 +1244,7 @@ export default function DriverProfileScreen() {
                     value={formEmail}
                     onChangeText={setFormEmail}
                     placeholder="driver@scklogistics.lk"
-                    placeholderTextColor="#849396"
+                    placeholderTextColor="#3A567F"
                     keyboardType="email-address"
                     autoCapitalize="none"
                   />
@@ -1260,7 +1260,7 @@ export default function DriverProfileScreen() {
                     value={formNic}
                     onChangeText={setFormNic}
                     placeholder="1985XXXXXXV"
-                    placeholderTextColor="#849396"
+                    placeholderTextColor="#3A567F"
                     autoCapitalize="characters"
                   />
                 </View>
@@ -1271,7 +1271,7 @@ export default function DriverProfileScreen() {
                     value={formEmployeeId}
                     onChangeText={setFormEmployeeId}
                     placeholder="SCK-EMP-1001"
-                    placeholderTextColor="#849396"
+                    placeholderTextColor="#3A567F"
                     autoCapitalize="characters"
                   />
                 </View>
@@ -1284,7 +1284,7 @@ export default function DriverProfileScreen() {
                 value={formAddress}
                 onChangeText={setFormAddress}
                 placeholder="No. 14, Port Access Road, Colombo"
-                placeholderTextColor="#849396"
+                placeholderTextColor="#3A567F"
               />
 
               {/* Driving License & Expiry */}
@@ -1296,7 +1296,7 @@ export default function DriverProfileScreen() {
                     value={formLicenseNumber}
                     onChangeText={setFormLicenseNumber}
                     placeholder="B8765400"
-                    placeholderTextColor="#849396"
+                    placeholderTextColor="#3A567F"
                     autoCapitalize="characters"
                   />
                 </View>
@@ -1307,7 +1307,7 @@ export default function DriverProfileScreen() {
                     value={formLicenseExpiryDate}
                     onChangeText={setFormLicenseExpiryDate}
                     placeholder="YYYY-MM-DD"
-                    placeholderTextColor="#849396"
+                    placeholderTextColor="#3A567F"
                   />
                 </View>
               </View>
@@ -1321,7 +1321,7 @@ export default function DriverProfileScreen() {
                     value={formDriverPortPassExpiry}
                     onChangeText={setFormDriverPortPassExpiry}
                     placeholder="YYYY-MM-DD"
-                    placeholderTextColor="#849396"
+                    placeholderTextColor="#3A567F"
                   />
                 </View>
                 <View style={{ flex: 1 }}>
@@ -1331,7 +1331,7 @@ export default function DriverProfileScreen() {
                     value={formVehiclePortPassExpiry}
                     onChangeText={setFormVehiclePortPassExpiry}
                     placeholder="YYYY-MM-DD"
-                    placeholderTextColor="#849396"
+                    placeholderTextColor="#3A567F"
                   />
                 </View>
               </View>
@@ -1345,7 +1345,7 @@ export default function DriverProfileScreen() {
                     value={formVehicleNumber}
                     onChangeText={setFormVehicleNumber}
                     placeholder="LY-6439"
-                    placeholderTextColor="#849396"
+                    placeholderTextColor="#3A567F"
                     autoCapitalize="characters"
                   />
                 </View>
@@ -1356,7 +1356,7 @@ export default function DriverProfileScreen() {
                     value={formChassisNumber}
                     onChangeText={setFormChassisNumber}
                     placeholder="SCK 100"
-                    placeholderTextColor="#849396"
+                    placeholderTextColor="#3A567F"
                     autoCapitalize="characters"
                   />
                 </View>
@@ -1369,7 +1369,7 @@ export default function DriverProfileScreen() {
                 value={formDateOfBirth}
                 onChangeText={setFormDateOfBirth}
                 placeholder="YYYY-MM-DD"
-                placeholderTextColor="#849396"
+                placeholderTextColor="#3A567F"
               />
 
               {/* Emergency Contact Name & Phone */}
@@ -1381,7 +1381,7 @@ export default function DriverProfileScreen() {
                     value={formEmergencyContactName}
                     onChangeText={setFormEmergencyContactName}
                     placeholder="e.g. Nimali Perera"
-                    placeholderTextColor="#849396"
+                    placeholderTextColor="#3A567F"
                   />
                 </View>
                 <View style={{ flex: 1 }}>
@@ -1391,7 +1391,7 @@ export default function DriverProfileScreen() {
                     value={formEmergencyContactNumber}
                     onChangeText={setFormEmergencyContactNumber}
                     placeholder="+94 71 XXXXXXX"
-                    placeholderTextColor="#849396"
+                    placeholderTextColor="#3A567F"
                   />
                 </View>
               </View>
@@ -1482,7 +1482,7 @@ export default function DriverProfileScreen() {
                     if (passwordError) setPasswordError(null);
                   }}
                   placeholder="Enter current password"
-                  placeholderTextColor="#849396"
+                  placeholderTextColor="#3A567F"
                   secureTextEntry={!showCurrentPassword}
                   autoCapitalize="none"
                 />
@@ -1493,7 +1493,7 @@ export default function DriverProfileScreen() {
                   <Ionicons
                     name={showCurrentPassword ? 'eye-off-outline' : 'eye-outline'}
                     size={18}
-                    color="#849396"
+                    color="#3A567F"
                   />
                 </TouchableOpacity>
               </View>
@@ -1509,7 +1509,7 @@ export default function DriverProfileScreen() {
                     if (passwordError) setPasswordError(null);
                   }}
                   placeholder="Min 8 chars (A-Z, a-z, 0-9, symbol)"
-                  placeholderTextColor="#849396"
+                  placeholderTextColor="#3A567F"
                   secureTextEntry={!showNewPassword}
                   autoCapitalize="none"
                 />
@@ -1520,7 +1520,7 @@ export default function DriverProfileScreen() {
                   <Ionicons
                     name={showNewPassword ? 'eye-off-outline' : 'eye-outline'}
                     size={18}
-                    color="#849396"
+                    color="#3A567F"
                   />
                 </TouchableOpacity>
               </View>
@@ -1538,7 +1538,7 @@ export default function DriverProfileScreen() {
                   if (passwordError) setPasswordError(null);
                 }}
                 placeholder="Confirm new password"
-                placeholderTextColor="#849396"
+                placeholderTextColor="#3A567F"
                 secureTextEntry={!showNewPassword}
                 autoCapitalize="none"
               />
@@ -1636,7 +1636,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    backgroundColor: 'rgba(8, 14, 23, 0.88)',
+    backgroundColor: '#FFFFFF',
     paddingHorizontal: 12,
     paddingVertical: 7,
     borderRadius: 20,
@@ -1646,7 +1646,7 @@ const styles = StyleSheet.create({
     elevation: 6,
     shadowColor: '#173B70',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.4,
+    shadowOpacity: 0.15,
     shadowRadius: 6,
   },
   editCoverBtnText: {
@@ -1855,17 +1855,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: 'rgba(255, 82, 82, 0.15)',
-    borderWidth: 1,
-    borderColor: colors.error,
+    backgroundColor: '#FEE2E2',
+    borderWidth: 1.5,
+    borderColor: '#FCA5A5',
     paddingVertical: 14,
     borderRadius: radius.DEFAULT,
+    marginTop: 18,
+    marginBottom: 8,
   },
   logoutText: {
-    color: colors.error,
+    color: '#B91C1C',
     fontWeight: '800',
-    fontSize: 14,
-    letterSpacing: 0.5,
+    fontSize: 15,
+    letterSpacing: 0.3,
   },
 
   // ─── Assigned Vehicle & Maintenance Card Styles ───
@@ -1880,7 +1882,7 @@ const styles = StyleSheet.create({
   },
   vehicleMetaLabel: {
     fontSize: 10,
-    color: '#849396',
+    color: '#3A567F',
     fontWeight: '800',
     letterSpacing: 0.6,
     marginBottom: 3,
@@ -1888,13 +1890,13 @@ const styles = StyleSheet.create({
   vehicleMetaPlate: {
     fontSize: 16,
     fontWeight: '900',
-    color: '#1E293B',
+    color: '#173B70',
     fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
   },
   vehicleMetaOperator: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#94a3b8',
+    color: '#24436E',
   },
   maintenanceBtn: {
     flexDirection: 'row',
@@ -1925,7 +1927,7 @@ const styles = StyleSheet.create({
   },
   maintenanceBtnSub: {
     fontSize: 10,
-    color: '#849396',
+    color: '#3A567F',
     marginTop: 2,
     fontWeight: '500',
   },
@@ -1973,7 +1975,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   modalSubheading: {
-    color: '#849396',
+    color: '#3A567F',
     fontSize: 11,
     marginBottom: 12,
   },
@@ -1994,7 +1996,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   sectionSubtitle: {
-    color: '#849396',
+    color: '#3A567F',
     fontSize: 10,
     fontWeight: '800',
     letterSpacing: 0.8,
@@ -2070,7 +2072,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   resetBtnText: {
-    color: '#849396',
+    color: '#3A567F',
     fontSize: 11,
     fontWeight: '700',
   },
@@ -2142,7 +2144,7 @@ const styles = StyleSheet.create({
   licenseDateLabel: {
     fontSize: 9,
     fontWeight: '800',
-    color: '#849396',
+    color: '#3A567F',
     letterSpacing: 0.5,
     marginBottom: 3,
   },
@@ -2214,17 +2216,17 @@ const styles = StyleSheet.create({
   editFieldLabel: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#849396',
+    color: '#3A567F',
     marginBottom: 4,
     marginTop: 8,
     textTransform: 'uppercase',
   },
   editTextInput: {
     backgroundColor: '#F8FAFC',
-    borderWidth: 1,
-    borderColor: '#242a34',
+    borderWidth: 1.5,
+    borderColor: '#CBD5E1',
     borderRadius: radius.md,
-    color: '#1E293B',
+    color: '#173B70',
     paddingHorizontal: 12,
     paddingVertical: 10,
     fontSize: 13,
@@ -2236,12 +2238,14 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 16,
     borderRadius: radius.md,
-    backgroundColor: '#1d2633',
+    backgroundColor: '#F0F5FA',
+    borderWidth: 1.5,
+    borderColor: '#CBD5E1',
     alignItems: 'center',
     justifyContent: 'center',
   },
   editCancelBtnText: {
-    color: '#849396',
+    color: '#24436E',
     fontSize: 12,
     fontWeight: '700',
   },
@@ -2266,16 +2270,16 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: 12,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(255, 255, 255, 0.06)',
+    borderTopColor: '#CBD5E1',
     gap: 12,
   },
   secRowTitle: {
-    color: '#f8fafc',
+    color: '#173B70',
     fontSize: 13,
     fontWeight: '700',
   },
   secRowDesc: {
-    color: '#849396',
+    color: '#24436E',
     fontSize: 11,
     marginTop: 2,
     lineHeight: 15,
@@ -2284,16 +2288,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#334155',
-    backgroundColor: 'rgba(51, 65, 85, 0.3)',
+    borderWidth: 1.5,
+    borderColor: '#CBD5E1',
+    backgroundColor: '#F0F5FA',
   },
   secToggleBtnActive: {
     borderColor: '#173B70',
-    backgroundColor: '#F0F5FA',
+    backgroundColor: '#E8F1FA',
   },
   secToggleText: {
-    color: '#94a3b8',
+    color: '#24436E',
     fontSize: 11,
     fontWeight: '800',
   },
@@ -2321,7 +2325,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
     paddingTop: 10,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(255, 255, 255, 0.06)',
+    borderTopColor: '#CBD5E1',
   },
   secPostureText: {
     color: '#173B70',

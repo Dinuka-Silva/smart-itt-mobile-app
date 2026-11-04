@@ -262,7 +262,7 @@ export default function SupervisorApprovals() {
                               {timing.isCompleted ? 'COMPLETED DATE & TIME' : timing.isPending ? 'DISCHARGED (AWAITING SIGN-OFF)' : 'CURRENT STATUS'}
                             </Text>
                           </View>
-                          <Text style={[styles.timingDate, !timing.isCompleted && !timing.isPending && { color: '#849396' }]}>
+                          <Text style={[styles.timingDate, !timing.isCompleted && !timing.isPending && { color: '#3A567F' }]}>
                             {timing.endDate}
                           </Text>
                           <Text style={[styles.timingTime, { color: timing.statusColor }]}>
@@ -360,7 +360,7 @@ export default function SupervisorApprovals() {
 
                     {/* Row 3: Security & Clearance Footer */}
                     <View style={styles.dischargeAuditFooter}>
-                      <Ionicons name="shield-checkmark-outline" size={11} color="#849396" />
+                      <Ionicons name="shield-checkmark-outline" size={11} color="#3A567F" />
                       <Text style={styles.dischargeAuditFooterText}>
                         SLPA Official Handover • Gate-In Authenticated at {trip.destTerminal || to}
                       </Text>
@@ -412,7 +412,7 @@ export default function SupervisorApprovals() {
                 <Text style={styles.modalTitle}>REJECT COMPLETED TRIP</Text>
               </View>
               <TouchableOpacity onPress={() => setRejectModalVisible(false)}>
-                <Ionicons name="close" size={22} color="#849396" />
+                <Ionicons name="close" size={22} color="#3A567F" />
               </TouchableOpacity>
             </View>
 
@@ -426,7 +426,7 @@ export default function SupervisorApprovals() {
             <TextInput
               style={styles.rejectionInput}
               placeholder="e.g. Container damage not recorded, seal number mismatch..."
-              placeholderTextColor="#849396"
+              placeholderTextColor="#3A567F"
               value={rejectionReason}
               onChangeText={setRejectionReason}
               multiline
@@ -514,7 +514,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   dateText: {
-    color: '#78909c',
+    color: '#3A567F',
     fontSize: 11,
     fontWeight: '700',
   },
@@ -575,7 +575,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   emptySub: {
-    color: '#78909c',
+    color: '#3A567F',
     fontSize: 11,
     textAlign: 'center',
   },
@@ -600,7 +600,7 @@ const styles = StyleSheet.create({
     fontWeight: '900',
   },
   driverSubText: {
-    color: '#78909c',
+    color: '#3A567F',
     fontSize: 11,
     marginTop: 2,
   },
@@ -634,7 +634,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   specsSubText: {
-    color: '#78909c',
+    color: '#3A567F',
     fontSize: 11,
   },
 
@@ -644,7 +644,7 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   specItem: {
-    color: '#849396',
+    color: '#3A567F',
     fontSize: 9,
   },
   specBold: {
@@ -732,7 +732,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   containerSizeText: {
-    color: '#849396',
+    color: '#3A567F',
     fontSize: 9,
   },
   containerDischargeText: {
@@ -904,7 +904,7 @@ const styles = StyleSheet.create({
   dischargeGridLabel: {
     fontSize: 8,
     fontWeight: '800',
-    color: '#849396',
+    color: '#3A567F',
     letterSpacing: 0.4,
   },
   dischargeGridValue: {
@@ -940,7 +940,7 @@ const styles = StyleSheet.create({
   },
   dischargeAuditFooterText: {
     fontSize: 8.5,
-    color: '#849396',
+    color: '#3A567F',
     fontWeight: '600',
   },
 });

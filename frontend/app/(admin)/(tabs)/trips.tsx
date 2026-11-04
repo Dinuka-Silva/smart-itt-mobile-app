@@ -145,7 +145,7 @@ export default function AdminTripsScreen() {
       {/* Filter Bar */}
       <View style={styles.filterBar}>
         <View style={styles.searchWrap}>
-          <Ionicons name="search" size={16} color="#78909c" style={{ marginRight: 8 }} />
+          <Ionicons name="search" size={16} color="#3A567F" style={{ marginRight: 8 }} />
           <TextInput
             style={styles.searchInput}
             placeholder="Search Trip #, Container, Vehicle, Vessel..."
@@ -155,7 +155,7 @@ export default function AdminTripsScreen() {
           />
           {search ? (
             <TouchableOpacity onPress={() => setSearch('')}>
-              <Ionicons name="close-circle" size={16} color="#78909c" />
+              <Ionicons name="close-circle" size={16} color="#3A567F" />
             </TouchableOpacity>
           ) : null}
         </View>
@@ -676,7 +676,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   emptyCardText: {
-    color: '#78909c',
+    color: '#3A567F',
     fontSize: 13,
     marginTop: 8,
   },
@@ -701,7 +701,7 @@ const styles = StyleSheet.create({
   },
   vesselText: {
     fontSize: 11,
-    color: '#78909c',
+    color: '#3A567F',
     marginTop: 2,
   },
   statusBadge: {
@@ -807,7 +807,7 @@ const styles = StyleSheet.create({
     marginVertical: 4,
   },
   infoLabel: {
-    color: '#78909c',
+    color: '#3A567F',
     fontSize: 12,
     fontWeight: '600',
   },
@@ -883,7 +883,7 @@ const styles = StyleSheet.create({
   driverGateText: {
     fontSize: 11,
     fontWeight: '600',
-    color: '#78909c',
+    color: '#3A567F',
   },
   timingCard: {
     flexDirection: 'row',
@@ -910,7 +910,7 @@ const styles = StyleSheet.create({
   timingLabel: {
     fontSize: 9,
     fontWeight: '800',
-    color: '#78909c',
+    color: '#3A567F',
     letterSpacing: 0.4,
   },
   timingTime: {
@@ -1040,7 +1040,7 @@ const styles = StyleSheet.create({
   modalStatLabel: {
     fontSize: 9,
     fontWeight: '700',
-    color: '#78909c',
+    color: '#3A567F',
     marginBottom: 2,
     textAlign: 'center',
   },
@@ -1083,7 +1083,7 @@ const styles = StyleSheet.create({
   },
   modalContMetricLabel: {
     fontSize: 9,
-    color: '#78909c',
+    color: '#3A567F',
     fontWeight: '600',
   },
   modalContMetricVal: {

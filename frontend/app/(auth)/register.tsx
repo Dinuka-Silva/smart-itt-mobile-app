@@ -701,13 +701,13 @@ export default function DriverRegisterScreen() {
               <TextInput
                 style={styles.input}
                 placeholder={currentRole === 'SUPERVISOR' ? 'e.g. SUP-00001 or SUP001' : 'e.g. DRV-00001 or DRV001'}
-                placeholderTextColor="#849396"
+                placeholderTextColor="#3A567F"
                 value={employeeId}
                 onChangeText={handleEmployeeIdChange}
                 autoCapitalize="characters"
               />
             </View>
-            <Text style={{ fontSize: 9, color: '#849396', marginTop: 3 }}>
+            <Text style={{ fontSize: 9, color: '#3A567F', marginTop: 3 }}>
               Type <Text style={{ color: '#173B70', fontWeight: '800' }}>DRV</Text> with number for Driver details, or <Text style={{ color: '#173B70', fontWeight: '800' }}>SUP</Text> with number for Supervisor details.
             </Text>
           </View>
@@ -715,11 +715,11 @@ export default function DriverRegisterScreen() {
           <View style={styles.fieldGroup}>
             <Text style={styles.fieldLabel}>FULL NAME *</Text>
             <View style={styles.inputWrap}>
-              <Ionicons name="person" size={16} color="#849396" style={styles.inputIcon} />
+              <Ionicons name="person" size={16} color="#3A567F" style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
                 placeholder="e.g. Kasun Chamara Perera"
-                placeholderTextColor="#849396"
+                placeholderTextColor="#3A567F"
                 value={fullName}
                 onChangeText={setFullName}
               />
@@ -729,11 +729,11 @@ export default function DriverRegisterScreen() {
           <View style={styles.fieldGroup}>
             <Text style={styles.fieldLabel}>NATIONAL IDENTITY CARD (NIC) NUMBER *</Text>
             <View style={styles.inputWrap}>
-              <Ionicons name="card" size={16} color="#849396" style={styles.inputIcon} />
+              <Ionicons name="card" size={16} color="#3A567F" style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
                 placeholder="e.g. 199411223344 or 851234567V"
-                placeholderTextColor="#849396"
+                placeholderTextColor="#3A567F"
                 value={nic}
                 onChangeText={setNic}
                 autoCapitalize="characters"
@@ -744,11 +744,11 @@ export default function DriverRegisterScreen() {
           <View style={styles.fieldGroup}>
             <Text style={styles.fieldLabel}>DATE OF BIRTH (YYYY-MM-DD)</Text>
             <View style={styles.inputWrap}>
-              <Ionicons name="calendar" size={16} color="#849396" style={styles.inputIcon} />
+              <Ionicons name="calendar" size={16} color="#3A567F" style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
                 placeholder="1994-06-15"
-                placeholderTextColor="#849396"
+                placeholderTextColor="#3A567F"
                 value={dateOfBirth}
                 onChangeText={setDateOfBirth}
               />
@@ -758,11 +758,11 @@ export default function DriverRegisterScreen() {
           <View style={styles.fieldGroup}>
             <Text style={styles.fieldLabel}>RESIDENTIAL ADDRESS *</Text>
             <View style={[styles.inputWrap, { height: 64 }]}>
-              <Ionicons name="location" size={16} color="#849396" style={styles.inputIcon} />
+              <Ionicons name="location" size={16} color="#3A567F" style={styles.inputIcon} />
               <TextInput
                 style={[styles.input, { height: 64, textAlignVertical: 'top', paddingTop: 8 }]}
                 placeholder="No. 45, Harbour View Road, Colombo 15"
-                placeholderTextColor="#849396"
+                placeholderTextColor="#3A567F"
                 multiline
                 value={address}
                 onChangeText={setAddress}
@@ -785,11 +785,11 @@ export default function DriverRegisterScreen() {
             <View style={styles.fieldGroup}>
               <Text style={styles.fieldLabel}>OFFICIAL MOBILE PHONE NUMBER *</Text>
               <View style={styles.inputWrap}>
-                <Ionicons name="call" size={16} color="#849396" style={styles.inputIcon} />
+                <Ionicons name="call" size={16} color="#3A567F" style={styles.inputIcon} />
                 <TextInput
                   style={styles.input}
                   placeholder="e.g. 0712345678"
-                  placeholderTextColor="#849396"
+                  placeholderTextColor="#3A567F"
                   keyboardType="phone-pad"
                   value={mobileNumber}
                   onChangeText={setMobileNumber}
@@ -800,11 +800,11 @@ export default function DriverRegisterScreen() {
             <View style={styles.fieldGroup}>
               <Text style={styles.fieldLabel}>OFFICIAL PORT EMAIL ADDRESS *</Text>
               <View style={styles.inputWrap}>
-                <Ionicons name="mail" size={16} color="#849396" style={styles.inputIcon} />
+                <Ionicons name="mail" size={16} color="#3A567F" style={styles.inputIcon} />
                 <TextInput
                   style={styles.input}
                   placeholder="e.g. supervisor@smartitt.lk"
-                  placeholderTextColor="#849396"
+                  placeholderTextColor="#3A567F"
                   keyboardType="email-address"
                   autoCapitalize="none"
                   value={email}
@@ -826,7 +826,7 @@ export default function DriverRegisterScreen() {
                 <TextInput
                   style={styles.input}
                   placeholder="e.g. 2026-11-18"
-                  placeholderTextColor="#849396"
+                  placeholderTextColor="#3A567F"
                   value={supervisorPortPassExpiryDate}
                   onChangeText={setSupervisorPortPassExpiryDate}
                 />
@@ -845,11 +845,11 @@ export default function DriverRegisterScreen() {
             <View style={styles.fieldGroup}>
               <Text style={styles.fieldLabel}>MOBILE PHONE NUMBER *</Text>
               <View style={styles.inputWrap}>
-                <Ionicons name="call" size={16} color="#849396" style={styles.inputIcon} />
+                <Ionicons name="call" size={16} color="#3A567F" style={styles.inputIcon} />
                 <TextInput
                   style={styles.input}
                   placeholder="e.g. 0771234567"
-                  placeholderTextColor="#849396"
+                  placeholderTextColor="#3A567F"
                   keyboardType="phone-pad"
                   value={mobileNumber}
                   onChangeText={setMobileNumber}
@@ -860,11 +860,11 @@ export default function DriverRegisterScreen() {
             <View style={styles.fieldGroup}>
               <Text style={styles.fieldLabel}>DRIVING LICENSE NUMBER *</Text>
               <View style={styles.inputWrap}>
-                <Ionicons name="id-card" size={16} color="#849396" style={styles.inputIcon} />
+                <Ionicons name="id-card" size={16} color="#3A567F" style={styles.inputIcon} />
                 <TextInput
                   style={styles.input}
                   placeholder="e.g. B1234567"
-                  placeholderTextColor="#849396"
+                  placeholderTextColor="#3A567F"
                   value={licenseNumber}
                   onChangeText={setLicenseNumber}
                   autoCapitalize="characters"
@@ -875,11 +875,11 @@ export default function DriverRegisterScreen() {
             <View style={styles.fieldGroup}>
               <Text style={styles.fieldLabel}>LICENSE EXPIRY DATE (YYYY-MM-DD)</Text>
               <View style={styles.inputWrap}>
-                <Ionicons name="time" size={16} color="#849396" style={styles.inputIcon} />
+                <Ionicons name="time" size={16} color="#3A567F" style={styles.inputIcon} />
                 <TextInput
                   style={styles.input}
                   placeholder="2029-10-15"
-                  placeholderTextColor="#849396"
+                  placeholderTextColor="#3A567F"
                   value={licenseExpiryDate}
                   onChangeText={setLicenseExpiryDate}
                 />
@@ -900,7 +900,7 @@ export default function DriverRegisterScreen() {
                 <TextInput
                   style={styles.input}
                   placeholder="e.g. 2026-11-15"
-                  placeholderTextColor="#849396"
+                  placeholderTextColor="#3A567F"
                   value={driverPortPassExpiryDate}
                   onChangeText={setDriverPortPassExpiryDate}
                 />
@@ -923,14 +923,14 @@ export default function DriverRegisterScreen() {
                 <TextInput
                   style={styles.input}
                   placeholder="e.g. LY-6439, LY-6528, LY-6434..."
-                  placeholderTextColor="#849396"
+                  placeholderTextColor="#3A567F"
                   value={vehicleNumber}
                   onChangeText={setVehicleNumber}
                   autoCapitalize="characters"
                 />
                 {vehicleNumber.length > 0 && (
                   <TouchableOpacity onPress={() => setVehicleNumber('')} style={{ paddingHorizontal: 6 }}>
-                    <Ionicons name="close-circle" size={16} color="#849396" />
+                    <Ionicons name="close-circle" size={16} color="#3A567F" />
                   </TouchableOpacity>
                 )}
               </View>
@@ -1000,7 +1000,7 @@ export default function DriverRegisterScreen() {
                   <TextInput
                     style={styles.input}
                     placeholder="e.g. 2026-11-20"
-                    placeholderTextColor="#849396"
+                    placeholderTextColor="#3A567F"
                     value={vehiclePortPassExpiryDate}
                     onChangeText={setVehiclePortPassExpiryDate}
                   />
@@ -1029,7 +1029,7 @@ export default function DriverRegisterScreen() {
                         onPress={() => setVehicleNumber(v.vehicleNumber)}
                         activeOpacity={0.7}
                       >
-                        <Ionicons name="bus" size={12} color={isSelected ? '#173B70' : '#849396'} />
+                        <Ionicons name="bus" size={12} color={isSelected ? '#173B70' : '#3A567F'} />
                         <Text style={[styles.fleetChipText, isSelected && styles.fleetChipTextActive]}>
                           {v.vehicleNumber}
                         </Text>
@@ -1053,11 +1053,11 @@ export default function DriverRegisterScreen() {
             <View style={styles.fieldGroup}>
               <Text style={styles.fieldLabel}>PORT EMAIL ADDRESS (OPTIONAL)</Text>
               <View style={styles.inputWrap}>
-                <Ionicons name="mail" size={16} color="#849396" style={styles.inputIcon} />
+                <Ionicons name="mail" size={16} color="#3A567F" style={styles.inputIcon} />
                 <TextInput
                   style={styles.input}
                   placeholder="driver@smartitt.lk"
-                  placeholderTextColor="#849396"
+                  placeholderTextColor="#3A567F"
                   keyboardType="email-address"
                   autoCapitalize="none"
                   value={email}
@@ -1080,11 +1080,11 @@ export default function DriverRegisterScreen() {
           <View style={styles.fieldGroup}>
             <Text style={styles.fieldLabel}>EMERGENCY CONTACT NAME *</Text>
             <View style={styles.inputWrap}>
-              <Ionicons name="people" size={16} color="#849396" style={styles.inputIcon} />
+              <Ionicons name="people" size={16} color="#3A567F" style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
                 placeholder="e.g. Nayana Perera (Spouse / Guardian)"
-                placeholderTextColor="#849396"
+                placeholderTextColor="#3A567F"
                 value={emergencyContactName}
                 onChangeText={setEmergencyContactName}
               />
@@ -1094,11 +1094,11 @@ export default function DriverRegisterScreen() {
           <View style={styles.fieldGroup}>
             <Text style={styles.fieldLabel}>EMERGENCY PHONE NUMBER *</Text>
             <View style={styles.inputWrap}>
-              <Ionicons name="call" size={16} color="#849396" style={styles.inputIcon} />
+              <Ionicons name="call" size={16} color="#3A567F" style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
                 placeholder="e.g. 0719876543"
-                placeholderTextColor="#849396"
+                placeholderTextColor="#3A567F"
                 keyboardType="phone-pad"
                 value={emergencyContactNumber}
                 onChangeText={setEmergencyContactNumber}
@@ -1117,17 +1117,17 @@ export default function DriverRegisterScreen() {
           <View style={styles.fieldGroup}>
             <Text style={styles.fieldLabel}>PASSWORD *</Text>
             <View style={styles.inputWrap}>
-              <Ionicons name="key" size={16} color="#849396" style={styles.inputIcon} />
+              <Ionicons name="key" size={16} color="#3A567F" style={styles.inputIcon} />
               <TextInput
                 style={[styles.input, { flex: 1 }]}
                 placeholder="••••••••"
-                placeholderTextColor="#849396"
+                placeholderTextColor="#3A567F"
                 secureTextEntry={!showPassword}
                 value={password}
                 onChangeText={setPassword}
               />
               <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                <Ionicons name={showPassword ? 'eye-off' : 'eye'} size={18} color="#849396" />
+                <Ionicons name={showPassword ? 'eye-off' : 'eye'} size={18} color="#3A567F" />
               </TouchableOpacity>
             </View>
           </View>
@@ -1135,11 +1135,11 @@ export default function DriverRegisterScreen() {
           <View style={styles.fieldGroup}>
             <Text style={styles.fieldLabel}>CONFIRM PASSWORD *</Text>
             <View style={styles.inputWrap}>
-              <Ionicons name="key" size={16} color="#849396" style={styles.inputIcon} />
+              <Ionicons name="key" size={16} color="#3A567F" style={styles.inputIcon} />
               <TextInput
                 style={[styles.input, { flex: 1 }]}
                 placeholder="••••••••"
-                placeholderTextColor="#849396"
+                placeholderTextColor="#3A567F"
                 secureTextEntry={!showPassword}
                 value={confirmPassword}
                 onChangeText={setConfirmPassword}
@@ -1160,7 +1160,7 @@ export default function DriverRegisterScreen() {
                 <Ionicons
                   name={rule.ok ? 'checkmark-circle' : 'ellipse-outline'}
                   size={14}
-                  color={rule.ok ? '#173B70' : '#849396'}
+                  color={rule.ok ? '#173B70' : '#3A567F'}
                 />
                 <Text style={[styles.ruleText, rule.ok && styles.ruleTextOk]}>
                   {rule.label}
@@ -1654,7 +1654,7 @@ const styles = StyleSheet.create({
   brandSubtitle: {
     fontSize: 9,
     fontWeight: '700',
-    color: '#849396',
+    color: '#3A567F',
     letterSpacing: 0.8,
         marginTop: 2,
   },
@@ -1709,7 +1709,7 @@ const styles = StyleSheet.create({
   fieldLabel: {
     fontSize: 8,
     fontWeight: '800',
-    color: '#849396',
+    color: '#3A567F',
     letterSpacing: 0.8,
   },
   inputWrap: {
@@ -1746,7 +1746,7 @@ const styles = StyleSheet.create({
   },
   ruleText: {
     fontSize: 10,
-    color: '#849396',
+    color: '#3A567F',
       },
   ruleTextOk: {
     color: '#173B70',
@@ -1776,7 +1776,7 @@ const styles = StyleSheet.create({
   },
   backLinkText: {
     fontSize: 11,
-    color: '#849396',
+    color: '#3A567F',
   },
   backLinkBold: {
     color: '#173B70',
@@ -1909,7 +1909,7 @@ const styles = StyleSheet.create({
   operatorTitle: {
     fontSize: 9,
     fontWeight: '800',
-    color: '#849396',
+    color: '#3A567F',
     letterSpacing: 0.8,
     textTransform: 'uppercase',
   },
@@ -1953,7 +1953,7 @@ const styles = StyleSheet.create({
   idHighlightSuper: {
     fontSize: 8,
     fontWeight: '800',
-    color: '#849396',
+    color: '#3A567F',
     letterSpacing: 1,
     textAlign: 'center',
   },
@@ -2024,7 +2024,7 @@ const styles = StyleSheet.create({
   detailItemLabel: {
     fontSize: 7,
     fontWeight: '800',
-    color: '#849396',
+    color: '#3A567F',
     letterSpacing: 0.5,
   },
   detailItemValue: {
@@ -2059,7 +2059,7 @@ const styles = StyleSheet.create({
   vehicleProp: {
     fontSize: 8,
     fontWeight: '800',
-    color: '#849396',
+    color: '#3A567F',
     letterSpacing: 0.6,
   },
   vehicleVal: {
@@ -2098,7 +2098,7 @@ const styles = StyleSheet.create({
   credKey: {
     fontSize: 9,
     fontWeight: '800',
-    color: '#849396',
+    color: '#3A567F',
   },
   credValCyan: {
     fontSize: 12,
@@ -2220,7 +2220,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   cheBlockLabel: {
-    color: '#849396',
+    color: '#3A567F',
     fontSize: 9,
     fontWeight: '700',
     letterSpacing: 0.5,
@@ -2270,7 +2270,7 @@ const styles = StyleSheet.create({
     paddingTop: 4,
   },
   cheFooterNoticeText: {
-    color: '#849396',
+    color: '#3A567F',
     fontSize: 10,
     flex: 1,
   },
@@ -2292,7 +2292,7 @@ const styles = StyleSheet.create({
     lineHeight: 15,
   },
   fleetPickerLabel: {
-    color: '#849396',
+    color: '#3A567F',
     fontSize: 9,
     fontWeight: '800',
     letterSpacing: 0.6,
@@ -2345,7 +2345,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#173B70',
   },
   fleetChipCheBadgeText: {
-    color: '#849396',
+    color: '#3A567F',
     fontSize: 9,
     fontWeight: '800',
   },
@@ -2438,7 +2438,7 @@ const styles = StyleSheet.create({
   },
   recognizedHint: {
     fontSize: 10,
-    color: '#849396',
+    color: '#3A567F',
     marginTop: 3,
   },
   terminalGrid: {
@@ -2469,7 +2469,7 @@ const styles = StyleSheet.create({
   terminalCardCode: {
     fontSize: 11,
     fontWeight: '800',
-    color: '#849396',
+    color: '#3A567F',
     letterSpacing: 0.5,
   },
   terminalDetailBanner: {
@@ -2487,7 +2487,7 @@ const styles = StyleSheet.create({
   },
   terminalDetailDesc: {
     fontSize: 10,
-    color: '#849396',
+    color: '#3A567F',
     lineHeight: 14,
   },
 });

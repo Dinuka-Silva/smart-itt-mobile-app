@@ -612,7 +612,7 @@ export default function AdminLoginScreen() {
 
             {/* Search Bar */}
             <View style={styles.rosterSearchWrap}>
-              <Ionicons name="search" size={16} color="#78909c" />
+              <Ionicons name="search" size={16} color="#3A567F" />
               <TextInput
                 style={styles.rosterSearchInput}
                 placeholder="Search driver name, username (DRV-...), NIC, truck plate..."
@@ -623,7 +623,7 @@ export default function AdminLoginScreen() {
               />
               {rosterSearch.length > 0 && (
                 <TouchableOpacity onPress={() => setRosterSearch('')}>
-                  <Ionicons name="close-circle" size={16} color="#78909c" />
+                  <Ionicons name="close-circle" size={16} color="#3A567F" />
                 </TouchableOpacity>
               )}
             </View>

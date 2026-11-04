@@ -224,7 +224,7 @@ export default function ForgotPasswordScreen() {
                   style={styles.inputIcon}
                 />
                 <TextInput
-                  style={[styles.input, isVerified && { color: '#849396' }]}
+                  style={[styles.input, isVerified && { color: '#3A567F' }]}
                   placeholder="e.g. DRV-00001 or SUP-00001"
                   placeholderTextColor="#62757f"
                   value={username}
@@ -242,9 +242,9 @@ export default function ForgotPasswordScreen() {
             <View style={styles.fieldGroup}>
               <Text style={styles.fieldLabel}>REGISTRATION ID / NATIONAL ID (NIC) NO *</Text>
               <View style={[styles.inputWrap, isVerified && styles.inputWrapLocked]}>
-                <Ionicons name="card-outline" size={16} color="#849396" style={styles.inputIcon} />
+                <Ionicons name="card-outline" size={16} color="#3A567F" style={styles.inputIcon} />
                 <TextInput
-                  style={[styles.input, isVerified && { color: '#849396' }]}
+                  style={[styles.input, isVerified && { color: '#3A567F' }]}
                   placeholder="e.g. 199411223344 or 851234567V"
                   placeholderTextColor="#62757f"
                   value={idNumber}
@@ -339,7 +339,7 @@ export default function ForgotPasswordScreen() {
                       <Ionicons
                         name={showPassword ? 'eye-off-outline' : 'eye-outline'}
                         size={18}
-                        color="#849396"
+                        color="#3A567F"
                       />
                     </TouchableOpacity>
                   </View>
@@ -368,7 +368,7 @@ export default function ForgotPasswordScreen() {
                     <Ionicons
                       name={newPassword.length >= 6 ? 'checkmark' : 'ellipse-outline'}
                       size={11}
-                      color={newPassword.length >= 6 ? '#173B70' : '#849396'}
+                      color={newPassword.length >= 6 ? '#173B70' : '#3A567F'}
                     />
                     <Text
                       style={[
@@ -398,7 +398,7 @@ export default function ForgotPasswordScreen() {
                       color={
                         newPassword.length > 0 && newPassword === confirmPassword
                           ? '#173B70'
-                          : '#849396'
+                          : '#3A567F'
                       }
                     />
                     <Text

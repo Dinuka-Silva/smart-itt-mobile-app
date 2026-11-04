@@ -256,7 +256,7 @@ export default function AdminDashboardScreen() {
             onPress={() => setSignOutModalVisible(true)}
             activeOpacity={0.7}
           >
-            <Ionicons name="log-out-outline" size={18} color="#ff8a80" />
+            <Ionicons name="log-out-outline" size={18} color="#DC2626" />
           </TouchableOpacity>
         </View>
       </View>
@@ -532,7 +532,7 @@ export default function AdminDashboardScreen() {
 
                     <View style={styles.tripRouteRow}>
                       <Text style={styles.tripRouteTerm}>{trip.sourceTerminal}</Text>
-                      <Ionicons name="arrow-forward" size={14} color="#78909c" />
+                      <Ionicons name="arrow-forward" size={14} color="#3A567F" />
                       <Text style={styles.tripRouteTerm}>{getTripDischargeTerminal(trip)}</Text>
                       <Text style={styles.tripVesselText}>• {trip.vesselName || 'ITT Harbor Transfer'}</Text>
                     </View>
@@ -621,7 +621,7 @@ export default function AdminDashboardScreen() {
                       }}
                     >
                       <View style={{ flex: 1, alignItems: 'center' }}>
-                        <Text style={{ fontSize: 9, fontWeight: '800', color: '#78909c' }}>LOADED</Text>
+                        <Text style={{ fontSize: 9, fontWeight: '800', color: '#3A567F' }}>LOADED</Text>
                         <Text style={{ fontSize: 12, fontWeight: '800', color: '#1E293B', marginTop: 2 }}>
                           {tTiming.loadTime}
                         </Text>
@@ -631,7 +631,7 @@ export default function AdminDashboardScreen() {
                       </View>
                       <View style={{ width: 1, height: 26, backgroundColor: 'rgba(255, 255, 255, 0.1)', marginHorizontal: 4 }} />
                       <View style={{ flex: 1, alignItems: 'center' }}>
-                        <Text style={{ fontSize: 9, fontWeight: '800', color: '#78909c' }}>DISCHARGED</Text>
+                        <Text style={{ fontSize: 9, fontWeight: '800', color: '#3A567F' }}>DISCHARGED</Text>
                         <Text
                           style={{
                             fontSize: 12,
@@ -648,7 +648,7 @@ export default function AdminDashboardScreen() {
                       </View>
                       <View style={{ width: 1, height: 26, backgroundColor: 'rgba(255, 255, 255, 0.1)', marginHorizontal: 4 }} />
                       <View style={{ flex: 1, alignItems: 'center' }}>
-                        <Text style={{ fontSize: 9, fontWeight: '800', color: '#78909c' }}>TIME SPENT</Text>
+                        <Text style={{ fontSize: 9, fontWeight: '800', color: '#3A567F' }}>TIME SPENT</Text>
                         <Text style={{ fontSize: 12, fontWeight: '800', color: '#ffd54f', marginTop: 2 }}>
                           {tTiming.timeSpent}
                         </Text>
@@ -877,7 +877,7 @@ export default function AdminDashboardScreen() {
               onPress={() => setSignOutModalVisible(true)}
               activeOpacity={0.8}
             >
-              <Ionicons name="log-out-outline" size={16} color="#ffffff" style={{ marginRight: 6 }} />
+              <Ionicons name="log-out-outline" size={16} color="#B91C1C" style={{ marginRight: 6 }} />
               <Text style={styles.signOutCardBtnText}>Sign Out</Text>
             </TouchableOpacity>
           </View>
@@ -957,8 +957,9 @@ const styles = StyleSheet.create({
     borderColor: '#E2E8F0',
   },
   logoutBtn: {
-    backgroundColor: 'rgba(255, 82, 82, 0.15)',
-    borderColor: 'rgba(255, 82, 82, 0.3)',
+    backgroundColor: '#FEE2E2',
+    borderColor: '#FCA5A5',
+    borderWidth: 1.5,
   },
   sectionSwitcher: {
     flexDirection: 'row',
@@ -980,7 +981,7 @@ const styles = StyleSheet.create({
     borderColor: '#173B70',
   },
   switcherTabText: {
-    color: '#78909c',
+    color: '#3A567F',
     fontSize: 11,
     fontWeight: '700',
   },
@@ -1033,7 +1034,7 @@ const styles = StyleSheet.create({
     marginTop: 6,
   },
   sectionHeader: {
-    color: '#78909c',
+    color: '#3A567F',
     fontSize: 11,
     fontWeight: '800',
     letterSpacing: 0.8,
@@ -1064,7 +1065,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   kpiLabel: {
-    color: '#78909c',
+    color: '#3A567F',
     fontSize: 10,
     fontWeight: '800',
   },
@@ -1109,7 +1110,7 @@ const styles = StyleSheet.create({
   },
   fleetStatSub: {
     fontSize: 9,
-    color: '#78909c',
+    color: '#3A567F',
     marginTop: 2,
   },
   dividerVertical: {
@@ -1290,7 +1291,7 @@ const styles = StyleSheet.create({
     marginRight: 6,
   },
   tripVesselText: {
-    color: '#78909c',
+    color: '#3A567F',
     fontSize: 11,
     marginLeft: 6,
   },
@@ -1316,7 +1317,7 @@ const styles = StyleSheet.create({
   terminalPointLabel: {
     fontSize: 9,
     fontWeight: '800',
-    color: '#78909c',
+    color: '#3A567F',
   },
   terminalPointVal: {
     fontSize: 15,
@@ -1336,7 +1337,7 @@ const styles = StyleSheet.create({
   },
   tripDetailLabel: {
     fontSize: 11,
-    color: '#78909c',
+    color: '#3A567F',
     fontWeight: '600',
   },
   tripDetailVal: {
@@ -1414,7 +1415,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   compliancePass: {
-    color: '#78909c',
+    color: '#3A567F',
     fontSize: 11,
     marginTop: 2,
   },
@@ -1492,7 +1493,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   driverCode: {
-    color: '#78909c',
+    color: '#3A567F',
     fontSize: 11,
     marginTop: 2,
   },
@@ -1559,7 +1560,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   supervisorCode: {
-    color: '#78909c',
+    color: '#3A567F',
     fontSize: 11,
     marginTop: 2,
   },
@@ -1614,20 +1615,22 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   signOutCardSub: {
-    color: '#78909c',
+    color: '#3A567F',
     fontSize: 10,
     marginTop: 2,
   },
   signOutCardBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#173B70',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    backgroundColor: '#FEE2E2',
+    borderWidth: 1.5,
+    borderColor: '#FCA5A5',
+    paddingHorizontal: 14,
+    paddingVertical: 9,
     borderRadius: 8,
   },
   signOutCardBtnText: {
-    color: '#1E293B',
+    color: '#B91C1C',
     fontSize: 12,
     fontWeight: '800',
   },

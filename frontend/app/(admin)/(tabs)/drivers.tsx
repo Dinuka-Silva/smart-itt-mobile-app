@@ -361,7 +361,7 @@ export default function AdminDriversScreen() {
             onPress={() => setSignOutModalVisible(true)}
             activeOpacity={0.7}
           >
-            <Ionicons name="log-out-outline" size={18} color="#ff8a80" />
+            <Ionicons name="log-out-outline" size={18} color="#DC2626" />
           </TouchableOpacity>
         </View>
       </View>
@@ -404,7 +404,7 @@ export default function AdminDriversScreen() {
       {/* Search & Status Filter Bar */}
       <View style={styles.filterBar}>
         <View style={styles.searchWrap}>
-          <Ionicons name="search" size={16} color="#78909c" style={{ marginRight: 8 }} />
+          <Ionicons name="search" size={16} color="#3A567F" style={{ marginRight: 8 }} />
           <TextInput
             style={styles.searchInput}
             placeholder="Search code, name, phone, vehicle..."
@@ -414,7 +414,7 @@ export default function AdminDriversScreen() {
           />
           {search ? (
             <TouchableOpacity onPress={() => setSearch('')}>
-              <Ionicons name="close-circle" size={16} color="#78909c" />
+              <Ionicons name="close-circle" size={16} color="#3A567F" />
             </TouchableOpacity>
           ) : null}
         </View>
@@ -575,7 +575,7 @@ export default function AdminDriversScreen() {
 
                     <View style={styles.specBox}>
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
-                        <Ionicons name="call" size={10} color="#849396" />
+                        <Ionicons name="call" size={10} color="#3A567F" />
                         <Text style={styles.specKey}>MOBILE</Text>
                       </View>
                       <Text style={styles.specValMono}>{d.mobileNumber || '-'}</Text>
@@ -970,7 +970,7 @@ export default function AdminDriversScreen() {
               <Text style={{ color: '#173B70', fontSize: 11, fontWeight: '700', marginTop: 2 }}>
                 Code: {driverToReset?.driverCode} · NIC: {driverToReset?.nic}
               </Text>
-              <Text style={{ color: '#849396', fontSize: 10, marginTop: 2 }}>
+              <Text style={{ color: '#3A567F', fontSize: 10, marginTop: 2 }}>
                 Assigned Truck: {driverToReset?.vehicleNumber || 'UNASSIGNED'} ({driverToReset?.cheNumber || driverToReset?.chassisNumber || 'No CHE'})
               </Text>
             </View>
@@ -1121,13 +1121,13 @@ export default function AdminDriversScreen() {
                     <Ionicons
                       name={selectedVehicleObj ? "car-sport" : "car-sport-outline"}
                       size={20}
-                      color={selectedVehicleObj ? "#173B70" : "#78909c"}
+                      color={selectedVehicleObj ? "#173B70" : "#3A567F"}
                     />
                     <View style={{ flex: 1 }}>
                       <Text
                         style={[
                           styles.vehiclePickerTriggerText,
-                          selectedVehicleObj ? { color: '#1E293B' } : { color: '#78909c' },
+                          selectedVehicleObj ? { color: '#1E293B' } : { color: '#3A567F' },
                         ]}
                         numberOfLines={1}
                       >
@@ -1200,7 +1200,7 @@ export default function AdminDriversScreen() {
 
             {/* Search inside picker */}
             <View style={styles.pickerSearchWrap}>
-              <Ionicons name="search" size={16} color="#78909c" />
+              <Ionicons name="search" size={16} color="#3A567F" />
               <TextInput
                 style={styles.pickerSearchInput}
                 placeholder="Search LY No, SCK No, Operator..."
@@ -1210,7 +1210,7 @@ export default function AdminDriversScreen() {
               />
               {vehiclePickerSearch ? (
                 <TouchableOpacity onPress={() => setVehiclePickerSearch('')}>
-                  <Ionicons name="close-circle" size={16} color="#78909c" />
+                  <Ionicons name="close-circle" size={16} color="#3A567F" />
                 </TouchableOpacity>
               ) : null}
             </View>
@@ -1610,9 +1610,9 @@ const styles = StyleSheet.create({
   headerLogoutBtn: {
     padding: 8,
     borderRadius: 8,
-    backgroundColor: 'rgba(255, 82, 82, 0.12)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 82, 82, 0.25)',
+    backgroundColor: '#FEE2E2',
+    borderWidth: 1.5,
+    borderColor: '#FCA5A5',
   },
   hudContainer: {
     flexDirection: 'row',
@@ -1653,7 +1653,7 @@ const styles = StyleSheet.create({
   hudLabel: {
     fontSize: 9,
     fontWeight: '800',
-    color: '#78909c',
+    color: '#3A567F',
     letterSpacing: 0.4,
   },
   hudValue: {
@@ -1764,7 +1764,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   emptyCardText: {
-    color: '#78909c',
+    color: '#3A567F',
     fontSize: 13,
     marginTop: 8,
   },
@@ -1884,7 +1884,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   modalSectionLabel: {
-    color: '#78909c',
+    color: '#3A567F',
     fontSize: 11,
     fontWeight: '800',
     letterSpacing: 0.5,
@@ -2059,7 +2059,7 @@ const styles = StyleSheet.create({
   },
   vehicleSelectChe: {
     fontSize: 11,
-    color: '#78909c',
+    color: '#3A567F',
     marginTop: 3,
   },
   createInputLabel: {
@@ -2185,12 +2185,12 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   driverCode: {
-    color: '#78909c',
+    color: '#3A567F',
     fontSize: 10,
     fontWeight: '600',
   },
   driverEmpId: {
-    color: '#78909c',
+    color: '#3A567F',
     fontSize: 10,
     fontWeight: '600',
   },
@@ -2243,7 +2243,7 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   specKey: {
-    color: '#78909c',
+    color: '#3A567F',
     fontSize: 8.5,
     fontWeight: '700',
     letterSpacing: 0.3,

@@ -3,53 +3,53 @@ import { Platform } from 'react-native';
 export const Colors = {
   dark: {
     text: '#173B70',
-    textSecondary: '#3A567F',
-    textHint: '#5E799E',
+    textSecondary: '#24436E',
+    textHint: '#3A567F',
     background: '#FFFFFF',
     backgroundElement: '#FFFFFF',
     backgroundSelected: '#E8F1FA',
     backgroundSurfaceLowest: '#FFFFFF',
     backgroundSurfaceLow: '#F0F5FA',
-    backgroundSurfaceHighest: '#D0DEEB',
-    border: '#D0DEEB',
+    backgroundSurfaceHighest: '#CBD5E1',
+    border: '#CBD5E1',
     accent: '#173B70', // Primary Dark Navy Blue
     accentSoft: '#E8F1FA', // Soft Light Blue
-    // Status Chips (Two-Color variations)
+    // Status Chips
     statusApprovedBg: '#E8F1FA',
     statusApprovedText: '#173B70',
     statusPendingBg: '#F4F8FC',
     statusPendingText: '#173B70',
-    statusRejectedBg: '#F0F5FA',
-    statusRejectedText: '#173B70',
+    statusRejectedBg: '#FEE2E2',
+    statusRejectedText: '#B91C1C',
     success: '#173B70',
     warning: '#173B70',
-    danger: '#173B70',
-    dangerContainer: '#F0F5FA',
+    danger: '#DC2626',
+    dangerContainer: '#FEE2E2',
   },
   light: {
     text: '#173B70',
-    textSecondary: '#3A567F',
-    textHint: '#5E799E',
+    textSecondary: '#24436E',
+    textHint: '#3A567F',
     background: '#FFFFFF',
     backgroundElement: '#FFFFFF',
     backgroundSelected: '#E8F1FA',
     backgroundSurfaceLowest: '#FFFFFF',
     backgroundSurfaceLow: '#F0F5FA',
-    backgroundSurfaceHighest: '#D0DEEB',
-    border: '#D0DEEB',
+    backgroundSurfaceHighest: '#CBD5E1',
+    border: '#CBD5E1',
     accent: '#173B70', // Primary Dark Navy Blue
     accentSoft: '#E8F1FA', // Soft Light Blue
-    // Status Chips (Two-Color variations)
+    // Status Chips
     statusApprovedBg: '#E8F1FA',
     statusApprovedText: '#173B70',
     statusPendingBg: '#F4F8FC',
     statusPendingText: '#173B70',
-    statusRejectedBg: '#F0F5FA',
-    statusRejectedText: '#173B70',
+    statusRejectedBg: '#FEE2E2',
+    statusRejectedText: '#B91C1C',
     success: '#173B70',
     warning: '#173B70',
-    danger: '#173B70',
-    dangerContainer: '#F0F5FA',
+    danger: '#DC2626',
+    dangerContainer: '#FEE2E2',
   },
 } as const;
 

@@ -187,14 +187,14 @@ export default function AdminSupervisorsTab() {
             onPress={() => setSignOutModalVisible(true)}
             activeOpacity={0.7}
           >
-            <Ionicons name="log-out-outline" size={18} color="#ff8a80" />
+            <Ionicons name="log-out-outline" size={18} color="#DC2626" />
           </TouchableOpacity>
         </View>
       </View>
 
       {/* Search Bar */}
       <View style={styles.searchBar}>
-        <Ionicons name="search" size={16} color="#78909c" style={{ marginRight: 8 }} />
+        <Ionicons name="search" size={16} color="#3A567F" style={{ marginRight: 8 }} />
         <TextInput
           style={styles.searchInput}
           placeholder="Search name, employee ID, terminal..."
@@ -204,7 +204,7 @@ export default function AdminSupervisorsTab() {
         />
         {search ? (
           <TouchableOpacity onPress={() => setSearch('')}>
-            <Ionicons name="close-circle" size={16} color="#78909c" />
+            <Ionicons name="close-circle" size={16} color="#3A567F" />
           </TouchableOpacity>
         ) : null}
       </View>
@@ -602,9 +602,9 @@ const styles = StyleSheet.create({
   headerLogoutBtn: {
     padding: 8,
     borderRadius: 8,
-    backgroundColor: 'rgba(255, 82, 82, 0.12)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 82, 82, 0.25)',
+    backgroundColor: '#FEE2E2',
+    borderWidth: 1.5,
+    borderColor: '#FCA5A5',
   },
   searchBar: {
     flexDirection: 'row',
@@ -658,7 +658,7 @@ const styles = StyleSheet.create({
   },
   supId: {
     fontSize: 11,
-    color: '#78909c',
+    color: '#3A567F',
     marginTop: 2,
   },
   usernamePill: {

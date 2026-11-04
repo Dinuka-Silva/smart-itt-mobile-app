@@ -1064,8 +1064,9 @@ const styles = StyleSheet.create({
     borderColor: theme.accent,
   },
   termChipDisabled: {
-    opacity: 0.35,
+    opacity: 0.65,
     backgroundColor: theme.backgroundSurfaceLow,
+    borderColor: '#CBD5E1',
   },
   termChipText: {
     fontSize: 13,

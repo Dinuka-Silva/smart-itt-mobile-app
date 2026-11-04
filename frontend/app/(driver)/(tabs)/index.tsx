@@ -374,14 +374,14 @@ export default function DriverHomeDashboard() {
 
             {/* Logout Icon Button */}
             <TouchableOpacity
-              style={styles.iconBtn}
+              style={[styles.iconBtn, styles.headerLogoutBtn]}
               onPress={() => {
                 logout();
                 router.replace('/(auth)/login');
               }}
               activeOpacity={0.8}
             >
-              <Ionicons name="log-out-outline" size={18} color={theme.danger} />
+              <Ionicons name="log-out-outline" size={18} color="#DC2626" />
             </TouchableOpacity>
           </View>
         </View>
@@ -1160,6 +1160,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderWidth: 1,
     borderColor: theme.border,
+  },
+  headerLogoutBtn: {
+    backgroundColor: '#FEE2E2',
+    borderWidth: 1.5,
+    borderColor: '#FCA5A5',
   },
 
   // ─── SUSPENSION BANNER ───

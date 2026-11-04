@@ -373,7 +373,7 @@ export default function DriverJobQueue() {
                               {timing.isCompleted ? 'TRIP COMPLETED' : timing.isPending ? 'DISCHARGED' : 'EST. ARRIVAL'}
                             </Text>
                           </View>
-                          <Text style={[styles.timingDateVal, !timing.isCompleted && !timing.isPending && { color: '#849396' }]}>
+                          <Text style={[styles.timingDateVal, !timing.isCompleted && !timing.isPending && { color: '#3A567F' }]}>
                             {timing.endDate}
                           </Text>
                           <Text style={[styles.timingTimeVal, { color: timing.statusColor }]}>
@@ -501,7 +501,7 @@ export default function DriverJobQueue() {
 
                         <View style={{ flexDirection: 'row', gap: 6 }}>
                           <View style={{ flex: 1, backgroundColor: '#0d1625', borderRadius: 6, borderWidth: 1, borderColor: '#242a34', padding: 6 }}>
-                            <Text style={{ fontSize: 8, fontWeight: '800', color: '#849396' }}>BAY / SLOT</Text>
+                            <Text style={{ fontSize: 8, fontWeight: '800', color: '#3A567F' }}>BAY / SLOT</Text>
                             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
                               <Ionicons name="location" size={11} color="#173B70" />
                               <Text style={{ fontSize: 9.5, fontWeight: '800', color: '#173B70' }} numberOfLines={1}>
@@ -518,7 +518,7 @@ export default function DriverJobQueue() {
                             borderColor: trip.sealStatus?.includes('DAMAGED') ? 'rgba(255, 82, 82, 0.35)' : 'rgba(34, 239, 126, 0.35)',
                             padding: 6,
                           }}>
-                            <Text style={{ fontSize: 8, fontWeight: '800', color: '#849396' }}>SEAL STATUS</Text>
+                            <Text style={{ fontSize: 8, fontWeight: '800', color: '#3A567F' }}>SEAL STATUS</Text>
                             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
                               <Ionicons
                                 name={trip.sealStatus?.includes('DAMAGED') ? 'warning' : 'shield-checkmark'}
@@ -539,7 +539,7 @@ export default function DriverJobQueue() {
                             borderColor: trip.damageStatus === 'DAMAGED' ? 'rgba(255, 82, 82, 0.35)' : 'rgba(34, 239, 126, 0.35)',
                             padding: 6,
                           }}>
-                            <Text style={{ fontSize: 8, fontWeight: '800', color: '#849396' }}>CARGO</Text>
+                            <Text style={{ fontSize: 8, fontWeight: '800', color: '#3A567F' }}>CARGO</Text>
                             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
                               <Ionicons
                                 name={trip.damageStatus === 'DAMAGED' ? 'alert-circle' : 'checkmark-circle'}
@@ -571,8 +571,8 @@ export default function DriverJobQueue() {
                         </View>
 
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, paddingTop: 2 }}>
-                          <Ionicons name="lock-closed" size={10} color="#849396" />
-                          <Text style={{ fontSize: 8.5, color: '#849396' }}>
+                          <Ionicons name="lock-closed" size={10} color="#3A567F" />
+                          <Text style={{ fontSize: 8.5, color: '#3A567F' }}>
                             SLPA Digital Handover Audit • Transmitted to Port Supervisor
                           </Text>
                         </View>
@@ -844,7 +844,7 @@ const styles = StyleSheet.create({
   },
   jobTimeText: {
     fontSize: 10,
-    color: '#849396',
+    color: '#3A567F',
       },
   vesselText: {
     fontSize: 14,
@@ -866,7 +866,7 @@ const styles = StyleSheet.create({
   termLabel: {
     fontSize: 8,
     fontWeight: '700',
-    color: '#849396',
+    color: '#3A567F',
     letterSpacing: 0.5,
   },
   termCode: {
@@ -912,7 +912,7 @@ const styles = StyleSheet.create({
   unloadLabel: {
     fontSize: 8,
     fontWeight: '800',
-    color: '#849396',
+    color: '#3A567F',
     letterSpacing: 0.5,
   },
   termChoice: {
@@ -985,7 +985,7 @@ const styles = StyleSheet.create({
   approvedNoticeSub: {
     fontSize: 11,
     fontWeight: '500',
-    color: '#849396',
+    color: '#3A567F',
   },
   arrivedNoticeBox: {
     flexDirection: 'row',
@@ -1022,7 +1022,7 @@ const styles = StyleSheet.create({
   completedNoticeSub: {
     fontSize: 11,
     fontWeight: '600',
-    color: '#849396',
+    color: '#3A567F',
   },
 
   // ─── TRIP TIMING DETAILS STYLES ───

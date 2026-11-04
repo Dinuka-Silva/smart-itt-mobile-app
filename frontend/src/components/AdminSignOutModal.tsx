@@ -145,7 +145,7 @@ const styles = StyleSheet.create({
   },
   message: {
     fontSize: 13,
-    color: '#64748B',
+    color: '#3A567F',
     textAlign: 'center',
     lineHeight: 19,
     marginBottom: 20,
@@ -202,7 +202,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.2,
   },
   switchAccountSubtitle: {
-    color: '#64748B',
+    color: '#3A567F',
     fontSize: 11,
     marginTop: 2,
   },
@@ -213,22 +213,20 @@ const styles = StyleSheet.create({
     letterSpacing: 0.2,
   },
   signOutSubtitle: {
-    color: '#64748B',
+    color: '#3A567F',
     fontSize: 11,
     marginTop: 2,
   },
   cancelBtn: {
     paddingVertical: 12,
     borderRadius: 10,
-    backgroundColor: '#F8FAFC',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
+    backgroundColor: '#F0F5FA', borderWidth: 1.5, borderColor: '#CBD5E1',
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 4,
   },
   cancelText: {
-    color: '#64748B',
+    color: '#173B70',
     fontWeight: '700',
     fontSize: 13,
   },

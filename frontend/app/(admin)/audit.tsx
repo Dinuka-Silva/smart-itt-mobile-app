@@ -315,7 +315,7 @@ export default function AdminAuditScreen() {
 
       {/* ─── SEARCH BAR ─── */}
       <View style={styles.searchBarWrap}>
-        <Ionicons name="search" size={16} color="#849396" style={{ marginRight: 8 }} />
+        <Ionicons name="search" size={16} color="#3A567F" style={{ marginRight: 8 }} />
         <TextInput
           style={styles.searchInput}
           placeholder="Search by User, Driver Code (DRV-00001), SUP, Action..."
@@ -327,7 +327,7 @@ export default function AdminAuditScreen() {
         />
         {searchQuery.length > 0 && (
           <TouchableOpacity onPress={() => setSearchQuery('')} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-            <Ionicons name="close-circle" size={16} color="#849396" />
+            <Ionicons name="close-circle" size={16} color="#3A567F" />
           </TouchableOpacity>
         )}
       </View>
@@ -429,7 +429,7 @@ export default function AdminAuditScreen() {
                   {/* Bottom Metadata Footer */}
                   <View style={styles.cardFooterRow}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
-                      <Ionicons name="person-circle-outline" size={13} color="#849396" />
+                      <Ionicons name="person-circle-outline" size={13} color="#3A567F" />
                       <Text style={styles.actorText}>
                         User:{' '}
                         <Text style={{ color: '#1E293B', fontWeight: '700' }}>
@@ -489,7 +489,7 @@ const styles = StyleSheet.create({
   },
   headerSubtitle: {
     fontSize: 10.5,
-    color: '#849396',
+    color: '#3A567F',
     marginTop: 2,
     fontWeight: '600',
   },
@@ -533,7 +533,7 @@ const styles = StyleSheet.create({
   kpiLabel: {
     fontSize: 8.5,
     fontWeight: '800',
-    color: '#849396',
+    color: '#3A567F',
     letterSpacing: 0.5,
   },
   kpiValue: {
@@ -585,7 +585,7 @@ const styles = StyleSheet.create({
     borderColor: '#173B70',
   },
   filterPillText: {
-    color: '#849396',
+    color: '#3A567F',
     fontSize: 10.5,
     fontWeight: '800',
     letterSpacing: 0.4,
@@ -628,7 +628,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   emptyCardText: {
-    color: '#849396',
+    color: '#3A567F',
     fontSize: 11.5,
     marginTop: 6,
     textAlign: 'center',
@@ -677,7 +677,7 @@ const styles = StyleSheet.create({
   },
   timeText: {
     fontSize: 10,
-    color: '#849396',
+    color: '#3A567F',
     fontWeight: '600',
   },
   descText: {
@@ -698,7 +698,7 @@ const styles = StyleSheet.create({
   },
   actorText: {
     fontSize: 10.5,
-    color: '#849396',
+    color: '#3A567F',
   },
   entityIdText: {
     fontSize: 10,

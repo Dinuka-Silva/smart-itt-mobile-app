@@ -717,11 +717,11 @@ export default function SupervisorMissionDispatcher() {
 
           {/* Search bar */}
           <View style={styles.searchBarWrap}>
-            <Ionicons name="search" size={16} color="#849396" style={{ marginRight: 8 }} />
+            <Ionicons name="search" size={16} color="#3A567F" style={{ marginRight: 8 }} />
             <TextInput
               style={styles.searchInput}
               placeholder="Search Trip ID, Container, Vessel, Truck, Driver..."
-              placeholderTextColor="#849396"
+              placeholderTextColor="#3A567F"
               value={searchQuery}
               onChangeText={setSearchQuery}
               autoCapitalize="none"
@@ -729,7 +729,7 @@ export default function SupervisorMissionDispatcher() {
             />
             {searchQuery.length > 0 && (
               <TouchableOpacity onPress={() => setSearchQuery('')}>
-                <Ionicons name="close-circle" size={16} color="#849396" />
+                <Ionicons name="close-circle" size={16} color="#3A567F" />
               </TouchableOpacity>
             )}
           </View>
@@ -917,7 +917,7 @@ export default function SupervisorMissionDispatcher() {
               <ActivityIndicator size="large" color="#173B70" style={{ marginVertical: 20 }} />
             ) : tripsByDate.length === 0 ? (
               <View style={styles.emptyPendingCard}>
-                <Ionicons name="file-tray-outline" size={28} color="#849396" />
+                <Ionicons name="file-tray-outline" size={28} color="#3A567F" />
                 <Text style={styles.emptyPendingText}>NO MATCHING TRIPS</Text>
                 <Text style={styles.emptyPendingSub}>
                   No active or completed inter-terminal moves found for this filter criteria.
@@ -1047,7 +1047,7 @@ export default function SupervisorMissionDispatcher() {
                                       {timing.isCompleted ? 'COMPLETED DATE & TIME' : timing.isPending ? 'DISCHARGED' : 'CURRENT STATUS'}
                                     </Text>
                                   </View>
-                                  <Text style={[styles.monTimingDate, !timing.isCompleted && !timing.isPending && { color: '#849396' }]}>
+                                  <Text style={[styles.monTimingDate, !timing.isCompleted && !timing.isPending && { color: '#3A567F' }]}>
                                     {timing.endDate}
                                   </Text>
                                   <Text style={[styles.monTimingTime, { color: timing.statusColor }]}>
@@ -1143,7 +1143,7 @@ export default function SupervisorMissionDispatcher() {
 
                               <View style={{ flexDirection: 'row', gap: 6 }}>
                                 <View style={{ flex: 1, backgroundColor: '#0f1726', borderRadius: 6, borderWidth: 1, borderColor: '#E2E8F0', padding: 6 }}>
-                                  <Text style={{ fontSize: 8, fontWeight: '800', color: '#849396' }}>BAY / BERTH</Text>
+                                  <Text style={{ fontSize: 8, fontWeight: '800', color: '#3A567F' }}>BAY / BERTH</Text>
                                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
                                     <Ionicons name="location" size={11} color="#173B70" />
                                     <Text style={{ fontSize: 9.5, fontWeight: '800', color: '#173B70' }} numberOfLines={1}>
@@ -1160,7 +1160,7 @@ export default function SupervisorMissionDispatcher() {
                                   borderColor: t.sealStatus?.includes('DAMAGED') ? 'rgba(255, 82, 82, 0.35)' : 'rgba(34, 239, 126, 0.35)',
                                   padding: 6,
                                 }}>
-                                  <Text style={{ fontSize: 8, fontWeight: '800', color: '#849396' }}>SEAL STATUS</Text>
+                                  <Text style={{ fontSize: 8, fontWeight: '800', color: '#3A567F' }}>SEAL STATUS</Text>
                                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
                                     <Ionicons
                                       name={t.sealStatus?.includes('DAMAGED') ? 'warning' : 'shield-checkmark'}
@@ -1181,7 +1181,7 @@ export default function SupervisorMissionDispatcher() {
                                   borderColor: t.damageStatus === 'DAMAGED' ? 'rgba(255, 82, 82, 0.35)' : 'rgba(34, 239, 126, 0.35)',
                                   padding: 6,
                                 }}>
-                                  <Text style={{ fontSize: 8, fontWeight: '800', color: '#849396' }}>CARGO</Text>
+                                  <Text style={{ fontSize: 8, fontWeight: '800', color: '#3A567F' }}>CARGO</Text>
                                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
                                     <Ionicons
                                       name={t.damageStatus === 'DAMAGED' ? 'alert-circle' : 'checkmark-circle'}
@@ -1261,7 +1261,7 @@ export default function SupervisorMissionDispatcher() {
                 <Text style={styles.modalTitle}>REJECT TRIP SUBMISSION</Text>
               </View>
               <TouchableOpacity onPress={() => setRejectModalVisible(false)}>
-                <Ionicons name="close" size={22} color="#849396" />
+                <Ionicons name="close" size={22} color="#3A567F" />
               </TouchableOpacity>
             </View>
 
@@ -1275,7 +1275,7 @@ export default function SupervisorMissionDispatcher() {
             <TextInput
               style={styles.rejectionInput}
               placeholder="e.g. Container seal mismatch, incorrect destination terminal..."
-              placeholderTextColor="#849396"
+              placeholderTextColor="#3A567F"
               value={rejectionReason}
               onChangeText={setRejectionReason}
               multiline
@@ -1315,7 +1315,7 @@ export default function SupervisorMissionDispatcher() {
                 onPress={() => setDateRangeModalVisible(false)}
                 hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               >
-                <Ionicons name="close" size={22} color="#849396" />
+                <Ionicons name="close" size={22} color="#3A567F" />
               </TouchableOpacity>
             </View>
 
@@ -1368,7 +1368,7 @@ export default function SupervisorMissionDispatcher() {
                 theme={{
                   backgroundColor: '#FFFFFF',
                   calendarBackground: '#FFFFFF',
-                  textSectionTitleColor: '#849396',
+                  textSectionTitleColor: '#3A567F',
                   selectedDayBackgroundColor: '#173B70',
                   selectedDayTextColor: '#F8FAFC',
                   todayTextColor: '#173B70',
@@ -1396,7 +1396,7 @@ export default function SupervisorMissionDispatcher() {
                   setDateRangeEnd(null);
                 }}
               >
-                <Ionicons name="refresh" size={14} color="#849396" />
+                <Ionicons name="refresh" size={14} color="#3A567F" />
                 <Text style={styles.calendarResetBtnText}>CLEAR DATES</Text>
               </TouchableOpacity>
 
@@ -1427,7 +1427,7 @@ export default function SupervisorMissionDispatcher() {
                 <Text style={styles.modalTitle}>CONTAINER PHOTO VERIFICATION</Text>
               </View>
               <TouchableOpacity onPress={() => setPhotoModalVisible(false)}>
-                <Ionicons name="close" size={22} color="#849396" />
+                <Ionicons name="close" size={22} color="#3A567F" />
               </TouchableOpacity>
             </View>
 
@@ -1595,7 +1595,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   dateText: {
-    color: '#849396',
+    color: '#3A567F',
     fontSize: 9,
     fontWeight: '700',
   },
@@ -1644,7 +1644,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   metricLabel: {
-    color: '#849396',
+    color: '#3A567F',
     fontSize: 8,
     fontWeight: '800',
     letterSpacing: 0.5,
@@ -1655,7 +1655,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   metricSub: {
-    color: '#849396',
+    color: '#3A567F',
     fontSize: 8,
   },
 
@@ -1703,7 +1703,7 @@ const styles = StyleSheet.create({
   filterGroupLabel: {
     fontSize: 9,
     fontWeight: '800',
-    color: '#849396',
+    color: '#3A567F',
     letterSpacing: 0.5,
     marginBottom: 6,
   },
@@ -1727,7 +1727,7 @@ const styles = StyleSheet.create({
     borderColor: '#173B70',
   },
   filterChipText: {
-    color: '#849396',
+    color: '#3A567F',
     fontSize: 9,
     fontWeight: '800',
   },
@@ -1962,7 +1962,7 @@ const styles = StyleSheet.create({
     color: '#173B70',
   },
   monTime: {
-    color: '#849396',
+    color: '#3A567F',
     fontSize: 9,
   },
   monSpecsRow: {
@@ -1971,7 +1971,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   monSpecItem: {
-    color: '#849396',
+    color: '#3A567F',
     fontSize: 9,
   },
   monSpecBold: {
@@ -2003,7 +2003,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   emptyPendingSub: {
-    color: '#849396',
+    color: '#3A567F',
     fontSize: 9,
     textAlign: 'center',
   },
@@ -2211,7 +2211,7 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   rangeDateLabel: {
-    color: '#849396',
+    color: '#3A567F',
     fontSize: 9,
     fontWeight: '800',
     letterSpacing: 0.6,
@@ -2245,7 +2245,7 @@ const styles = StyleSheet.create({
     borderColor: '#233750',
   },
   calendarResetBtnText: {
-    color: '#849396',
+    color: '#3A567F',
     fontSize: 11,
     fontWeight: '800',
     letterSpacing: 0.5,

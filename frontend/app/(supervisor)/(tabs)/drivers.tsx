@@ -419,11 +419,11 @@ export default function SupervisorDrivers() {
 
           {/* Search bar */}
           <View style={styles.searchBarWrap}>
-            <Ionicons name="search" size={16} color="#849396" style={{ marginRight: 8 }} />
+            <Ionicons name="search" size={16} color="#3A567F" style={{ marginRight: 8 }} />
             <TextInput
               style={styles.searchInput}
               placeholder="Search by driver name, code, NIC, license, vehicle..."
-              placeholderTextColor="#849396"
+              placeholderTextColor="#3A567F"
               value={searchQuery}
               onChangeText={setSearchQuery}
               autoCapitalize="none"
@@ -431,7 +431,7 @@ export default function SupervisorDrivers() {
             />
             {searchQuery.length > 0 && (
               <TouchableOpacity onPress={() => setSearchQuery('')}>
-                <Ionicons name="close-circle" size={16} color="#849396" />
+                <Ionicons name="close-circle" size={16} color="#3A567F" />
               </TouchableOpacity>
             )}
           </View>
@@ -443,7 +443,7 @@ export default function SupervisorDrivers() {
             ) : filteredDrivers.length === 0 ? (
               searchQuery.trim() ? (
                 <View style={styles.emptyCard}>
-                  <Ionicons name="search" size={28} color="#849396" />
+                  <Ionicons name="search" size={28} color="#3A567F" />
                   <Text style={styles.emptyTitle}>NO OPERATORS FOUND</Text>
                   <Text style={styles.emptySub}>No drivers matched your search filter.</Text>
                 </View>
@@ -578,7 +578,7 @@ export default function SupervisorDrivers() {
 
                       <View style={styles.specBox}>
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
-                          <Ionicons name="call" size={10} color="#849396" />
+                          <Ionicons name="call" size={10} color="#3A567F" />
                           <Text style={styles.specKey}>MOBILE</Text>
                         </View>
                         <Text style={styles.specValMono}>{drv.mobileNumber || '+94 77 123 4567'}</Text>
@@ -666,7 +666,7 @@ export default function SupervisorDrivers() {
                     {/* Footer Row: Actions */}
                     <View style={styles.cardFooterRow}>
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, flex: 1 }}>
-                        <Ionicons name="location" size={12} color="#849396" />
+                        <Ionicons name="location" size={12} color="#3A567F" />
                         <Text style={styles.addressSnippet} numberOfLines={1}>
                           {drv.address || 'Colombo Port Facility'}
                         </Text>
@@ -930,21 +930,21 @@ export default function SupervisorDrivers() {
                     <View style={styles.dossierList}>
                       <View style={styles.dossierRow}>
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                          <Ionicons name="call-outline" size={14} color="#849396" />
+                          <Ionicons name="call-outline" size={14} color="#3A567F" />
                           <Text style={styles.dossierRowKey}>Mobile Phone:</Text>
                         </View>
                         <Text style={[styles.dossierRowVal, styles.monoText]}>{selectedDriver.mobileNumber || '—'}</Text>
                       </View>
                       <View style={styles.dossierRow}>
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                          <Ionicons name="mail-outline" size={14} color="#849396" />
+                          <Ionicons name="mail-outline" size={14} color="#3A567F" />
                           <Text style={styles.dossierRowKey}>Email Address:</Text>
                         </View>
                         <Text style={styles.dossierRowVal}>{selectedDriver.email || '—'}</Text>
                       </View>
                       <View style={[styles.dossierRow, { borderBottomWidth: 0 }]}>
                         <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 6 }}>
-                          <Ionicons name="location-outline" size={14} color="#849396" style={{ marginTop: 2 }} />
+                          <Ionicons name="location-outline" size={14} color="#3A567F" style={{ marginTop: 2 }} />
                           <Text style={styles.dossierRowKey}>Residential Address:</Text>
                         </View>
                         <Text style={[styles.dossierRowVal, { flex: 1, textAlign: 'right' }]}>
@@ -1002,7 +1002,7 @@ export default function SupervisorDrivers() {
                         <Ionicons name="person-circle" size={20} color="#173B70" />
                       </View>
                       <View style={{ flex: 1 }}>
-                        <Text style={{ fontSize: 10, fontWeight: '700', color: '#849396', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 2 }}>
+                        <Text style={{ fontSize: 10, fontWeight: '700', color: '#3A567F', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 2 }}>
                           App Login Username
                         </Text>
                         <Text style={{ fontSize: 18, fontWeight: '900', color: '#173B70', letterSpacing: 1.5, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace' }}>
@@ -1137,7 +1137,7 @@ export default function SupervisorDrivers() {
                 value={editFullName}
                 onChangeText={setEditFullName}
                 placeholder="Full Name"
-                placeholderTextColor="#849396"
+                placeholderTextColor="#3A567F"
               />
 
               <View style={{ flexDirection: (isSmallMobile || width < 420) ? 'column' : 'row', gap: 10 }}>
@@ -1148,7 +1148,7 @@ export default function SupervisorDrivers() {
                     value={editMobile}
                     onChangeText={setEditMobile}
                     placeholder="+94 77 XXXXXXX"
-                    placeholderTextColor="#849396"
+                    placeholderTextColor="#3A567F"
                   />
                 </View>
                 <View style={{ flex: 1 }}>
@@ -1158,7 +1158,7 @@ export default function SupervisorDrivers() {
                     value={editEmail}
                     onChangeText={setEditEmail}
                     placeholder="driver@scklogistics.lk"
-                    placeholderTextColor="#849396"
+                    placeholderTextColor="#3A567F"
                     autoCapitalize="none"
                   />
                 </View>
@@ -1172,7 +1172,7 @@ export default function SupervisorDrivers() {
                     value={editNic}
                     onChangeText={setEditNic}
                     placeholder="1985XXXXXXV"
-                    placeholderTextColor="#849396"
+                    placeholderTextColor="#3A567F"
                     autoCapitalize="characters"
                   />
                 </View>
@@ -1183,7 +1183,7 @@ export default function SupervisorDrivers() {
                     value={editEmpId}
                     onChangeText={setEditEmpId}
                     placeholder="SCK-EMP-1001"
-                    placeholderTextColor="#849396"
+                    placeholderTextColor="#3A567F"
                     autoCapitalize="characters"
                   />
                 </View>
@@ -1195,7 +1195,7 @@ export default function SupervisorDrivers() {
                 value={editAddress}
                 onChangeText={setEditAddress}
                 placeholder="Residential Address"
-                placeholderTextColor="#849396"
+                placeholderTextColor="#3A567F"
               />
 
               <View style={{ flexDirection: (isSmallMobile || width < 420) ? 'column' : 'row', gap: 10 }}>
@@ -1206,7 +1206,7 @@ export default function SupervisorDrivers() {
                     value={editLicense}
                     onChangeText={setEditLicense}
                     placeholder="B8765400"
-                    placeholderTextColor="#849396"
+                    placeholderTextColor="#3A567F"
                     autoCapitalize="characters"
                   />
                 </View>
@@ -1217,7 +1217,7 @@ export default function SupervisorDrivers() {
                     value={editLicenseExpiry}
                     onChangeText={setEditLicenseExpiry}
                     placeholder="YYYY-MM-DD"
-                    placeholderTextColor="#849396"
+                    placeholderTextColor="#3A567F"
                   />
                 </View>
               </View>
@@ -1230,7 +1230,7 @@ export default function SupervisorDrivers() {
                     value={editDriverPortPass}
                     onChangeText={setEditDriverPortPass}
                     placeholder="YYYY-MM-DD"
-                    placeholderTextColor="#849396"
+                    placeholderTextColor="#3A567F"
                   />
                 </View>
                 <View style={{ flex: 1 }}>
@@ -1240,7 +1240,7 @@ export default function SupervisorDrivers() {
                     value={editVehiclePortPass}
                     onChangeText={setEditVehiclePortPass}
                     placeholder="YYYY-MM-DD"
-                    placeholderTextColor="#849396"
+                    placeholderTextColor="#3A567F"
                   />
                 </View>
               </View>
@@ -1253,7 +1253,7 @@ export default function SupervisorDrivers() {
                     value={editVehicleNo}
                     onChangeText={setEditVehicleNo}
                     placeholder="LY-6439"
-                    placeholderTextColor="#849396"
+                    placeholderTextColor="#3A567F"
                     autoCapitalize="characters"
                   />
                 </View>
@@ -1264,7 +1264,7 @@ export default function SupervisorDrivers() {
                     value={editCheNo}
                     onChangeText={setEditCheNo}
                     placeholder="SCK 100"
-                    placeholderTextColor="#849396"
+                    placeholderTextColor="#3A567F"
                     autoCapitalize="characters"
                   />
                 </View>
@@ -1276,7 +1276,7 @@ export default function SupervisorDrivers() {
                 value={editDob}
                 onChangeText={setEditDob}
                 placeholder="YYYY-MM-DD"
-                placeholderTextColor="#849396"
+                placeholderTextColor="#3A567F"
               />
 
               <View style={{ flexDirection: (isSmallMobile || width < 420) ? 'column' : 'row', gap: 10 }}>
@@ -1287,7 +1287,7 @@ export default function SupervisorDrivers() {
                     value={editEmergencyName}
                     onChangeText={setEditEmergencyName}
                     placeholder="Contact Name"
-                    placeholderTextColor="#849396"
+                    placeholderTextColor="#3A567F"
                   />
                 </View>
                 <View style={{ flex: 1 }}>
@@ -1297,7 +1297,7 @@ export default function SupervisorDrivers() {
                     value={editEmergencyPhone}
                     onChangeText={setEditEmergencyPhone}
                     placeholder="+94 71 XXXXXXX"
-                    placeholderTextColor="#849396"
+                    placeholderTextColor="#3A567F"
                   />
                 </View>
               </View>
@@ -1398,7 +1398,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   dateText: {
-    color: '#849396',
+    color: '#3A567F',
     fontSize: 9,
     fontWeight: '700',
   },
@@ -1504,11 +1504,11 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   driverCode: {
-    color: '#849396',
+    color: '#3A567F',
     fontSize: 10,
   },
   driverEmpId: {
-    color: '#849396',
+    color: '#3A567F',
     fontSize: 10,
   },
   statusBadge: {
@@ -1560,7 +1560,7 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   specKey: {
-    color: '#849396',
+    color: '#3A567F',
     fontSize: 8,
     fontWeight: '800',
     letterSpacing: 0.5,
@@ -1594,7 +1594,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   monthlyMissionTitle: {
-    color: '#849396',
+    color: '#3A567F',
     fontSize: 9,
     fontWeight: '800',
     letterSpacing: 0.5,
@@ -1627,7 +1627,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   monthlyMissionPct: {
-    color: '#849396',
+    color: '#3A567F',
     fontSize: 9,
     fontWeight: '600',
   },
@@ -1656,7 +1656,7 @@ const styles = StyleSheet.create({
     borderTopColor: '#1a222f',
   },
   addressSnippet: {
-    color: '#849396',
+    color: '#3A567F',
     fontSize: 9,
     maxWidth: 180,
   },
@@ -1691,7 +1691,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   emptySub: {
-    color: '#849396',
+    color: '#3A567F',
     fontSize: 9,
   },
 
@@ -1730,7 +1730,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.6,
   },
   modalHeaderSubtitle: {
-    color: '#849396',
+    color: '#3A567F',
     fontSize: 9,
     fontWeight: '600',
   },
@@ -1814,7 +1814,7 @@ const styles = StyleSheet.create({
     fontWeight: '900',
   },
   heroDriverCode: {
-    color: '#849396',
+    color: '#3A567F',
     fontSize: 11,
     marginTop: 2,
   },
@@ -1854,7 +1854,7 @@ const styles = StyleSheet.create({
     gap: 3,
   },
   dossierItemLabel: {
-    color: '#849396',
+    color: '#3A567F',
     fontSize: 8,
     fontWeight: '800',
     letterSpacing: 0.5,
@@ -1930,7 +1930,7 @@ const styles = StyleSheet.create({
     borderBottomColor: '#141d2a',
   },
   dossierRowKey: {
-    color: '#849396',
+    color: '#3A567F',
     fontSize: 10,
     fontWeight: '700',
   },
@@ -1982,7 +1982,7 @@ const styles = StyleSheet.create({
   editFieldLabel: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#849396',
+    color: '#3A567F',
     marginBottom: 4,
     marginTop: 8,
     textTransform: 'uppercase',
@@ -2009,7 +2009,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   editCancelBtnText: {
-    color: '#849396',
+    color: '#3A567F',
     fontSize: 12,
     fontWeight: '700',
   },

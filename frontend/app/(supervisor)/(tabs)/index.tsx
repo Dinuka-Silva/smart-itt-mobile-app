@@ -379,7 +379,7 @@ export default function SupervisorHomeDashboard() {
               }}
               accessibilityLabel="Log out"
             >
-              <Ionicons name="log-out-outline" size={18} color="#173B70" />
+              <Ionicons name="log-out-outline" size={18} color="#DC2626" />
             </TouchableOpacity>
           </View>
         </View>
@@ -1430,9 +1430,9 @@ const styles = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: 8,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#FEE2E2',
     borderWidth: 1.5,
-    borderColor: '#173B70',
+    borderColor: '#FCA5A5',
     alignItems: 'center',
     justifyContent: 'center',
   },

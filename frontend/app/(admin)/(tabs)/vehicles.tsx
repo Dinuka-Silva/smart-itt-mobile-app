@@ -245,7 +245,7 @@ export default function AdminVehiclesScreen() {
             onPress={() => setSignOutModalVisible(true)}
             activeOpacity={0.7}
           >
-            <Ionicons name="log-out-outline" size={18} color="#ff8a80" />
+            <Ionicons name="log-out-outline" size={18} color="#DC2626" />
           </TouchableOpacity>
         </View>
       </View>
@@ -288,7 +288,7 @@ export default function AdminVehiclesScreen() {
       {/* Filter Bar with Dual Segmented Controls */}
       <View style={styles.filterBar}>
         <View style={styles.searchWrap}>
-          <Ionicons name="search" size={16} color="#78909c" style={{ marginRight: 8 }} />
+          <Ionicons name="search" size={16} color="#3A567F" style={{ marginRight: 8 }} />
           <TextInput
             style={styles.searchInput}
             placeholder="Search LY-No, CHE No, Operator..."
@@ -298,7 +298,7 @@ export default function AdminVehiclesScreen() {
           />
           {search ? (
             <TouchableOpacity onPress={() => setSearch('')}>
-              <Ionicons name="close-circle" size={16} color="#78909c" />
+              <Ionicons name="close-circle" size={16} color="#3A567F" />
             </TouchableOpacity>
           ) : null}
         </View>
@@ -1177,9 +1177,9 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: 'rgba(255, 82, 82, 0.12)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 82, 82, 0.25)',
+    backgroundColor: '#FEE2E2',
+    borderWidth: 1.5,
+    borderColor: '#FCA5A5',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -1265,7 +1265,7 @@ const styles = StyleSheet.create({
   hudLabel: {
     fontSize: 9,
     fontWeight: '800',
-    color: '#78909c',
+    color: '#3A567F',
     letterSpacing: 0.4,
   },
   hudValue: {
@@ -1329,7 +1329,7 @@ const styles = StyleSheet.create({
     borderColor: '#173B70',
   },
   statusFilterTabText: {
-    color: '#78909c',
+    color: '#3A567F',
     fontSize: 10,
     fontWeight: '700',
   },
@@ -1359,7 +1359,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   emptyCardText: {
-    color: '#78909c',
+    color: '#3A567F',
     fontSize: 13,
     marginTop: 8,
   },
@@ -1480,7 +1480,7 @@ const styles = StyleSheet.create({
   driverLabel: {
     fontSize: 9,
     fontWeight: '700',
-    color: '#78909c',
+    color: '#3A567F',
     letterSpacing: 0.5,
   },
   driverNameVal: {
@@ -1592,7 +1592,7 @@ const styles = StyleSheet.create({
   },
   driverSelectCode: {
     fontSize: 11,
-    color: '#78909c',
+    color: '#3A567F',
     marginTop: 2,
   },
   detailCardBox: {
@@ -1682,7 +1682,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#173B70',
   },
   formSegmentText: {
-    color: '#78909c',
+    color: '#3A567F',
     fontSize: 11,
     fontWeight: '700',
   },
@@ -1714,7 +1714,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   cancelBtnText: {
-    color: '#78909c',
+    color: '#3A567F',
     fontSize: 12,
     fontWeight: '700',
   },

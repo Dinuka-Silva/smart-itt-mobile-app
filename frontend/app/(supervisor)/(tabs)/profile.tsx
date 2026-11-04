@@ -239,7 +239,7 @@ export default function SupervisorProfileScreen() {
           onPress={handleLogout}
           activeOpacity={0.8}
         >
-          <Ionicons name="log-out-outline" size={18} color={theme.danger} />
+          <Ionicons name="log-out-outline" size={18} color="#B91C1C" />
           <Text style={styles.logoutBtnText}>Sign Out of Supervisor Console</Text>
         </TouchableOpacity>
 
@@ -493,17 +493,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: theme.dangerContainer,
+    backgroundColor: '#FEE2E2',
     borderRadius: Layout.radius,
-    borderWidth: 1,
-    borderColor: theme.danger,
+    borderWidth: 1.5,
+    borderColor: '#FCA5A5',
     paddingVertical: 14,
-    marginTop: 6,
+    marginTop: 18,
+    marginBottom: 8,
   },
   logoutBtnText: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: theme.danger,
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#B91C1C',
+    letterSpacing: 0.3,
   },
   footerVersion: {
     fontSize: 11,
