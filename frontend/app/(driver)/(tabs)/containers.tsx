@@ -99,9 +99,9 @@ export default function DriverContainers() {
 
   const getStatusColor = (label: string) => {
     if (label === 'DELIVERED') return { bg: '#E6F6EC', text: '#1E7A45' };
-    if (label === 'IN TRANSIT') return { bg: '#FFF4DB', text: '#8A5A00' };
-    if (label === 'DISCHARGED') return { bg: '#E3F4F1', text: '#0F766E' };
-    return { bg: '#FFF4DB', text: '#8A5A00' };
+    if (label === 'IN TRANSIT') return { bg: '#F0F5FA', text: '#173B70' };
+    if (label === 'DISCHARGED') return { bg: '#F0F5FA', text: '#173B70' };
+    return { bg: '#F0F5FA', text: '#173B70' };
   };
 
   return (
@@ -114,7 +114,7 @@ export default function DriverContainers() {
         paddingBottom: Math.max(bottomInset + 24, 40),
       }}
       showsVerticalScrollIndicator={false}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#0F766E" />}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#173B70" />}
     >
       <View
         style={[
@@ -136,7 +136,7 @@ export default function DriverContainers() {
             style={styles.dateFilterBtn}
             onPress={() => setShowDatePicker(true)}
           >
-            <Ionicons name="calendar-outline" size={16} color="#0F766E" />
+            <Ionicons name="calendar-outline" size={16} color="#173B70" />
             <Text style={styles.dateFilterText}>
               {selectedDate === 'All' ? 'ALL DATES' : selectedDate}
             </Text>
@@ -147,16 +147,16 @@ export default function DriverContainers() {
       {/* Summary Cards */}
       {!loading && (
         <View style={[styles.summaryRow, { paddingHorizontal: containerPaddingHorizontal }]}>
-          <View style={[styles.summaryCard, { borderTopColor: '#0F766E' }]}>
-            <Text style={[styles.summaryValue, { color: '#0F766E', fontSize: isSmallMobile ? 20 : 24 }]}>{ft20}</Text>
+          <View style={[styles.summaryCard, { borderTopColor: '#173B70' }]}>
+            <Text style={[styles.summaryValue, { color: '#173B70', fontSize: isSmallMobile ? 20 : 24 }]}>{ft20}</Text>
             <Text style={styles.summaryLabel}>20FT</Text>
           </View>
-          <View style={[styles.summaryCard, { borderTopColor: '#0F766E' }]}>
-            <Text style={[styles.summaryValue, { color: '#0F766E', fontSize: isSmallMobile ? 20 : 24 }]}>{ft40}</Text>
+          <View style={[styles.summaryCard, { borderTopColor: '#173B70' }]}>
+            <Text style={[styles.summaryValue, { color: '#173B70', fontSize: isSmallMobile ? 20 : 24 }]}>{ft40}</Text>
             <Text style={styles.summaryLabel}>40FT</Text>
           </View>
-          <View style={[styles.summaryCard, { borderTopColor: '#0F766E' }]}>
-            <Text style={[styles.summaryValue, { color: '#0F766E', fontSize: isSmallMobile ? 20 : 24 }]}>{filteredContainers.length}</Text>
+          <View style={[styles.summaryCard, { borderTopColor: '#173B70' }]}>
+            <Text style={[styles.summaryValue, { color: '#173B70', fontSize: isSmallMobile ? 20 : 24 }]}>{filteredContainers.length}</Text>
             <Text style={styles.summaryLabel}>TOTAL</Text>
           </View>
         </View>
@@ -165,7 +165,7 @@ export default function DriverContainers() {
       {/* ITT Haulage Capacity Rule Banner */}
       {!loading && (
         <View style={[styles.policyNoticeBox, { marginHorizontal: containerPaddingHorizontal }]}>
-          <Ionicons name="information-circle-outline" size={16} color="#0F766E" />
+          <Ionicons name="information-circle-outline" size={16} color="#173B70" />
           <Text style={styles.policyNoticeText}>
             ITT Haulage Rule: 1 Trip can transport only 1 × 40FT container OR up to 2 × 20FT containers.
           </Text>
@@ -180,8 +180,8 @@ export default function DriverContainers() {
               DISCHARGE TERMINAL
             </Text>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-              <Ionicons name="funnel-outline" size={12} color="#0F766E" />
-              <Text style={{ fontSize: 11, fontWeight: '600', color: '#0F766E' }}>FILTER</Text>
+              <Ionicons name="funnel-outline" size={12} color="#173B70" />
+              <Text style={{ fontSize: 11, fontWeight: '600', color: '#173B70' }}>FILTER</Text>
             </View>
           </View>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingBottom: 4 }}>
@@ -197,9 +197,9 @@ export default function DriverContainers() {
                     paddingHorizontal: 12,
                     paddingVertical: 7,
                     borderRadius: 8,
-                    backgroundColor: isActive ? '#0F766E' : '#FFFFFF',
+                    backgroundColor: isActive ? '#173B70' : '#FFFFFF',
                     borderWidth: 1,
-                    borderColor: isActive ? '#0F766E' : '#E5EAEC',
+                    borderColor: isActive ? '#173B70' : '#E5EAEC',
                   }}
                   onPress={() => setSelectedTerminal(term)}
                   activeOpacity={0.8}
@@ -226,7 +226,7 @@ export default function DriverContainers() {
       )}
 
       {loading ? (
-        <ActivityIndicator size="large" color="#0F766E" style={{ marginTop: 30 }} />
+        <ActivityIndicator size="large" color="#173B70" style={{ marginTop: 30 }} />
       ) : networkError && containers.length === 0 ? (
         <View style={{ marginHorizontal: containerPaddingHorizontal }}>
           <NetworkErrorView onRetry={fetchContainers} isRetrying={refreshing} />
@@ -257,18 +257,18 @@ export default function DriverContainers() {
               {/* Container Number + Size */}
               <View style={[styles.cardHeader, { flexWrap: 'wrap', gap: 8 }]}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexShrink: 1 }}>
-                  <Ionicons name="cube-outline" size={18} color="#0F766E" />
+                  <Ionicons name="cube-outline" size={18} color="#173B70" />
                   <Text style={[styles.containerNum, { fontSize: isSmallMobile ? 15 : 17 }]}>
                     {(c.containerNumber || '').replace(/[^A-Za-z0-9]/g, '').toUpperCase()}
                   </Text>
                 </View>
                 <View style={[
                   styles.sizeBadge,
-                  { backgroundColor: '#E3F4F1' }
+                  { backgroundColor: '#F0F5FA' }
                 ]}>
                   <Text style={[
                     styles.sizeText,
-                    { color: '#0F766E' }
+                    { color: '#173B70' }
                   ]}>
                     {sizeLabel}
                   </Text>
@@ -289,10 +289,10 @@ export default function DriverContainers() {
                   <Text style={styles.termLabel}>ORIGIN</Text>
                   <Text style={styles.termValue}>{c.sourceTerminal || 'ECT'}</Text>
                 </View>
-                <Ionicons name="arrow-forward" size={16} color="#0F766E" />
+                <Ionicons name="arrow-forward" size={16} color="#173B70" />
                 <View style={styles.termBox}>
                   <Text style={styles.termLabel}>DESTINATION</Text>
-                  <Text style={[styles.termValue, { color: '#0F766E' }]}>{c.destTerminal || 'JCT'}</Text>
+                  <Text style={[styles.termValue, { color: '#173B70' }]}>{c.destTerminal || 'JCT'}</Text>
                 </View>
               </View>
 
@@ -386,23 +386,23 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#E5EAEC',
   },
-  summaryValue: { fontSize: 22, fontWeight: '700', color: '#0F766E' },
+  summaryValue: { fontSize: 22, fontWeight: '700', color: '#173B70' },
   summaryLabel: { fontSize: 12, color: '#6B7C85', marginTop: 4, fontWeight: '600' },
   policyNoticeBox: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: '#E3F4F1',
+    backgroundColor: '#F0F5FA',
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#0F766E',
+    borderColor: '#173B70',
     marginHorizontal: 16,
     marginTop: 12,
     paddingHorizontal: 12,
     paddingVertical: 8,
   },
   policyNoticeText: {
-    color: '#0F766E',
+    color: '#173B70',
     fontSize: 12,
     fontWeight: '600',
     flex: 1,
@@ -447,7 +447,7 @@ const styles = StyleSheet.create({
   termBox: { alignItems: 'center', flex: 1 },
   termLabel: { fontSize: 10, color: '#6B7C85', fontWeight: '700', letterSpacing: 0.5 },
   termValue: { fontSize: 15, fontWeight: '700', color: '#1F2D33', marginTop: 2 },
-  arrow: { fontSize: 18, color: '#0F766E', fontWeight: '700' },
+  arrow: { fontSize: 18, color: '#173B70', fontWeight: '700' },
   statusBadge: { alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6, marginTop: 10 },
   statusText: { fontSize: 12, fontWeight: '600', letterSpacing: 0.3 },
   weightText: { fontSize: 12, color: '#6B7C85', marginTop: 8, fontWeight: '600' },
@@ -463,7 +463,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#E5EAEC',
   },
-  dateFilterText: { color: '#0F766E', fontSize: 12, fontWeight: '700' },
+  dateFilterText: { color: '#173B70', fontSize: 12, fontWeight: '700' },
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.4)',
@@ -490,12 +490,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#E5EAEC',
   },
-  dateOptionActive: { backgroundColor: '#E3F4F1', borderColor: '#0F766E' },
+  dateOptionActive: { backgroundColor: '#F0F5FA', borderColor: '#173B70' },
   dateOptionText: { color: '#6B7C85', fontSize: 14, fontWeight: '600', textAlign: 'center' },
-  dateOptionTextActive: { color: '#0F766E', fontWeight: '700' },
+  dateOptionTextActive: { color: '#173B70', fontWeight: '700' },
   modalCloseBtn: {
     marginTop: 16,
-    backgroundColor: '#0F766E',
+    backgroundColor: '#173B70',
     paddingVertical: 12,
     borderRadius: 8,
     alignItems: 'center',

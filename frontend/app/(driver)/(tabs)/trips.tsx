@@ -289,12 +289,12 @@ export default function DriverJobQueue() {
             const isDone = trip.status === 'COMPLETED';
 
             const statusColor = isDone
-              ? '#22ef7e'
+              ? '#173B70'
               : isProgress
-              ? '#2563EB'
+              ? '#173B70'
               : isApproved
-              ? '#2563EB'
-              : '#feb300';
+              ? '#173B70'
+              : '#173B70';
 
             return (
               <View key={trip.id} style={styles.jobCard}>
@@ -344,7 +344,7 @@ export default function DriverJobQueue() {
                         {/* Started Date & Time */}
                         <View style={styles.timingCol}>
                           <View style={styles.timingColHeader}>
-                            <Ionicons name="play-circle" size={13} color="#2563EB" />
+                            <Ionicons name="play-circle" size={13} color="#173B70" />
                             <Text style={styles.timingColLabel}>TRIP STARTED</Text>
                           </View>
                           <Text style={styles.timingDateVal}>{timing.startDate}</Text>
@@ -356,7 +356,7 @@ export default function DriverJobQueue() {
                           <Ionicons name="arrow-forward" size={14} color="#3a4756" />
                           {timing.duration && (
                             <View style={styles.durationPill}>
-                              <Ionicons name="timer-outline" size={10} color="#22ef7e" />
+                              <Ionicons name="timer-outline" size={10} color="#173B70" />
                               <Text style={styles.durationPillText}>{timing.duration}</Text>
                             </View>
                           )}
@@ -397,9 +397,9 @@ export default function DriverJobQueue() {
                             flexDirection: 'row',
                             alignItems: 'center',
                             gap: 6,
-                            backgroundColor: isDual ? '#EFF6FF' : 'rgba(34, 239, 126, 0.08)',
+                            backgroundColor: isDual ? '#F0F5FA' : 'rgba(34, 239, 126, 0.08)',
                             borderWidth: 1,
-                            borderColor: isDual ? '#EFF6FF' : 'rgba(34, 239, 126, 0.25)',
+                            borderColor: isDual ? '#F0F5FA' : 'rgba(34, 239, 126, 0.25)',
                             borderRadius: 6,
                             paddingHorizontal: 8,
                             paddingVertical: 4,
@@ -409,9 +409,9 @@ export default function DriverJobQueue() {
                           <Ionicons
                             name={isDual ? 'swap-horizontal' : 'checkmark-circle'}
                             size={12}
-                            color={isDual ? '#2563EB' : '#22ef7e'}
+                            color={isDual ? '#173B70' : '#173B70'}
                           />
-                          <Text style={{ fontSize: 10, fontWeight: '700', color: isDual ? '#2563EB' : '#22ef7e', flex: 1 }}>
+                          <Text style={{ fontSize: 10, fontWeight: '700', color: isDual ? '#173B70' : '#173B70', flex: 1 }}>
                             {isDual ? `DUAL DISCHARGE TERMINALS: ${termStr}` : `DISCHARGE TERMINAL: ${termStr}`}
                           </Text>
                         </View>
@@ -430,8 +430,8 @@ export default function DriverJobQueue() {
                             </View>
                             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                               <Text style={styles.isoType}>{c.size || c.isoType || '20FT'}</Text>
-                              <View style={{ backgroundColor: '#EFF6FF', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, borderWidth: 1, borderColor: '#2563EB' }}>
-                                <Text style={{ color: '#2563EB', fontSize: 10, fontWeight: '800' }}>
+                              <View style={{ backgroundColor: '#F0F5FA', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, borderWidth: 1, borderColor: '#173B70' }}>
+                                <Text style={{ color: '#173B70', fontSize: 10, fontWeight: '800' }}>
                                   ➔ {cDest}
                                 </Text>
                               </View>
@@ -466,7 +466,7 @@ export default function DriverJobQueue() {
                   {isPending && (
                     <View style={{ gap: 8 }}>
                       <View style={styles.pendingNoticeBox}>
-                        <Ionicons name="time-outline" size={16} color="#feb300" />
+                        <Ionicons name="time-outline" size={16} color="#173B70" />
                         <Text style={styles.pendingNoticeText}>
                           Cargo discharged at {getTripDischargeTerminal(trip)}. Submitted to Port Operations Supervisor for delivery verification & sign-off.
                         </Text>
@@ -483,8 +483,8 @@ export default function DriverJobQueue() {
                       }}>
                         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingBottom: 4, borderBottomWidth: 1, borderBottomColor: '#E2E8F0' }}>
                           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
-                            <Ionicons name="shield-checkmark" size={13} color="#2563EB" />
-                            <Text style={{ fontSize: 9.5, fontWeight: '900', color: '#2563EB', letterSpacing: 0.4 }}>
+                            <Ionicons name="shield-checkmark" size={13} color="#173B70" />
+                            <Text style={{ fontSize: 9.5, fontWeight: '900', color: '#173B70', letterSpacing: 0.4 }}>
                               SLPA PORT CLEARANCE MANIFEST
                             </Text>
                           </View>
@@ -496,7 +496,7 @@ export default function DriverJobQueue() {
                             borderWidth: 1,
                             borderColor: 'rgba(34, 239, 126, 0.3)',
                           }}>
-                            <Text style={{ fontSize: 8, fontWeight: '800', color: '#22ef7e' }}>LOGGED</Text>
+                            <Text style={{ fontSize: 8, fontWeight: '800', color: '#173B70' }}>LOGGED</Text>
                           </View>
                         </View>
 
@@ -504,8 +504,8 @@ export default function DriverJobQueue() {
                           <View style={{ flex: 1, backgroundColor: '#0d1625', borderRadius: 6, borderWidth: 1, borderColor: '#242a34', padding: 6 }}>
                             <Text style={{ fontSize: 8, fontWeight: '800', color: '#849396' }}>BAY / SLOT</Text>
                             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
-                              <Ionicons name="location" size={11} color="#feb300" />
-                              <Text style={{ fontSize: 9.5, fontWeight: '800', color: '#2563EB' }} numberOfLines={1}>
+                              <Ionicons name="location" size={11} color="#173B70" />
+                              <Text style={{ fontSize: 9.5, fontWeight: '800', color: '#173B70' }} numberOfLines={1}>
                                 {trip.destTerminal} · {trip.dischargeBay || 'Bay 04, Crane 02'}
                               </Text>
                             </View>
@@ -524,9 +524,9 @@ export default function DriverJobQueue() {
                               <Ionicons
                                 name={trip.sealStatus?.includes('DAMAGED') ? 'warning' : 'shield-checkmark'}
                                 size={11}
-                                color={trip.sealStatus?.includes('DAMAGED') ? '#ff5252' : '#22ef7e'}
+                                color={trip.sealStatus?.includes('DAMAGED') ? '#173B70' : '#173B70'}
                               />
-                              <Text style={{ fontSize: 9.5, fontWeight: '800', color: trip.sealStatus?.includes('DAMAGED') ? '#ff5252' : '#22ef7e' }} numberOfLines={1}>
+                              <Text style={{ fontSize: 9.5, fontWeight: '800', color: trip.sealStatus?.includes('DAMAGED') ? '#173B70' : '#173B70' }} numberOfLines={1}>
                                 {trip.sealStatus || 'INTACT (VERIFIED)'}
                               </Text>
                             </View>
@@ -545,9 +545,9 @@ export default function DriverJobQueue() {
                               <Ionicons
                                 name={trip.damageStatus === 'DAMAGED' ? 'alert-circle' : 'checkmark-circle'}
                                 size={11}
-                                color={trip.damageStatus === 'DAMAGED' ? '#ff5252' : '#22ef7e'}
+                                color={trip.damageStatus === 'DAMAGED' ? '#173B70' : '#173B70'}
                               />
-                              <Text style={{ fontSize: 9.5, fontWeight: '800', color: trip.damageStatus === 'DAMAGED' ? '#ff5252' : '#22ef7e' }} numberOfLines={1}>
+                              <Text style={{ fontSize: 9.5, fontWeight: '800', color: trip.damageStatus === 'DAMAGED' ? '#173B70' : '#173B70' }} numberOfLines={1}>
                                 {trip.damageStatus === 'DAMAGED' ? 'DAMAGED' : 'SOUND'}
                               </Text>
                             </View>
@@ -559,11 +559,11 @@ export default function DriverJobQueue() {
                           backgroundColor: '#F8FAFC',
                           borderRadius: 6,
                           borderLeftWidth: 3,
-                          borderLeftColor: '#2563EB',
+                          borderLeftColor: '#173B70',
                           paddingHorizontal: 8,
                           paddingVertical: 6,
                         }}>
-                          <Text style={{ fontSize: 7.5, fontWeight: '900', color: '#2563EB', letterSpacing: 0.4, marginBottom: 2 }}>
+                          <Text style={{ fontSize: 7.5, fontWeight: '900', color: '#173B70', letterSpacing: 0.4, marginBottom: 2 }}>
                             DRIVER COMPLETION NOTES
                           </Text>
                           <Text style={{ fontSize: 9.5, color: '#1E293B', fontStyle: 'italic', lineHeight: 13 }}>
@@ -580,8 +580,8 @@ export default function DriverJobQueue() {
                       </View>
 
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, justifyContent: 'center', paddingVertical: 4 }}>
-                        <ActivityIndicator size="small" color="#feb300" />
-                        <Text style={{ fontSize: 10, fontWeight: '700', color: '#feb300' }}>
+                        <ActivityIndicator size="small" color="#173B70" />
+                        <Text style={{ fontSize: 10, fontWeight: '700', color: '#173B70' }}>
                           Awaiting supervisor approval to credit container quota (+1)...
                         </Text>
                       </View>
@@ -592,13 +592,13 @@ export default function DriverJobQueue() {
                   {isApproved && (
                     <View style={{ gap: 8 }}>
                       <View style={styles.approvedNoticeBox}>
-                        <Ionicons name="shield-checkmark" size={16} color="#2563EB" />
+                        <Ionicons name="shield-checkmark" size={16} color="#173B70" />
                         <Text style={styles.approvedNoticeText}>
                           Gate Pass Cleared. You are authorized to depart {trip.sourceTerminal || 'Origin'}.
                         </Text>
                       </View>
                       <TouchableOpacity
-                        style={[styles.completeBtn, { backgroundColor: '#2563EB' }]}
+                        style={[styles.completeBtn, { backgroundColor: '#173B70' }]}
                         onPress={() => handleStartTrip(trip.id)}
                         disabled={updatingId === trip.id}
                       >
@@ -617,7 +617,7 @@ export default function DriverJobQueue() {
                   {/* ─── State 3: IN PROGRESS -> ARRIVED AT DESTINATION ─── */}
                   {isProgress && !arrivedTrips.has(trip.id) && (
                     <TouchableOpacity
-                      style={[styles.completeBtn, { backgroundColor: '#feb300' }]}
+                      style={[styles.completeBtn, { backgroundColor: '#173B70' }]}
                       onPress={() => {
                         const next = new Set(arrivedTrips);
                         next.add(trip.id);
@@ -633,14 +633,14 @@ export default function DriverJobQueue() {
                   {isProgress && arrivedTrips.has(trip.id) && (
                     <View style={{ gap: 8 }}>
                       <View style={styles.arrivedNoticeBox}>
-                        <Ionicons name="pin" size={16} color="#22ef7e" />
+                        <Ionicons name="pin" size={16} color="#173B70" />
                         <Text style={styles.arrivedNoticeText}>
                           Arrived at {getTripDischargeTerminal(trip)}. Confirm discharge bay and submit mission for supervisor approval.
                         </Text>
                       </View>
 
                       <TouchableOpacity
-                        style={[styles.completeBtn, { backgroundColor: '#2563EB' }]}
+                        style={[styles.completeBtn, { backgroundColor: '#173B70' }]}
                         onPress={() => handleCompleteTrip(trip.id)}
                         disabled={updatingId === trip.id}
                       >
@@ -662,7 +662,7 @@ export default function DriverJobQueue() {
                   {isDone && (
                     <View style={styles.completedNoticeBox}>
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                        <Ionicons name="checkmark-circle" size={16} color="#22ef7e" />
+                        <Ionicons name="checkmark-circle" size={16} color="#173B70" />
                         <Text style={styles.completedNoticeText}>STORED IN MY TRIPS ARCHIVE</Text>
                       </View>
                       <Text style={styles.completedNoticeSub}>
@@ -715,7 +715,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#0F766E',
+    backgroundColor: '#173B70',
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 8,
@@ -752,7 +752,7 @@ const styles = StyleSheet.create({
   filterCountBadge: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#0F766E',
+    color: '#173B70',
   },
   filterPillsScroll: {
     flexDirection: 'row',
@@ -768,8 +768,8 @@ const styles = StyleSheet.create({
     borderColor: '#E5EAEC',
   },
   filterChipActive: {
-    backgroundColor: '#0F766E',
-    borderColor: '#0F766E',
+    backgroundColor: '#173B70',
+    borderColor: '#173B70',
   },
   filterChipText: {
     fontSize: 12,
@@ -830,7 +830,7 @@ const styles = StyleSheet.create({
   jobNumText: {
     fontSize: 13,
     fontWeight: '900',
-    color: '#2563EB',
+    color: '#173B70',
         letterSpacing: 0.5,
   },
   statusTag: {
@@ -883,7 +883,7 @@ const styles = StyleSheet.create({
   routeDist: {
     fontSize: 8,
     fontWeight: '700',
-    color: '#2563EB',
+    color: '#173B70',
       },
   containersBox: {
     gap: 8,
@@ -925,8 +925,8 @@ const styles = StyleSheet.create({
     borderColor: '#E5EAEC',
   },
   termChoiceActive: {
-    backgroundColor: '#0F766E',
-    borderColor: '#0F766E',
+    backgroundColor: '#173B70',
+    borderColor: '#173B70',
   },
   termChoiceText: {
     fontSize: 10,
@@ -938,7 +938,7 @@ const styles = StyleSheet.create({
   },
   completeBtn: {
     height: 48,
-    backgroundColor: '#0F766E',
+    backgroundColor: '#173B70',
     borderRadius: 8,
     flexDirection: 'row',
     alignItems: 'center',
@@ -956,9 +956,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: '#FFF4DB',
+    backgroundColor: '#F0F5FA',
     borderWidth: 1,
-    borderColor: '#8A5A00',
+    borderColor: '#173B70',
     borderRadius: 8,
     padding: 10,
     marginTop: 4,
@@ -966,7 +966,7 @@ const styles = StyleSheet.create({
   pendingNoticeText: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#8A5A00',
+    color: '#173B70',
     flex: 1,
   },
   approvedNoticeBox: {
@@ -1001,7 +1001,7 @@ const styles = StyleSheet.create({
   arrivedNoticeText: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#22ef7e',
+    color: '#173B70',
     flex: 1,
   },
   completedNoticeBox: {
@@ -1017,7 +1017,7 @@ const styles = StyleSheet.create({
   completedNoticeText: {
     fontSize: 12,
     fontWeight: '900',
-    color: '#22ef7e',
+    color: '#173B70',
     letterSpacing: 0.5,
   },
   completedNoticeSub: {
@@ -1054,7 +1054,7 @@ const styles = StyleSheet.create({
   timingColLabel: {
     fontSize: 9,
     fontWeight: '800',
-    color: '#2563EB',
+    color: '#173B70',
     letterSpacing: 0.5,
   },
   timingDateVal: {
@@ -1065,7 +1065,7 @@ const styles = StyleSheet.create({
   timingTimeVal: {
     fontSize: 13,
     fontWeight: '900',
-    color: '#2563EB',
+    color: '#173B70',
     letterSpacing: 0.3,
   },
   timingDividerCol: {
@@ -1088,6 +1088,6 @@ const styles = StyleSheet.create({
   durationPillText: {
     fontSize: 9,
     fontWeight: '800',
-    color: '#22ef7e',
+    color: '#173B70',
   },
 });

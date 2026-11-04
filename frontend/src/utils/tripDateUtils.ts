@@ -124,7 +124,7 @@ export function getTripTimingDetails(trip: any): TripTimingInfo {
   const isPending = trip.status === 'PENDING_APPROVAL';
   const isInProgress = trip.status === 'IN_PROGRESS' || trip.status === 'ARRIVED';
 
-  let statusColor = '#0F766E';
+  let statusColor = '#173B70';
   if (isCompleted) {
     statusColor = '#059669';
   } else if (isPending) {
@@ -132,7 +132,7 @@ export function getTripTimingDetails(trip: any): TripTimingInfo {
   } else if (trip.status === 'REJECTED') {
     statusColor = '#DC2626';
   } else {
-    statusColor = '#0F766E';
+    statusColor = '#173B70';
   }
 
   // 1. Started Date & Time

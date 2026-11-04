@@ -356,7 +356,7 @@ export default function AdminLoginScreen() {
           <Text style={styles.brandSubtitle}>SCK LOGISTICS — INTER TERMINAL OPERATIONS</Text>
 
           <View style={styles.securityBadge}>
-            <Ionicons name="lock-closed" size={12} color="#2563EB" />
+            <Ionicons name="lock-closed" size={12} color="#173B70" />
             <Text style={styles.securityBadgeText}>ENCRYPTED ADMINISTRATIVE CHANNEL</Text>
           </View>
         </View>
@@ -366,13 +366,13 @@ export default function AdminLoginScreen() {
           {errorMessage ? (
             <View style={styles.errorBox}>
               <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, gap: 6 }}>
-                <Ionicons name="alert-circle" size={16} color="#ff5252" />
+                <Ionicons name="alert-circle" size={16} color="#173B70" />
                 <Text style={styles.errorText}>{errorMessage}</Text>
               </View>
               {errorMessage.includes('Unable to connect') && (
                 <TouchableOpacity
                   onPress={() => handleAdminLogin()}
-                  style={{ backgroundColor: '#0F766E', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6 }}
+                  style={{ backgroundColor: '#173B70', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6 }}
                   activeOpacity={0.7}
                 >
                   <Text style={{ color: '#FFFFFF', fontSize: 12, fontWeight: '700' }}>Retry</Text>
@@ -384,7 +384,7 @@ export default function AdminLoginScreen() {
           {/* Lockout Banner */}
           {lockoutSeconds > 0 && (
             <View style={styles.lockoutBox}>
-              <Ionicons name="lock-closed" size={18} color="#ef4444" />
+              <Ionicons name="lock-closed" size={18} color="#173B70" />
               <View style={{ flex: 1 }}>
                 <Text style={styles.lockoutTitle}>ADMINISTRATIVE LOCKOUT ACTIVE</Text>
                 <Text style={styles.lockoutText}>
@@ -397,7 +397,7 @@ export default function AdminLoginScreen() {
 
           {/* Admin Clearance Info Badge */}
           <View style={styles.credentialBanner}>
-            <Ionicons name="shield-checkmark" size={14} color="#2563EB" />
+            <Ionicons name="shield-checkmark" size={14} color="#173B70" />
             <Text style={styles.credentialBannerText}>
               LEVEL 4 PRIVILEGED ACCESS · 256-BIT ENCLAVE
             </Text>
@@ -406,7 +406,7 @@ export default function AdminLoginScreen() {
           <View style={styles.fieldGroup}>
             <Text style={styles.fieldLabel}>Administrator Username</Text>
             <View style={styles.inputWrap}>
-              <Ionicons name="person-outline" size={18} color="#2563EB" style={styles.inputIcon} />
+              <Ionicons name="person-outline" size={18} color="#173B70" style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
                 value={username}
@@ -424,7 +424,7 @@ export default function AdminLoginScreen() {
           <View style={styles.fieldGroup}>
             <Text style={styles.fieldLabel}>Master Password</Text>
             <View style={styles.inputWrap}>
-              <Ionicons name="key-outline" size={18} color="#2563EB" style={styles.inputIcon} />
+              <Ionicons name="key-outline" size={18} color="#173B70" style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
                 value={password}
@@ -477,7 +477,7 @@ export default function AdminLoginScreen() {
               <Ionicons
                 name={biometricStatus.biometricType === 'FACE_ID' ? 'scan' : 'finger-print'}
                 size={18}
-                color="#2563EB"
+                color="#173B70"
                 style={{ marginRight: 8 }}
               />
               <Text style={styles.bioButtonText}>
@@ -494,7 +494,7 @@ export default function AdminLoginScreen() {
           >
             <View style={styles.rosterTriggerLeft}>
               <View style={styles.rosterTriggerIconWrap}>
-                <Ionicons name="people-circle" size={24} color="#2563EB" />
+                <Ionicons name="people-circle" size={24} color="#173B70" />
               </View>
               <View style={{ flex: 1 }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
@@ -508,7 +508,7 @@ export default function AdminLoginScreen() {
                 </Text>
               </View>
             </View>
-            <Ionicons name="chevron-forward" size={18} color="#2563EB" />
+            <Ionicons name="chevron-forward" size={18} color="#173B70" />
           </TouchableOpacity>
 
           {/* System Audit Trail & Operations Ledger (Admin Clearance) */}
@@ -518,14 +518,14 @@ export default function AdminLoginScreen() {
             activeOpacity={0.85}
           >
             <View style={styles.rosterTriggerLeft}>
-              <View style={[styles.rosterTriggerIconWrap, { backgroundColor: '#EFF6FF', borderColor: '#2563EB' }]}>
-                <Ionicons name="shield-checkmark" size={22} color="#2563EB" />
+              <View style={[styles.rosterTriggerIconWrap, { backgroundColor: '#F0F5FA', borderColor: '#173B70' }]}>
+                <Ionicons name="shield-checkmark" size={22} color="#173B70" />
               </View>
               <View style={{ flex: 1 }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                   <Text style={[styles.rosterTriggerTitle, { color: '#1E293B' }]}>SYSTEM AUDIT & OPERATIONS TRAIL</Text>
-                  <View style={[styles.adminOnlyBadge, { backgroundColor: '#EFF6FF', borderColor: '#BFDBFE' }]}>
-                    <Text style={[styles.adminOnlyBadgeText, { color: '#2563EB' }]}>ALL WORK</Text>
+                  <View style={[styles.adminOnlyBadge, { backgroundColor: '#F0F5FA', borderColor: '#BFDBFE' }]}>
+                    <Text style={[styles.adminOnlyBadgeText, { color: '#173B70' }]}>ALL WORK</Text>
                   </View>
                 </View>
                 <Text style={styles.rosterTriggerSubtitle}>
@@ -533,7 +533,7 @@ export default function AdminLoginScreen() {
                 </Text>
               </View>
             </View>
-            <Ionicons name="chevron-forward" size={18} color="#2563EB" />
+            <Ionicons name="chevron-forward" size={18} color="#173B70" />
           </TouchableOpacity>
 
           <View style={styles.auditNotice}>
@@ -558,7 +558,7 @@ export default function AdminLoginScreen() {
             <View style={styles.rosterModalHeader}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 }}>
                 <View style={styles.rosterHeaderIconBox}>
-                  <Ionicons name="shield-checkmark" size={20} color="#2563EB" />
+                  <Ionicons name="shield-checkmark" size={20} color="#173B70" />
                 </View>
                 <View style={{ flex: 1 }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
@@ -589,21 +589,21 @@ export default function AdminLoginScreen() {
               </View>
               <View style={styles.rosterMetricDivider} />
               <View style={styles.rosterMetricItem}>
-                <Text style={[styles.rosterMetricVal, { color: '#22ef7e' }]}>
+                <Text style={[styles.rosterMetricVal, { color: '#173B70' }]}>
                   {rosterDrivers.filter(d => d.status === 'ACTIVE').length}
                 </Text>
                 <Text style={styles.rosterMetricLabel}>ACTIVE</Text>
               </View>
               <View style={styles.rosterMetricDivider} />
               <View style={styles.rosterMetricItem}>
-                <Text style={[styles.rosterMetricVal, { color: '#2563EB' }]}>
+                <Text style={[styles.rosterMetricVal, { color: '#173B70' }]}>
                   {rosterDrivers.filter(d => (d.operator || '').includes('SCK') || !d.operator).length}
                 </Text>
                 <Text style={styles.rosterMetricLabel}>SCK LOGISTICS</Text>
               </View>
               <View style={styles.rosterMetricDivider} />
               <View style={styles.rosterMetricItem}>
-                <Text style={[styles.rosterMetricVal, { color: '#feb300' }]}>
+                <Text style={[styles.rosterMetricVal, { color: '#173B70' }]}>
                   {rosterDrivers.filter(d => (d.operator || '').includes('SDR')).length}
                 </Text>
                 <Text style={styles.rosterMetricLabel}>SDR LINK</Text>
@@ -631,7 +631,7 @@ export default function AdminLoginScreen() {
             {/* Roster List */}
             {rosterLoading ? (
               <View style={{ padding: 40, alignItems: 'center' }}>
-                <ActivityIndicator size="large" color="#2563EB" />
+                <ActivityIndicator size="large" color="#173B70" />
                 <Text style={{ color: '#90caf9', fontSize: 13, marginTop: 12 }}>
                   Loading registered driver accounts...
                 </Text>
@@ -671,7 +671,7 @@ export default function AdminLoginScreen() {
                           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                             <Text style={styles.rosterDriverName}>{d.fullName}</Text>
                             <View style={[styles.rosterOperatorBadge, isSdr ? styles.rosterOperatorSdr : styles.rosterOperatorSck]}>
-                              <Text style={[styles.rosterOperatorText, isSdr ? { color: '#feb300' } : { color: '#2563EB' }]}>
+                              <Text style={[styles.rosterOperatorText, isSdr ? { color: '#173B70' } : { color: '#173B70' }]}>
                                 {d.operator || (isSdr ? 'SDR LINK' : 'SCK Logistics')}
                               </Text>
                             </View>
@@ -682,8 +682,8 @@ export default function AdminLoginScreen() {
                         </View>
 
                         <View style={[styles.rosterStatusPill, isSuspended ? styles.rosterStatusSuspended : styles.rosterStatusActive]}>
-                          <View style={[styles.rosterStatusDot, { backgroundColor: isSuspended ? '#feb300' : '#22ef7e' }]} />
-                          <Text style={[styles.rosterStatusText, { color: isSuspended ? '#feb300' : '#22ef7e' }]}>
+                          <View style={[styles.rosterStatusDot, { backgroundColor: isSuspended ? '#173B70' : '#173B70' }]} />
+                          <Text style={[styles.rosterStatusText, { color: isSuspended ? '#173B70' : '#173B70' }]}>
                             {d.status || 'ACTIVE'}
                           </Text>
                         </View>
@@ -692,7 +692,7 @@ export default function AdminLoginScreen() {
                       {/* Prominent Login Username Row */}
                       <View style={styles.rosterUsernameRow}>
                         <View style={styles.rosterUsernameTag}>
-                          <Ionicons name="key" size={12} color="#2563EB" />
+                          <Ionicons name="key" size={12} color="#173B70" />
                           <Text style={styles.rosterUsernameTagLabel}>LOGIN USERNAME:</Text>
                           <Text style={styles.rosterUsernameTagValue}>{uname}</Text>
                         </View>
@@ -705,9 +705,9 @@ export default function AdminLoginScreen() {
                           <Ionicons
                             name={isCopied ? 'checkmark' : 'copy-outline'}
                             size={12}
-                            color={isCopied ? '#16A34A' : '#2563EB'}
+                            color={isCopied ? '#173B70' : '#173B70'}
                           />
-                          <Text style={[styles.rosterQuickCopyText, isCopied && { color: '#16A34A' }]}>
+                          <Text style={[styles.rosterQuickCopyText, isCopied && { color: '#173B70' }]}>
                             {isCopied ? 'COPIED' : 'COPY'}
                           </Text>
                         </TouchableOpacity>
@@ -723,7 +723,7 @@ export default function AdminLoginScreen() {
                         </View>
                         <View style={styles.rosterSpecCol}>
                           <Text style={styles.rosterSpecKey}>CHE / CHASSIS</Text>
-                          <Text style={[styles.rosterSpecVal, { color: '#2563EB' }]}>
+                          <Text style={[styles.rosterSpecVal, { color: '#173B70' }]}>
                             {d.cheNumber || d.chassisNumber || 'SCK 100'}
                           </Text>
                         </View>
@@ -739,7 +739,7 @@ export default function AdminLoginScreen() {
 
                       <View style={styles.rosterCardFooter}>
                         <Text style={styles.rosterCardFooterHint}>Tap to view full driver dossier</Text>
-                        <Ionicons name="chevron-forward" size={13} color="#2563EB" />
+                        <Ionicons name="chevron-forward" size={13} color="#173B70" />
                       </View>
                     </TouchableOpacity>
                   );
@@ -762,11 +762,11 @@ export default function AdminLoginScreen() {
             <View style={styles.rosterModalHeader}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 }}>
                 <View style={styles.rosterHeaderIconBox}>
-                  <Ionicons name="person" size={20} color="#2563EB" />
+                  <Ionicons name="person" size={20} color="#173B70" />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.rosterModalTitle}>{selectedRosterDriver?.fullName}</Text>
-                  <Text style={{ color: '#2563EB', fontSize: 12, fontWeight: '800' }}>
+                  <Text style={{ color: '#173B70', fontSize: 12, fontWeight: '800' }}>
                     {selectedRosterDriver?.username || selectedRosterDriver?.driverCode} • {selectedRosterDriver?.employeeId}
                   </Text>
                 </View>
@@ -785,8 +785,8 @@ export default function AdminLoginScreen() {
               <View style={styles.dossierCard}>
                 <View style={styles.dossierRow}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                    <Ionicons name="key" size={14} color="#2563EB" />
-                    <Text style={[styles.dossierLabel, { color: '#2563EB', fontWeight: '800' }]}>LOGIN USERNAME:</Text>
+                    <Ionicons name="key" size={14} color="#173B70" />
+                    <Text style={[styles.dossierLabel, { color: '#173B70', fontWeight: '800' }]}>LOGIN USERNAME:</Text>
                   </View>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                     <View style={styles.dossierUsernameBadge}>
@@ -802,9 +802,9 @@ export default function AdminLoginScreen() {
                       <Ionicons
                         name={copiedUsername === (selectedRosterDriver?.username || selectedRosterDriver?.driverCode) ? 'checkmark' : 'copy-outline'}
                         size={12}
-                        color={copiedUsername === (selectedRosterDriver?.username || selectedRosterDriver?.driverCode) ? '#22ef7e' : '#2563EB'}
+                        color={copiedUsername === (selectedRosterDriver?.username || selectedRosterDriver?.driverCode) ? '#173B70' : '#173B70'}
                       />
-                      <Text style={[styles.rosterQuickCopyText, copiedUsername === (selectedRosterDriver?.username || selectedRosterDriver?.driverCode) && { color: '#22ef7e' }]}>
+                      <Text style={[styles.rosterQuickCopyText, copiedUsername === (selectedRosterDriver?.username || selectedRosterDriver?.driverCode) && { color: '#173B70' }]}>
                         {copiedUsername === (selectedRosterDriver?.username || selectedRosterDriver?.driverCode) ? 'COPIED' : 'COPY'}
                       </Text>
                     </TouchableOpacity>
@@ -823,7 +823,7 @@ export default function AdminLoginScreen() {
 
                 <View style={styles.dossierRow}>
                   <Text style={styles.dossierLabel}>Account Status:</Text>
-                  <Text style={[styles.dossierVal, { color: selectedRosterDriver?.status === 'ACTIVE' ? '#22ef7e' : '#feb300' }]}>
+                  <Text style={[styles.dossierVal, { color: selectedRosterDriver?.status === 'ACTIVE' ? '#173B70' : '#173B70' }]}>
                     {selectedRosterDriver?.status || 'ACTIVE'}
                   </Text>
                 </View>
@@ -834,13 +834,13 @@ export default function AdminLoginScreen() {
               <View style={styles.dossierCard}>
                 <View style={styles.dossierRow}>
                   <Text style={styles.dossierLabel}>Truck License Plate:</Text>
-                  <Text style={[styles.dossierVal, { color: '#feb300', fontWeight: '800' }]}>
+                  <Text style={[styles.dossierVal, { color: '#173B70', fontWeight: '800' }]}>
                     {selectedRosterDriver?.vehicleNumber || 'UNASSIGNED'}
                   </Text>
                 </View>
                 <View style={styles.dossierRow}>
                   <Text style={styles.dossierLabel}>CHE / Chassis Number:</Text>
-                  <Text style={[styles.dossierVal, { color: '#2563EB' }]}>
+                  <Text style={[styles.dossierVal, { color: '#173B70' }]}>
                     {selectedRosterDriver?.cheNumber || selectedRosterDriver?.chassisNumber || 'SCK 100'}
                   </Text>
                 </View>
@@ -871,7 +871,7 @@ export default function AdminLoginScreen() {
                 </View>
                 <View style={styles.dossierRow}>
                   <Text style={styles.dossierLabel}>Port Pass Number:</Text>
-                  <Text style={[styles.dossierVal, { color: '#2563EB' }]}>{selectedRosterDriver?.portPassNumber || 'SLPA-DPP-001'}</Text>
+                  <Text style={[styles.dossierVal, { color: '#173B70' }]}>{selectedRosterDriver?.portPassNumber || 'SLPA-DPP-001'}</Text>
                 </View>
                 <View style={styles.dossierRow}>
                   <Text style={styles.dossierLabel}>Port Pass Expiry:</Text>
@@ -879,7 +879,7 @@ export default function AdminLoginScreen() {
                 </View>
                 <View style={styles.dossierRow}>
                   <Text style={styles.dossierLabel}>Mobile Phone:</Text>
-                  <Text style={[styles.dossierVal, { color: '#22ef7e' }]}>{selectedRosterDriver?.mobileNumber}</Text>
+                  <Text style={[styles.dossierVal, { color: '#173B70' }]}>{selectedRosterDriver?.mobileNumber}</Text>
                 </View>
                 <View style={styles.dossierRow}>
                   <Text style={styles.dossierLabel}>Official Email:</Text>
@@ -891,7 +891,7 @@ export default function AdminLoginScreen() {
                 </View>
                 <View style={styles.dossierRow}>
                   <Text style={styles.dossierLabel}>Emergency Contact:</Text>
-                  <Text style={[styles.dossierVal, { color: '#feb300' }]}>
+                  <Text style={[styles.dossierVal, { color: '#173B70' }]}>
                     {selectedRosterDriver?.emergencyContactName || 'Port Dispatch Control'} ({selectedRosterDriver?.emergencyContactNumber || '0112456789'})
                   </Text>
                 </View>
@@ -930,12 +930,12 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     paddingHorizontal: 10,
     borderRadius: 8,
-    backgroundColor: '#EFF6FF',
+    backgroundColor: '#F0F5FA',
     borderWidth: 1,
     borderColor: '#DBEAFE',
   },
   backButtonText: {
-    color: '#2563EB',
+    color: '#173B70',
     fontSize: 13,
     fontWeight: '600',
     marginLeft: 6,
@@ -952,7 +952,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1.5,
-    borderColor: '#2563EB',
+    borderColor: '#173B70',
     shadowColor: '#000000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
@@ -973,7 +973,7 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: '#2563EB',
+    backgroundColor: '#173B70',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
@@ -1002,12 +1002,12 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     paddingHorizontal: 12,
     borderRadius: 20,
-    backgroundColor: '#EFF6FF',
+    backgroundColor: '#F0F5FA',
     borderWidth: 1,
     borderColor: '#DBEAFE',
   },
   securityBadgeText: {
-    color: '#2563EB',
+    color: '#173B70',
     fontSize: 10,
     fontWeight: '700',
     letterSpacing: 0.5,
@@ -1044,7 +1044,7 @@ const styles = StyleSheet.create({
   credentialBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#EFF6FF',
+    backgroundColor: '#F0F5FA',
     borderWidth: 1,
     borderColor: '#DBEAFE',
     borderRadius: 8,
@@ -1093,7 +1093,7 @@ const styles = StyleSheet.create({
     padding: 6,
   },
   submitButton: {
-    backgroundColor: '#2563EB',
+    backgroundColor: '#173B70',
     borderRadius: 10,
     height: 48,
     alignItems: 'center',
@@ -1152,7 +1152,7 @@ const styles = StyleSheet.create({
     lineHeight: 15,
   },
   devFillBtn: {
-    backgroundColor: '#EFF6FF',
+    backgroundColor: '#F0F5FA',
     borderWidth: 1,
     borderColor: '#DBEAFE',
     paddingHorizontal: 8,
@@ -1160,7 +1160,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   devFillBtnText: {
-    color: '#2563EB',
+    color: '#173B70',
     fontSize: 10,
     fontWeight: '800',
   },
@@ -1180,7 +1180,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#EFF6FF',
+    backgroundColor: '#F0F5FA',
     borderWidth: 1.5,
     borderColor: '#DBEAFE',
     borderRadius: 10,
@@ -1188,7 +1188,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   bioButtonText: {
-    color: '#2563EB',
+    color: '#173B70',
     fontSize: 13,
     fontWeight: '800',
     letterSpacing: 0.5,
@@ -1197,7 +1197,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#EFF6FF',
+    backgroundColor: '#F0F5FA',
     borderWidth: 1.5,
     borderColor: '#DBEAFE',
     borderRadius: 12,
@@ -1218,7 +1218,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: '#2563EB',
+    borderColor: '#173B70',
   },
   rosterTriggerTitle: {
     color: '#1E293B',
@@ -1276,7 +1276,7 @@ const styles = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: '#EFF6FF',
+    backgroundColor: '#F0F5FA',
     borderWidth: 1,
     borderColor: '#DBEAFE',
     alignItems: 'center',
@@ -1374,7 +1374,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   rosterOperatorSck: {
-    backgroundColor: '#EFF6FF',
+    backgroundColor: '#F0F5FA',
     borderColor: '#BFDBFE',
   },
   rosterOperatorSdr: {
@@ -1420,7 +1420,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#EFF6FF',
+    backgroundColor: '#F0F5FA',
     borderWidth: 1,
     borderColor: '#DBEAFE',
     borderRadius: 8,
@@ -1436,7 +1436,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   rosterUsernameTagLabel: {
-    color: '#2563EB',
+    color: '#173B70',
     fontSize: 10,
     fontWeight: '900',
     letterSpacing: 0.5,
@@ -1453,17 +1453,17 @@ const styles = StyleSheet.create({
     gap: 4,
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#2563EB',
+    borderColor: '#173B70',
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 6,
   },
   rosterQuickCopyBtnCopied: {
     backgroundColor: '#DCFCE7',
-    borderColor: '#16A34A',
+    borderColor: '#173B70',
   },
   rosterQuickCopyText: {
-    color: '#2563EB',
+    color: '#173B70',
     fontSize: 9,
     fontWeight: '900',
     letterSpacing: 0.5,
@@ -1502,12 +1502,12 @@ const styles = StyleSheet.create({
     borderTopColor: '#E2E8F0',
   },
   rosterCardFooterHint: {
-    color: '#2563EB',
+    color: '#173B70',
     fontSize: 10,
     fontWeight: '700',
   },
   dossierSectionTitle: {
-    color: '#2563EB',
+    color: '#173B70',
     fontSize: 10,
     fontWeight: '800',
     letterSpacing: 0.8,
@@ -1540,15 +1540,15 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   dossierUsernameBadge: {
-    backgroundColor: '#EFF6FF',
+    backgroundColor: '#F0F5FA',
     borderWidth: 1,
-    borderColor: '#2563EB',
+    borderColor: '#173B70',
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 6,
   },
   dossierUsernameText: {
-    color: '#2563EB',
+    color: '#173B70',
     fontSize: 12,
     fontWeight: '900',
     letterSpacing: 0.8,

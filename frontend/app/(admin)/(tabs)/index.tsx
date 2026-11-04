@@ -221,7 +221,7 @@ export default function AdminDashboardScreen() {
       <View style={[styles.header, { paddingTop: Math.max(topInset, 16) }]}>
         <View style={styles.headerLeft}>
           <View style={styles.badgePill}>
-            <Ionicons name="shield-checkmark" size={12} color="#2563EB" />
+            <Ionicons name="shield-checkmark" size={12} color="#173B70" />
             <Text style={styles.badgePillText}>ADMIN CONSOLE</Text>
           </View>
           <Text style={styles.headerTitle}>System Overview</Text>
@@ -249,7 +249,7 @@ export default function AdminDashboardScreen() {
             activeOpacity={0.7}
             accessibilityLabel="Lock Admin Session"
           >
-            <Ionicons name="lock-closed-outline" size={17} color="#feb300" />
+            <Ionicons name="lock-closed-outline" size={17} color="#173B70" />
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.actionIconBtn, styles.logoutBtn]}
@@ -288,7 +288,7 @@ export default function AdminDashboardScreen() {
 
       {loading && !refreshing ? (
         <View style={styles.centerLoading}>
-          <ActivityIndicator size="large" color="#2563EB" />
+          <ActivityIndicator size="large" color="#173B70" />
           <Text style={styles.loadingText}>Loading comprehensive telemetry...</Text>
         </View>
       ) : (
@@ -301,7 +301,7 @@ export default function AdminDashboardScreen() {
             },
           ]}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#2563EB" />
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#173B70" />
           }
           showsVerticalScrollIndicator={false}
         >
@@ -312,7 +312,7 @@ export default function AdminDashboardScreen() {
               onPress={() => router.push('/(admin)/(tabs)/vehicles')}
               activeOpacity={0.8}
             >
-              <Ionicons name="car-sport" size={16} color="#2563EB" />
+              <Ionicons name="car-sport" size={16} color="#173B70" />
               <Text style={styles.actionBtnText}>+ Add Vehicle</Text>
             </TouchableOpacity>
 
@@ -330,7 +330,7 @@ export default function AdminDashboardScreen() {
               onPress={() => router.push('/(admin)/audit')}
               activeOpacity={0.8}
             >
-              <Ionicons name="finger-print" size={16} color="#feb300" />
+              <Ionicons name="finger-print" size={16} color="#173B70" />
               <Text style={styles.actionBtnText}>Audit Trail</Text>
             </TouchableOpacity>
           </View>
@@ -343,10 +343,10 @@ export default function AdminDashboardScreen() {
               {/* ITT Operations KPI Grid */}
               <Text style={styles.sectionHeader}>TODAY'S ITT OPERATIONS</Text>
               <View style={styles.kpiGrid}>
-                <View style={[styles.kpiCard, { borderColor: '#2563EB' }]}>
+                <View style={[styles.kpiCard, { borderColor: '#173B70' }]}>
                   <View style={styles.kpiHeaderRow}>
                     <Text style={styles.kpiLabel}>TODAY'S TRIPS</Text>
-                    <Ionicons name="swap-horizontal" size={16} color="#2563EB" />
+                    <Ionicons name="swap-horizontal" size={16} color="#173B70" />
                   </View>
                   <Text style={styles.kpiValue}>{stats?.todayTrips || 18}</Text>
                   <Text style={styles.kpiSub}>Active: {stats?.tripsInProgress || 4} in progress</Text>
@@ -355,9 +355,9 @@ export default function AdminDashboardScreen() {
                 <View style={[styles.kpiCard, { borderColor: 'rgba(254, 179, 0, 0.3)' }]}>
                   <View style={styles.kpiHeaderRow}>
                     <Text style={styles.kpiLabel}>PENDING APPROVAL</Text>
-                    <Ionicons name="time" size={16} color="#feb300" />
+                    <Ionicons name="time" size={16} color="#173B70" />
                   </View>
-                  <Text style={[styles.kpiValue, { color: '#feb300' }]}>{stats?.tripsPendingApproval || 3}</Text>
+                  <Text style={[styles.kpiValue, { color: '#173B70' }]}>{stats?.tripsPendingApproval || 3}</Text>
                   <Text style={styles.kpiSub}>Awaiting verification</Text>
                 </View>
 
@@ -413,7 +413,7 @@ export default function AdminDashboardScreen() {
                     style={styles.fleetStatItem}
                     onPress={() => setActiveSection('FLEET')}
                   >
-                    <Text style={[styles.fleetStatNum, { color: '#2563EB' }]}>
+                    <Text style={[styles.fleetStatNum, { color: '#173B70' }]}>
                       {drivers.filter((d) => d.status === 'ACTIVE').length}
                     </Text>
                     <Text style={styles.fleetStatLabel}>Active Drivers</Text>
@@ -470,7 +470,7 @@ export default function AdminDashboardScreen() {
                   <View style={styles.dividerVertical} />
 
                   <View style={styles.storageStatItem}>
-                    <Text style={[styles.storageStatNum, { color: '#0F766E' }]}>
+                    <Text style={[styles.storageStatNum, { color: '#173B70' }]}>
                       {storageStats
                         ? `${((storageStats.totalSizeBytes || 0) / (1024 * 1024)).toFixed(1)} MB`
                         : '-'}
@@ -484,7 +484,7 @@ export default function AdminDashboardScreen() {
                   <View style={styles.dividerVertical} />
 
                   <View style={styles.storageStatItem}>
-                    <Text style={[styles.storageStatNum, { color: storageStats?.lowDiskSpaceWarning ? '#D97706' : '#0F766E' }]}>
+                    <Text style={[styles.storageStatNum, { color: storageStats?.lowDiskSpaceWarning ? '#D97706' : '#173B70' }]}>
                       {storageStats ? `${(storageStats.freeDiskSpaceGb || 0).toFixed(1)} GB` : '-'}
                     </Text>
                     <Text style={styles.storageStatLabel}>Free Space</Text>
@@ -495,7 +495,7 @@ export default function AdminDashboardScreen() {
                 </View>
 
                 <View style={styles.storageMetaRow}>
-                  <Ionicons name="folder-open-outline" size={13} color="#0F766E" />
+                  <Ionicons name="folder-open-outline" size={13} color="#173B70" />
                   <Text style={styles.storageMetaText} numberOfLines={1}>
                     Dir: {storageStats?.storageDirectory || './uploads/photos'} • Retention: 0 (Keep Forever)
                   </Text>
@@ -539,10 +539,10 @@ export default function AdminDashboardScreen() {
 
                     {/* Operational Timing & Turnaround Metric */}
                     <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 10, marginVertical: 4 }}>
-                      <Text style={{ fontSize: 11, color: '#22ef7e', fontWeight: '700' }}>
+                      <Text style={{ fontSize: 11, color: '#173B70', fontWeight: '700' }}>
                         📥 Load: {tTiming.loadTime}
                       </Text>
-                      <Text style={{ fontSize: 11, color: tTiming.isDischarged ? '#2563EB' : '#feb300', fontWeight: '700' }}>
+                      <Text style={{ fontSize: 11, color: tTiming.isDischarged ? '#173B70' : '#173B70', fontWeight: '700' }}>
                         📤 Disch: {tTiming.dischargeTime}
                       </Text>
                       <Text style={{ fontSize: 11, color: '#ffd54f', fontWeight: '800' }}>
@@ -578,7 +578,7 @@ export default function AdminDashboardScreen() {
                   <View key={trip.id || trip.tripNumber} style={styles.fullTripCard}>
                     <View style={styles.tripItemHeader}>
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                        <Ionicons name="swap-horizontal" size={18} color="#2563EB" />
+                        <Ionicons name="swap-horizontal" size={18} color="#173B70" />
                         <Text style={styles.tripItemNumber}>{trip.tripNumber}</Text>
                       </View>
                       <View
@@ -600,7 +600,7 @@ export default function AdminDashboardScreen() {
                         <Text style={styles.terminalPointLabel}>ORIGIN</Text>
                         <Text style={styles.terminalPointVal}>{trip.sourceTerminal}</Text>
                       </View>
-                      <Ionicons name="arrow-forward-circle" size={24} color="#2563EB" />
+                      <Ionicons name="arrow-forward-circle" size={24} color="#173B70" />
                       <View style={styles.terminalPoint}>
                         <Text style={styles.terminalPointLabel}>DISCHARGE</Text>
                         <Text style={styles.terminalPointVal}>{getTripDischargeTerminal(trip)}</Text>
@@ -614,7 +614,7 @@ export default function AdminDashboardScreen() {
                         backgroundColor: 'rgba(7, 15, 30, 0.95)',
                         borderRadius: 8,
                         borderWidth: 1,
-                        borderColor: '#EFF6FF',
+                        borderColor: '#F0F5FA',
                         paddingVertical: 8,
                         paddingHorizontal: 10,
                         marginVertical: 6,
@@ -636,7 +636,7 @@ export default function AdminDashboardScreen() {
                           style={{
                             fontSize: 12,
                             fontWeight: '800',
-                            color: tTiming.isDischarged ? '#2563EB' : '#feb300',
+                            color: tTiming.isDischarged ? '#173B70' : '#173B70',
                             marginTop: 2,
                           }}
                         >
@@ -704,7 +704,7 @@ export default function AdminDashboardScreen() {
                           onPress={() => handleTripAction(trip.id, 'REJECTED')}
                           activeOpacity={0.8}
                         >
-                          <Ionicons name="close-circle" size={16} color="#ff5252" />
+                          <Ionicons name="close-circle" size={16} color="#173B70" />
                           <Text style={styles.btnTextRed}>Reject</Text>
                         </TouchableOpacity>
                       </View>
@@ -724,7 +724,7 @@ export default function AdminDashboardScreen() {
               <Text style={styles.sectionHeader}>PORT PASS & COMPLIANCE WATCH</Text>
               <View style={styles.complianceCard}>
                 <View style={styles.complianceTop}>
-                  <Ionicons name="warning" size={18} color="#feb300" />
+                  <Ionicons name="warning" size={18} color="#173B70" />
                   <Text style={styles.complianceTitle}>Upcoming Port Pass Renewals</Text>
                 </View>
                 {vehicles.slice(0, 4).map((v) => (
@@ -820,7 +820,7 @@ export default function AdminDashboardScreen() {
               </View>
 
               <View style={styles.jurisdictionNotice}>
-                <Ionicons name="information-circle" size={18} color="#2563EB" />
+                <Ionicons name="information-circle" size={18} color="#173B70" />
                 <Text style={styles.jurisdictionNoticeText}>
                   Port-Wide Jurisdiction: Authorized across all 6 terminals (JCT, CICT, SAGT, ECT, CWIT, UCT).
                 </Text>
@@ -843,7 +843,7 @@ export default function AdminDashboardScreen() {
 
                   <View style={styles.supervisorDetailBox}>
                     <View style={styles.supervisorDetailRow}>
-                      <Ionicons name="call-outline" size={14} color="#2563EB" />
+                      <Ionicons name="call-outline" size={14} color="#173B70" />
                       <Text style={styles.supervisorDetailText}>{sup.phone}</Text>
                     </View>
                     <View style={styles.supervisorDetailRow}>
@@ -851,7 +851,7 @@ export default function AdminDashboardScreen() {
                       <Text style={styles.supervisorDetailText}>{sup.email}</Text>
                     </View>
                     <View style={styles.supervisorDetailRow}>
-                      <Ionicons name="time-outline" size={14} color="#feb300" />
+                      <Ionicons name="time-outline" size={14} color="#173B70" />
                       <Text style={styles.supervisorDetailText}>{sup.shift}</Text>
                     </View>
                   </View>
@@ -864,7 +864,7 @@ export default function AdminDashboardScreen() {
           <View style={styles.signOutCard}>
             <View style={styles.signOutCardLeft}>
               <View style={styles.signOutIconWrap}>
-                <Ionicons name="shield-outline" size={20} color="#2563EB" />
+                <Ionicons name="shield-outline" size={20} color="#173B70" />
               </View>
               <View>
                 <Text style={styles.signOutCardTitle}>Admin Session Active</Text>
@@ -915,16 +915,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     alignSelf: 'flex-start',
-    backgroundColor: '#EFF6FF',
+    backgroundColor: '#F0F5FA',
     borderRadius: 12,
     paddingHorizontal: 8,
     paddingVertical: 3,
     marginBottom: 4,
     borderWidth: 1,
-    borderColor: '#EFF6FF',
+    borderColor: '#F0F5FA',
   },
   badgePillText: {
-    color: '#2563EB',
+    color: '#173B70',
     fontSize: 10,
     fontWeight: '800',
     marginLeft: 4,
@@ -975,9 +975,9 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   switcherTabActive: {
-    backgroundColor: '#EFF6FF',
+    backgroundColor: '#F0F5FA',
     borderWidth: 1,
-    borderColor: '#2563EB',
+    borderColor: '#173B70',
   },
   switcherTabText: {
     color: '#78909c',
@@ -985,7 +985,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   switcherTabTextActive: {
-    color: '#2563EB',
+    color: '#173B70',
     fontWeight: '800',
   },
   scrollContent: {
@@ -998,7 +998,7 @@ const styles = StyleSheet.create({
     padding: 40,
   },
   loadingText: {
-    color: '#2563EB',
+    color: '#173B70',
     marginTop: 12,
     fontSize: 13,
     fontWeight: '600',
@@ -1041,7 +1041,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   seeAllText: {
-    color: '#2563EB',
+    color: '#173B70',
     fontSize: 11,
     fontWeight: '700',
   },
@@ -1201,11 +1201,11 @@ const styles = StyleSheet.create({
     width: 48,
     paddingVertical: 3,
     borderRadius: 6,
-    backgroundColor: '#EFF6FF',
+    backgroundColor: '#F0F5FA',
     alignItems: 'center',
   },
   terminalBadgeText: {
-    color: '#2563EB',
+    color: '#173B70',
     fontSize: 10,
     fontWeight: '800',
   },
@@ -1219,7 +1219,7 @@ const styles = StyleSheet.create({
   },
   terminalBarFill: {
     height: '100%',
-    backgroundColor: '#2563EB',
+    backgroundColor: '#173B70',
     borderRadius: 3,
   },
   terminalCountText: {
@@ -1268,7 +1268,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(254, 179, 0, 0.15)',
   },
   statusPillCyan: {
-    backgroundColor: '#EFF6FF',
+    backgroundColor: '#F0F5FA',
   },
   statusPillRed: {
     backgroundColor: 'rgba(255, 82, 82, 0.15)',
@@ -1284,7 +1284,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   tripRouteTerm: {
-    color: '#2563EB',
+    color: '#173B70',
     fontSize: 12,
     fontWeight: '700',
     marginRight: 6,
@@ -1308,7 +1308,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     marginVertical: 10,
     borderWidth: 1,
-    borderColor: '#EFF6FF',
+    borderColor: '#F0F5FA',
   },
   terminalPoint: {
     alignItems: 'center',
@@ -1321,7 +1321,7 @@ const styles = StyleSheet.create({
   terminalPointVal: {
     fontSize: 15,
     fontWeight: '800',
-    color: '#2563EB',
+    color: '#173B70',
     marginTop: 2,
   },
   tripDetailsGrid: {
@@ -1377,7 +1377,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   btnTextRed: {
-    color: '#ff5252',
+    color: '#173B70',
     fontSize: 12,
     fontWeight: '700',
   },
@@ -1396,7 +1396,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   complianceTitle: {
-    color: '#feb300',
+    color: '#173B70',
     fontSize: 13,
     fontWeight: '800',
   },
@@ -1452,7 +1452,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   rosterChassis: {
-    color: '#2563EB',
+    color: '#173B70',
     fontSize: 12,
     fontWeight: '700',
   },
@@ -1511,15 +1511,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: '#EFF6FF',
+    backgroundColor: '#F0F5FA',
     borderWidth: 1,
-    borderColor: '#EFF6FF',
+    borderColor: '#F0F5FA',
     borderRadius: 10,
     padding: 12,
     marginBottom: 12,
   },
   jurisdictionNoticeText: {
-    color: '#2563EB',
+    color: '#173B70',
     fontSize: 11,
     fontWeight: '600',
     flex: 1,
@@ -1542,14 +1542,14 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#EFF6FF',
+    backgroundColor: '#F0F5FA',
     borderWidth: 1,
-    borderColor: '#2563EB',
+    borderColor: '#173B70',
     alignItems: 'center',
     justifyContent: 'center',
   },
   supervisorAvatarText: {
-    color: '#2563EB',
+    color: '#173B70',
     fontSize: 16,
     fontWeight: '800',
   },
@@ -1601,9 +1601,9 @@ const styles = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: 10,
-    backgroundColor: '#EFF6FF',
+    backgroundColor: '#F0F5FA',
     borderWidth: 1,
-    borderColor: '#EFF6FF',
+    borderColor: '#F0F5FA',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
@@ -1621,7 +1621,7 @@ const styles = StyleSheet.create({
   signOutCardBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#ff5252',
+    backgroundColor: '#173B70',
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 8,

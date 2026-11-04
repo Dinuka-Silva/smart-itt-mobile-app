@@ -141,8 +141,8 @@ export default function SupervisorMissionDispatcher() {
           selected: true,
           startingDay: isStart,
           endingDay: isEnd,
-          color: isStart || isEnd ? '#2563EB' : '#EFF6FF',
-          textColor: isStart || isEnd ? '#F8FAFC' : '#2563EB',
+          color: isStart || isEnd ? '#173B70' : '#F0F5FA',
+          textColor: isStart || isEnd ? '#F8FAFC' : '#173B70',
         };
         curDate.setDate(curDate.getDate() + 1);
       }
@@ -151,7 +151,7 @@ export default function SupervisorMissionDispatcher() {
         selected: true,
         startingDay: true,
         endingDay: true,
-        color: '#2563EB',
+        color: '#173B70',
         textColor: '#F8FAFC',
       };
     }
@@ -570,7 +570,7 @@ export default function SupervisorMissionDispatcher() {
           },
         ]}
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#2563EB" />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#173B70" />}
         keyboardShouldPersistTaps="handled"
       >
         {/* ─── A. SUPERVISOR HEADER ─── */}
@@ -599,7 +599,7 @@ export default function SupervisorMissionDispatcher() {
         {/* ─── B. LIVE METRICS SUMMARY ROW ─── */}
         <View style={styles.summaryHeaderRow}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-            <Ionicons name="bar-chart" size={15} color="#2563EB" />
+            <Ionicons name="bar-chart" size={15} color="#173B70" />
             <Text style={styles.summaryHeaderTitle}>TRIP SUMMARY METRICS</Text>
           </View>
           <TouchableOpacity
@@ -607,9 +607,9 @@ export default function SupervisorMissionDispatcher() {
             onPress={() => setDateRangeModalVisible(true)}
             activeOpacity={0.8}
           >
-            <Ionicons name="calendar-outline" size={12} color="#2563EB" />
+            <Ionicons name="calendar-outline" size={12} color="#173B70" />
             <Text style={styles.summaryDateBadgeText} numberOfLines={1}>{activePeriodLabel}</Text>
-            <Ionicons name="chevron-down" size={12} color="#2563EB" />
+            <Ionicons name="chevron-down" size={12} color="#173B70" />
           </TouchableOpacity>
         </View>
 
@@ -617,27 +617,27 @@ export default function SupervisorMissionDispatcher() {
           <View style={styles.metricCard}>
             <View style={styles.metricCardHeader}>
               <Text style={styles.metricLabel}>TOTAL TRIPS</Text>
-              <Ionicons name="swap-horizontal" size={14} color="#2563EB" />
+              <Ionicons name="swap-horizontal" size={14} color="#173B70" />
             </View>
-            <Text style={[styles.metricValue, { color: '#2563EB' }]}>{countTotal}</Text>
+            <Text style={[styles.metricValue, { color: '#173B70' }]}>{countTotal}</Text>
             <Text style={styles.metricSub}>{totalContainersDispatched} Containers Dispatched</Text>
           </View>
 
           <View style={styles.metricCard}>
             <View style={styles.metricCardHeader}>
               <Text style={styles.metricLabel}>ACTIVE</Text>
-              <Ionicons name="navigate" size={14} color="#22ef7e" />
+              <Ionicons name="navigate" size={14} color="#173B70" />
             </View>
-            <Text style={[styles.metricValue, { color: '#22ef7e' }]}>{countInProgress}</Text>
+            <Text style={[styles.metricValue, { color: '#173B70' }]}>{countInProgress}</Text>
             <Text style={styles.metricSub}>In Transit</Text>
           </View>
 
           <View style={styles.metricCard}>
             <View style={styles.metricCardHeader}>
               <Text style={styles.metricLabel}>PENDING PASS</Text>
-              <Ionicons name="time" size={14} color="#feb300" />
+              <Ionicons name="time" size={14} color="#173B70" />
             </View>
-            <Text style={[styles.metricValue, { color: '#feb300' }]}>{countPending}</Text>
+            <Text style={[styles.metricValue, { color: '#173B70' }]}>{countPending}</Text>
             <Text style={styles.metricSub}>Awaiting Action</Text>
           </View>
 
@@ -669,7 +669,7 @@ export default function SupervisorMissionDispatcher() {
               <Ionicons
                 name="time-outline"
                 size={16}
-                color={activeSegment === 'PENDING' ? '#0F766E' : '#6B7C85'}
+                color={activeSegment === 'PENDING' ? '#173B70' : '#6B7C85'}
               />
               <Text
                 style={[
@@ -695,7 +695,7 @@ export default function SupervisorMissionDispatcher() {
               <Ionicons
                 name="list-outline"
                 size={16}
-                color={activeSegment === 'ALL' ? '#0F766E' : '#6B7C85'}
+                color={activeSegment === 'ALL' ? '#173B70' : '#6B7C85'}
               />
               <Text
                 style={[
@@ -709,7 +709,7 @@ export default function SupervisorMissionDispatcher() {
           </View>
 
           <View style={styles.sectionTitleRow}>
-            <Ionicons name="pulse" size={18} color="#0F766E" />
+            <Ionicons name="pulse" size={18} color="#173B70" />
             <Text style={styles.sectionTitle}>
               INTER-TERMINAL TRIP MONITORING ({filteredTrips.length})
             </Text>
@@ -747,8 +747,8 @@ export default function SupervisorMissionDispatcher() {
                   }}
                   style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}
                 >
-                  <Ionicons name="close-circle" size={13} color="#ff5252" />
-                  <Text style={{ fontSize: 9, color: '#ff5252', fontWeight: '800' }}>RESET</Text>
+                  <Ionicons name="close-circle" size={13} color="#173B70" />
+                  <Text style={{ fontSize: 9, color: '#173B70', fontWeight: '800' }}>RESET</Text>
                 </TouchableOpacity>
               )}
             </View>
@@ -791,7 +791,7 @@ export default function SupervisorMissionDispatcher() {
                 activeOpacity={0.85}
               >
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 }}>
-                  <Ionicons name="calendar" size={14} color="#2563EB" />
+                  <Ionicons name="calendar" size={14} color="#173B70" />
                   <Text style={styles.activeRangeBannerText}>
                     {dateRangeStart && dateRangeEnd
                       ? `Range: ${formatFriendlyDate(dateRangeStart)}  ➔  ${formatFriendlyDate(dateRangeEnd)}`
@@ -914,7 +914,7 @@ export default function SupervisorMissionDispatcher() {
           {/* List of Trip Monitoring Cards Grouped Date-Wise */}
           <View style={{ gap: 14, marginTop: 4 }}>
             {loading ? (
-              <ActivityIndicator size="large" color="#2563EB" style={{ marginVertical: 20 }} />
+              <ActivityIndicator size="large" color="#173B70" style={{ marginVertical: 20 }} />
             ) : tripsByDate.length === 0 ? (
               <View style={styles.emptyPendingCard}>
                 <Ionicons name="file-tray-outline" size={28} color="#849396" />
@@ -929,7 +929,7 @@ export default function SupervisorMissionDispatcher() {
                   {/* Date Section Header */}
                   <View style={styles.dateGroupHeader}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                      <Ionicons name="calendar" size={14} color="#2563EB" />
+                      <Ionicons name="calendar" size={14} color="#173B70" />
                       <Text style={styles.dateGroupTitle}>{group.displayDate.toUpperCase()}</Text>
                       {group.isToday && (
                         <View style={styles.todayPill}>
@@ -998,11 +998,11 @@ export default function SupervisorMissionDispatcher() {
                           {/* Route Row */}
                           <View style={styles.monRouteBox}>
                             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                              <Ionicons name="boat" size={13} color="#2563EB" />
+                              <Ionicons name="boat" size={13} color="#173B70" />
                               <Text style={styles.monRouteText}>
                                 {t.sourceTerminal || 'CICT'}
                               </Text>
-                              <Ionicons name="arrow-forward" size={13} color="#2563EB" />
+                              <Ionicons name="arrow-forward" size={13} color="#173B70" />
                               <Text style={styles.monRouteText}>
                                 {getTripDischargeTerminal(t)}
                               </Text>
@@ -1019,7 +1019,7 @@ export default function SupervisorMissionDispatcher() {
                               <View style={styles.monTimingPanel}>
                                 <View style={styles.monTimingCol}>
                                   <View style={styles.monTimingHeader}>
-                                    <Ionicons name="play-circle" size={12} color="#2563EB" />
+                                    <Ionicons name="play-circle" size={12} color="#173B70" />
                                     <Text style={styles.monTimingLabel}>STARTED DATE & TIME</Text>
                                   </View>
                                   <Text style={styles.monTimingDate}>{timing.startDate}</Text>
@@ -1030,7 +1030,7 @@ export default function SupervisorMissionDispatcher() {
                                   <Ionicons name="arrow-forward" size={13} color="#3a4756" />
                                   {timing.duration && (
                                     <View style={styles.monDurationPill}>
-                                      <Ionicons name="timer-outline" size={10} color="#22ef7e" />
+                                      <Ionicons name="timer-outline" size={10} color="#173B70" />
                                       <Text style={styles.monDurationText}>{timing.duration}</Text>
                                     </View>
                                   )}
@@ -1083,7 +1083,7 @@ export default function SupervisorMissionDispatcher() {
                               {t.containers.map((c: any, cIdx: number) => (
                                 <View key={c.id || cIdx} style={styles.monContainerCard}>
                                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 }}>
-                                    <Ionicons name="cube-outline" size={14} color="#0F766E" />
+                                    <Ionicons name="cube-outline" size={14} color="#173B70" />
                                     <Text style={styles.monContainerNumber}>{c.containerNumber}</Text>
                                     <Text style={styles.monContainerSize}>{c.size || '20FT'}</Text>
                                     {c.isVerified === false && (
@@ -1103,7 +1103,7 @@ export default function SupervisorMissionDispatcher() {
                                     onPress={() => openPhotoModal(t, c)}
                                     activeOpacity={0.7}
                                   >
-                                    <Ionicons name="camera-outline" size={13} color="#0F766E" />
+                                    <Ionicons name="camera-outline" size={13} color="#173B70" />
                                     <Text style={styles.inspectPhotoBtnText}>Inspect Photo</Text>
                                   </TouchableOpacity>
                                 </View>
@@ -1117,15 +1117,15 @@ export default function SupervisorMissionDispatcher() {
                               backgroundColor: '#0a101d',
                               borderRadius: 10,
                               borderWidth: 1,
-                              borderColor: '#EFF6FF',
+                              borderColor: '#F0F5FA',
                               padding: 10,
                               gap: 8,
                               marginTop: 6,
                             }}>
                               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingBottom: 4, borderBottomWidth: 1, borderBottomColor: '#E2E8F0' }}>
                                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
-                                  <Ionicons name="shield-checkmark" size={13} color="#2563EB" />
-                                  <Text style={{ fontSize: 9.5, fontWeight: '900', color: '#2563EB', letterSpacing: 0.4 }}>
+                                  <Ionicons name="shield-checkmark" size={13} color="#173B70" />
+                                  <Text style={{ fontSize: 9.5, fontWeight: '900', color: '#173B70', letterSpacing: 0.4 }}>
                                     DRIVER DISCHARGE & SEAL VERIFICATION
                                   </Text>
                                 </View>
@@ -1137,7 +1137,7 @@ export default function SupervisorMissionDispatcher() {
                                   borderWidth: 1,
                                   borderColor: 'rgba(34, 239, 126, 0.3)',
                                 }}>
-                                  <Text style={{ fontSize: 8, fontWeight: '800', color: '#22ef7e' }}>SLPA AUDITED</Text>
+                                  <Text style={{ fontSize: 8, fontWeight: '800', color: '#173B70' }}>SLPA AUDITED</Text>
                                 </View>
                               </View>
 
@@ -1145,8 +1145,8 @@ export default function SupervisorMissionDispatcher() {
                                 <View style={{ flex: 1, backgroundColor: '#0f1726', borderRadius: 6, borderWidth: 1, borderColor: '#E2E8F0', padding: 6 }}>
                                   <Text style={{ fontSize: 8, fontWeight: '800', color: '#849396' }}>BAY / BERTH</Text>
                                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
-                                    <Ionicons name="location" size={11} color="#feb300" />
-                                    <Text style={{ fontSize: 9.5, fontWeight: '800', color: '#2563EB' }} numberOfLines={1}>
+                                    <Ionicons name="location" size={11} color="#173B70" />
+                                    <Text style={{ fontSize: 9.5, fontWeight: '800', color: '#173B70' }} numberOfLines={1}>
                                       {getTripDischargeTerminal(t)} · {t.dischargeBay || 'Bay 04, Crane 02'}
                                     </Text>
                                   </View>
@@ -1165,9 +1165,9 @@ export default function SupervisorMissionDispatcher() {
                                     <Ionicons
                                       name={t.sealStatus?.includes('DAMAGED') ? 'warning' : 'shield-checkmark'}
                                       size={11}
-                                      color={t.sealStatus?.includes('DAMAGED') ? '#ff5252' : '#22ef7e'}
+                                      color={t.sealStatus?.includes('DAMAGED') ? '#173B70' : '#173B70'}
                                     />
-                                    <Text style={{ fontSize: 9.5, fontWeight: '800', color: t.sealStatus?.includes('DAMAGED') ? '#ff5252' : '#22ef7e' }} numberOfLines={1}>
+                                    <Text style={{ fontSize: 9.5, fontWeight: '800', color: t.sealStatus?.includes('DAMAGED') ? '#173B70' : '#173B70' }} numberOfLines={1}>
                                       {t.sealStatus || 'INTACT (VERIFIED)'}
                                     </Text>
                                   </View>
@@ -1186,9 +1186,9 @@ export default function SupervisorMissionDispatcher() {
                                     <Ionicons
                                       name={t.damageStatus === 'DAMAGED' ? 'alert-circle' : 'checkmark-circle'}
                                       size={11}
-                                      color={t.damageStatus === 'DAMAGED' ? '#ff5252' : '#22ef7e'}
+                                      color={t.damageStatus === 'DAMAGED' ? '#173B70' : '#173B70'}
                                     />
-                                    <Text style={{ fontSize: 9.5, fontWeight: '800', color: t.damageStatus === 'DAMAGED' ? '#ff5252' : '#22ef7e' }} numberOfLines={1}>
+                                    <Text style={{ fontSize: 9.5, fontWeight: '800', color: t.damageStatus === 'DAMAGED' ? '#173B70' : '#173B70' }} numberOfLines={1}>
                                       {t.damageStatus === 'DAMAGED' ? 'DAMAGED' : 'SOUND'}
                                     </Text>
                                   </View>
@@ -1200,11 +1200,11 @@ export default function SupervisorMissionDispatcher() {
                                 backgroundColor: '#F8FAFC',
                                 borderRadius: 6,
                                 borderLeftWidth: 3,
-                                borderLeftColor: '#2563EB',
+                                borderLeftColor: '#173B70',
                                 paddingHorizontal: 8,
                                 paddingVertical: 6,
                               }}>
-                                <Text style={{ fontSize: 7.5, fontWeight: '900', color: '#2563EB', letterSpacing: 0.4, marginBottom: 2 }}>
+                                <Text style={{ fontSize: 7.5, fontWeight: '900', color: '#173B70', letterSpacing: 0.4, marginBottom: 2 }}>
                                   DRIVER COMPLETION REMARKS
                                 </Text>
                                 <Text style={{ fontSize: 9.5, color: '#1E293B', fontStyle: 'italic', lineHeight: 13 }}>
@@ -1232,7 +1232,7 @@ export default function SupervisorMissionDispatcher() {
                                   style={styles.rejectBtn}
                                   onPress={() => handleOpenRejectModal(t)}
                                 >
-                                  <Ionicons name="close-circle" size={14} color="#ff5252" />
+                                  <Ionicons name="close-circle" size={14} color="#173B70" />
                                   <Text style={styles.rejectBtnText}>REJECT</Text>
                                 </TouchableOpacity>
                               )}
@@ -1257,7 +1257,7 @@ export default function SupervisorMissionDispatcher() {
           <View style={styles.modalCard}>
             <View style={styles.modalHeader}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <Ionicons name="alert-circle" size={20} color="#ff5252" />
+                <Ionicons name="alert-circle" size={20} color="#173B70" />
                 <Text style={styles.modalTitle}>REJECT TRIP SUBMISSION</Text>
               </View>
               <TouchableOpacity onPress={() => setRejectModalVisible(false)}>
@@ -1267,7 +1267,7 @@ export default function SupervisorMissionDispatcher() {
 
             <Text style={styles.modalDesc}>
               Please specify the mandatory reason for rejecting Gate Pass for Trip{' '}
-              <Text style={{ color: '#2563EB', fontWeight: '800' }}>
+              <Text style={{ color: '#173B70', fontWeight: '800' }}>
                 {tripToReject?.tripNumber || tripToReject?.id}
               </Text>.
             </Text>
@@ -1284,7 +1284,7 @@ export default function SupervisorMissionDispatcher() {
 
             <View style={{ flexDirection: 'row', gap: 10, marginTop: 12 }}>
               <TouchableOpacity
-                style={[styles.modalSubmitBtn, { backgroundColor: '#ff5252' }]}
+                style={[styles.modalSubmitBtn, { backgroundColor: '#173B70' }]}
                 onPress={handleConfirmRejection}
                 disabled={submittingDecision}
               >
@@ -1308,7 +1308,7 @@ export default function SupervisorMissionDispatcher() {
             {/* Header */}
             <View style={styles.modalHeader}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <Ionicons name="calendar" size={18} color="#2563EB" />
+                <Ionicons name="calendar" size={18} color="#173B70" />
                 <Text style={styles.modalTitle}>FILTER BY DATE RANGE</Text>
               </View>
               <TouchableOpacity
@@ -1346,7 +1346,7 @@ export default function SupervisorMissionDispatcher() {
                   {dateRangeStart ? formatFriendlyDate(dateRangeStart) : 'Select Start'}
                 </Text>
               </View>
-              <Ionicons name="arrow-forward" size={16} color="#2563EB" />
+              <Ionicons name="arrow-forward" size={16} color="#173B70" />
               <View style={styles.rangeDateCol}>
                 <Text style={styles.rangeDateLabel}>END DATE</Text>
                 <Text style={styles.rangeDateVal}>
@@ -1369,14 +1369,14 @@ export default function SupervisorMissionDispatcher() {
                   backgroundColor: '#FFFFFF',
                   calendarBackground: '#FFFFFF',
                   textSectionTitleColor: '#849396',
-                  selectedDayBackgroundColor: '#2563EB',
+                  selectedDayBackgroundColor: '#173B70',
                   selectedDayTextColor: '#F8FAFC',
-                  todayTextColor: '#2563EB',
+                  todayTextColor: '#173B70',
                   dayTextColor: '#dde2f0',
                   textDisabledColor: '#323f4b',
-                  arrowColor: '#2563EB',
-                  monthTextColor: '#2563EB',
-                  indicatorColor: '#2563EB',
+                  arrowColor: '#173B70',
+                  monthTextColor: '#173B70',
+                  indicatorColor: '#173B70',
                   textDayFontWeight: '600',
                   textMonthFontWeight: '800',
                   textDayHeaderFontWeight: '700',
@@ -1423,7 +1423,7 @@ export default function SupervisorMissionDispatcher() {
           <View style={[styles.modalCard, { maxWidth: 480 }]}>
             <View style={styles.modalHeader}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <Ionicons name="camera" size={20} color="#0F766E" />
+                <Ionicons name="camera" size={20} color="#173B70" />
                 <Text style={styles.modalTitle}>CONTAINER PHOTO VERIFICATION</Text>
               </View>
               <TouchableOpacity onPress={() => setPhotoModalVisible(false)}>
@@ -1432,7 +1432,7 @@ export default function SupervisorMissionDispatcher() {
             </View>
 
             {loadingPhoto ? (
-              <ActivityIndicator size="large" color="#0F766E" style={{ marginVertical: 30 }} />
+              <ActivityIndicator size="large" color="#173B70" style={{ marginVertical: 30 }} />
             ) : activePhoto ? (
               <View style={{ gap: 12, marginTop: 10 }}>
                 <View style={{ height: 260, backgroundColor: '#F7F9FA', borderRadius: 8, overflow: 'hidden', borderWidth: 1, borderColor: '#E5EAEC', alignItems: 'center', justifyContent: 'center' }}>
@@ -1455,7 +1455,7 @@ export default function SupervisorMissionDispatcher() {
                     Container: {activePhoto.containerNumber || '-'}
                   </Text>
                   <View style={{
-                    backgroundColor: activePhoto.verificationStatus === 'VERIFIED' ? '#E6F6EC' : activePhoto.verificationStatus === 'REJECTED' ? '#FDE8E8' : '#FFF4DB',
+                    backgroundColor: activePhoto.verificationStatus === 'VERIFIED' ? '#E6F6EC' : activePhoto.verificationStatus === 'REJECTED' ? '#F0F5FA' : '#F0F5FA',
                     paddingHorizontal: 8,
                     paddingVertical: 3,
                     borderRadius: 12,
@@ -1463,7 +1463,7 @@ export default function SupervisorMissionDispatcher() {
                     <Text style={{
                       fontSize: 11,
                       fontWeight: '700',
-                      color: activePhoto.verificationStatus === 'VERIFIED' ? '#1E7A45' : activePhoto.verificationStatus === 'REJECTED' ? '#B42318' : '#8A5A00',
+                      color: activePhoto.verificationStatus === 'VERIFIED' ? '#1E7A45' : activePhoto.verificationStatus === 'REJECTED' ? '#173B70' : '#173B70',
                     }}>
                       {activePhoto.verificationStatus || 'PENDING'}
                     </Text>
@@ -1499,7 +1499,7 @@ export default function SupervisorMissionDispatcher() {
                   </TouchableOpacity>
 
                   <TouchableOpacity
-                    style={[styles.modalSubmitBtn, { backgroundColor: '#B42318' }]}
+                    style={[styles.modalSubmitBtn, { backgroundColor: '#173B70' }]}
                     onPress={async () => {
                       if (!showRejectNoteInput) {
                         setShowRejectNoteInput(true);
@@ -1563,7 +1563,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: '#feb300',
+    backgroundColor: '#173B70',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -1590,7 +1590,7 @@ const styles = StyleSheet.create({
     paddingVertical: 1,
   },
   rolePillText: {
-    color: '#feb300',
+    color: '#173B70',
     fontSize: 9,
     fontWeight: '800',
   },
@@ -1614,12 +1614,12 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: '#2563EB',
+    backgroundColor: '#173B70',
   },
   onlineText: {
     fontSize: 9,
     fontWeight: '800',
-    color: '#2563EB',
+    color: '#173B70',
     letterSpacing: 0.6,
   },
 
@@ -1720,11 +1720,11 @@ const styles = StyleSheet.create({
   },
   filterChipActive: {
     backgroundColor: 'rgba(254, 179, 0, 0.15)',
-    borderColor: '#feb300',
+    borderColor: '#173B70',
   },
   filterChipActiveCyan: {
-    backgroundColor: '#EFF6FF',
-    borderColor: '#2563EB',
+    backgroundColor: '#F0F5FA',
+    borderColor: '#173B70',
   },
   filterChipText: {
     color: '#849396',
@@ -1732,10 +1732,10 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   filterChipTextActive: {
-    color: '#feb300',
+    color: '#173B70',
   },
   filterChipTextActiveCyan: {
-    color: '#2563EB',
+    color: '#173B70',
   },
 
   // ─── DATE-WISE GROUP STYLES ───
@@ -1760,7 +1760,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   todayPill: {
-    backgroundColor: '#2563EB',
+    backgroundColor: '#173B70',
     paddingHorizontal: 5,
     paddingVertical: 1,
     borderRadius: 3,
@@ -1776,10 +1776,10 @@ const styles = StyleSheet.create({
     paddingVertical: 1,
     borderRadius: 3,
     borderWidth: 1,
-    borderColor: '#feb300',
+    borderColor: '#173B70',
   },
   yesterdayPillText: {
-    color: '#feb300',
+    color: '#173B70',
     fontSize: 8,
     fontWeight: '800',
   },
@@ -1792,7 +1792,7 @@ const styles = StyleSheet.create({
     borderColor: '#E2E8F0',
   },
   dateGroupCountText: {
-    color: '#2563EB',
+    color: '#173B70',
     fontSize: 9,
     fontWeight: '800',
   },
@@ -1801,7 +1801,7 @@ const styles = StyleSheet.create({
     height: 32,
     borderRadius: 16,
     borderWidth: 1.5,
-    borderColor: '#2563EB',
+    borderColor: '#173B70',
   },
   monDriverThumbFallback: {
     width: 32,
@@ -1809,12 +1809,12 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     backgroundColor: '#101d30',
     borderWidth: 1.5,
-    borderColor: '#2563EB',
+    borderColor: '#173B70',
     alignItems: 'center',
     justifyContent: 'center',
   },
   monDriverThumbText: {
-    color: '#2563EB',
+    color: '#173B70',
     fontWeight: '900',
     fontSize: 12,
   },
@@ -1824,15 +1824,15 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   monSpecBoldHighlight: {
-    color: '#feb300',
+    color: '#173B70',
     fontWeight: '800',
   },
   monSpecBoldCyan: {
-    color: '#2563EB',
+    color: '#173B70',
     fontWeight: '800',
   },
   monSpecBoldGreen: {
-    color: '#22ef7e',
+    color: '#173B70',
     fontWeight: '800',
   },
 
@@ -1854,10 +1854,10 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: '#22ef7e',
+    backgroundColor: '#173B70',
   },
   monTripId: {
-    color: '#2563EB',
+    color: '#173B70',
     fontSize: 12,
     fontWeight: '900',
   },
@@ -1867,7 +1867,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   badgeGreen: { backgroundColor: 'rgba(34, 239, 126, 0.15)' },
-  badgeCyan: { backgroundColor: '#EFF6FF' },
+  badgeCyan: { backgroundColor: '#F0F5FA' },
   badgeAmber: { backgroundColor: 'rgba(254, 179, 0, 0.15)' },
   badgeRed: { backgroundColor: 'rgba(255, 82, 82, 0.15)' },
   monStatusText: {
@@ -1886,17 +1886,17 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   monRouteTag: {
-    backgroundColor: '#EFF6FF',
+    backgroundColor: '#F0F5FA',
     borderRadius: 4,
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderWidth: 1,
-    borderColor: '#EFF6FF',
+    borderColor: '#F0F5FA',
   },
   monRouteTagText: {
     fontSize: 9,
     fontWeight: '800',
-    color: '#2563EB',
+    color: '#173B70',
     letterSpacing: 0.5,
   },
   monTimingPanel: {
@@ -1925,7 +1925,7 @@ const styles = StyleSheet.create({
   monTimingLabel: {
     fontSize: 8.5,
     fontWeight: '800',
-    color: '#2563EB',
+    color: '#173B70',
     letterSpacing: 0.4,
   },
   monTimingDate: {
@@ -1936,7 +1936,7 @@ const styles = StyleSheet.create({
   monTimingTime: {
     fontSize: 12,
     fontWeight: '900',
-    color: '#2563EB',
+    color: '#173B70',
     letterSpacing: 0.2,
   },
   monTimingDivider: {
@@ -1959,7 +1959,7 @@ const styles = StyleSheet.create({
   monDurationText: {
     fontSize: 9,
     fontWeight: '800',
-    color: '#22ef7e',
+    color: '#173B70',
   },
   monTime: {
     color: '#849396',
@@ -1987,7 +1987,7 @@ const styles = StyleSheet.create({
     borderTopColor: '#161c25',
   },
   monContainersText: {
-    color: '#2563EB',
+    color: '#173B70',
     fontSize: 9,
   },
   emptyPendingCard: {
@@ -2020,7 +2020,7 @@ const styles = StyleSheet.create({
   approveBtn: {
     flex: 1,
     height: 38,
-    backgroundColor: '#2563EB',
+    backgroundColor: '#173B70',
     borderRadius: radius.DEFAULT,
     flexDirection: 'row',
     alignItems: 'center',
@@ -2035,17 +2035,17 @@ const styles = StyleSheet.create({
   rejectBtn: {
     paddingHorizontal: 16,
     height: 38,
-    backgroundColor: '#EFF6FF',
+    backgroundColor: '#F0F5FA',
     borderRadius: radius.DEFAULT,
     borderWidth: 1,
-    borderColor: '#ff5252',
+    borderColor: '#173B70',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
   },
   rejectBtnText: {
-    color: '#ff5252',
+    color: '#173B70',
     fontWeight: '800',
     fontSize: 10,
   },
@@ -2087,7 +2087,7 @@ const styles = StyleSheet.create({
   rejectionInput: {
     backgroundColor: '#F8FAFC',
     borderWidth: 1,
-    borderColor: '#ff5252',
+    borderColor: '#173B70',
     borderRadius: radius.DEFAULT,
     padding: 10,
     color: '#1E293B',
@@ -2115,7 +2115,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   summaryHeaderTitle: {
-    color: '#2563EB',
+    color: '#173B70',
     fontSize: 12,
     fontWeight: '900',
     letterSpacing: 0.8,
@@ -2124,15 +2124,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    backgroundColor: '#EFF6FF',
+    backgroundColor: '#F0F5FA',
     borderWidth: 1,
-    borderColor: '#EFF6FF',
+    borderColor: '#F0F5FA',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 6,
   },
   summaryDateBadgeText: {
-    color: '#2563EB',
+    color: '#173B70',
     fontSize: 11,
     fontWeight: '700',
   },
@@ -2140,9 +2140,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#EFF6FF',
+    backgroundColor: '#F0F5FA',
     borderWidth: 1,
-    borderColor: '#2563EB',
+    borderColor: '#173B70',
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 8,
@@ -2154,7 +2154,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   changeRangeBtn: {
-    backgroundColor: '#2563EB',
+    backgroundColor: '#173B70',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 4,
@@ -2191,7 +2191,7 @@ const styles = StyleSheet.create({
     borderColor: '#1f3452',
   },
   calendarPresetText: {
-    color: '#2563EB',
+    color: '#173B70',
     fontSize: 11,
     fontWeight: '700',
   },
@@ -2201,7 +2201,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     backgroundColor: '#F8FAFC',
     borderWidth: 1,
-    borderColor: '#EFF6FF',
+    borderColor: '#F0F5FA',
     borderRadius: 10,
     paddingHorizontal: 14,
     paddingVertical: 10,
@@ -2258,7 +2258,7 @@ const styles = StyleSheet.create({
     gap: 6,
     height: 42,
     borderRadius: 10,
-    backgroundColor: '#2563EB',
+    backgroundColor: '#173B70',
   },
   calendarApplyBtnText: {
     color: '#FFFFFF',
@@ -2286,8 +2286,8 @@ const styles = StyleSheet.create({
     borderColor: '#E5EAEC',
   },
   topSegmentBtnActive: {
-    backgroundColor: '#E3F4F1',
-    borderColor: '#0F766E',
+    backgroundColor: '#F0F5FA',
+    borderColor: '#173B70',
   },
   topSegmentBtnText: {
     fontSize: 12,
@@ -2295,7 +2295,7 @@ const styles = StyleSheet.create({
     color: '#6B7C85',
   },
   topSegmentBtnTextActive: {
-    color: '#0F766E',
+    color: '#173B70',
     fontWeight: '700',
   },
 
@@ -2315,7 +2315,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '700',
     fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
-    color: '#0F766E',
+    color: '#173B70',
   },
   monContainerSize: {
     fontSize: 10,
@@ -2327,7 +2327,7 @@ const styles = StyleSheet.create({
     borderRadius: 3,
   },
   monUnverifiedBadge: {
-    backgroundColor: '#FFF4DB',
+    backgroundColor: '#F0F5FA',
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 4,
@@ -2335,7 +2335,7 @@ const styles = StyleSheet.create({
   monUnverifiedText: {
     fontSize: 9,
     fontWeight: '700',
-    color: '#8A5A00',
+    color: '#173B70',
   },
   monVerifiedBadge: {
     backgroundColor: '#E6F6EC',
@@ -2357,11 +2357,11 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 4,
     borderWidth: 1,
-    borderColor: '#0F766E',
+    borderColor: '#173B70',
   },
   inspectPhotoBtnText: {
     fontSize: 10,
     fontWeight: '700',
-    color: '#0F766E',
+    color: '#173B70',
   },
 });

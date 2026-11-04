@@ -12,12 +12,12 @@ export default function SupervisorTabsLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: '#0F766E',
-        tabBarInactiveTintColor: '#6B7C85',
+        tabBarActiveTintColor: '#173B70',
+        tabBarInactiveTintColor: '#5A779D',
         tabBarStyle: {
           backgroundColor: '#FFFFFF',
           borderTopWidth: 1,
-          borderTopColor: '#E5EAEC',
+          borderTopColor: '#D0DEEB',
           height: Platform.select({
             ios: 62 + bottomInset,
             android: 64 + (insets.bottom > 0 ? insets.bottom : 8),
@@ -29,10 +29,10 @@ export default function SupervisorTabsLayout() {
             default: 8,
           }),
           paddingTop: 8,
-          elevation: 8,
-          shadowColor: '#000',
+          elevation: 6,
+          shadowColor: '#173B70',
           shadowOffset: { width: 0, height: -2 },
-          shadowOpacity: 0.05,
+          shadowOpacity: 0.06,
           shadowRadius: 4,
         },
         tabBarItemStyle: {
@@ -48,7 +48,7 @@ export default function SupervisorTabsLayout() {
         },
         tabBarLabelStyle: {
           fontSize: 11,
-          fontWeight: '600',
+          fontWeight: '700',
           marginTop: 3,
           textAlign: 'center',
         },
@@ -63,7 +63,7 @@ export default function SupervisorTabsLayout() {
               <Ionicons
                 name={focused ? 'home' : 'home-outline'}
                 size={20}
-                color={focused ? '#0F766E' : '#6B7C85'}
+                color={focused ? '#173B70' : '#5A779D'}
                 style={{ textAlign: 'center' }}
               />
             </View>
@@ -79,7 +79,7 @@ export default function SupervisorTabsLayout() {
               <Ionicons
                 name={focused ? 'people' : 'people-outline'}
                 size={20}
-                color={focused ? '#0F766E' : '#6B7C85'}
+                color={focused ? '#173B70' : '#5A779D'}
                 style={{ textAlign: 'center' }}
               />
             </View>
@@ -95,7 +95,7 @@ export default function SupervisorTabsLayout() {
               <Ionicons
                 name={focused ? 'swap-horizontal' : 'swap-horizontal-outline'}
                 size={20}
-                color={focused ? '#0F766E' : '#6B7C85'}
+                color={focused ? '#173B70' : '#5A779D'}
                 style={{ textAlign: 'center' }}
               />
             </View>
@@ -111,7 +111,7 @@ export default function SupervisorTabsLayout() {
               <Ionicons
                 name={focused ? 'document-text' : 'document-text-outline'}
                 size={20}
-                color={focused ? '#0F766E' : '#6B7C85'}
+                color={focused ? '#173B70' : '#5A779D'}
                 style={{ textAlign: 'center' }}
               />
             </View>
@@ -127,7 +127,7 @@ export default function SupervisorTabsLayout() {
               <Ionicons
                 name={focused ? 'person' : 'person-outline'}
                 size={20}
-                color={focused ? '#0F766E' : '#6B7C85'}
+                color={focused ? '#173B70' : '#5A779D'}
                 style={{ textAlign: 'center' }}
               />
             </View>
@@ -154,6 +154,6 @@ const styles = StyleSheet.create({
     overflow: 'visible',
   },
   iconWrapActive: {
-    backgroundColor: '#E3F4F1',
+    backgroundColor: '#E8F1FA',
   },
 });

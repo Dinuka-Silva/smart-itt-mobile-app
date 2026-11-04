@@ -167,7 +167,7 @@ export default function AdminSupervisorsTab() {
 
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
           <TouchableOpacity
-            style={[styles.addBtn, { backgroundColor: '#0F766E' }]}
+            style={[styles.addBtn, { backgroundColor: '#173B70' }]}
             onPress={() => setImportModalVisible(true)}
             activeOpacity={0.8}
           >
@@ -212,7 +212,7 @@ export default function AdminSupervisorsTab() {
       {/* Supervisors List */}
       {loading && !refreshing ? (
         <View style={styles.centerLoading}>
-          <ActivityIndicator size="large" color="#2563EB" />
+          <ActivityIndicator size="large" color="#173B70" />
         </View>
       ) : (
         <ScrollView
@@ -224,7 +224,7 @@ export default function AdminSupervisorsTab() {
             },
           ]}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#2563EB" />
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#173B70" />
           }
         >
           {supervisors.map((s) => (
@@ -240,13 +240,13 @@ export default function AdminSupervisorsTab() {
               <View style={styles.cardTop}>
                 <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 10, flex: 1 }}>
                   <View style={styles.avatarCircle}>
-                    <Ionicons name="shield" size={18} color="#feb300" />
+                    <Ionicons name="shield" size={18} color="#173B70" />
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.supName}>{s.fullName}</Text>
                     <Text style={styles.supId}>{s.employeeId} • {s.mobileNumber}</Text>
                     <View style={styles.usernamePill}>
-                      <Ionicons name="key" size={11} color="#2563EB" style={{ marginRight: 4 }} />
+                      <Ionicons name="key" size={11} color="#173B70" style={{ marginRight: 4 }} />
                       <Text style={styles.usernamePillLabel}>LOGIN USERNAME: </Text>
                       <Text style={styles.usernamePillValue}>{s.username || s.employeeId}</Text>
                     </View>
@@ -277,8 +277,8 @@ export default function AdminSupervisorsTab() {
 
               <View style={styles.cardBottom}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                  <View style={[styles.statusDot, { backgroundColor: s.status === 'ACTIVE' ? '#4caf50' : '#feb300' }]} />
-                  <Text style={[styles.statusPillText, { color: s.status === 'ACTIVE' ? '#4caf50' : '#feb300' }]}>
+                  <View style={[styles.statusDot, { backgroundColor: s.status === 'ACTIVE' ? '#4caf50' : '#173B70' }]} />
+                  <Text style={[styles.statusPillText, { color: s.status === 'ACTIVE' ? '#4caf50' : '#173B70' }]}>
                     {s.status || 'ACTIVE'}
                   </Text>
                 </View>
@@ -310,12 +310,12 @@ export default function AdminSupervisorsTab() {
           <View style={[styles.modalBox, { maxHeight: '90%' }]}>
             <View style={styles.modalHeader}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(254, 179, 0, 0.15)', borderWidth: 1, borderColor: '#feb300', alignItems: 'center', justifyContent: 'center' }}>
-                  <Ionicons name="shield-checkmark" size={22} color="#feb300" />
+                <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(254, 179, 0, 0.15)', borderWidth: 1, borderColor: '#173B70', alignItems: 'center', justifyContent: 'center' }}>
+                  <Ionicons name="shield-checkmark" size={22} color="#173B70" />
                 </View>
                 <View>
                   <Text style={styles.modalTitle}>{selectedSupervisor?.fullName}</Text>
-                  <Text style={{ color: '#feb300', fontSize: 13, fontWeight: '800' }}>
+                  <Text style={{ color: '#173B70', fontSize: 13, fontWeight: '800' }}>
                     {selectedSupervisor?.employeeId} • Port-Wide Supervisor
                   </Text>
                 </View>
@@ -327,7 +327,7 @@ export default function AdminSupervisorsTab() {
 
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 20 }}>
               {/* Status Header */}
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#EFF6FF', padding: 12, borderRadius: 8, marginVertical: 12, borderWidth: 1, borderColor: '#E2E8F0' }}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#F0F5FA', padding: 12, borderRadius: 8, marginVertical: 12, borderWidth: 1, borderColor: '#E2E8F0' }}>
                 <Text style={{ color: '#90caf9', fontSize: 12, fontWeight: '700' }}>ACCOUNT STATUS</Text>
                 <View style={[styles.statusPill, selectedSupervisor?.status === 'ACTIVE' ? styles.statusPillActive : styles.statusPillSuspended]}>
                   <Text style={styles.statusPillText}>{selectedSupervisor?.status || 'ACTIVE'}</Text>
@@ -336,14 +336,14 @@ export default function AdminSupervisorsTab() {
 
               {/* Portal Login Credentials */}
               <Text style={styles.modalSectionLabel}>PORTAL LOGIN CREDENTIALS</Text>
-              <View style={[styles.detailCardBox, { borderColor: '#EFF6FF', backgroundColor: '#EFF6FF' }]}>
+              <View style={[styles.detailCardBox, { borderColor: '#F0F5FA', backgroundColor: '#F0F5FA' }]}>
                 <View style={styles.detailRow}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                    <Ionicons name="key" size={14} color="#2563EB" />
-                    <Text style={[styles.detailRowLabel, { color: '#2563EB', fontWeight: '800' }]}>System Login Username:</Text>
+                    <Ionicons name="key" size={14} color="#173B70" />
+                    <Text style={[styles.detailRowLabel, { color: '#173B70', fontWeight: '800' }]}>System Login Username:</Text>
                   </View>
-                  <View style={{ backgroundColor: '#EFF6FF', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6, borderWidth: 1, borderColor: '#2563EB' }}>
-                    <Text style={{ color: '#2563EB', fontSize: 13, fontWeight: '900', letterSpacing: 0.8 }}>
+                  <View style={{ backgroundColor: '#F0F5FA', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6, borderWidth: 1, borderColor: '#173B70' }}>
+                    <Text style={{ color: '#173B70', fontSize: 13, fontWeight: '900', letterSpacing: 0.8 }}>
                       {selectedSupervisor?.username || selectedSupervisor?.employeeId}
                     </Text>
                   </View>
@@ -354,11 +354,11 @@ export default function AdminSupervisorsTab() {
                 </View>
                 <View style={styles.detailRow}>
                   <Text style={styles.detailRowLabel}>Login Role Clearance:</Text>
-                  <Text style={[styles.detailRowValue, { color: '#feb300', fontWeight: '800' }]}>PORT OPERATIONS SUPERVISOR</Text>
+                  <Text style={[styles.detailRowValue, { color: '#173B70', fontWeight: '800' }]}>PORT OPERATIONS SUPERVISOR</Text>
                 </View>
                 <View style={styles.detailRow}>
                   <Text style={styles.detailRowLabel}>Terminal Control Scope:</Text>
-                  <Text style={[styles.detailRowValue, { color: '#22ef7e', fontWeight: '700' }]}>ALL 6 GATES (PORT-WIDE)</Text>
+                  <Text style={[styles.detailRowValue, { color: '#173B70', fontWeight: '700' }]}>ALL 6 GATES (PORT-WIDE)</Text>
                 </View>
               </View>
 
@@ -367,7 +367,7 @@ export default function AdminSupervisorsTab() {
               <View style={styles.detailCardBox}>
                 <View style={styles.detailRow}>
                   <Text style={styles.detailRowLabel}>Jurisdiction Scope:</Text>
-                  <Text style={[styles.detailRowValue, { color: '#2563EB', fontWeight: '800' }]}>ALL TERMINALS (PORT-WIDE)</Text>
+                  <Text style={[styles.detailRowValue, { color: '#173B70', fontWeight: '800' }]}>ALL TERMINALS (PORT-WIDE)</Text>
                 </View>
                 <View style={styles.detailRow}>
                   <Text style={styles.detailRowLabel}>Terminal Gates:</Text>
@@ -411,7 +411,7 @@ export default function AdminSupervisorsTab() {
               <View style={styles.detailCardBox}>
                 <View style={styles.detailRow}>
                   <Text style={styles.detailRowLabel}>System Role:</Text>
-                  <Text style={[styles.detailRowValue, { color: '#feb300', fontWeight: '800' }]}>ROLE_SUPERVISOR</Text>
+                  <Text style={[styles.detailRowValue, { color: '#173B70', fontWeight: '800' }]}>ROLE_SUPERVISOR</Text>
                 </View>
                 <View style={styles.detailRow}>
                   <Text style={styles.detailRowLabel}>Trip Verification Authority:</Text>
@@ -427,7 +427,7 @@ export default function AdminSupervisorsTab() {
               <Text style={styles.modalSectionLabel}>ADMIN ACTIONS</Text>
               <View style={{ flexDirection: 'row', gap: 10, marginTop: 4 }}>
                 <TouchableOpacity
-                  style={{ flex: 1, backgroundColor: selectedSupervisor?.status === 'ACTIVE' ? '#ff5252' : '#4caf50', paddingVertical: 12, borderRadius: 8, alignItems: 'center' }}
+                  style={{ flex: 1, backgroundColor: selectedSupervisor?.status === 'ACTIVE' ? '#173B70' : '#4caf50', paddingVertical: 12, borderRadius: 8, alignItems: 'center' }}
                   onPress={() => handleToggleStatus(selectedSupervisor)}
                   activeOpacity={0.8}
                 >
@@ -437,11 +437,11 @@ export default function AdminSupervisorsTab() {
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  style={{ flex: 1, backgroundColor: '#EFF6FF', borderWidth: 1, borderColor: '#2563EB', paddingVertical: 12, borderRadius: 8, alignItems: 'center' }}
+                  style={{ flex: 1, backgroundColor: '#F0F5FA', borderWidth: 1, borderColor: '#173B70', paddingVertical: 12, borderRadius: 8, alignItems: 'center' }}
                   onPress={handleResetPassword}
                   activeOpacity={0.8}
                 >
-                  <Text style={{ color: '#2563EB', fontWeight: '800', fontSize: 13 }}>RESET PASSWORD</Text>
+                  <Text style={{ color: '#173B70', fontWeight: '800', fontSize: 13 }}>RESET PASSWORD</Text>
                 </TouchableOpacity>
               </View>
             </ScrollView>
@@ -513,8 +513,8 @@ export default function AdminSupervisorsTab() {
 
             <View style={styles.inputGroup}>
               <Text style={styles.inputLabel}>Jurisdiction Authority</Text>
-              <View style={[styles.modalInput, { justifyContent: 'center', backgroundColor: '#EFF6FF', borderColor: '#EFF6FF' }]}>
-                <Text style={{ color: '#2563EB', fontSize: 13, fontWeight: '700' }}>
+              <View style={[styles.modalInput, { justifyContent: 'center', backgroundColor: '#F0F5FA', borderColor: '#F0F5FA' }]}>
+                <Text style={{ color: '#173B70', fontSize: 13, fontWeight: '700' }}>
                   ALL TERMINALS (PORT-WIDE JURISDICTION)
                 </Text>
               </View>
@@ -589,7 +589,7 @@ const styles = StyleSheet.create({
   addBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#feb300',
+    backgroundColor: '#173B70',
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 8,
@@ -665,9 +665,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     alignSelf: 'flex-start',
-    backgroundColor: '#EFF6FF',
+    backgroundColor: '#F0F5FA',
     borderWidth: 1,
-    borderColor: '#EFF6FF',
+    borderColor: '#F0F5FA',
     borderRadius: 6,
     paddingHorizontal: 8,
     paddingVertical: 3,
@@ -676,7 +676,7 @@ const styles = StyleSheet.create({
   usernamePillLabel: {
     fontSize: 10,
     fontWeight: '800',
-    color: '#2563EB',
+    color: '#173B70',
     letterSpacing: 0.5,
   },
   usernamePillValue: {
@@ -686,15 +686,15 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   terminalBadge: {
-    backgroundColor: '#EFF6FF',
-    borderColor: '#2563EB',
+    backgroundColor: '#F0F5FA',
+    borderColor: '#173B70',
     borderWidth: 1,
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 6,
   },
   terminalBadgeText: {
-    color: '#2563EB',
+    color: '#173B70',
     fontSize: 11,
     fontWeight: '800',
   },
@@ -772,7 +772,7 @@ const styles = StyleSheet.create({
     color: '#1E293B',
   },
   modalSectionLabel: {
-    color: '#feb300',
+    color: '#173B70',
     fontSize: 11,
     fontWeight: '900',
     letterSpacing: 1,
@@ -838,8 +838,8 @@ const styles = StyleSheet.create({
     borderColor: '#E2E8F0',
   },
   termPillActive: {
-    backgroundColor: '#feb300',
-    borderColor: '#feb300',
+    backgroundColor: '#173B70',
+    borderColor: '#173B70',
   },
   termPillText: {
     color: '#90caf9',
@@ -851,7 +851,7 @@ const styles = StyleSheet.create({
     fontWeight: '900',
   },
   saveBtn: {
-    backgroundColor: '#feb300',
+    backgroundColor: '#173B70',
     borderRadius: 8,
     height: 44,
     alignItems: 'center',

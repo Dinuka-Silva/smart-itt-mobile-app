@@ -291,7 +291,7 @@ export default function SharedReportsScreen() {
  <Styles>
   <Style ss:ID="Header">
    <Font ss:Bold="1" ss:Color="#FFFFFF"/>
-   <Interior ss:Color="#0F766E" ss:Pattern="Solid"/>
+   <Interior ss:Color="#173B70" ss:Pattern="Solid"/>
    <Alignment ss:Horizontal="Center"/>
   </Style>
  </Styles>
@@ -431,7 +431,7 @@ export default function SharedReportsScreen() {
         return `
       <tr style="background-color: ${i % 2 === 0 ? '#f7f9fa' : '#ffffff'};">
         <td style="padding: 6px 8px; font-weight: bold; text-align: center;">${i + 1}</td>
-        <td style="padding: 6px 8px; font-weight: 600; color: #0F766E;">${t.tripNumber || '-'}</td>
+        <td style="padding: 6px 8px; font-weight: 600; color: #173B70;">${t.tripNumber || '-'}</td>
         <td style="padding: 6px 8px;">${dateStr}</td>
         <td style="padding: 6px 8px;">${t.driverName || t.driverCode || '-'}</td>
         <td style="padding: 6px 8px; font-weight: 600;">${t.vehicleNumber || '-'}</td>
@@ -458,15 +458,15 @@ export default function SharedReportsScreen() {
       body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     }
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 15px; color: #1F2D33; font-size: 11px; }
-    .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #0F766E; padding-bottom: 8px; margin-bottom: 12px; }
-    .title { font-size: 18px; font-weight: 700; color: #0F766E; }
+    .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #173B70; padding-bottom: 8px; margin-bottom: 12px; }
+    .title { font-size: 18px; font-weight: 700; color: #173B70; }
     .meta { font-size: 10px; color: #6B7C85; }
     .kpi-row { display: flex; gap: 12px; margin-bottom: 12px; }
     .kpi-card { border: 1px solid #E5EAEC; background: #F7F9FA; padding: 6px 12px; border-radius: 6px; }
-    .kpi-val { font-size: 14px; font-weight: bold; color: #0F766E; }
+    .kpi-val { font-size: 14px; font-weight: bold; color: #173B70; }
     .kpi-lbl { font-size: 9px; color: #6B7C85; text-transform: uppercase; }
     table { width: 100%; border-collapse: collapse; margin-top: 8px; }
-    th { background: #0F766E; color: #ffffff; text-align: left; padding: 6px 8px; font-size: 10px; font-weight: 600; }
+    th { background: #173B70; color: #ffffff; text-align: left; padding: 6px 8px; font-size: 10px; font-weight: 600; }
     td { border-bottom: 1px solid #E5EAEC; }
   </style>
 </head>

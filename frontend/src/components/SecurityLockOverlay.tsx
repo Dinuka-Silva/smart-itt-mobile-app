@@ -54,7 +54,7 @@ export function SecurityLockOverlay() {
   }
 
   const roleColor =
-    user.role === 'ADMIN' ? '#DC2626' : user.role === 'SUPERVISOR' ? '#D97706' : '#2563EB';
+    user.role === 'ADMIN' ? '#DC2626' : user.role === 'SUPERVISOR' ? '#D97706' : '#173B70';
 
   const handleBiometricUnlock = async () => {
     setErrorMessage(null);
@@ -168,7 +168,7 @@ export function SecurityLockOverlay() {
         {/* Error Message */}
         {errorMessage ? (
           <View style={styles.errorBox}>
-            <Ionicons name="alert-circle" size={16} color="#ef4444" />
+            <Ionicons name="alert-circle" size={16} color="#173B70" />
             <Text style={styles.errorText}>{errorMessage}</Text>
           </View>
         ) : null}
@@ -239,8 +239,8 @@ export function SecurityLockOverlay() {
             disabled={loading || actionLoading}
             activeOpacity={0.75}
           >
-            <Ionicons name="swap-horizontal" size={15} color="#2563EB" style={{ marginRight: 6 }} />
-            <Text style={[styles.actionPillText, { color: '#2563EB' }]}>Switch Account</Text>
+            <Ionicons name="swap-horizontal" size={15} color="#173B70" style={{ marginRight: 6 }} />
+            <Text style={[styles.actionPillText, { color: '#173B70' }]}>Switch Account</Text>
           </TouchableOpacity>
 
           <View style={styles.actionPillDivider} />
@@ -279,7 +279,7 @@ export function SecurityLockOverlay() {
               <Ionicons
                 name={confirmAction === 'SWITCH' ? 'swap-horizontal' : 'log-out-outline'}
                 size={28}
-                color={confirmAction === 'SWITCH' ? '#2563EB' : '#DC2626'}
+                color={confirmAction === 'SWITCH' ? '#173B70' : '#DC2626'}
               />
             </View>
 
@@ -374,9 +374,9 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: '#EFF6FF',
+    backgroundColor: '#F0F5FA',
     borderWidth: 1,
-    borderColor: '#2563EB',
+    borderColor: '#173B70',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 12,
@@ -448,7 +448,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 10,
-    backgroundColor: '#EFF6FF',
+    backgroundColor: '#F0F5FA',
     borderWidth: 1,
     borderRadius: 10,
     paddingVertical: 14,
@@ -558,8 +558,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   modalIconCircleSwitch: {
-    backgroundColor: '#EFF6FF',
-    borderColor: '#2563EB',
+    backgroundColor: '#F0F5FA',
+    borderColor: '#173B70',
   },
   modalIconCircleSignout: {
     backgroundColor: '#FEE2E2',
@@ -609,7 +609,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   modalConfirmBtnSwitch: {
-    backgroundColor: '#2563EB',
+    backgroundColor: '#173B70',
   },
   modalConfirmBtnSignout: {
     backgroundColor: '#DC2626',

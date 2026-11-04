@@ -341,7 +341,7 @@ export default function AdminDriversScreen() {
 
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
           <TouchableOpacity
-            style={[styles.createBtn, { backgroundColor: '#0F766E' }]}
+            style={[styles.createBtn, { backgroundColor: '#173B70' }]}
             onPress={() => setImportModalVisible(true)}
             activeOpacity={0.8}
           >
@@ -370,10 +370,10 @@ export default function AdminDriversScreen() {
       <View style={styles.hudContainer}>
         <View style={[styles.hudCard, styles.hudCardTotal]}>
           <View style={styles.hudIconRow}>
-            <Ionicons name="people" size={13} color="#2563EB" />
+            <Ionicons name="people" size={13} color="#173B70" />
             <Text style={styles.hudLabel}>TOTAL DRIVERS</Text>
           </View>
-          <Text style={[styles.hudValue, { color: '#2563EB' }]}>{totalDriversCount}</Text>
+          <Text style={[styles.hudValue, { color: '#173B70' }]}>{totalDriversCount}</Text>
         </View>
 
         <View style={[styles.hudCard, styles.hudCardActive]}>
@@ -451,7 +451,7 @@ export default function AdminDriversScreen() {
       {/* Driver Cards List */}
       {loading && !refreshing ? (
         <View style={styles.centerLoading}>
-          <ActivityIndicator size="large" color="#2563EB" />
+          <ActivityIndicator size="large" color="#173B70" />
           <Text style={styles.loadingText}>Fetching driver records...</Text>
         </View>
       ) : (
@@ -464,7 +464,7 @@ export default function AdminDriversScreen() {
             },
           ]}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#2563EB" />
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#173B70" />
           }
           showsVerticalScrollIndicator={false}
         >
@@ -506,7 +506,7 @@ export default function AdminDriversScreen() {
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                         <Text style={styles.driverFullName}>{d.fullName}</Text>
                         <View style={[styles.operatorBadge, isSdr ? styles.operatorBadgeAmber : styles.operatorBadgeCyan]}>
-                          <Text style={[styles.operatorBadgeText, isSdr ? { color: '#feb300' } : { color: '#2563EB' }]}>
+                          <Text style={[styles.operatorBadgeText, isSdr ? { color: '#173B70' } : { color: '#173B70' }]}>
                             {opName}
                           </Text>
                         </View>
@@ -514,7 +514,7 @@ export default function AdminDriversScreen() {
 
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap', marginTop: 4 }}>
                         <View style={styles.usernamePill}>
-                          <Ionicons name="key" size={10} color="#2563EB" />
+                          <Ionicons name="key" size={10} color="#173B70" />
                           <Text style={styles.usernamePillLabel}>LOGIN USERNAME:</Text>
                           <Text style={styles.usernamePillValue}>{d.username || d.driverCode || d.employeeId}</Text>
                         </View>
@@ -533,11 +533,11 @@ export default function AdminDriversScreen() {
                         isActive ? styles.statusBadgeActive : isSuspended ? styles.statusBadgeSuspended : styles.statusBadgeInactive,
                       ]}
                     >
-                      <View style={[styles.dot, { backgroundColor: isActive ? '#22ef7e' : isSuspended ? '#feb300' : '#ff5252' }]} />
+                      <View style={[styles.dot, { backgroundColor: isActive ? '#173B70' : isSuspended ? '#173B70' : '#173B70' }]} />
                       <Text
                         style={[
                           styles.statusText,
-                          { color: isActive ? '#22ef7e' : isSuspended ? '#feb300' : '#ff5252' },
+                          { color: isActive ? '#173B70' : isSuspended ? '#173B70' : '#173B70' },
                         ]}
                       >
                         {d.status || 'ACTIVE'}
@@ -549,7 +549,7 @@ export default function AdminDriversScreen() {
                   <View style={styles.driverSpecsGrid}>
                     <View style={styles.specBox}>
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
-                        <Ionicons name="bus" size={10} color="#feb300" />
+                        <Ionicons name="bus" size={10} color="#173B70" />
                         <Text style={styles.specKey}>VEHICLE NO</Text>
                       </View>
                       <Text style={styles.specValHighlight}>{d.vehicleNumber || 'UNASSIGNED'}</Text>
@@ -557,10 +557,10 @@ export default function AdminDriversScreen() {
 
                     <View style={styles.specBox}>
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
-                        <Ionicons name="hardware-chip" size={10} color="#2563EB" />
+                        <Ionicons name="hardware-chip" size={10} color="#173B70" />
                         <Text style={styles.specKey}>CHE / CHASSIS</Text>
                       </View>
-                      <Text style={[styles.specVal, { color: '#2563EB' }]}>
+                      <Text style={[styles.specVal, { color: '#173B70' }]}>
                         {d.cheNumber || d.chassisNumber || '-'}
                       </Text>
                     </View>
@@ -604,7 +604,7 @@ export default function AdminDriversScreen() {
                       <Ionicons
                         name="boat-outline"
                         size={13}
-                        color={d.portPassStatus === 'RENEWAL_DUE' ? '#ffab00' : '#2563EB'}
+                        color={d.portPassStatus === 'RENEWAL_DUE' ? '#ffab00' : '#173B70'}
                       />
                       <Text style={styles.portPassLabel}>
                         Port Pass: <Text style={[styles.portPassDate, d.portPassStatus === 'RENEWAL_DUE' && { color: '#ffab00' }]}>{d.portPassExpiryDate || '-'}</Text>
@@ -629,7 +629,7 @@ export default function AdminDriversScreen() {
                       }}
                       activeOpacity={0.8}
                     >
-                      <Ionicons name="create-outline" size={13} color="#2563EB" />
+                      <Ionicons name="create-outline" size={13} color="#173B70" />
                       <Text style={styles.cardEditActionText}>EDIT</Text>
                     </TouchableOpacity>
 
@@ -637,8 +637,8 @@ export default function AdminDriversScreen() {
                       style={[
                         styles.cardStatusActionBtn,
                         isActive
-                          ? { backgroundColor: 'rgba(254, 179, 0, 0.15)', borderColor: '#feb300' }
-                          : { backgroundColor: 'rgba(34, 239, 126, 0.15)', borderColor: '#22ef7e' }
+                          ? { backgroundColor: 'rgba(254, 179, 0, 0.15)', borderColor: '#173B70' }
+                          : { backgroundColor: 'rgba(34, 239, 126, 0.15)', borderColor: '#173B70' }
                       ]}
                       onPress={(e) => {
                         e.stopPropagation?.();
@@ -649,9 +649,9 @@ export default function AdminDriversScreen() {
                       <Ionicons
                         name={isActive ? "pause-circle-outline" : "play-circle-outline"}
                         size={13}
-                        color={isActive ? "#feb300" : "#22ef7e"}
+                        color={isActive ? "#173B70" : "#173B70"}
                       />
-                      <Text style={[styles.cardStatusActionText, { color: isActive ? '#feb300' : '#22ef7e' }]}>
+                      <Text style={[styles.cardStatusActionText, { color: isActive ? '#173B70' : '#173B70' }]}>
                         {isActive ? 'SUSPEND' : 'ACTIVATE'}
                       </Text>
                     </TouchableOpacity>
@@ -686,12 +686,12 @@ export default function AdminDriversScreen() {
           <View style={[styles.modalBox, { maxHeight: '90%' }]}>
             <View style={styles.modalHeader}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: '#EFF6FF', borderWidth: 1, borderColor: '#2563EB', alignItems: 'center', justifyContent: 'center' }}>
-                  <Ionicons name="person" size={22} color="#2563EB" />
+                <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: '#F0F5FA', borderWidth: 1, borderColor: '#173B70', alignItems: 'center', justifyContent: 'center' }}>
+                  <Ionicons name="person" size={22} color="#173B70" />
                 </View>
                 <View>
                   <Text style={styles.modalTitle}>{selectedDriver?.fullName}</Text>
-                  <Text style={{ color: '#2563EB', fontSize: 13, fontWeight: '800' }}>
+                  <Text style={{ color: '#173B70', fontSize: 13, fontWeight: '800' }}>
                     {selectedDriver?.driverCode} • {selectedDriver?.employeeId}
                   </Text>
                 </View>
@@ -703,7 +703,7 @@ export default function AdminDriversScreen() {
 
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 20 }}>
               {/* Status Badge */}
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#EFF6FF', padding: 12, borderRadius: 8, marginVertical: 12, borderWidth: 1, borderColor: '#E2E8F0' }}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#F0F5FA', padding: 12, borderRadius: 8, marginVertical: 12, borderWidth: 1, borderColor: '#E2E8F0' }}>
                 <Text style={{ color: '#90caf9', fontSize: 12, fontWeight: '700' }}>OPERATIONAL STATUS</Text>
                 <View style={[styles.statusBadge, selectedDriver?.status === 'ACTIVE' ? styles.statusActive : selectedDriver?.status === 'SUSPENDED' ? styles.statusSuspended : styles.statusDeactivated]}>
                   <Text style={styles.statusBadgeText}>{selectedDriver?.status || 'ACTIVE'}</Text>
@@ -712,14 +712,14 @@ export default function AdminDriversScreen() {
 
               {/* Exclusive System Login Credentials */}
               <Text style={styles.modalSectionLabel}>PORTAL LOGIN CREDENTIALS (ADMIN EXCLUSIVE)</Text>
-              <View style={[styles.detailCardBox, { borderColor: '#EFF6FF', backgroundColor: '#EFF6FF' }]}>
+              <View style={[styles.detailCardBox, { borderColor: '#F0F5FA', backgroundColor: '#F0F5FA' }]}>
                 <View style={styles.detailRow}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                    <Ionicons name="key" size={14} color="#2563EB" />
-                    <Text style={[styles.detailRowLabel, { color: '#2563EB', fontWeight: '800' }]}>LOGIN USERNAME:</Text>
+                    <Ionicons name="key" size={14} color="#173B70" />
+                    <Text style={[styles.detailRowLabel, { color: '#173B70', fontWeight: '800' }]}>LOGIN USERNAME:</Text>
                   </View>
-                  <View style={{ backgroundColor: '#EFF6FF', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6, borderWidth: 1, borderColor: '#2563EB' }}>
-                    <Text style={{ color: '#2563EB', fontSize: 13, fontWeight: '900', letterSpacing: 0.8 }}>
+                  <View style={{ backgroundColor: '#F0F5FA', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6, borderWidth: 1, borderColor: '#173B70' }}>
+                    <Text style={{ color: '#173B70', fontSize: 13, fontWeight: '900', letterSpacing: 0.8 }}>
                       {selectedDriver?.username || selectedDriver?.driverCode || selectedDriver?.employeeId}
                     </Text>
                   </View>
@@ -744,10 +744,10 @@ export default function AdminDriversScreen() {
                 </View>
                 <View style={styles.detailRow}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                    <Ionicons name="shield-checkmark" size={14} color="#22ef7e" />
+                    <Ionicons name="shield-checkmark" size={14} color="#173B70" />
                     <Text style={styles.detailRowLabel}>Access Tier:</Text>
                   </View>
-                  <Text style={[styles.detailRowValue, { color: '#22ef7e', fontWeight: '700' }]}>
+                  <Text style={[styles.detailRowValue, { color: '#173B70', fontWeight: '700' }]}>
                     Mobile Driver App Enclave
                   </Text>
                 </View>
@@ -762,7 +762,7 @@ export default function AdminDriversScreen() {
                 </View>
                 <View style={styles.detailRow}>
                   <Text style={styles.detailRowLabel}>Chassis / CHE Number:</Text>
-                  <Text style={[styles.detailRowValue, { color: '#2563EB' }]}>{selectedDriver?.cheNumber || selectedDriver?.chassisNumber || 'CHE 100'}</Text>
+                  <Text style={[styles.detailRowValue, { color: '#173B70' }]}>{selectedDriver?.cheNumber || selectedDriver?.chassisNumber || 'CHE 100'}</Text>
                 </View>
                 <View style={styles.detailRow}>
                   <Text style={styles.detailRowLabel}>Fleet Operator:</Text>
@@ -833,7 +833,7 @@ export default function AdminDriversScreen() {
               <View style={styles.detailCardBox}>
                 <View style={styles.detailRow}>
                   <Text style={styles.detailRowLabel}>SLPA Port Pass Number:</Text>
-                  <Text style={[styles.detailRowValue, { color: '#2563EB', fontWeight: '800' }]}>
+                  <Text style={[styles.detailRowValue, { color: '#173B70', fontWeight: '800' }]}>
                     {selectedDriver?.portPassNumber || 'SLPA-DPP-001'}
                   </Text>
                 </View>
@@ -853,7 +853,7 @@ export default function AdminDriversScreen() {
                 </View>
                 <View style={styles.detailRow}>
                   <Text style={styles.detailRowLabel}>Vehicle Permit Expiry:</Text>
-                  <Text style={[styles.detailRowValue, { color: '#feb300', fontWeight: '800' }]}>
+                  <Text style={[styles.detailRowValue, { color: '#173B70', fontWeight: '800' }]}>
                     {selectedDriver?.vehiclePortPassExpiryDate || '2026-11-20'}
                   </Text>
                 </View>
@@ -882,9 +882,9 @@ export default function AdminDriversScreen() {
               {/* Edit Driver Details Action */}
               <TouchableOpacity
                 style={{
-                  backgroundColor: '#EFF6FF',
+                  backgroundColor: '#F0F5FA',
                   borderWidth: 1,
-                  borderColor: '#2563EB',
+                  borderColor: '#173B70',
                   paddingVertical: 12,
                   borderRadius: 8,
                   alignItems: 'center',
@@ -897,8 +897,8 @@ export default function AdminDriversScreen() {
                 onPress={() => openEditDriver(selectedDriver)}
                 activeOpacity={0.8}
               >
-                <Ionicons name="create-outline" size={18} color="#2563EB" />
-                <Text style={{ color: '#2563EB', fontWeight: '800', fontSize: 13 }}>
+                <Ionicons name="create-outline" size={18} color="#173B70" />
+                <Text style={{ color: '#173B70', fontWeight: '800', fontSize: 13 }}>
                   EDIT DRIVER DETAILS & FLEET ASSIGNMENT
                 </Text>
               </TouchableOpacity>
@@ -913,13 +913,13 @@ export default function AdminDriversScreen() {
                   <Text style={styles.statusBtnText}>ACTIVE</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={[styles.statusBtn, { backgroundColor: '#feb300' }]}
+                  style={[styles.statusBtn, { backgroundColor: '#173B70' }]}
                   onPress={() => handleUpdateStatus('SUSPENDED')}
                 >
                   <Text style={[styles.statusBtnText, { color: '#000000' }]}>SUSPEND</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={[styles.statusBtn, { backgroundColor: '#ff5252' }]}
+                  style={[styles.statusBtn, { backgroundColor: '#173B70' }]}
                   onPress={() => handleUpdateStatus('DEACTIVATED')}
                 >
                   <Text style={styles.statusBtnText}>DEACTIVATE</Text>
@@ -932,7 +932,7 @@ export default function AdminDriversScreen() {
                 onPress={() => openResetPasswordModal(selectedDriver)}
                 activeOpacity={0.8}
               >
-                <Ionicons name="key-outline" size={16} color="#2563EB" style={{ marginRight: 8 }} />
+                <Ionicons name="key-outline" size={16} color="#173B70" style={{ marginRight: 8 }} />
                 <Text style={styles.resetPasswordBtnText}>RESET DRIVER PASSWORD (CUSTOM OR DEFAULT)</Text>
               </TouchableOpacity>
             </ScrollView>
@@ -951,8 +951,8 @@ export default function AdminDriversScreen() {
           <View style={[styles.createModalBox, { maxWidth: 440, width: '92%' }]}>
             <View style={styles.modalHeader}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: '#EFF6FF', alignItems: 'center', justifyContent: 'center' }}>
-                  <Ionicons name="key" size={18} color="#2563EB" />
+                <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: '#F0F5FA', alignItems: 'center', justifyContent: 'center' }}>
+                  <Ionicons name="key" size={18} color="#173B70" />
                 </View>
                 <View>
                   <Text style={styles.modalTitle}>Reset Driver Password</Text>
@@ -967,7 +967,7 @@ export default function AdminDriversScreen() {
             {/* Target Driver Information Box */}
             <View style={{ backgroundColor: '#FFFFFF', padding: 12, borderRadius: 8, marginVertical: 12, borderWidth: 1, borderColor: '#E2E8F0' }}>
               <Text style={{ color: '#1E293B', fontSize: 13, fontWeight: '800' }}>{driverToReset?.fullName}</Text>
-              <Text style={{ color: '#2563EB', fontSize: 11, fontWeight: '700', marginTop: 2 }}>
+              <Text style={{ color: '#173B70', fontSize: 11, fontWeight: '700', marginTop: 2 }}>
                 Code: {driverToReset?.driverCode} · NIC: {driverToReset?.nic}
               </Text>
               <Text style={{ color: '#849396', fontSize: 10, marginTop: 2 }}>
@@ -989,17 +989,17 @@ export default function AdminDriversScreen() {
 
             <View style={{ flexDirection: 'row', gap: 6, marginBottom: 14 }}>
               <TouchableOpacity
-                style={{ flex: 1, paddingVertical: 6, backgroundColor: '#EFF6FF', borderRadius: 6, borderWidth: 1, borderColor: '#2563EB', alignItems: 'center' }}
+                style={{ flex: 1, paddingVertical: 6, backgroundColor: '#F0F5FA', borderRadius: 6, borderWidth: 1, borderColor: '#173B70', alignItems: 'center' }}
                 onPress={() => setNewTempPassword('driver')}
               >
-                <Text style={{ fontSize: 10.5, color: '#2563EB', fontWeight: '800' }}>Default: &apos;driver&apos;</Text>
+                <Text style={{ fontSize: 10.5, color: '#173B70', fontWeight: '800' }}>Default: &apos;driver&apos;</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
                 style={{ flex: 1, paddingVertical: 6, backgroundColor: 'rgba(254, 179, 0, 0.1)', borderRadius: 6, borderWidth: 1, borderColor: 'rgba(254, 179, 0, 0.3)', alignItems: 'center' }}
                 onPress={() => setNewTempPassword('Driver@123')}
               >
-                <Text style={{ fontSize: 10.5, color: '#feb300', fontWeight: '800' }}>&apos;Driver@123&apos;</Text>
+                <Text style={{ fontSize: 10.5, color: '#173B70', fontWeight: '800' }}>&apos;Driver@123&apos;</Text>
               </TouchableOpacity>
             </View>
 
@@ -1121,7 +1121,7 @@ export default function AdminDriversScreen() {
                     <Ionicons
                       name={selectedVehicleObj ? "car-sport" : "car-sport-outline"}
                       size={20}
-                      color={selectedVehicleObj ? "#2563EB" : "#78909c"}
+                      color={selectedVehicleObj ? "#173B70" : "#78909c"}
                     />
                     <View style={{ flex: 1 }}>
                       <Text
@@ -1148,14 +1148,14 @@ export default function AdminDriversScreen() {
                       )}
                     </View>
                   </View>
-                  <Ionicons name="chevron-down" size={18} color="#2563EB" />
+                  <Ionicons name="chevron-down" size={18} color="#173B70" />
                 </TouchableOpacity>
               </View>
 
-              <View style={[styles.inputGroup, { backgroundColor: '#E3F4F1', padding: 10, borderRadius: 8, borderWidth: 1, borderColor: '#0F766E' }]}>
+              <View style={[styles.inputGroup, { backgroundColor: '#F0F5FA', padding: 10, borderRadius: 8, borderWidth: 1, borderColor: '#173B70' }]}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                  <Ionicons name="shield-checkmark" size={16} color="#0F766E" />
-                  <Text style={{ color: '#0F766E', fontSize: 12, fontWeight: '700' }}>Temporary Password Security</Text>
+                  <Ionicons name="shield-checkmark" size={16} color="#173B70" />
+                  <Text style={{ color: '#173B70', fontSize: 12, fontWeight: '700' }}>Temporary Password Security</Text>
                 </View>
                 <Text style={{ color: '#1F2D33', fontSize: 11, marginTop: 4 }}>
                   A cryptographically secure temporary password will be auto-generated and displayed once upon registration.
@@ -1229,15 +1229,15 @@ export default function AdminDriversScreen() {
                   setVehiclePickerModalVisible(false);
                 }}
               >
-                <Ionicons name="person-outline" size={20} color="#feb300" />
+                <Ionicons name="person-outline" size={20} color="#173B70" />
                 <View style={{ flex: 1, marginLeft: 10 }}>
-                  <Text style={[styles.vehicleSelectPlate, { color: '#feb300' }]}>
+                  <Text style={[styles.vehicleSelectPlate, { color: '#173B70' }]}>
                     Standby Driver (No Vehicle Assigned)
                   </Text>
                   <Text style={styles.vehicleSelectChe}>Available as relief / replacement driver</Text>
                 </View>
                 {!selectedVehicleObj && (
-                  <Ionicons name="checkmark-circle" size={18} color="#feb300" />
+                  <Ionicons name="checkmark-circle" size={18} color="#173B70" />
                 )}
               </TouchableOpacity>
 
@@ -1273,7 +1273,7 @@ export default function AdminDriversScreen() {
                       <Ionicons
                         name="bus"
                         size={20}
-                        color={v.operator === 'SDR LINK' ? '#ff9100' : '#2563EB'}
+                        color={v.operator === 'SDR LINK' ? '#ff9100' : '#173B70'}
                       />
                       <View style={{ flex: 1, marginLeft: 10 }}>
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
@@ -1289,7 +1289,7 @@ export default function AdminDriversScreen() {
                         </Text>
                       </View>
                       {isSelected && (
-                        <Ionicons name="checkmark-circle" size={20} color="#2563EB" />
+                        <Ionicons name="checkmark-circle" size={20} color="#173B70" />
                       )}
                     </TouchableOpacity>
                   );
@@ -1311,8 +1311,8 @@ export default function AdminDriversScreen() {
             <View style={styles.createModalBox}>
               <View style={styles.modalHeader}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                  <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: '#EFF6FF', alignItems: 'center', justifyContent: 'center' }}>
-                    <Ionicons name="create" size={18} color="#2563EB" />
+                  <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: '#F0F5FA', alignItems: 'center', justifyContent: 'center' }}>
+                    <Ionicons name="create" size={18} color="#173B70" />
                   </View>
                   <View>
                     <Text style={styles.modalTitle}>Edit Driver Profile</Text>
@@ -1492,7 +1492,7 @@ export default function AdminDriversScreen() {
                       style={[
                         { flex: 1, paddingVertical: 8, borderRadius: 6, alignItems: 'center', borderWidth: 1 },
                         editStatus === st
-                          ? { backgroundColor: st === 'ACTIVE' ? '#4caf50' : st === 'SUSPENDED' ? '#feb300' : '#ff5252', borderColor: 'transparent' }
+                          ? { backgroundColor: st === 'ACTIVE' ? '#4caf50' : st === 'SUSPENDED' ? '#173B70' : '#173B70', borderColor: 'transparent' }
                           : { backgroundColor: '#FFFFFF', borderColor: '#E2E8F0' },
                       ]}
                       onPress={() => setEditStatus(st)}
@@ -1580,7 +1580,7 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#2563EB',
+    backgroundColor: '#173B70',
   },
   headerTitle: {
     fontSize: 18,
@@ -1596,7 +1596,7 @@ const styles = StyleSheet.create({
   createBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#2563EB',
+    backgroundColor: '#173B70',
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 8,
@@ -1633,7 +1633,7 @@ const styles = StyleSheet.create({
     borderColor: '#E2E8F0',
   },
   hudCardTotal: {
-    borderColor: '#2563EB',
+    borderColor: '#173B70',
   },
   hudCardActive: {
     borderColor: 'rgba(0, 230, 118, 0.3)',
@@ -1676,7 +1676,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   portPassDate: {
-    color: '#2563EB',
+    color: '#173B70',
     fontWeight: '700',
   },
   renewalTag: {
@@ -1731,7 +1731,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.05)',
   },
   filterPillActive: {
-    backgroundColor: '#2563EB',
+    backgroundColor: '#173B70',
   },
   filterPillText: {
     color: '#90caf9',
@@ -1787,7 +1787,7 @@ const styles = StyleSheet.create({
   driverCodeText: {
     fontSize: 10,
     fontWeight: '800',
-    color: '#2563EB',
+    color: '#173B70',
     letterSpacing: 0.5,
   },
   driverNameText: {
@@ -1797,17 +1797,17 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   cardEditBtn: {
-    backgroundColor: '#EFF6FF',
+    backgroundColor: '#F0F5FA',
     borderRadius: 6,
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderWidth: 1,
-    borderColor: '#2563EB',
+    borderColor: '#173B70',
     flexDirection: 'row',
     alignItems: 'center',
   },
   cardEditBtnText: {
-    color: '#2563EB',
+    color: '#173B70',
     fontSize: 10,
     fontWeight: '800',
   },
@@ -1861,7 +1861,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 20,
     borderWidth: 1,
-    borderColor: '#EFF6FF',
+    borderColor: '#F0F5FA',
   },
   modalHeader: {
     flexDirection: 'row',
@@ -1875,7 +1875,7 @@ const styles = StyleSheet.create({
     color: '#1E293B',
   },
   modalSub: {
-    color: '#2563EB',
+    color: '#173B70',
     fontSize: 12,
     fontWeight: '600',
     marginBottom: 16,
@@ -1909,14 +1909,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#EFF6FF',
+    backgroundColor: '#F0F5FA',
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#2563EB',
+    borderColor: '#173B70',
     paddingVertical: 12,
   },
   resetPasswordBtnText: {
-    color: '#2563EB',
+    color: '#173B70',
     fontSize: 12,
     fontWeight: '700',
   },
@@ -1929,7 +1929,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 20,
     borderWidth: 1,
-    borderColor: '#EFF6FF',
+    borderColor: '#F0F5FA',
   },
   inputGroup: {
     marginBottom: 12,
@@ -1951,7 +1951,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
   saveDriverBtn: {
-    backgroundColor: '#2563EB',
+    backgroundColor: '#173B70',
     borderRadius: 8,
     height: 44,
     alignItems: 'center',
@@ -1995,7 +1995,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#EFF6FF',
+    borderColor: '#F0F5FA',
     paddingHorizontal: 12,
     paddingVertical: 10,
     justifyContent: 'space-between',
@@ -2038,8 +2038,8 @@ const styles = StyleSheet.create({
     borderColor: '#E2E8F0',
   },
   vehicleSelectItemActive: {
-    borderColor: '#2563EB',
-    backgroundColor: '#EFF6FF',
+    borderColor: '#173B70',
+    backgroundColor: '#F0F5FA',
   },
   vehicleSelectPlate: {
     fontSize: 13,
@@ -2047,13 +2047,13 @@ const styles = StyleSheet.create({
     color: '#1E293B',
   },
   vehicleSelectCheBadge: {
-    backgroundColor: '#EFF6FF',
+    backgroundColor: '#F0F5FA',
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 4,
   },
   vehicleSelectCheBadgeText: {
-    color: '#2563EB',
+    color: '#173B70',
     fontSize: 10,
     fontWeight: '800',
   },
@@ -2081,7 +2081,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   createSubmitBtn: {
-    backgroundColor: '#2563EB',
+    backgroundColor: '#173B70',
     borderRadius: 8,
     height: 44,
     flexDirection: 'row',
@@ -2120,14 +2120,14 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: '#EFF6FF',
+    backgroundColor: '#F0F5FA',
     borderWidth: 1.5,
-    borderColor: '#2563EB',
+    borderColor: '#173B70',
     alignItems: 'center',
     justifyContent: 'center',
   },
   driverAvatarText: {
-    color: '#2563EB',
+    color: '#173B70',
     fontSize: 18,
     fontWeight: '900',
   },
@@ -2136,7 +2136,7 @@ const styles = StyleSheet.create({
     height: 44,
     borderRadius: 22,
     borderWidth: 1.5,
-    borderColor: '#2563EB',
+    borderColor: '#173B70',
   },
   driverFullName: {
     color: '#1E293B',
@@ -2150,8 +2150,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   operatorBadgeCyan: {
-    backgroundColor: '#EFF6FF',
-    borderColor: '#2563EB',
+    backgroundColor: '#F0F5FA',
+    borderColor: '#173B70',
   },
   operatorBadgeAmber: {
     backgroundColor: 'rgba(254, 179, 0, 0.12)',
@@ -2165,15 +2165,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#EFF6FF',
+    backgroundColor: '#F0F5FA',
     borderWidth: 1,
-    borderColor: '#EFF6FF',
+    borderColor: '#F0F5FA',
     borderRadius: 6,
     paddingHorizontal: 6,
     paddingVertical: 2,
   },
   usernamePillLabel: {
-    color: '#2563EB',
+    color: '#173B70',
     fontSize: 9,
     fontWeight: '800',
     letterSpacing: 0.3,
@@ -2256,7 +2256,7 @@ const styles = StyleSheet.create({
   specValHighlight: {
     fontSize: 11,
     fontWeight: '800',
-    color: '#feb300',
+    color: '#173B70',
   },
   specValMono: {
     fontSize: 10.5,
@@ -2278,14 +2278,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 4,
-    backgroundColor: '#EFF6FF',
+    backgroundColor: '#F0F5FA',
     borderWidth: 1,
-    borderColor: '#2563EB',
+    borderColor: '#173B70',
     borderRadius: 6,
     paddingVertical: 7,
   },
   cardEditActionText: {
-    color: '#2563EB',
+    color: '#173B70',
     fontSize: 10.5,
     fontWeight: '800',
   },

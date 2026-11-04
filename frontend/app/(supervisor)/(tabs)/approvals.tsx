@@ -126,7 +126,7 @@ export default function SupervisorApprovals() {
             width: '100%',
           },
         ]}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#2563EB" />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#173B70" />}
         keyboardShouldPersistTaps="handled"
       >
         {/* ─── HEADER ─── */}
@@ -147,7 +147,7 @@ export default function SupervisorApprovals() {
           </View>
 
           <View style={styles.pendingBadgeHeader}>
-            <Ionicons name="shield-checkmark" size={14} color="#feb300" />
+            <Ionicons name="shield-checkmark" size={14} color="#173B70" />
             <Text style={styles.pendingBadgeHeaderText}>{trips.length} PENDING</Text>
           </View>
         </View>
@@ -155,19 +155,19 @@ export default function SupervisorApprovals() {
         {/* ─── PENDING GATE PASS REVIEWS ─── */}
         <View style={styles.sectionWrap}>
           <View style={styles.sectionTitleRow}>
-            <Ionicons name="time" size={18} color="#feb300" />
+            <Ionicons name="time" size={18} color="#173B70" />
             <Text style={styles.sectionTitle}>
               SUBMITTED TRIPS REQUIRING GATE PASS APPROVAL ({trips.length})
             </Text>
           </View>
 
           {loading ? (
-            <ActivityIndicator size="large" color="#2563EB" style={{ marginVertical: 30 }} />
+            <ActivityIndicator size="large" color="#173B70" style={{ marginVertical: 30 }} />
           ) : networkError && trips.length === 0 ? (
             <NetworkErrorView onRetry={fetchPending} isRetrying={refreshing} />
           ) : trips.length === 0 ? (
             <View style={styles.emptyCard}>
-              <Ionicons name="checkmark-done-circle" size={36} color="#22ef7e" />
+              <Ionicons name="checkmark-done-circle" size={36} color="#173B70" />
               <Text style={styles.emptyTitle}>ALL CAUGHT UP</Text>
               <Text style={styles.emptySub}>No trips pending supervisor gate pass review right now.</Text>
             </View>
@@ -202,12 +202,12 @@ export default function SupervisorApprovals() {
                   <View style={styles.routeBox}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                       <Text style={styles.routeTermText}>{from}</Text>
-                      <Ionicons name="arrow-forward" size={14} color="#2563EB" />
+                      <Ionicons name="arrow-forward" size={14} color="#173B70" />
                       <Text style={styles.routeTermText}>{to}</Text>
                     </View>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                      <Text style={styles.specsSubText}>Truck: <Text style={{ color: '#2563EB', fontWeight: '800' }}>{vehicle}</Text></Text>
-                      <Text style={styles.specsSubText}>CHE: <Text style={{ color: '#2563EB', fontWeight: '800' }}>{cheNumber}</Text></Text>
+                      <Text style={styles.specsSubText}>Truck: <Text style={{ color: '#173B70', fontWeight: '800' }}>{vehicle}</Text></Text>
+                      <Text style={styles.specsSubText}>CHE: <Text style={{ color: '#173B70', fontWeight: '800' }}>{cheNumber}</Text></Text>
                     </View>
                   </View>
 
@@ -234,7 +234,7 @@ export default function SupervisorApprovals() {
                       <View style={styles.timingCard}>
                         <View style={styles.timingCol}>
                           <View style={styles.timingHeader}>
-                            <Ionicons name="play-circle" size={12} color="#2563EB" />
+                            <Ionicons name="play-circle" size={12} color="#173B70" />
                             <Text style={styles.timingLabel}>STARTED DATE & TIME</Text>
                           </View>
                           <Text style={styles.timingDate}>{timing.startDate}</Text>
@@ -245,7 +245,7 @@ export default function SupervisorApprovals() {
                           <Ionicons name="arrow-forward" size={13} color="#3a4756" />
                           {timing.duration && (
                             <View style={styles.durationPill}>
-                              <Ionicons name="timer-outline" size={10} color="#22ef7e" />
+                              <Ionicons name="timer-outline" size={10} color="#173B70" />
                               <Text style={styles.durationText}>{timing.duration}</Text>
                             </View>
                           )}
@@ -277,7 +277,7 @@ export default function SupervisorApprovals() {
                   <View style={styles.containersList}>
                     {containers.map((c: any, i: number) => (
                       <View key={c.id || i} style={styles.containerItem}>
-                        <Ionicons name="cube-outline" size={14} color="#2563EB" />
+                        <Ionicons name="cube-outline" size={14} color="#173B70" />
                         <Text style={styles.containerNumberText}>{c.containerNumber}</Text>
                         <Text style={styles.containerSizeText}>{c.size || '40FT'}</Text>
                         <Text style={styles.containerDischargeText}>➔ {c.destTerminal || to}</Text>
@@ -289,13 +289,13 @@ export default function SupervisorApprovals() {
                   <View style={styles.dischargeVerificationCard}>
                     <View style={styles.dischargeVerificationHeader}>
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                        <Ionicons name="shield-checkmark" size={14} color="#2563EB" />
+                        <Ionicons name="shield-checkmark" size={14} color="#173B70" />
                         <Text style={styles.dischargeVerificationTitle}>
                           DRIVER DISCHARGE & SEAL VERIFICATION MANIFEST
                         </Text>
                       </View>
                       <View style={styles.supervisorDriverRemarksAuditedBadge}>
-                        <Ionicons name="lock-closed" size={10} color="#22ef7e" />
+                        <Ionicons name="lock-closed" size={10} color="#173B70" />
                         <Text style={styles.supervisorDriverRemarksAuditedText}>SLPA AUDITED</Text>
                       </View>
                     </View>
@@ -305,7 +305,7 @@ export default function SupervisorApprovals() {
                       <View style={styles.dischargeMetricBox}>
                         <Text style={styles.dischargeGridLabel}>DISCHARGE BERTH / BAY</Text>
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 3 }}>
-                          <Ionicons name="location" size={11} color="#feb300" />
+                          <Ionicons name="location" size={11} color="#173B70" />
                           <Text style={styles.dischargeGridValue} numberOfLines={1}>
                             {trip.destTerminal || to} · {trip.dischargeBay || 'Bay 04, Crane 02'}
                           </Text>
@@ -321,9 +321,9 @@ export default function SupervisorApprovals() {
                           <Ionicons
                             name={trip.sealStatus?.includes('DAMAGED') ? 'warning' : 'shield-checkmark'}
                             size={11}
-                            color={trip.sealStatus?.includes('DAMAGED') ? '#ff5252' : '#22ef7e'}
+                            color={trip.sealStatus?.includes('DAMAGED') ? '#173B70' : '#173B70'}
                           />
-                          <Text style={[styles.dischargeGridValue, { color: trip.sealStatus?.includes('DAMAGED') ? '#ff5252' : '#22ef7e' }]} numberOfLines={1}>
+                          <Text style={[styles.dischargeGridValue, { color: trip.sealStatus?.includes('DAMAGED') ? '#173B70' : '#173B70' }]} numberOfLines={1}>
                             {trip.sealStatus || 'INTACT (VERIFIED)'}
                           </Text>
                         </View>
@@ -338,9 +338,9 @@ export default function SupervisorApprovals() {
                           <Ionicons
                             name={trip.damageStatus === 'DAMAGED' ? 'alert-circle' : 'checkmark-circle'}
                             size={11}
-                            color={trip.damageStatus === 'DAMAGED' ? '#ff5252' : '#22ef7e'}
+                            color={trip.damageStatus === 'DAMAGED' ? '#173B70' : '#173B70'}
                           />
-                          <Text style={[styles.dischargeGridValue, { color: trip.damageStatus === 'DAMAGED' ? '#ff5252' : '#22ef7e' }]} numberOfLines={1}>
+                          <Text style={[styles.dischargeGridValue, { color: trip.damageStatus === 'DAMAGED' ? '#173B70' : '#173B70' }]} numberOfLines={1}>
                             {trip.damageStatus === 'DAMAGED' ? 'DAMAGED' : 'SOUND'}
                           </Text>
                         </View>
@@ -350,7 +350,7 @@ export default function SupervisorApprovals() {
                     {/* Row 2: Full-Width Driver Submission Remarks Box */}
                     <View style={styles.supervisorDriverRemarksBox}>
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 3 }}>
-                        <Ionicons name="chatbubble-ellipses" size={12} color="#2563EB" />
+                        <Ionicons name="chatbubble-ellipses" size={12} color="#173B70" />
                         <Text style={styles.supervisorDriverRemarksLabel}>DRIVER COMPLETION & HANDOVER REMARKS</Text>
                       </View>
                       <Text style={styles.supervisorDriverRemarksText}>
@@ -389,7 +389,7 @@ export default function SupervisorApprovals() {
                       disabled={isProcessing}
                       onPress={() => handleOpenReject(trip)}
                     >
-                      <Ionicons name="close-circle" size={16} color="#ff5252" />
+                      <Ionicons name="close-circle" size={16} color="#173B70" />
                       <Text style={styles.rejectBtnText}>REJECT</Text>
                     </TouchableOpacity>
                   </View>
@@ -408,7 +408,7 @@ export default function SupervisorApprovals() {
           <View style={styles.modalCard}>
             <View style={styles.modalHeader}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <Ionicons name="alert-circle" size={20} color="#ff5252" />
+                <Ionicons name="alert-circle" size={20} color="#173B70" />
                 <Text style={styles.modalTitle}>REJECT TRIP SUBMISSION</Text>
               </View>
               <TouchableOpacity onPress={() => setRejectModalVisible(false)}>
@@ -418,7 +418,7 @@ export default function SupervisorApprovals() {
 
             <Text style={styles.modalDesc}>
               Please provide the mandatory rejection reason for Trip{' '}
-              <Text style={{ color: '#2563EB', fontWeight: '800' }}>
+              <Text style={{ color: '#173B70', fontWeight: '800' }}>
                 {tripToReject?.tripNumber || tripToReject?.id}
               </Text>:
             </Text>
@@ -435,7 +435,7 @@ export default function SupervisorApprovals() {
 
             <View style={{ flexDirection: 'row', gap: 10, marginTop: 12 }}>
               <TouchableOpacity
-                style={[styles.modalSubmitBtn, { backgroundColor: '#ff5252' }]}
+                style={[styles.modalSubmitBtn, { backgroundColor: '#173B70' }]}
                 onPress={handleConfirmRejection}
               >
                 <Text style={styles.modalSubmitBtnText}>CONFIRM REJECTION</Text>
@@ -481,7 +481,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: '#feb300',
+    backgroundColor: '#173B70',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -509,7 +509,7 @@ const styles = StyleSheet.create({
     paddingVertical: 1,
   },
   rolePillText: {
-    color: '#feb300',
+    color: '#173B70',
     fontSize: 10,
     fontWeight: '800',
   },
@@ -522,7 +522,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#EFF6FF',
+    backgroundColor: '#F0F5FA',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 8,
@@ -532,7 +532,7 @@ const styles = StyleSheet.create({
   pendingBadgeHeaderText: {
     fontSize: 11,
     fontWeight: '800',
-    color: '#feb300',
+    color: '#173B70',
     letterSpacing: 0.6,
   },
 
@@ -595,7 +595,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   cardTripId: {
-    color: '#feb300',
+    color: '#173B70',
     fontSize: 14,
     fontWeight: '900',
   },
@@ -613,7 +613,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(254, 179, 0, 0.5)',
   },
   awaitingBadgeText: {
-    color: '#feb300',
+    color: '#173B70',
     fontSize: 9,
     fontWeight: '900',
   },
@@ -622,7 +622,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#EFF6FF',
+    backgroundColor: '#F0F5FA',
     padding: 10,
     borderRadius: 10,
     borderWidth: 1,
@@ -678,7 +678,7 @@ const styles = StyleSheet.create({
   timingLabel: {
     fontSize: 8.5,
     fontWeight: '800',
-    color: '#2563EB',
+    color: '#173B70',
     letterSpacing: 0.4,
   },
   timingDate: {
@@ -689,7 +689,7 @@ const styles = StyleSheet.create({
   timingTime: {
     fontSize: 12,
     fontWeight: '900',
-    color: '#2563EB',
+    color: '#173B70',
     letterSpacing: 0.2,
   },
   timingDivider: {
@@ -712,7 +712,7 @@ const styles = StyleSheet.create({
   durationText: {
     fontSize: 9,
     fontWeight: '800',
-    color: '#22ef7e',
+    color: '#173B70',
   },
 
   containersList: {
@@ -727,7 +727,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.sm,
   },
   containerNumberText: {
-    color: '#2563EB',
+    color: '#173B70',
         fontSize: 11,
     fontWeight: '800',
   },
@@ -736,7 +736,7 @@ const styles = StyleSheet.create({
     fontSize: 9,
   },
   containerDischargeText: {
-    color: '#22ef7e',
+    color: '#173B70',
     fontSize: 9,
     marginLeft: 'auto',
       },
@@ -775,7 +775,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   rejectBtnText: {
-    color: '#ff5252',
+    color: '#173B70',
     fontWeight: '800',
     fontSize: 11,
   },
@@ -817,7 +817,7 @@ const styles = StyleSheet.create({
   rejectionInput: {
     backgroundColor: '#F8FAFC',
     borderWidth: 1,
-    borderColor: '#ff5252',
+    borderColor: '#173B70',
     borderRadius: radius.DEFAULT,
     padding: 10,
     color: '#1E293B',
@@ -845,7 +845,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#0a101d',
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: '#EFF6FF',
+    borderColor: '#F0F5FA',
     padding: 11,
     gap: 8,
     marginTop: 4,
@@ -861,7 +861,7 @@ const styles = StyleSheet.create({
   dischargeVerificationTitle: {
     fontSize: 9.5,
     fontWeight: '900',
-    color: '#2563EB',
+    color: '#173B70',
     letterSpacing: 0.5,
   },
   supervisorDriverRemarksAuditedBadge: {
@@ -878,7 +878,7 @@ const styles = StyleSheet.create({
   supervisorDriverRemarksAuditedText: {
     fontSize: 8.5,
     fontWeight: '800',
-    color: '#22ef7e',
+    color: '#173B70',
     letterSpacing: 0.4,
   },
   dischargeVerificationMetricsRow: {
@@ -916,14 +916,14 @@ const styles = StyleSheet.create({
     backgroundColor: '#F8FAFC',
     borderRadius: 6,
     borderLeftWidth: 3,
-    borderLeftColor: '#2563EB',
+    borderLeftColor: '#173B70',
     paddingHorizontal: 10,
     paddingVertical: 8,
   },
   supervisorDriverRemarksLabel: {
     fontSize: 8.5,
     fontWeight: '900',
-    color: '#2563EB',
+    color: '#173B70',
     letterSpacing: 0.4,
   },
   supervisorDriverRemarksText: {

@@ -56,16 +56,13 @@ export function AppButton({
   };
 
   const getTextColor = () => {
-    if (disabled) return '#A3B1B8';
+    if (disabled) return '#5E799E';
     switch (variant) {
       case 'secondary':
-        return '#0F766E';
       case 'outline':
-        return '#1F2D33';
       case 'danger':
-        return '#B42318';
       case 'ghost':
-        return '#0F766E';
+        return '#173B70';
       case 'primary':
       default:
         return '#FFFFFF';
@@ -117,24 +114,28 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   primaryBtn: {
-    backgroundColor: '#0F766E',
+    backgroundColor: '#173B70',
   },
   secondaryBtn: {
-    backgroundColor: '#E3F4F1',
+    backgroundColor: '#F0F5FA',
+    borderWidth: 1.5,
+    borderColor: '#173B70',
   },
   outlineBtn: {
     backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E5EAEC',
+    borderWidth: 1.5,
+    borderColor: '#173B70',
   },
   dangerBtn: {
-    backgroundColor: '#FDE8E8',
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1.5,
+    borderColor: '#173B70',
   },
   ghostBtn: {
     backgroundColor: 'transparent',
   },
   disabledBtn: {
-    opacity: 0.5,
+    opacity: 0.45,
   },
   contentRow: {
     flexDirection: 'row',

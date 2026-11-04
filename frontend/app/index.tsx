@@ -105,7 +105,7 @@ export default function Index() {
         <View style={styles.indicatorContainer}>
           {!initTimeoutReached ? (
             <>
-              <ActivityIndicator size="small" color="#0284C7" style={styles.spinner} />
+              <ActivityIndicator size="small" color="#173B70" style={styles.spinner} />
               <Text style={styles.loadingStatusText}>
                 {isRetrying ? 'Retrying session restoration...' : 'Starting secure environment...'}
               </Text>
@@ -187,7 +187,7 @@ const styles = StyleSheet.create({
   brandTitle: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#0F172A',
+    color: '#173B70',
     letterSpacing: 0.3,
     textAlign: 'center',
     marginBottom: 4,
@@ -195,7 +195,7 @@ const styles = StyleSheet.create({
   brandSubtitle: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#64748B',
+    color: '#5A779D',
     textAlign: 'center',
     letterSpacing: 0.2,
     marginBottom: 28,
@@ -210,7 +210,7 @@ const styles = StyleSheet.create({
   },
   loadingStatusText: {
     fontSize: 13,
-    color: '#94A3B8',
+    color: '#5A779D',
     fontWeight: '400',
   },
   fallbackBox: {
@@ -219,7 +219,7 @@ const styles = StyleSheet.create({
   },
   fallbackText: {
     fontSize: 13,
-    color: '#64748B',
+    color: '#5A779D',
     textAlign: 'center',
     marginBottom: 14,
   },
@@ -235,7 +235,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   retryBtn: {
-    backgroundColor: '#0284C7',
+    backgroundColor: '#173B70',
   },
   retryBtnText: {
     color: '#FFFFFF',
@@ -243,12 +243,12 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   skipBtn: {
-    backgroundColor: '#F1F5F9',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
+    backgroundColor: '#F0F5FA',
+    borderWidth: 1.5,
+    borderColor: '#173B70',
   },
   skipBtnText: {
-    color: '#334155',
+    color: '#173B70',
     fontSize: 13,
     fontWeight: '600',
   },

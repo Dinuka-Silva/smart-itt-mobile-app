@@ -206,7 +206,7 @@ export default function AdminTripsScreen() {
       {/* Trips List */}
       {loading && !refreshing ? (
         <View style={styles.centerLoading}>
-          <ActivityIndicator size="large" color="#2563EB" />
+          <ActivityIndicator size="large" color="#173B70" />
           <Text style={styles.loadingText}>Fetching ITT trip operational data...</Text>
         </View>
       ) : (
@@ -219,7 +219,7 @@ export default function AdminTripsScreen() {
             },
           ]}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#2563EB" />
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#173B70" />
           }
           showsVerticalScrollIndicator={false}
         >
@@ -268,7 +268,7 @@ export default function AdminTripsScreen() {
                     <View style={styles.terminalBox}>
                       <Text style={styles.terminalBoxText}>{trip.sourceTerminal}</Text>
                     </View>
-                    <Ionicons name="arrow-forward" size={16} color="#2563EB" style={{ marginHorizontal: 8 }} />
+                    <Ionicons name="arrow-forward" size={16} color="#173B70" style={{ marginHorizontal: 8 }} />
                     <View style={styles.terminalBox}>
                       <Text style={styles.terminalBoxText}>{getTripDischargeTerminal(trip)}</Text>
                     </View>
@@ -291,7 +291,7 @@ export default function AdminTripsScreen() {
                   <View style={styles.timingCard}>
                     <View style={styles.timingCol}>
                       <View style={styles.timingLabelRow}>
-                        <Ionicons name="arrow-down-circle" size={11} color="#22ef7e" />
+                        <Ionicons name="arrow-down-circle" size={11} color="#173B70" />
                         <Text style={styles.timingLabel}>LOADED</Text>
                       </View>
                       <Text style={styles.timingTime}>{timing.loadTime}</Text>
@@ -302,10 +302,10 @@ export default function AdminTripsScreen() {
 
                     <View style={styles.timingCol}>
                       <View style={styles.timingLabelRow}>
-                        <Ionicons name="flag" size={11} color={timing.isDischarged ? "#2563EB" : "#feb300"} />
+                        <Ionicons name="flag" size={11} color={timing.isDischarged ? "#173B70" : "#173B70"} />
                         <Text style={styles.timingLabel}>DISCHARGED</Text>
                       </View>
-                      <Text style={[styles.timingTime, { color: timing.isDischarged ? '#2563EB' : '#feb300' }]}>
+                      <Text style={[styles.timingTime, { color: timing.isDischarged ? '#173B70' : '#173B70' }]}>
                         {timing.dischargeTime}
                       </Text>
                       <Text style={styles.timingTerminal}>{getTripDischargeTerminal(trip)}</Text>
@@ -334,7 +334,7 @@ export default function AdminTripsScreen() {
                           <View key={idx} style={styles.containerTagEnhanced}>
                             <View style={styles.cTopRow}>
                               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                                <Ionicons name="cube" size={12} color="#2563EB" />
+                                <Ionicons name="cube" size={12} color="#173B70" />
                                 <Text style={styles.cNumText}>{cTiming.containerNumber}</Text>
                                 <View style={styles.cSizeBadge}>
                                   <Text style={styles.cSizeText}>{cTiming.size}</Text>
@@ -359,7 +359,7 @@ export default function AdminTripsScreen() {
                               <Text style={styles.cTimeArrow}>➔</Text>
                               <Text style={styles.cTimeText}>
                                 📤 Disch:{' '}
-                                <Text style={[styles.cTimeHighlight, { color: cTiming.isDischarged ? '#2563EB' : '#feb300' }]}>
+                                <Text style={[styles.cTimeHighlight, { color: cTiming.isDischarged ? '#173B70' : '#173B70' }]}>
                                   {cTiming.dischargeTime} ({cTiming.destTerminal})
                                 </Text>
                               </Text>
@@ -403,7 +403,7 @@ export default function AdminTripsScreen() {
                   {/* ⏱️ Top Operational Timing & Turnaround Report Banner */}
                   <View style={styles.modalTimingBox}>
                     <View style={styles.modalTimingHeader}>
-                      <Ionicons name="timer-outline" size={15} color="#2563EB" />
+                      <Ionicons name="timer-outline" size={15} color="#173B70" />
                       <Text style={styles.modalTimingTitle}>ITT OPERATIONAL TIMING & DISCHARGE REPORT</Text>
                     </View>
 
@@ -416,7 +416,7 @@ export default function AdminTripsScreen() {
 
                       <View style={styles.modalTimingStat}>
                         <Text style={styles.modalStatLabel}>DISCHARGE TIME</Text>
-                        <Text style={[styles.modalStatVal, { color: selTiming.isDischarged ? '#2563EB' : '#feb300' }]}>
+                        <Text style={[styles.modalStatVal, { color: selTiming.isDischarged ? '#173B70' : '#173B70' }]}>
                           {selTiming.dischargeTime}
                         </Text>
                         <Text style={styles.modalStatSub}>{getTripDischargeTerminal(selectedTrip)}</Text>
@@ -432,7 +432,7 @@ export default function AdminTripsScreen() {
 
                   <View style={styles.infoRow}>
                     <Text style={styles.infoLabel}>Current Status:</Text>
-                    <Text style={[styles.infoVal, { color: '#2563EB', fontWeight: '800' }]}>
+                    <Text style={[styles.infoVal, { color: '#173B70', fontWeight: '800' }]}>
                       {selectedTrip?.status}
                     </Text>
                   </View>
@@ -462,7 +462,7 @@ export default function AdminTripsScreen() {
                   </View>
 
                   {/* Containers List with Individual Load & Discharge Log */}
-                  <Text style={[styles.infoLabel, { marginTop: 14, marginBottom: 8, color: '#2563EB' }]}>
+                  <Text style={[styles.infoLabel, { marginTop: 14, marginBottom: 8, color: '#173B70' }]}>
                     CONTAINER DISCHARGE & TURNAROUND LOG ({selectedTrip?.containers?.length || 0}):
                   </Text>
                   {selectedTrip?.containers?.map((c: any, i: number) => {
@@ -471,7 +471,7 @@ export default function AdminTripsScreen() {
                       <View key={i} style={styles.modalContainerCard}>
                         <View style={styles.modalContHeader}>
                           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                            <Ionicons name="cube" size={14} color="#2563EB" />
+                            <Ionicons name="cube" size={14} color="#173B70" />
                             <Text style={styles.containerDetailNum}>{cInfo.containerNumber}</Text>
                             <View style={styles.cSizeBadge}>
                               <Text style={styles.cSizeText}>{cInfo.size}</Text>
@@ -498,7 +498,7 @@ export default function AdminTripsScreen() {
                           </View>
                           <View style={styles.modalContMetric}>
                             <Text style={styles.modalContMetricLabel}>Discharged At:</Text>
-                            <Text style={[styles.modalContMetricVal, { color: cInfo.isDischarged ? '#2563EB' : '#feb300' }]}>
+                            <Text style={[styles.modalContMetricVal, { color: cInfo.isDischarged ? '#173B70' : '#173B70' }]}>
                               {cInfo.dischargeTime} ({cInfo.destTerminal})
                             </Text>
                           </View>
@@ -539,7 +539,7 @@ export default function AdminTripsScreen() {
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={[styles.actionBtn, { backgroundColor: '#ff5252' }]}
+                style={[styles.actionBtn, { backgroundColor: '#173B70' }]}
                 onPress={() => handleTripAction('REJECTED')}
                 disabled={actionLoading}
               >
@@ -617,7 +617,7 @@ const styles = StyleSheet.create({
     marginRight: 6,
   },
   pillActive: {
-    backgroundColor: '#2563EB',
+    backgroundColor: '#173B70',
   },
   pillText: {
     color: '#90caf9',
@@ -631,16 +631,16 @@ const styles = StyleSheet.create({
     paddingVertical: 3,
     paddingHorizontal: 8,
     borderRadius: 6,
-    backgroundColor: '#EFF6FF',
+    backgroundColor: '#F0F5FA',
     marginRight: 6,
     borderWidth: 1,
-    borderColor: '#EFF6FF',
+    borderColor: '#F0F5FA',
   },
   termPillActive: {
-    backgroundColor: '#2563EB',
+    backgroundColor: '#173B70',
   },
   termPillText: {
-    color: '#2563EB',
+    color: '#173B70',
     fontSize: 10,
     fontWeight: '800',
   },
@@ -713,7 +713,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 82, 82, 0.2)',
   },
   statusInProgress: {
-    backgroundColor: '#EFF6FF',
+    backgroundColor: '#F0F5FA',
   },
   statusBadgeText: {
     color: '#1E293B',
@@ -726,13 +726,13 @@ const styles = StyleSheet.create({
     marginVertical: 4,
   },
   terminalBox: {
-    backgroundColor: '#EFF6FF',
+    backgroundColor: '#F0F5FA',
     borderRadius: 6,
     paddingHorizontal: 6,
     paddingVertical: 2,
   },
   terminalBoxText: {
-    color: '#2563EB',
+    color: '#173B70',
     fontSize: 11,
     fontWeight: '800',
   },
@@ -758,7 +758,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderWidth: 1,
-    borderColor: '#EFF6FF',
+    borderColor: '#F0F5FA',
   },
   containerTagText: {
     color: '#cfd8dc',
@@ -776,7 +776,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 20,
     borderWidth: 1,
-    borderColor: '#EFF6FF',
+    borderColor: '#F0F5FA',
   },
   modalHeader: {
     flexDirection: 'row',
@@ -790,7 +790,7 @@ const styles = StyleSheet.create({
     color: '#1E293B',
   },
   modalSub: {
-    color: '#2563EB',
+    color: '#173B70',
     fontSize: 12,
     fontWeight: '600',
     marginTop: 2,
@@ -824,7 +824,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   containerDetailSize: {
-    color: '#2563EB',
+    color: '#173B70',
     fontSize: 11,
     fontWeight: '800',
   },
@@ -885,7 +885,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(7, 15, 30, 0.95)',
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#EFF6FF',
+    borderColor: '#F0F5FA',
     paddingVertical: 8,
     paddingHorizontal: 10,
     marginTop: 4,
@@ -930,7 +930,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 8,
     borderWidth: 1,
-    borderColor: '#EFF6FF',
+    borderColor: '#F0F5FA',
     marginBottom: 4,
   },
   cTopRow: {
@@ -945,13 +945,13 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   cSizeBadge: {
-    backgroundColor: '#EFF6FF',
+    backgroundColor: '#F0F5FA',
     paddingHorizontal: 5,
     paddingVertical: 1,
     borderRadius: 4,
   },
   cSizeText: {
-    color: '#2563EB',
+    color: '#173B70',
     fontSize: 10,
     fontWeight: '800',
   },
@@ -1004,10 +1004,10 @@ const styles = StyleSheet.create({
     marginLeft: 'auto',
   },
   modalTimingBox: {
-    backgroundColor: '#EFF6FF',
+    backgroundColor: '#F0F5FA',
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: '#EFF6FF',
+    borderColor: '#F0F5FA',
     padding: 12,
     marginBottom: 12,
   },
@@ -1020,7 +1020,7 @@ const styles = StyleSheet.create({
   modalTimingTitle: {
     fontSize: 11,
     fontWeight: '800',
-    color: '#2563EB',
+    color: '#173B70',
     letterSpacing: 0.6,
   },
   modalTimingGrid: {

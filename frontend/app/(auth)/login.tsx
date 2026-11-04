@@ -572,15 +572,15 @@ export default function LoginScreen() {
 
           {adminTapHint && (
             <View style={{
-              backgroundColor: '#E3F4F1',
-              borderColor: '#0F766E',
+              backgroundColor: '#F0F5FA',
+              borderColor: '#173B70',
               borderWidth: 1,
               borderRadius: 12,
               paddingHorizontal: 12,
               paddingVertical: 4,
               marginTop: 6,
             }}>
-              <Text style={{ color: '#0F766E', fontSize: 11, fontWeight: '600' }}>
+              <Text style={{ color: '#173B70', fontSize: 11, fontWeight: '600' }}>
                 {adminTapHint}
               </Text>
             </View>
@@ -594,13 +594,13 @@ export default function LoginScreen() {
           {errorMessage ? (
             <View style={styles.errorBanner}>
               <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, gap: 6 }}>
-                <Ionicons name="alert-circle" size={16} color="#ff4d4f" />
+                <Ionicons name="alert-circle" size={16} color="#173B70" />
                 <Text style={styles.errorText}>{errorMessage}</Text>
               </View>
               {errorMessage.includes('Unable to connect') && (
                 <TouchableOpacity
                   onPress={() => handleLogin()}
-                  style={{ backgroundColor: '#0F766E', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6 }}
+                  style={{ backgroundColor: '#173B70', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6 }}
                   activeOpacity={0.7}
                 >
                   <Text style={{ color: '#FFFFFF', fontSize: 12, fontWeight: '700' }}>Retry</Text>
@@ -614,12 +614,12 @@ export default function LoginScreen() {
             <Text style={styles.inputLabel}>username:</Text>
             {isSupervisorIdentified ? (
               <View style={[styles.roleMiniTag, styles.roleMiniTagAmber]}>
-                <View style={[styles.statusDot, { backgroundColor: '#feb300' }]} />
+                <View style={[styles.statusDot, { backgroundColor: '#173B70' }]} />
                 <Text style={styles.roleMiniTagAmberText}>SUPERVISOR</Text>
               </View>
             ) : isDriverIdentified ? (
               <View style={[styles.roleMiniTag, styles.roleMiniTagCyan]}>
-                <View style={[styles.statusDot, { backgroundColor: '#2563EB' }]} />
+                <View style={[styles.statusDot, { backgroundColor: '#173B70' }]} />
                 <Text style={styles.roleMiniTagCyanText}>DRIVER</Text>
               </View>
             ) : null}
@@ -627,13 +627,13 @@ export default function LoginScreen() {
           <View style={[
             styles.inputWrap,
             focusedField === 'username' && styles.inputWrapFocused,
-            isSupervisorIdentified && { borderColor: '#2563EB' },
-            isDriverIdentified && { borderColor: '#2563EB' },
+            isSupervisorIdentified && { borderColor: '#173B70' },
+            isDriverIdentified && { borderColor: '#173B70' },
           ]}>
             <Ionicons
               name={isSupervisorIdentified ? 'shield-outline' : isDriverIdentified ? 'car-sport-outline' : 'person-outline'}
               size={18}
-              color={isSupervisorIdentified ? '#2563EB' : isDriverIdentified ? '#2563EB' : '#64748B'}
+              color={isSupervisorIdentified ? '#173B70' : isDriverIdentified ? '#173B70' : '#64748B'}
               style={styles.inputIcon}
             />
             <TextInput
@@ -665,13 +665,13 @@ export default function LoginScreen() {
           <View style={[
             styles.inputWrap,
             focusedField === 'password' && styles.inputWrapFocused,
-            isSupervisorIdentified && { borderColor: '#2563EB' },
-            isDriverIdentified && { borderColor: '#2563EB' },
+            isSupervisorIdentified && { borderColor: '#173B70' },
+            isDriverIdentified && { borderColor: '#173B70' },
           ]}>
             <Ionicons
               name="lock-closed-outline"
               size={18}
-              color={isSupervisorIdentified ? '#2563EB' : isDriverIdentified ? '#2563EB' : '#64748B'}
+              color={isSupervisorIdentified ? '#173B70' : isDriverIdentified ? '#173B70' : '#64748B'}
               style={styles.inputIcon}
             />
             <TextInput
@@ -695,7 +695,7 @@ export default function LoginScreen() {
               <Ionicons
                 name={showPassword ? 'eye-off-outline' : 'eye-outline'}
                 size={18}
-                color={showPassword ? '#2563EB' : '#64748B'}
+                color={showPassword ? '#173B70' : '#64748B'}
               />
             </TouchableOpacity>
           </View>
@@ -726,7 +726,7 @@ export default function LoginScreen() {
               <Ionicons
                 name="help-circle-outline"
                 size={13}
-                color="#2563EB"
+                color="#173B70"
               />
               <Text
                 style={styles.forgotBtnText}
@@ -794,7 +794,7 @@ export default function LoginScreen() {
               <Ionicons
                 name={biometricStatus.biometricType === 'FACE_ID' ? 'scan' : 'finger-print'}
                 size={19}
-                color="#2563EB"
+                color="#173B70"
               />
               <Text style={styles.biometricBtnText}>
                 Sign In with {biometricStatus.label}
@@ -845,7 +845,7 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: '#F7F9FA',
+    backgroundColor: '#FFFFFF',
   },
   backgroundWrap: {
     display: 'none',
@@ -881,7 +881,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: '#E5EAEC',
+    borderColor: '#D0DEEB',
     marginBottom: 6,
     overflow: 'hidden',
   },
@@ -892,14 +892,14 @@ const styles = StyleSheet.create({
   brandTitle: {
     fontSize: 22,
     fontWeight: '600',
-    color: '#1F2D33',
+    color: '#173B70',
     letterSpacing: -0.3,
     textAlign: 'center',
   },
   brandSubtitle: {
     fontSize: 13,
     fontWeight: '400',
-    color: '#6B7C85',
+    color: '#5A779D',
     textAlign: 'center',
   },
   onlineBadge: {
@@ -918,12 +918,12 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: '#16A34A',
+    backgroundColor: '#173B70',
   },
   onlineText: {
     fontSize: 9,
     fontWeight: '800',
-    color: '#16A34A',
+    color: '#173B70',
   },
 
   recognizedBanner: {
@@ -991,16 +991,16 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 20,
     borderWidth: 1,
-    borderColor: '#E5EAEC',
+    borderColor: '#D0DEEB',
     gap: 12,
   },
   authTabContainer: {
     flexDirection: 'row',
-    backgroundColor: '#F7F9FA',
+    backgroundColor: '#FFFFFF',
     borderRadius: 8,
     padding: 3,
     borderWidth: 1,
-    borderColor: '#E5EAEC',
+    borderColor: '#D0DEEB',
     marginBottom: 4,
   },
   authTab: {
@@ -1015,18 +1015,18 @@ const styles = StyleSheet.create({
   authTabActive: {
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#0F766E',
+    borderColor: '#173B70',
   },
   authTabTextActive: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#0F766E',
+    color: '#173B70',
     letterSpacing: 0.2,
   },
   authTabTextInactive: {
     fontSize: 12,
     fontWeight: '500',
-    color: '#6B7C85',
+    color: '#5A779D',
     letterSpacing: 0.2,
   },
   quickFillBar: {
@@ -1040,37 +1040,37 @@ const styles = StyleSheet.create({
   quickFillLabel: {
     fontSize: 11,
     fontWeight: '600',
-    color: '#6B7C85',
+    color: '#5A779D',
     marginRight: 2,
   },
   quickChip: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    backgroundColor: '#F7F9FA',
+    backgroundColor: '#FFFFFF',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: '#E5EAEC',
+    borderColor: '#D0DEEB',
   },
   quickChipActiveCyan: {
-    borderColor: '#0F766E',
-    backgroundColor: '#E3F4F1',
+    borderColor: '#173B70',
+    backgroundColor: '#F0F5FA',
   },
   quickChipActiveAmber: {
-    borderColor: '#8A5A00',
-    backgroundColor: '#FFF4DB',
+    borderColor: '#173B70',
+    backgroundColor: '#F0F5FA',
   },
   quickChipTextCyan: {
     fontSize: 11,
     fontWeight: '600',
-    color: '#0F766E',
+    color: '#173B70',
   },
   quickChipTextAmber: {
     fontSize: 11,
     fontWeight: '600',
-    color: '#8A5A00',
+    color: '#173B70',
   },
   quickChipReset: {
     flexDirection: 'row',
@@ -1079,14 +1079,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
     paddingVertical: 4,
     borderRadius: 6,
-    backgroundColor: '#F7F9FA',
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#E5EAEC',
+    borderColor: '#D0DEEB',
   },
   quickChipResetText: {
     fontSize: 11,
     fontWeight: '500',
-    color: '#6B7C85',
+    color: '#5A779D',
   },
   labelRow: {
     flexDirection: 'row',
@@ -1097,7 +1097,7 @@ const styles = StyleSheet.create({
   inputLabel: {
     fontSize: 13,
     fontWeight: '500',
-    color: '#6B7C85',
+    color: '#5A779D',
   },
   roleMiniTag: {
     flexDirection: 'row',
@@ -1108,20 +1108,20 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   roleMiniTagCyan: {
-    backgroundColor: '#E3F4F1',
+    backgroundColor: '#F0F5FA',
   },
   roleMiniTagAmber: {
-    backgroundColor: '#FFF4DB',
+    backgroundColor: '#F0F5FA',
   },
   roleMiniTagCyanText: {
     fontSize: 10,
     fontWeight: '600',
-    color: '#0F766E',
+    color: '#173B70',
   },
   roleMiniTagAmberText: {
     fontSize: 10,
     fontWeight: '600',
-    color: '#8A5A00',
+    color: '#173B70',
   },
   statusDot: {
     width: 5,
@@ -1134,12 +1134,12 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#E5EAEC',
+    borderColor: '#D0DEEB',
     paddingHorizontal: 12,
     height: 48,
   },
   inputWrapFocused: {
-    borderColor: '#0F766E',
+    borderColor: '#173B70',
   },
   clearFieldBtn: {
     padding: 6,
@@ -1150,7 +1150,7 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     fontSize: 15,
-    color: '#1F2D33',
+    color: '#173B70',
     height: 48,
   },
   eyeBtn: {
@@ -1174,19 +1174,19 @@ const styles = StyleSheet.create({
     height: 18,
     borderRadius: 4,
     borderWidth: 1,
-    borderColor: '#E5EAEC',
+    borderColor: '#D0DEEB',
     backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
   },
   checkboxActive: {
-    backgroundColor: '#0F766E',
-    borderColor: '#0F766E',
+    backgroundColor: '#173B70',
+    borderColor: '#173B70',
   },
   rememberText: {
     fontSize: 13,
     fontWeight: '500',
-    color: '#6B7C85',
+    color: '#5A779D',
   },
   forgotBtn: {
     flexDirection: 'row',
@@ -1195,7 +1195,7 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   forgotBtnText: {
-    color: '#0F766E',
+    color: '#173B70',
     fontSize: 12,
     fontWeight: '600',
   },
@@ -1207,13 +1207,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
     marginTop: 8,
-    backgroundColor: '#0F766E',
+    backgroundColor: '#173B70',
   },
   loginBtnCyan: {
-    backgroundColor: '#0F766E',
+    backgroundColor: '#173B70',
   },
   loginBtnAmber: {
-    backgroundColor: '#0F766E',
+    backgroundColor: '#173B70',
   },
   loginBtnDisabled: {
     opacity: 0.5,
@@ -1234,9 +1234,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: '#FDE8E8',
+    backgroundColor: '#F0F5FA',
     borderWidth: 1,
-    borderColor: '#FDE8E8',
+    borderColor: '#D0DEEB',
     paddingHorizontal: 12,
     paddingVertical: 10,
     borderRadius: 8,
@@ -1244,7 +1244,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   errorText: {
-    color: '#B42318',
+    color: '#173B70',
     fontSize: 13,
     fontWeight: '500',
     flex: 1,
@@ -1258,12 +1258,12 @@ const styles = StyleSheet.create({
   },
   createAccountPrompt: {
     fontSize: 13,
-    color: '#6B7C85',
+    color: '#5A779D',
     fontWeight: '400',
   },
   createAccountLink: {
     fontSize: 13,
-    color: '#0F766E',
+    color: '#173B70',
     fontWeight: '600',
   },
   footerWrap: {
@@ -1331,21 +1331,21 @@ const styles = StyleSheet.create({
     height: 48,
     borderRadius: 12,
     borderWidth: 1,
-    backgroundColor: '#E3F4F1',
-    borderColor: '#E5EAEC',
+    backgroundColor: '#F0F5FA',
+    borderColor: '#D0DEEB',
     marginTop: 8,
   },
   biometricBtnCyan: {
-    borderColor: '#E5EAEC',
+    borderColor: '#D0DEEB',
   },
   biometricBtnAmber: {
-    borderColor: '#E5EAEC',
+    borderColor: '#D0DEEB',
   },
   biometricBtnText: {
     fontSize: 14,
     fontWeight: '600',
     letterSpacing: 0.2,
-    color: '#0F766E',
+    color: '#173B70',
   },
   securityBadgeRow: {
     flexDirection: 'row',
@@ -1356,7 +1356,7 @@ const styles = StyleSheet.create({
   securityBadgeText: {
     fontSize: 9,
     fontWeight: '700',
-    color: '#16A34A',
+    color: '#173B70',
     letterSpacing: 0.5,
   },
 });

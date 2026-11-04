@@ -586,7 +586,7 @@ export default function DriverProfileScreen() {
               <Image source={{ uri: coverImage }} style={styles.coverImage} />
             ) : (
               <View style={styles.coverFallback}>
-                <Ionicons name="boat" size={60} color="#EFF6FF" style={styles.coverBgIcon} />
+                <Ionicons name="boat" size={60} color="#F0F5FA" style={styles.coverBgIcon} />
                 <Text style={styles.coverFallbackText}>SCK LOGISTICS • INTER TERMINAL FLEET</Text>
               </View>
             )}
@@ -600,7 +600,7 @@ export default function DriverProfileScreen() {
               activeOpacity={0.8}
               onPress={() => handleOpenPhotoPicker('cover')}
             >
-              <Ionicons name="camera" size={14} color="#2563EB" />
+              <Ionicons name="camera" size={14} color="#173B70" />
               <Text style={styles.editCoverBtnText}>Change Background</Text>
             </TouchableOpacity>
           </View>
@@ -654,7 +654,7 @@ export default function DriverProfileScreen() {
 
           {savingPhotos && (
             <View style={styles.savingNotice}>
-              <ActivityIndicator size="small" color="#2563EB" />
+              <ActivityIndicator size="small" color="#173B70" />
               <Text style={styles.savingNoticeText}>Updating driver photos...</Text>
             </View>
           )}
@@ -667,7 +667,7 @@ export default function DriverProfileScreen() {
             {/* ─── Assigned Prime Mover & Fleet Status / Maintenance Control ─── */}
             <View style={styles.card}>
               <View style={styles.cardHead}>
-                <Ionicons name="bus-outline" size={18} color="#2563EB" />
+                <Ionicons name="bus-outline" size={18} color="#173B70" />
                 <Text style={styles.cardTitle}>ASSIGNED PRIME MOVER & STATUS</Text>
                 <View
                   style={[
@@ -688,9 +688,9 @@ export default function DriverProfileScreen() {
                       {
                         backgroundColor:
                           vehicleStatus === 'MAINTENANCE'
-                            ? '#f59e0b'
+                            ? '#173B70'
                             : vehicleStatus === 'ACTIVE'
-                            ? '#10b981'
+                            ? '#173B70'
                             : '#94a3b8',
                       },
                     ]}
@@ -701,9 +701,9 @@ export default function DriverProfileScreen() {
                       {
                         color:
                           vehicleStatus === 'MAINTENANCE'
-                            ? '#f59e0b'
+                            ? '#173B70'
                             : vehicleStatus === 'ACTIVE'
-                            ? '#10b981'
+                            ? '#173B70'
                             : '#94a3b8',
                         fontWeight: '800',
                       },
@@ -720,7 +720,7 @@ export default function DriverProfileScreen() {
                     <Text style={styles.vehicleMetaLabel}>TRACTOR LICENSE & CHE</Text>
                     <Text style={styles.vehicleMetaPlate}>
                       {vehicleNumber}{' '}
-                      <Text style={{ color: '#2563EB', fontSize: 13, fontWeight: '700' }}>
+                      <Text style={{ color: '#173B70', fontSize: 13, fontWeight: '700' }}>
                         • {chassisNumber}
                       </Text>
                     </Text>
@@ -735,7 +735,7 @@ export default function DriverProfileScreen() {
                 <View style={styles.licenseCard}>
                   <View style={styles.licenseCardHeader}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                      <Ionicons name="document-text" size={15} color="#2563EB" />
+                      <Ionicons name="document-text" size={15} color="#173B70" />
                       <Text style={styles.licenseCardTitle}>VEHICLE REVENUE LICENSE</Text>
                     </View>
                     <View
@@ -747,12 +747,12 @@ export default function DriverProfileScreen() {
                       <Ionicons
                         name={vehicleLicenseRenewalDue ? 'warning' : 'checkmark-circle'}
                         size={12}
-                        color={vehicleLicenseRenewalDue ? '#f59e0b' : '#10b981'}
+                        color={vehicleLicenseRenewalDue ? '#173B70' : '#173B70'}
                       />
                       <Text
                         style={[
                           styles.licenseStatusBadgeText,
-                          { color: vehicleLicenseRenewalDue ? '#f59e0b' : '#10b981' },
+                          { color: vehicleLicenseRenewalDue ? '#173B70' : '#173B70' },
                         ]}
                       >
                         {vehicleLicenseRenewalDue ? 'RENEWAL DUE' : 'VALID'}
@@ -771,7 +771,7 @@ export default function DriverProfileScreen() {
                       <Text
                         style={[
                           styles.licenseDateVal,
-                          vehicleLicenseRenewalDue && { color: '#f59e0b', fontWeight: '900' },
+                          vehicleLicenseRenewalDue && { color: '#173B70', fontWeight: '900' },
                         ]}
                       >
                         {vehicleLicenseExpiryDate}
@@ -783,7 +783,7 @@ export default function DriverProfileScreen() {
                   {vehicleLicenseRenewalDue ? (
                     <View style={styles.licenseAlertBanner}>
                       <View style={styles.licenseAlertIconWrap}>
-                        <Ionicons name="alert-circle" size={18} color="#f59e0b" />
+                        <Ionicons name="alert-circle" size={18} color="#173B70" />
                       </View>
                       <View style={{ flex: 1 }}>
                         <Text style={styles.licenseAlertTitle}>
@@ -798,7 +798,7 @@ export default function DriverProfileScreen() {
                     </View>
                   ) : (
                     <View style={styles.licenseValidBanner}>
-                      <Ionicons name="shield-checkmark" size={14} color="#10b981" />
+                      <Ionicons name="shield-checkmark" size={14} color="#173B70" />
                       <Text style={styles.licenseValidText}>
                         Revenue License Valid • {vehicleLicenseDaysLeft} days left on 1-year cycle
                       </Text>
@@ -807,11 +807,11 @@ export default function DriverProfileScreen() {
                 </View>
 
                 {/* ─── SLPA PORT PASS CLEARANCE CARD (DRIVER & VEHICLE PASSES) ─── */}
-                <View style={[styles.licenseCard, { borderColor: '#feb300', marginTop: 12 }]}>
+                <View style={[styles.licenseCard, { borderColor: '#173B70', marginTop: 12 }]}>
                   <View style={styles.licenseCardHeader}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                      <Ionicons name="shield-checkmark" size={15} color="#feb300" />
-                      <Text style={[styles.licenseCardTitle, { color: '#feb300' }]}>SLPA SECURITY PORT PASS PERMITS</Text>
+                      <Ionicons name="shield-checkmark" size={15} color="#173B70" />
+                      <Text style={[styles.licenseCardTitle, { color: '#173B70' }]}>SLPA SECURITY PORT PASS PERMITS</Text>
                     </View>
                     <View
                       style={[
@@ -824,12 +824,12 @@ export default function DriverProfileScreen() {
                       <Ionicons
                         name={(driverPortPassRenewalDue || vehiclePortPassRenewalDue) ? 'warning' : 'checkmark-circle'}
                         size={12}
-                        color={(driverPortPassRenewalDue || vehiclePortPassRenewalDue) ? '#f59e0b' : '#10b981'}
+                        color={(driverPortPassRenewalDue || vehiclePortPassRenewalDue) ? '#173B70' : '#173B70'}
                       />
                       <Text
                         style={[
                           styles.licenseStatusBadgeText,
-                          { color: (driverPortPassRenewalDue || vehiclePortPassRenewalDue) ? '#f59e0b' : '#10b981' },
+                          { color: (driverPortPassRenewalDue || vehiclePortPassRenewalDue) ? '#173B70' : '#173B70' },
                         ]}
                       >
                         {(driverPortPassRenewalDue || vehiclePortPassRenewalDue) ? 'RENEWAL DUE (<5d)' : 'VALID PASS'}
@@ -843,12 +843,12 @@ export default function DriverProfileScreen() {
                       <Text
                         style={[
                           styles.licenseDateVal,
-                          driverPortPassRenewalDue && { color: '#feb300', fontWeight: '900' },
+                          driverPortPassRenewalDue && { color: '#173B70', fontWeight: '900' },
                         ]}
                       >
                         {driverPortPassExpiryDate}
                       </Text>
-                      <Text style={{ fontSize: 10, color: driverPortPassRenewalDue ? '#feb300' : '#849396', marginTop: 2 }}>
+                      <Text style={{ fontSize: 10, color: driverPortPassRenewalDue ? '#173B70' : '#849396', marginTop: 2 }}>
                         {driverPortPassDaysLeft <= 0 ? 'EXPIRED' : `${driverPortPassDaysLeft} days remaining ${driverPortPassRenewalDue ? '(RENEW NOW)' : ''}`}
                       </Text>
                     </View>
@@ -858,12 +858,12 @@ export default function DriverProfileScreen() {
                       <Text
                         style={[
                           styles.licenseDateVal,
-                          vehiclePortPassRenewalDue && { color: '#feb300', fontWeight: '900' },
+                          vehiclePortPassRenewalDue && { color: '#173B70', fontWeight: '900' },
                         ]}
                       >
                         {vehiclePortPassExpiryDate}
                       </Text>
-                      <Text style={{ fontSize: 10, color: vehiclePortPassRenewalDue ? '#feb300' : '#849396', marginTop: 2 }}>
+                      <Text style={{ fontSize: 10, color: vehiclePortPassRenewalDue ? '#173B70' : '#849396', marginTop: 2 }}>
                         {vehiclePortPassDaysLeft <= 0 ? 'EXPIRED' : `${vehiclePortPassDaysLeft} days remaining ${vehiclePortPassRenewalDue ? '(RENEW NOW)' : ''}`}
                       </Text>
                     </View>
@@ -872,7 +872,7 @@ export default function DriverProfileScreen() {
                   {(driverPortPassRenewalDue || vehiclePortPassRenewalDue) ? (
                     <View style={styles.licenseAlertBanner}>
                       <View style={styles.licenseAlertIconWrap}>
-                        <Ionicons name="alert-circle" size={18} color="#f59e0b" />
+                        <Ionicons name="alert-circle" size={18} color="#173B70" />
                       </View>
                       <View style={{ flex: 1 }}>
                         <Text style={styles.licenseAlertTitle}>
@@ -885,7 +885,7 @@ export default function DriverProfileScreen() {
                     </View>
                   ) : (
                     <View style={styles.licenseValidBanner}>
-                      <Ionicons name="shield-checkmark" size={14} color="#10b981" />
+                      <Ionicons name="shield-checkmark" size={14} color="#173B70" />
                       <Text style={styles.licenseValidText}>
                         Port Pass Entry Valid • Driver and Truck passes cleared for terminal gates
                       </Text>
@@ -908,7 +908,7 @@ export default function DriverProfileScreen() {
                   {updatingVehicle ? (
                     <ActivityIndicator
                       size="small"
-                      color={vehicleStatus === 'MAINTENANCE' ? '#2563EB' : '#f59e0b'}
+                      color={vehicleStatus === 'MAINTENANCE' ? '#173B70' : '#173B70'}
                     />
                   ) : (
                     <>
@@ -917,7 +917,7 @@ export default function DriverProfileScreen() {
                           styles.maintenanceIconCircle,
                           {
                             backgroundColor:
-                              vehicleStatus === 'MAINTENANCE' ? '#2563EB' : '#f59e0b',
+                              vehicleStatus === 'MAINTENANCE' ? '#173B70' : '#173B70',
                           },
                         ]}
                       >
@@ -933,7 +933,7 @@ export default function DriverProfileScreen() {
                             styles.maintenanceBtnTitle,
                             {
                               color:
-                                vehicleStatus === 'MAINTENANCE' ? '#2563EB' : '#f59e0b',
+                                vehicleStatus === 'MAINTENANCE' ? '#173B70' : '#173B70',
                             },
                           ]}
                         >
@@ -950,7 +950,7 @@ export default function DriverProfileScreen() {
                       <Ionicons
                         name="chevron-forward"
                         size={18}
-                        color={vehicleStatus === 'MAINTENANCE' ? '#2563EB' : '#f59e0b'}
+                        color={vehicleStatus === 'MAINTENANCE' ? '#173B70' : '#173B70'}
                       />
                     </>
                   )}
@@ -970,7 +970,7 @@ export default function DriverProfileScreen() {
                   onPress={handleOpenEditModal}
                   activeOpacity={0.85}
                 >
-                  <Ionicons name="create-outline" size={14} color="#2563EB" />
+                  <Ionicons name="create-outline" size={14} color="#173B70" />
                   <Text style={styles.editProfileBtnText}>EDIT DETAILS</Text>
                 </TouchableOpacity>
               </View>
@@ -1016,15 +1016,15 @@ export default function DriverProfileScreen() {
             <View style={styles.card}>
               <View style={styles.cardHead}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
-                  <Ionicons name="shield-checkmark" size={18} color="#2563EB" />
+                  <Ionicons name="shield-checkmark" size={18} color="#173B70" />
                   <Text style={styles.cardTitle}>SECURITY & COCKPIT CONTROLS</Text>
                 </View>
                 <TouchableOpacity
-                  style={[styles.editProfileBtn, { borderColor: '#2563EB' }]}
+                  style={[styles.editProfileBtn, { borderColor: '#173B70' }]}
                   onPress={handleOpenChangePasswordModal}
                   activeOpacity={0.85}
                 >
-                  <Ionicons name="key-outline" size={14} color="#2563EB" />
+                  <Ionicons name="key-outline" size={14} color="#173B70" />
                   <Text style={styles.editProfileBtnText}>CHANGE PASSWORD</Text>
                 </TouchableOpacity>
               </View>
@@ -1037,7 +1037,7 @@ export default function DriverProfileScreen() {
                       <Ionicons
                         name={biometricStatus.biometricType === 'FACE_ID' ? 'scan' : 'finger-print'}
                         size={16}
-                        color="#2563EB"
+                        color="#173B70"
                       />
                       <Text style={styles.secRowTitle}>{biometricStatus.label} Login</Text>
                     </View>
@@ -1063,7 +1063,7 @@ export default function DriverProfileScreen() {
               <View style={styles.secRowItem}>
                 <View style={{ flex: 1 }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                    <Ionicons name="lock-closed" size={15} color="#feb300" />
+                    <Ionicons name="lock-closed" size={15} color="#173B70" />
                     <Text style={styles.secRowTitle}>Lock Cockpit Screen</Text>
                   </View>
                   <Text style={styles.secRowDesc}>
@@ -1082,7 +1082,7 @@ export default function DriverProfileScreen() {
 
               {/* Security Posture Tag */}
               <View style={styles.secPostureBanner}>
-                <Ionicons name="shield-checkmark-outline" size={13} color="#10b981" />
+                <Ionicons name="shield-checkmark-outline" size={13} color="#173B70" />
                 <Text style={styles.secPostureText}>
                   HARDWARE KEYSTORE · AES-256 ENCRYPTED SESSION · ZERO PLAINTEXT
                 </Text>
@@ -1115,7 +1115,7 @@ export default function DriverProfileScreen() {
                 <Ionicons
                   name={pickerType === 'avatar' ? 'person-circle-outline' : 'image-outline'}
                   size={20}
-                  color="#2563EB"
+                  color="#173B70"
                 />
                 <Text style={styles.modalTitle}>
                   {pickerType === 'avatar' ? 'UPDATE DRIVER PHOTO' : 'UPDATE BACKGROUND IMAGE'}
@@ -1203,7 +1203,7 @@ export default function DriverProfileScreen() {
             {/* Modal Header */}
             <View style={styles.modalHeader}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <Ionicons name="create-outline" size={20} color="#2563EB" />
+                <Ionicons name="create-outline" size={20} color="#173B70" />
                 <View>
                   <Text style={styles.modalTitle}>EDIT DRIVER CREDENTIALS</Text>
                   <Text style={{ fontSize: 11, color: '#849396' }}>Update your official driver and vehicle data</Text>
@@ -1439,7 +1439,7 @@ export default function DriverProfileScreen() {
             {/* Modal Header */}
             <View style={styles.modalHeader}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <Ionicons name="key" size={20} color="#2563EB" />
+                <Ionicons name="key" size={20} color="#173B70" />
                 <Text style={styles.modalTitle}>CHANGE TERMINAL PASSWORD</Text>
               </View>
               <TouchableOpacity onPress={() => setPasswordModalVisible(false)} style={styles.modalCloseBtn}>
@@ -1619,7 +1619,7 @@ const styles = StyleSheet.create({
     top: 20,
   },
   coverFallbackText: {
-    color: '#2563EB',
+    color: '#173B70',
     fontSize: 10,
     fontWeight: '900',
     letterSpacing: 2,
@@ -1641,16 +1641,16 @@ const styles = StyleSheet.create({
     paddingVertical: 7,
     borderRadius: 20,
     borderWidth: 1.5,
-    borderColor: '#2563EB',
+    borderColor: '#173B70',
     zIndex: 25,
     elevation: 6,
-    shadowColor: '#2563EB',
+    shadowColor: '#173B70',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.4,
     shadowRadius: 6,
   },
   editCoverBtnText: {
-    color: '#2563EB',
+    color: '#173B70',
     fontSize: 11,
     fontWeight: '800',
     letterSpacing: 0.5,
@@ -1680,7 +1680,7 @@ const styles = StyleSheet.create({
     height: 84,
     borderRadius: 42,
     borderWidth: 3,
-    borderColor: '#2563EB',
+    borderColor: '#173B70',
   },
   avatarText: {
     color: colors.onPrimaryContainer,
@@ -1704,7 +1704,7 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: '#2563EB',
+    backgroundColor: '#173B70',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
@@ -1724,15 +1724,15 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   operatorPill: {
-    backgroundColor: '#EFF6FF',
+    backgroundColor: '#F0F5FA',
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 4,
     borderWidth: 1,
-    borderColor: '#2563EB',
+    borderColor: '#173B70',
   },
   operatorPillText: {
-    color: '#2563EB',
+    color: '#173B70',
     fontSize: 9,
     fontWeight: '800',
   },
@@ -1768,7 +1768,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   savingNoticeText: {
-    color: '#2563EB',
+    color: '#173B70',
     fontSize: 10,
     fontWeight: '700',
   },
@@ -1908,8 +1908,8 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(245, 158, 11, 0.35)',
   },
   maintenanceBtnInMaint: {
-    backgroundColor: '#EFF6FF',
-    borderColor: '#2563EB',
+    backgroundColor: '#F0F5FA',
+    borderColor: '#173B70',
   },
   maintenanceIconCircle: {
     width: 36,
@@ -1982,7 +1982,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: '#2563EB',
+    backgroundColor: '#173B70',
     paddingVertical: 12,
     borderRadius: radius.DEFAULT,
     marginBottom: 16,
@@ -2016,14 +2016,14 @@ const styles = StyleSheet.create({
     height: 64,
     borderRadius: 32,
     borderWidth: 2,
-    borderColor: '#2563EB',
+    borderColor: '#173B70',
   },
   presetCoverImg: {
     width: 80,
     height: 50,
     borderRadius: 6,
     borderWidth: 1.5,
-    borderColor: '#2563EB',
+    borderColor: '#173B70',
   },
   presetName: {
     color: '#1E293B',
@@ -2050,7 +2050,7 @@ const styles = StyleSheet.create({
     ...(Platform.OS === 'web' ? { outlineStyle: 'none' } : {}),
   } as any,
   applyUrlBtn: {
-    backgroundColor: '#feb300',
+    backgroundColor: '#173B70',
     paddingHorizontal: 14,
     height: 40,
     borderRadius: radius.DEFAULT,
@@ -2080,7 +2080,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#0c131d',
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: '#EFF6FF',
+    borderColor: '#F0F5FA',
     padding: 12,
     marginBottom: 14,
   },
@@ -2094,7 +2094,7 @@ const styles = StyleSheet.create({
     borderBottomColor: '#E2E8F0',
   },
   licenseCardTitle: {
-    color: '#2563EB',
+    color: '#173B70',
     fontSize: 11,
     fontWeight: '800',
     letterSpacing: 0.8,
@@ -2166,7 +2166,7 @@ const styles = StyleSheet.create({
     marginTop: 1,
   },
   licenseAlertTitle: {
-    color: '#f59e0b',
+    color: '#173B70',
     fontSize: 10,
     fontWeight: '900',
     letterSpacing: 0.6,
@@ -2190,7 +2190,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
   },
   licenseValidText: {
-    color: '#10b981',
+    color: '#173B70',
     fontSize: 10,
     fontWeight: '700',
   },
@@ -2198,15 +2198,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    backgroundColor: '#EFF6FF',
+    backgroundColor: '#F0F5FA',
     borderWidth: 1,
-    borderColor: '#2563EB',
+    borderColor: '#173B70',
     paddingHorizontal: 9,
     paddingVertical: 5,
     borderRadius: radius.md,
   },
   editProfileBtnText: {
-    color: '#2563EB',
+    color: '#173B70',
     fontSize: 11,
     fontWeight: '800',
     letterSpacing: 0.5,
@@ -2252,7 +2252,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 18,
     borderRadius: radius.md,
-    backgroundColor: '#2563EB',
+    backgroundColor: '#173B70',
     justifyContent: 'center',
   },
   editSaveBtnText: {
@@ -2289,8 +2289,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(51, 65, 85, 0.3)',
   },
   secToggleBtnActive: {
-    borderColor: '#2563EB',
-    backgroundColor: '#EFF6FF',
+    borderColor: '#173B70',
+    backgroundColor: '#F0F5FA',
   },
   secToggleText: {
     color: '#94a3b8',
@@ -2298,7 +2298,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   secToggleTextActive: {
-    color: '#2563EB',
+    color: '#173B70',
   },
   secLockBtn: {
     flexDirection: 'row',
@@ -2307,7 +2307,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 8,
-    backgroundColor: '#feb300',
+    backgroundColor: '#173B70',
   },
   secLockBtnText: {
     color: '#FFFFFF',
@@ -2324,7 +2324,7 @@ const styles = StyleSheet.create({
     borderTopColor: 'rgba(255, 255, 255, 0.06)',
   },
   secPostureText: {
-    color: '#10b981',
+    color: '#173B70',
     fontSize: 9,
     fontWeight: '800',
     letterSpacing: 0.5,

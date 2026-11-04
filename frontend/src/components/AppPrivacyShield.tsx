@@ -42,7 +42,7 @@ export function AppPrivacyShield({ enabled = true }: AppPrivacyShieldProps) {
     <View style={styles.overlay} pointerEvents="auto">
       <View style={styles.badgeContainer}>
         <View style={styles.iconCircle}>
-          <Ionicons name="shield-checkmark" size={44} color="#2563EB" />
+          <Ionicons name="shield-checkmark" size={44} color="#173B70" />
         </View>
         <Text style={styles.title}>SMART ITT SECURITY SHIELD</Text>
         <Text style={styles.subtitle}>Protected Terminal & Fleet Data</Text>
@@ -88,9 +88,9 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: '#EFF6FF',
+    backgroundColor: '#F0F5FA',
     borderWidth: 1,
-    borderColor: '#2563EB',
+    borderColor: '#173B70',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 18,

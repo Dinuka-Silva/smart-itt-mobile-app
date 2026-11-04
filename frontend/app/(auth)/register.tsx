@@ -36,9 +36,9 @@ import { useResponsive } from '../../src/hooks/useResponsive';
 export const SCK_FLEET_VEHICLES = SCK_FLEET;
 
 export const PORT_TERMINALS = [
-  { code: 'CICT', name: 'Colombo International Container Terminals', color: '#2563EB' },
-  { code: 'SAGT', name: 'South Asia Gateway Terminals', color: '#22ef7e' },
-  { code: 'JCT', name: 'Jaya Container Terminal', color: '#feb300' },
+  { code: 'CICT', name: 'Colombo International Container Terminals', color: '#173B70' },
+  { code: 'SAGT', name: 'South Asia Gateway Terminals', color: '#173B70' },
+  { code: 'JCT', name: 'Jaya Container Terminal', color: '#173B70' },
   { code: 'ECT', name: 'East Container Terminal', color: '#a855f7' },
   { code: 'CWIT', name: 'Colombo West International Terminal', color: '#ec4899' },
   { code: 'UCT', name: 'Unity Container Terminal', color: '#3b82f6' },
@@ -589,22 +589,22 @@ export default function DriverRegisterScreen() {
               }
             }}
           >
-            <Ionicons name="arrow-back" size={18} color="#2563EB" />
+            <Ionicons name="arrow-back" size={18} color="#173B70" />
             <Text style={styles.backBtnText}>BACK TO LOGIN TERMINAL</Text>
           </TouchableOpacity>
         </View>
 
         {/* Hero Section */}
         <View style={styles.hero}>
-          <View style={[styles.logoBadge, currentRole === 'SUPERVISOR' && { borderColor: '#feb300' }]}>
+          <View style={[styles.logoBadge, currentRole === 'SUPERVISOR' && { borderColor: '#173B70' }]}>
             <Ionicons
               name={currentRole === 'SUPERVISOR' ? 'shield-checkmark' : 'car-sport'}
               size={28}
-              color={currentRole === 'SUPERVISOR' ? '#feb300' : '#2563EB'}
+              color={currentRole === 'SUPERVISOR' ? '#173B70' : '#173B70'}
             />
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={[styles.brandTitle, currentRole === 'SUPERVISOR' && { color: '#feb300' }]}>SCK LOGISTICS PORT SYSTEM</Text>
+            <Text style={[styles.brandTitle, currentRole === 'SUPERVISOR' && { color: '#173B70' }]}>SCK LOGISTICS PORT SYSTEM</Text>
             <Text style={styles.brandSubtitle}>
               {currentRole === 'SUPERVISOR'
                 ? 'OFFICIAL PORT SUPERVISOR REGISTRATION'
@@ -619,7 +619,7 @@ export default function DriverRegisterScreen() {
           style={[
             styles.autofillBtn,
             currentRole === 'SUPERVISOR' && {
-              borderColor: '#feb300',
+              borderColor: '#173B70',
               backgroundColor: 'rgba(254, 179, 0, 0.12)',
             },
           ]}
@@ -629,12 +629,12 @@ export default function DriverRegisterScreen() {
           <Ionicons
             name="flash"
             size={16}
-            color={currentRole === 'SUPERVISOR' ? '#feb300' : '#2563EB'}
+            color={currentRole === 'SUPERVISOR' ? '#173B70' : '#173B70'}
           />
           <Text
             style={[
               styles.autofillBtnText,
-              currentRole === 'SUPERVISOR' && { color: '#feb300' },
+              currentRole === 'SUPERVISOR' && { color: '#173B70' },
             ]}
           >
             QUICK AUTO-FILL DEMO {currentRole === 'SUPERVISOR' ? 'SUPERVISOR' : 'OPERATOR'} DETAILS
@@ -643,7 +643,7 @@ export default function DriverRegisterScreen() {
 
         {formError && (
           <View style={styles.errorBanner}>
-            <Ionicons name="alert-circle" size={18} color="#ff5252" />
+            <Ionicons name="alert-circle" size={18} color="#173B70" />
             <Text style={styles.errorBannerText}>{formError}</Text>
           </View>
         )}
@@ -654,12 +654,12 @@ export default function DriverRegisterScreen() {
             <Ionicons
               name="person-circle"
               size={18}
-              color={currentRole === 'SUPERVISOR' ? '#feb300' : '#2563EB'}
+              color={currentRole === 'SUPERVISOR' ? '#173B70' : '#173B70'}
             />
             <Text
               style={[
                 styles.cardHeaderText,
-                currentRole === 'SUPERVISOR' && { color: '#feb300' },
+                currentRole === 'SUPERVISOR' && { color: '#173B70' },
               ]}
             >
               1. {currentRole === 'SUPERVISOR' ? 'SUPERVISOR' : 'OPERATOR'} IDENTIFICATION & PERSONAL INFORMATION
@@ -677,11 +677,11 @@ export default function DriverRegisterScreen() {
                 <Ionicons
                   name={currentRole === 'SUPERVISOR' ? 'shield-checkmark' : 'car-sport'}
                   size={10}
-                  color={currentRole === 'SUPERVISOR' ? '#feb300' : '#2563EB'}
+                  color={currentRole === 'SUPERVISOR' ? '#173B70' : '#173B70'}
                 />
                 <Text style={[
                   styles.empTypeBadgeText,
-                  { color: currentRole === 'SUPERVISOR' ? '#feb300' : '#2563EB' },
+                  { color: currentRole === 'SUPERVISOR' ? '#173B70' : '#173B70' },
                 ]}>
                   {currentRole === 'SUPERVISOR' ? 'SUP IDENTIFIER' : 'DRV IDENTIFIER'}
                 </Text>
@@ -690,12 +690,12 @@ export default function DriverRegisterScreen() {
             <View style={[
               styles.inputWrap,
               currentRole === 'SUPERVISOR' && { borderColor: 'rgba(254, 179, 0, 0.5)' },
-              currentRole === 'DRIVER' && { borderColor: '#EFF6FF' },
+              currentRole === 'DRIVER' && { borderColor: '#F0F5FA' },
             ]}>
               <Ionicons
                 name={currentRole === 'SUPERVISOR' ? 'shield-outline' : 'car-sport-outline'}
                 size={16}
-                color={currentRole === 'SUPERVISOR' ? '#feb300' : '#2563EB'}
+                color={currentRole === 'SUPERVISOR' ? '#173B70' : '#173B70'}
                 style={styles.inputIcon}
               />
               <TextInput
@@ -708,7 +708,7 @@ export default function DriverRegisterScreen() {
               />
             </View>
             <Text style={{ fontSize: 9, color: '#849396', marginTop: 3 }}>
-              Type <Text style={{ color: '#2563EB', fontWeight: '800' }}>DRV</Text> with number for Driver details, or <Text style={{ color: '#feb300', fontWeight: '800' }}>SUP</Text> with number for Supervisor details.
+              Type <Text style={{ color: '#173B70', fontWeight: '800' }}>DRV</Text> with number for Driver details, or <Text style={{ color: '#173B70', fontWeight: '800' }}>SUP</Text> with number for Supervisor details.
             </Text>
           </View>
 
@@ -773,10 +773,10 @@ export default function DriverRegisterScreen() {
 
         {/* ─── SECTION 2: Dynamic Role Details (Driver vs Supervisor) ─── */}
         {currentRole === 'SUPERVISOR' ? (
-          <View style={[styles.card, { borderColor: '#feb300' }]}>
+          <View style={[styles.card, { borderColor: '#173B70' }]}>
             <View style={styles.cardHeader}>
-              <Ionicons name="briefcase" size={18} color="#feb300" />
-              <Text style={[styles.cardHeaderText, { color: '#feb300' }]}>
+              <Ionicons name="briefcase" size={18} color="#173B70" />
+              <Text style={[styles.cardHeaderText, { color: '#173B70' }]}>
                 2. PORT SUPERVISOR APPOINTMENT & CLEARANCE DETAILS
               </Text>
             </View>
@@ -816,13 +816,13 @@ export default function DriverRegisterScreen() {
             <View style={styles.fieldGroup}>
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
                 <Text style={styles.fieldLabel}>SUPERVISOR PORT PASS EXPIRY DATE (YYYY-MM-DD) *</Text>
-                <View style={[styles.cheLivePill, { backgroundColor: 'rgba(254, 179, 0, 0.12)', borderColor: '#feb300' }]}>
-                  <Ionicons name="shield-checkmark" size={10} color="#feb300" />
-                  <Text style={[styles.cheLivePillText, { color: '#feb300' }]}>SLPA GATE PERMIT</Text>
+                <View style={[styles.cheLivePill, { backgroundColor: 'rgba(254, 179, 0, 0.12)', borderColor: '#173B70' }]}>
+                  <Ionicons name="shield-checkmark" size={10} color="#173B70" />
+                  <Text style={[styles.cheLivePillText, { color: '#173B70' }]}>SLPA GATE PERMIT</Text>
                 </View>
               </View>
               <View style={styles.inputWrap}>
-                <Ionicons name="card-outline" size={16} color="#feb300" style={styles.inputIcon} />
+                <Ionicons name="card-outline" size={16} color="#173B70" style={styles.inputIcon} />
                 <TextInput
                   style={styles.input}
                   placeholder="e.g. 2026-11-18"
@@ -836,8 +836,8 @@ export default function DriverRegisterScreen() {
         ) : (
           <View style={styles.card}>
             <View style={styles.cardHeader}>
-              <Ionicons name="car-sport" size={18} color="#feb300" />
-              <Text style={[styles.cardHeaderText, { color: '#feb300' }]}>
+              <Ionicons name="car-sport" size={18} color="#173B70" />
+              <Text style={[styles.cardHeaderText, { color: '#173B70' }]}>
                 2. DRIVER CREDENTIALS, LICENSE & VEHICLE DETAILS
               </Text>
             </View>
@@ -890,13 +890,13 @@ export default function DriverRegisterScreen() {
             <View style={styles.fieldGroup}>
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
                 <Text style={styles.fieldLabel}>DRIVER PORT PASS EXPIRY DATE (YYYY-MM-DD) *</Text>
-                <View style={[styles.cheLivePill, { backgroundColor: '#EFF6FF', borderColor: '#2563EB' }]}>
-                  <Ionicons name="card" size={10} color="#2563EB" />
-                  <Text style={[styles.cheLivePillText, { color: '#2563EB' }]}>SLPA GATE PASS</Text>
+                <View style={[styles.cheLivePill, { backgroundColor: '#F0F5FA', borderColor: '#173B70' }]}>
+                  <Ionicons name="card" size={10} color="#173B70" />
+                  <Text style={[styles.cheLivePillText, { color: '#173B70' }]}>SLPA GATE PASS</Text>
                 </View>
               </View>
               <View style={styles.inputWrap}>
-                <Ionicons name="card-outline" size={16} color="#2563EB" style={styles.inputIcon} />
+                <Ionicons name="card-outline" size={16} color="#173B70" style={styles.inputIcon} />
                 <TextInput
                   style={styles.input}
                   placeholder="e.g. 2026-11-15"
@@ -919,7 +919,7 @@ export default function DriverRegisterScreen() {
               </View>
 
               <View style={[styles.inputWrap, detectedFleet && styles.inputWrapDetected]}>
-                <Ionicons name="bus" size={16} color={detectedFleet ? '#2563EB' : '#feb300'} style={styles.inputIcon} />
+                <Ionicons name="bus" size={16} color={detectedFleet ? '#173B70' : '#173B70'} style={styles.inputIcon} />
                 <TextInput
                   style={styles.input}
                   placeholder="e.g. LY-6439, LY-6528, LY-6434..."
@@ -957,7 +957,7 @@ export default function DriverRegisterScreen() {
                     <View style={styles.cheBlockSmall}>
                       <Text style={styles.cheBlockLabel}>TRAILER SIZE</Text>
                       <View style={styles.cheSizePill}>
-                        <Ionicons name="cube" size={11} color="#feb300" />
+                        <Ionicons name="cube" size={11} color="#173B70" />
                         <Text style={styles.cheBlockSize}>{detectedFleet.trailerSize || '40FT'}</Text>
                       </View>
                     </View>
@@ -971,7 +971,7 @@ export default function DriverRegisterScreen() {
                   </View>
 
                   <View style={styles.cheFooterNotice}>
-                    <Ionicons name="shield-checkmark" size={13} color="#2563EB" />
+                    <Ionicons name="shield-checkmark" size={13} color="#173B70" />
                     <Text style={styles.cheFooterNoticeText}>
                       CHE {detectedFleet.cheNumber} • {detectedFleet.trailerSize || '40FT'} Chassis registered under {detectedFleet.operator}. ITT gateway ready.
                     </Text>
@@ -979,7 +979,7 @@ export default function DriverRegisterScreen() {
                 </View>
               ) : vehicleNumber.trim().length > 0 ? (
                 <View style={styles.chePendingCard}>
-                  <Ionicons name="information-circle-outline" size={15} color="#feb300" />
+                  <Ionicons name="information-circle-outline" size={15} color="#173B70" />
                   <Text style={styles.chePendingText}>
                     Type or tap a fleet vehicle below (e.g. LY-5234) to auto-display CHE (SCK No) and 40FT trailer specs.
                   </Text>
@@ -990,13 +990,13 @@ export default function DriverRegisterScreen() {
               <View style={{ marginTop: 10 }}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
                   <Text style={styles.fieldLabel}>VEHICLE PORT PASS EXPIRY DATE (YYYY-MM-DD) *</Text>
-                  <View style={[styles.cheLivePill, { backgroundColor: 'rgba(254, 179, 0, 0.12)', borderColor: '#feb300' }]}>
-                    <Ionicons name="shield-checkmark" size={10} color="#feb300" />
-                    <Text style={[styles.cheLivePillText, { color: '#feb300' }]}>TRUCK PERMIT</Text>
+                  <View style={[styles.cheLivePill, { backgroundColor: 'rgba(254, 179, 0, 0.12)', borderColor: '#173B70' }]}>
+                    <Ionicons name="shield-checkmark" size={10} color="#173B70" />
+                    <Text style={[styles.cheLivePillText, { color: '#173B70' }]}>TRUCK PERMIT</Text>
                   </View>
                 </View>
                 <View style={styles.inputWrap}>
-                  <Ionicons name="shield-outline" size={16} color="#feb300" style={styles.inputIcon} />
+                  <Ionicons name="shield-outline" size={16} color="#173B70" style={styles.inputIcon} />
                   <TextInput
                     style={styles.input}
                     placeholder="e.g. 2026-11-20"
@@ -1029,7 +1029,7 @@ export default function DriverRegisterScreen() {
                         onPress={() => setVehicleNumber(v.vehicleNumber)}
                         activeOpacity={0.7}
                       >
-                        <Ionicons name="bus" size={12} color={isSelected ? '#2563EB' : '#849396'} />
+                        <Ionicons name="bus" size={12} color={isSelected ? '#173B70' : '#849396'} />
                         <Text style={[styles.fleetChipText, isSelected && styles.fleetChipTextActive]}>
                           {v.vehicleNumber}
                         </Text>
@@ -1071,8 +1071,8 @@ export default function DriverRegisterScreen() {
         {/* ─── SECTION 3: Emergency Contacts ─── */}
         <View style={styles.card}>
           <View style={styles.cardHeader}>
-            <Ionicons name="medkit" size={18} color="#22ef7e" />
-            <Text style={[styles.cardHeaderText, { color: '#22ef7e' }]}>
+            <Ionicons name="medkit" size={18} color="#173B70" />
+            <Text style={[styles.cardHeaderText, { color: '#173B70' }]}>
               3. EMERGENCY CONTACT INFORMATION
             </Text>
           </View>
@@ -1110,7 +1110,7 @@ export default function DriverRegisterScreen() {
         {/* ─── SECTION 4: Terminal Security Pin / Password ─── */}
         <View style={styles.card}>
           <View style={styles.cardHeader}>
-            <Ionicons name="lock-closed" size={18} color="#2563EB" />
+            <Ionicons name="lock-closed" size={18} color="#173B70" />
             <Text style={styles.cardHeaderText}>4. COCKPIT ACCESS PASSWORD</Text>
           </View>
 
@@ -1160,7 +1160,7 @@ export default function DriverRegisterScreen() {
                 <Ionicons
                   name={rule.ok ? 'checkmark-circle' : 'ellipse-outline'}
                   size={14}
-                  color={rule.ok ? '#22ef7e' : '#849396'}
+                  color={rule.ok ? '#173B70' : '#849396'}
                 />
                 <Text style={[styles.ruleText, rule.ok && styles.ruleTextOk]}>
                   {rule.label}
@@ -1172,9 +1172,9 @@ export default function DriverRegisterScreen() {
                 <Ionicons
                   name={passwordsMatch ? 'checkmark-circle' : 'close-circle'}
                   size={14}
-                  color={passwordsMatch ? '#22ef7e' : '#ff5252'}
+                  color={passwordsMatch ? '#173B70' : '#173B70'}
                 />
-                <Text style={[styles.ruleText, { color: passwordsMatch ? '#22ef7e' : '#ff5252' }]}>
+                <Text style={[styles.ruleText, { color: passwordsMatch ? '#173B70' : '#173B70' }]}>
                   {passwordsMatch ? 'Passwords match' : 'Passwords do not match'}
                 </Text>
               </View>
@@ -1184,7 +1184,7 @@ export default function DriverRegisterScreen() {
 
         {formError && (
           <View style={styles.errorBanner}>
-            <Ionicons name="alert-circle" size={18} color="#ff5252" />
+            <Ionicons name="alert-circle" size={18} color="#173B70" />
             <Text style={styles.errorBannerText}>{formError}</Text>
           </View>
         )}
@@ -1193,7 +1193,7 @@ export default function DriverRegisterScreen() {
         <TouchableOpacity
           style={[
             styles.submitBtn,
-            currentRole === 'SUPERVISOR' && { backgroundColor: '#feb300' },
+            currentRole === 'SUPERVISOR' && { backgroundColor: '#173B70' },
             loading && { opacity: 0.6 },
           ]}
           onPress={handleRegister}
@@ -1250,7 +1250,7 @@ export default function DriverRegisterScreen() {
                   <View
                     style={[
                       styles.cardStripe,
-                      isSupervisorPass && { backgroundColor: '#feb300' },
+                      isSupervisorPass && { backgroundColor: '#173B70' },
                     ]}
                   >
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
@@ -1283,13 +1283,13 @@ export default function DriverRegisterScreen() {
                     <View
                       style={[
                         styles.operatorAvatarWrap,
-                        isSupervisorPass && { borderColor: '#feb300' },
+                        isSupervisorPass && { borderColor: '#173B70' },
                       ]}
                     >
                       <Ionicons
                         name={isSupervisorPass ? 'shield-checkmark' : 'person'}
                         size={34}
-                        color={isSupervisorPass ? '#feb300' : '#2563EB'}
+                        color={isSupervisorPass ? '#173B70' : '#173B70'}
                       />
                       <View style={styles.verifiedBadge}>
                         <Ionicons name="checkmark" size={12} color="#003918" />
@@ -1300,7 +1300,7 @@ export default function DriverRegisterScreen() {
                       <Text
                         style={[
                           styles.operatorTitle,
-                          isSupervisorPass && { color: '#feb300' },
+                          isSupervisorPass && { color: '#173B70' },
                         ]}
                       >
                         {isSupervisorPass ? 'PORT OPERATIONS SUPERVISOR' : 'PORT TRANSPORT OPERATOR'}
@@ -1319,13 +1319,13 @@ export default function DriverRegisterScreen() {
                   <View
                     style={[
                       styles.operatorIdHighlightBox,
-                      isSupervisorPass && { borderColor: '#feb300', backgroundColor: 'rgba(254, 179, 0, 0.08)' },
+                      isSupervisorPass && { borderColor: '#173B70', backgroundColor: 'rgba(254, 179, 0, 0.08)' },
                     ]}
                   >
                     <Text
                       style={[
                         styles.idHighlightSuper,
-                        isSupervisorPass && { color: '#feb300' },
+                        isSupervisorPass && { color: '#173B70' },
                       ]}
                     >
                       {isSupervisorPass
@@ -1336,7 +1336,7 @@ export default function DriverRegisterScreen() {
                       <Text
                         style={[
                           styles.idCodeText,
-                          isSupervisorPass && { color: '#feb300' },
+                          isSupervisorPass && { color: '#173B70' },
                         ]}
                       >
                         {generatedDriverCode}
@@ -1344,7 +1344,7 @@ export default function DriverRegisterScreen() {
                       <TouchableOpacity
                         style={[
                           styles.copyIdBtn,
-                          isSupervisorPass && { borderColor: '#feb300', backgroundColor: 'rgba(254, 179, 0, 0.15)' },
+                          isSupervisorPass && { borderColor: '#173B70', backgroundColor: 'rgba(254, 179, 0, 0.15)' },
                         ]}
                         onPress={handleCopyCode}
                         activeOpacity={0.8}
@@ -1352,13 +1352,13 @@ export default function DriverRegisterScreen() {
                         <Ionicons
                           name={copied ? 'checkmark' : 'copy'}
                           size={16}
-                          color={copied ? '#22ef7e' : isSupervisorPass ? '#feb300' : '#2563EB'}
+                          color={copied ? '#173B70' : isSupervisorPass ? '#173B70' : '#173B70'}
                         />
                         <Text
                           style={[
                             styles.copyIdBtnText,
-                            isSupervisorPass && { color: '#feb300' },
-                            copied && { color: '#22ef7e' },
+                            isSupervisorPass && { color: '#173B70' },
+                            copied && { color: '#173B70' },
                           ]}
                         >
                           {copied ? 'COPIED' : 'COPY ID'}
@@ -1378,12 +1378,12 @@ export default function DriverRegisterScreen() {
                       <Ionicons
                         name="id-card"
                         size={14}
-                        color={isSupervisorPass ? '#feb300' : '#2563EB'}
+                        color={isSupervisorPass ? '#173B70' : '#173B70'}
                       />
                       <Text
                         style={[
                           styles.detailsSectionTitle,
-                          isSupervisorPass && { color: '#feb300' },
+                          isSupervisorPass && { color: '#173B70' },
                         ]}
                       >
                         {isSupervisorPass
@@ -1413,7 +1413,7 @@ export default function DriverRegisterScreen() {
                         <>
                           <View style={styles.detailItem}>
                             <Text style={styles.detailItemLabel}>SUPERVISORY SCOPE</Text>
-                            <Text style={[styles.detailItemValueMono, { color: '#feb300', fontWeight: '900' }]}>
+                            <Text style={[styles.detailItemValueMono, { color: '#173B70', fontWeight: '900' }]}>
                               ALL PORT TERMINALS
                             </Text>
                           </View>
@@ -1433,14 +1433,14 @@ export default function DriverRegisterScreen() {
                             <Text style={styles.detailItemValueMono}>{registeredUser?.licenseExpiryDate || licenseExpiryDate || '2030-12-31'}</Text>
                           </View>
                           <View style={styles.detailItem}>
-                            <Text style={[styles.detailItemLabel, { color: '#2563EB' }]}>DRIVER PORT PASS EXPIRY</Text>
-                            <Text style={[styles.detailItemValueMono, { color: '#2563EB', fontWeight: '800' }]}>
+                            <Text style={[styles.detailItemLabel, { color: '#173B70' }]}>DRIVER PORT PASS EXPIRY</Text>
+                            <Text style={[styles.detailItemValueMono, { color: '#173B70', fontWeight: '800' }]}>
                               {registeredUser?.driverPortPassExpiryDate || driverPortPassExpiryDate || '2026-11-15'}
                             </Text>
                           </View>
                           <View style={styles.detailItem}>
-                            <Text style={[styles.detailItemLabel, { color: '#feb300' }]}>VEHICLE PORT PASS EXPIRY</Text>
-                            <Text style={[styles.detailItemValueMono, { color: '#feb300', fontWeight: '800' }]}>
+                            <Text style={[styles.detailItemLabel, { color: '#173B70' }]}>VEHICLE PORT PASS EXPIRY</Text>
+                            <Text style={[styles.detailItemValueMono, { color: '#173B70', fontWeight: '800' }]}>
                               {registeredUser?.vehiclePortPassExpiryDate || vehiclePortPassExpiryDate || '2026-11-20'}
                             </Text>
                           </View>
@@ -1457,8 +1457,8 @@ export default function DriverRegisterScreen() {
                   {isSupervisorPass ? (
                     <View style={styles.vehicleSection}>
                       <View style={styles.sectionTitleRow}>
-                        <Ionicons name="boat" size={14} color="#feb300" />
-                        <Text style={[styles.detailsSectionTitle, { color: '#feb300' }]}>
+                        <Ionicons name="boat" size={14} color="#173B70" />
+                        <Text style={[styles.detailsSectionTitle, { color: '#173B70' }]}>
                           PORT AUTHORITY APPOINTMENT &amp; CLEARANCE
                         </Text>
                       </View>
@@ -1466,7 +1466,7 @@ export default function DriverRegisterScreen() {
                       <View style={styles.vehicleBox}>
                         <View style={styles.vehicleRow}>
                           <Text style={styles.vehicleProp}>AUTHORITY SCOPE:</Text>
-                          <Text style={[styles.vehicleVal, { color: '#feb300', fontWeight: '900' }]}>
+                          <Text style={[styles.vehicleVal, { color: '#173B70', fontWeight: '900' }]}>
                             CENTRAL MESH · ALL 6 TERMINALS
                           </Text>
                         </View>
@@ -1491,8 +1491,8 @@ export default function DriverRegisterScreen() {
                   ) : (
                     <View style={styles.vehicleSection}>
                       <View style={styles.sectionTitleRow}>
-                        <Ionicons name="bus" size={14} color="#feb300" />
-                        <Text style={[styles.detailsSectionTitle, { color: '#feb300' }]}>
+                        <Ionicons name="bus" size={14} color="#173B70" />
+                        <Text style={[styles.detailsSectionTitle, { color: '#173B70' }]}>
                           ASSIGNED VEHICLE &amp; TERMINAL DISPATCH
                         </Text>
                       </View>
@@ -1504,13 +1504,13 @@ export default function DriverRegisterScreen() {
                         </View>
                         <View style={styles.vehicleRow}>
                           <Text style={styles.vehicleProp}>CHE NUMBER (SCK NO):</Text>
-                          <Text style={[styles.vehicleVal, { color: '#2563EB', fontWeight: '900' }]}>
+                          <Text style={[styles.vehicleVal, { color: '#173B70', fontWeight: '900' }]}>
                             {registeredUser?.cheNumber || detectedFleet?.cheNumber || 'CHE 100'}
                           </Text>
                         </View>
                         <View style={styles.vehicleRow}>
                           <Text style={styles.vehicleProp}>TRAILER / CHASSIS SIZE:</Text>
-                          <Text style={[styles.vehicleVal, { color: '#feb300', fontWeight: '900' }]}>
+                          <Text style={[styles.vehicleVal, { color: '#173B70', fontWeight: '900' }]}>
                             {registeredUser?.trailerSize || detectedFleet?.trailerSize || '40FT'}
                           </Text>
                         </View>
@@ -1537,14 +1537,14 @@ export default function DriverRegisterScreen() {
                   {/* Login Credentials Box */}
                   <View style={styles.loginCredsBox}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                      <Ionicons name="key" size={16} color="#22ef7e" />
+                      <Ionicons name="key" size={16} color="#173B70" />
                       <Text style={styles.loginCredsTitle}>
                         {isSupervisorPass ? 'HOW TO LOG IN (MOBILE & WEB)' : 'HOW TO LOG IN TO SCK LOGISTICS'}
                       </Text>
                     </View>
                     <View style={styles.credRow}>
                       <Text style={styles.credKey}>LOGIN IDENTIFIER:</Text>
-                      <Text style={[styles.credValCyan, isSupervisorPass && { color: '#feb300' }]}>
+                      <Text style={[styles.credValCyan, isSupervisorPass && { color: '#173B70' }]}>
                         {generatedDriverCode}
                       </Text>
                     </View>
@@ -1559,7 +1559,7 @@ export default function DriverRegisterScreen() {
                     <TouchableOpacity
                       style={[
                         styles.directCockpitBtn,
-                        isSupervisorPass && { backgroundColor: '#feb300' },
+                        isSupervisorPass && { backgroundColor: '#173B70' },
                       ]}
                       onPress={handleDirectCockpitAccess}
                       activeOpacity={0.88}
@@ -1586,7 +1586,7 @@ export default function DriverRegisterScreen() {
                       onPress={handleProceedToLogin}
                       activeOpacity={0.88}
                     >
-                      <Ionicons name="log-in" size={18} color="#2563EB" />
+                      <Ionicons name="log-in" size={18} color="#173B70" />
                       <Text style={styles.proceedLoginBtnText}>
                         GO TO LOGIN WITH {generatedDriverCode}
                       </Text>
@@ -1625,7 +1625,7 @@ const styles = StyleSheet.create({
   backBtnText: {
     fontSize: 10,
     fontWeight: '900',
-    color: '#2563EB',
+    color: '#173B70',
     letterSpacing: 0.8,
       },
   hero: {
@@ -1642,12 +1642,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: '#2563EB',
+    borderColor: '#173B70',
   },
   brandTitle: {
     fontSize: 16,
     fontWeight: '900',
-    color: '#2563EB',
+    color: '#173B70',
     letterSpacing: 1.2,
     textTransform: 'uppercase',
   },
@@ -1660,10 +1660,10 @@ const styles = StyleSheet.create({
   },
   noticeBox: {
     flexDirection: 'row',
-    backgroundColor: '#EFF6FF',
+    backgroundColor: '#F0F5FA',
     borderRadius: radius.DEFAULT,
     borderWidth: 1,
-    borderColor: '#2563EB',
+    borderColor: '#173B70',
     padding: 12,
     gap: 10,
     marginBottom: 14,
@@ -1677,7 +1677,7 @@ const styles = StyleSheet.create({
   },
   noticeBold: {
     fontWeight: '900',
-    color: '#2563EB',
+    color: '#173B70',
   },
 
   card: {
@@ -1700,7 +1700,7 @@ const styles = StyleSheet.create({
   cardHeaderText: {
     fontSize: 11,
     fontWeight: '900',
-    color: '#2563EB',
+    color: '#173B70',
     letterSpacing: 0.8,
   },
   fieldGroup: {
@@ -1749,13 +1749,13 @@ const styles = StyleSheet.create({
     color: '#849396',
       },
   ruleTextOk: {
-    color: '#22ef7e',
+    color: '#173B70',
     fontWeight: '700',
   },
 
   submitBtn: {
     height: 52,
-    backgroundColor: '#2563EB',
+    backgroundColor: '#173B70',
     borderRadius: radius.DEFAULT,
     flexDirection: 'row',
     alignItems: 'center',
@@ -1779,16 +1779,16 @@ const styles = StyleSheet.create({
     color: '#849396',
   },
   backLinkBold: {
-    color: '#2563EB',
+    color: '#173B70',
     fontWeight: '800',
   },
   autofillBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#EFF6FF',
+    backgroundColor: '#F0F5FA',
     borderWidth: 1.5,
-    borderColor: '#2563EB',
+    borderColor: '#173B70',
     borderRadius: radius.DEFAULT,
     paddingVertical: 12,
     paddingHorizontal: 16,
@@ -1796,7 +1796,7 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
   autofillBtnText: {
-    color: '#2563EB',
+    color: '#173B70',
     fontSize: 11,
     fontWeight: '900',
     letterSpacing: 0.8,
@@ -1806,7 +1806,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: 'rgba(255, 82, 82, 0.15)',
     borderWidth: 1,
-    borderColor: '#ff5252',
+    borderColor: '#173B70',
     borderRadius: radius.DEFAULT,
     padding: 12,
     gap: 8,
@@ -1846,16 +1846,16 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: radius.DEFAULT,
     borderWidth: 2,
-    borderColor: '#2563EB',
+    borderColor: '#173B70',
     overflow: 'hidden',
-    shadowColor: '#2563EB',
+    shadowColor: '#173B70',
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.5,
     shadowRadius: 16,
     elevation: 10,
   },
   cardStripe: {
-    backgroundColor: '#2563EB',
+    backgroundColor: '#173B70',
     paddingHorizontal: 14,
     paddingVertical: 8,
     flexDirection: 'row',
@@ -1878,7 +1878,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
     padding: 14,
-    backgroundColor: '#EFF6FF',
+    backgroundColor: '#F0F5FA',
     borderBottomWidth: 1,
     borderBottomColor: '#E2E8F0',
   },
@@ -1890,7 +1890,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: '#2563EB',
+    borderColor: '#173B70',
     position: 'relative',
   },
   verifiedBadge: {
@@ -1900,7 +1900,7 @@ const styles = StyleSheet.create({
     width: 18,
     height: 18,
     borderRadius: 9,
-    backgroundColor: '#22ef7e',
+    backgroundColor: '#173B70',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
@@ -1930,12 +1930,12 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: '#22ef7e',
+    backgroundColor: '#173B70',
   },
   statusVerifiedText: {
     fontSize: 9,
     fontWeight: '800',
-    color: '#22ef7e',
+    color: '#173B70',
         letterSpacing: 0.6,
   },
 
@@ -1946,7 +1946,7 @@ const styles = StyleSheet.create({
     padding: 14,
     borderRadius: radius.DEFAULT,
     borderWidth: 1.5,
-    borderColor: '#2563EB',
+    borderColor: '#173B70',
     alignItems: 'center',
     gap: 6,
   },
@@ -1966,7 +1966,7 @@ const styles = StyleSheet.create({
   idCodeText: {
     fontSize: 32,
     fontWeight: '900',
-    color: '#2563EB',
+    color: '#173B70',
         letterSpacing: 2,
   },
   copyIdBtn: {
@@ -1978,12 +1978,12 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: radius.sm,
     borderWidth: 1,
-    borderColor: '#2563EB',
+    borderColor: '#173B70',
   },
   copyIdBtnText: {
     fontSize: 10,
     fontWeight: '900',
-    color: '#2563EB',
+    color: '#173B70',
       },
   idHighlightSub: {
     fontSize: 10,
@@ -2005,7 +2005,7 @@ const styles = StyleSheet.create({
   detailsSectionTitle: {
     fontSize: 9,
     fontWeight: '900',
-    color: '#2563EB',
+    color: '#173B70',
     letterSpacing: 0.8,
   },
   detailsGrid: {
@@ -2070,24 +2070,24 @@ const styles = StyleSheet.create({
   vehicleValGreen: {
     fontSize: 10,
     fontWeight: '800',
-    color: '#22ef7e',
+    color: '#173B70',
       },
 
   // Login Creds Box
   loginCredsBox: {
     marginHorizontal: 14,
     marginBottom: 14,
-    backgroundColor: '#EFF6FF',
+    backgroundColor: '#F0F5FA',
     padding: 12,
     borderRadius: radius.DEFAULT,
     borderWidth: 1,
-    borderColor: '#22ef7e',
+    borderColor: '#173B70',
     gap: 6,
   },
   loginCredsTitle: {
     fontSize: 10,
     fontWeight: '900',
-    color: '#22ef7e',
+    color: '#173B70',
     letterSpacing: 0.8,
   },
   credRow: {
@@ -2103,7 +2103,7 @@ const styles = StyleSheet.create({
   credValCyan: {
     fontSize: 12,
     fontWeight: '900',
-    color: '#2563EB',
+    color: '#173B70',
       },
   credValWhite: {
     fontSize: 10,
@@ -2118,7 +2118,7 @@ const styles = StyleSheet.create({
   },
   directCockpitBtn: {
     height: 50,
-    backgroundColor: '#2563EB',
+    backgroundColor: '#173B70',
     borderRadius: radius.DEFAULT,
     flexDirection: 'row',
     alignItems: 'center',
@@ -2134,10 +2134,10 @@ const styles = StyleSheet.create({
   },
   proceedLoginBtn: {
     height: 46,
-    backgroundColor: '#EFF6FF',
+    backgroundColor: '#F0F5FA',
     borderRadius: radius.DEFAULT,
     borderWidth: 1,
-    borderColor: '#2563EB',
+    borderColor: '#173B70',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -2146,7 +2146,7 @@ const styles = StyleSheet.create({
   proceedLoginBtnText: {
     fontSize: 10,
     fontWeight: '900',
-    color: '#2563EB',
+    color: '#173B70',
     letterSpacing: 0.8,
   },
 
@@ -2169,14 +2169,14 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   inputWrapDetected: {
-    borderColor: '#2563EB',
-    backgroundColor: '#EFF6FF',
+    borderColor: '#173B70',
+    backgroundColor: '#F0F5FA',
   },
   cheAutoCard: {
     backgroundColor: '#F8FAFC',
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: '#EFF6FF',
+    borderColor: '#F0F5FA',
     padding: 12,
     marginTop: 8,
     gap: 8,
@@ -2202,7 +2202,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   cheVerifiedText: {
-    color: '#2563EB',
+    color: '#173B70',
     fontSize: 10,
     fontWeight: '800',
     letterSpacing: 0.5,
@@ -2226,7 +2226,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   cheBlockValue: {
-    color: '#2563EB',
+    color: '#173B70',
     fontSize: 16,
     fontWeight: '900',
     letterSpacing: 0.8,
@@ -2258,7 +2258,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   cheBlockSize: {
-    color: '#feb300',
+    color: '#173B70',
     fontSize: 12,
     fontWeight: '900',
     letterSpacing: 0.5,
@@ -2286,7 +2286,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   chePendingText: {
-    color: '#feb300',
+    color: '#173B70',
     fontSize: 11,
     flex: 1,
     lineHeight: 15,
@@ -2298,7 +2298,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.6,
   },
   fleetTotalBadge: {
-    color: '#feb300',
+    color: '#173B70',
     fontSize: 9,
     fontWeight: '900',
     letterSpacing: 0.5,
@@ -2324,8 +2324,8 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255, 255, 255, 0.08)',
   },
   fleetChipActive: {
-    backgroundColor: '#EFF6FF',
-    borderColor: '#2563EB',
+    backgroundColor: '#F0F5FA',
+    borderColor: '#173B70',
   },
   fleetChipText: {
     color: '#1E293B',
@@ -2333,7 +2333,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   fleetChipTextActive: {
-    color: '#2563EB',
+    color: '#173B70',
   },
   fleetChipCheBadge: {
     backgroundColor: 'rgba(255, 255, 255, 0.08)',
@@ -2342,7 +2342,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   fleetChipCheBadgeActive: {
-    backgroundColor: '#2563EB',
+    backgroundColor: '#173B70',
   },
   fleetChipCheBadgeText: {
     color: '#849396',
@@ -2359,10 +2359,10 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   fleetChipSizeBadgeActive: {
-    backgroundColor: '#feb300',
+    backgroundColor: '#173B70',
   },
   fleetChipSizeBadgeText: {
-    color: '#feb300',
+    color: '#173B70',
     fontSize: 9,
     fontWeight: '800',
   },
@@ -2379,12 +2379,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   empTypeBadgeCyan: {
-    backgroundColor: '#EFF6FF',
-    borderColor: '#2563EB',
+    backgroundColor: '#F0F5FA',
+    borderColor: '#173B70',
   },
   empTypeBadgeAmber: {
     backgroundColor: 'rgba(254, 179, 0, 0.12)',
-    borderColor: '#feb300',
+    borderColor: '#173B70',
   },
   empTypeBadgeText: {
     fontSize: 9,
@@ -2405,8 +2405,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(254, 179, 0, 0.08)',
   },
   roleDetectionBannerCyan: {
-    borderColor: '#EFF6FF',
-    backgroundColor: '#EFF6FF',
+    borderColor: '#F0F5FA',
+    backgroundColor: '#F0F5FA',
   },
   roleBadgeCircle: {
     width: 38,

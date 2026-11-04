@@ -18,7 +18,7 @@ export function StatCard({
   iconName,
   hint,
   style,
-  valueColor = '#1F2D33',
+  valueColor = '#173B70',
 }: StatCardProps) {
   return (
     <View style={[styles.card, style]}>
@@ -26,7 +26,7 @@ export function StatCard({
         <Text style={styles.label} numberOfLines={1}>
           {label}
         </Text>
-        {iconName && <Ionicons name={iconName} size={16} color="#6B7C85" />}
+        {iconName && <Ionicons name={iconName} size={16} color="#173B70" />}
       </View>
       <Text style={[styles.value, { color: valueColor }]}>{value}</Text>
       {hint ? (
@@ -43,7 +43,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: Layout.radius,
     borderWidth: 1,
-    borderColor: '#E5EAEC',
+    borderColor: '#D0DEEB',
     padding: 14,
     justifyContent: 'center',
   },
@@ -55,17 +55,17 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 13,
-    fontWeight: '500',
-    color: '#6B7C85',
+    fontWeight: '600',
+    color: '#3A567F',
   },
   value: {
     fontSize: 24,
-    fontWeight: '600',
+    fontWeight: '700',
     letterSpacing: -0.5,
   },
   hint: {
     fontSize: 12,
-    color: '#A3B1B8',
+    color: '#5E799E',
     marginTop: 4,
   },
 });

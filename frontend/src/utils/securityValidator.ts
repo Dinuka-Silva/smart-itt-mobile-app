@@ -88,14 +88,14 @@ export const securityValidator = {
     }
 
     let level: PasswordStrengthResult['level'] = 'VERY_WEAK';
-    let color = '#ef4444'; // Red
+    let color = '#173B70'; // Red
 
     if (score >= 90) {
       level = 'STRONG';
-      color = '#16A34A'; // Green
+      color = '#173B70'; // Green
     } else if (score >= 70) {
       level = 'GOOD';
-      color = '#2563EB'; // Blue
+      color = '#173B70'; // Blue
     } else if (score >= 50) {
       level = 'FAIR';
       color = '#D97706'; // Amber

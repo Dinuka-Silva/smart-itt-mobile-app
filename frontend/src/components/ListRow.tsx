@@ -35,8 +35,8 @@ export function ListRow({
   statusLabel,
   iconName,
   badgeText,
-  badgeBg = '#E3F4F1',
-  badgeColor = '#0F766E',
+  badgeBg = '#E8F1FA',
+  badgeColor = '#173B70',
   onPress,
   showArrow = false,
   style,
@@ -51,7 +51,7 @@ export function ListRow({
         </View>
       ) : iconName ? (
         <View style={styles.iconWrap}>
-          <Ionicons name={iconName} size={18} color="#0F766E" />
+          <Ionicons name={iconName} size={18} color="#173B70" />
         </View>
       ) : null}
 
@@ -124,7 +124,9 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#E3F4F1',
+    backgroundColor: '#F0F5FA',
+    borderWidth: 1,
+    borderColor: '#D0DEEB',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
@@ -140,18 +142,18 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 16,
-    fontWeight: '500',
-    color: '#1F2D33',
+    fontWeight: '600',
+    color: '#173B70',
     flex: 1,
   },
   metaText: {
     fontSize: 12,
-    color: '#6B7C85',
+    color: '#3A567F',
     marginLeft: 8,
   },
   subtitle: {
     fontSize: 13,
-    color: '#6B7C85',
+    color: '#5E799E',
     marginTop: 2,
   },
   rightWrap: {

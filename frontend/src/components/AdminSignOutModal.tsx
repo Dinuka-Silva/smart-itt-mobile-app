@@ -39,7 +39,7 @@ export const AdminSignOutModal: React.FC<AdminSignOutModalProps> = ({ visible, o
       <View style={styles.overlay}>
         <View style={styles.card}>
           <View style={styles.iconCircle}>
-            <Ionicons name="shield-outline" size={30} color="#2563EB" />
+            <Ionicons name="shield-outline" size={30} color="#173B70" />
           </View>
           <Text style={styles.title}>Admin Session Actions</Text>
           <Text style={styles.message}>
@@ -55,13 +55,13 @@ export const AdminSignOutModal: React.FC<AdminSignOutModalProps> = ({ visible, o
               activeOpacity={0.8}
             >
               <View style={styles.btnIconWrapBlue}>
-                <Ionicons name="swap-horizontal" size={18} color="#2563EB" />
+                <Ionicons name="swap-horizontal" size={18} color="#173B70" />
               </View>
               <View style={styles.btnTextWrap}>
                 <Text style={styles.switchAccountTitle}>Switch Account</Text>
                 <Text style={styles.switchAccountSubtitle}>Go to Operator Login (Drivers / Supervisors)</Text>
               </View>
-              <Ionicons name="chevron-forward" size={16} color="#2563EB" />
+              <Ionicons name="chevron-forward" size={16} color="#173B70" />
             </TouchableOpacity>
 
             {/* Sign Out to Admin Login */}
@@ -89,7 +89,7 @@ export const AdminSignOutModal: React.FC<AdminSignOutModalProps> = ({ visible, o
               activeOpacity={0.7}
             >
               {loading ? (
-                <ActivityIndicator size="small" color="#2563EB" />
+                <ActivityIndicator size="small" color="#173B70" />
               ) : (
                 <Text style={styles.cancelText}>Cancel</Text>
               )}
@@ -128,9 +128,9 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: '#EFF6FF',
+    backgroundColor: '#F0F5FA',
     borderWidth: 1,
-    borderColor: '#2563EB',
+    borderColor: '#173B70',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 16,
@@ -160,9 +160,9 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 14,
     borderRadius: 10,
-    backgroundColor: '#EFF6FF',
+    backgroundColor: '#F0F5FA',
     borderWidth: 1,
-    borderColor: '#2563EB',
+    borderColor: '#173B70',
   },
   signOutBtn: {
     flexDirection: 'row',
@@ -196,7 +196,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   switchAccountTitle: {
-    color: '#2563EB',
+    color: '#173B70',
     fontSize: 14,
     fontWeight: '800',
     letterSpacing: 0.2,

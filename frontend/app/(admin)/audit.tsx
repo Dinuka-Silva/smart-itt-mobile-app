@@ -212,9 +212,9 @@ export default function AdminAuditScreen() {
   const getRoleBadgeStyle = (role: string) => {
     switch (role) {
       case 'DRIVER':
-        return { bg: '#EFF6FF', border: '#EFF6FF', color: '#2563EB', icon: 'car-sport-outline' as const };
+        return { bg: '#F0F5FA', border: '#F0F5FA', color: '#173B70', icon: 'car-sport-outline' as const };
       case 'SUPERVISOR':
-        return { bg: 'rgba(254, 179, 0, 0.12)', border: 'rgba(254, 179, 0, 0.35)', color: '#feb300', icon: 'shield-outline' as const };
+        return { bg: 'rgba(254, 179, 0, 0.12)', border: 'rgba(254, 179, 0, 0.35)', color: '#173B70', icon: 'shield-outline' as const };
       case 'ADMIN':
         return { bg: 'rgba(179, 136, 255, 0.15)', border: 'rgba(179, 136, 255, 0.4)', color: '#b388ff', icon: 'key-outline' as const };
       default:
@@ -225,28 +225,28 @@ export default function AdminAuditScreen() {
   const getActionBadgeStyle = (action: string) => {
     const act = (action || '').toUpperCase();
     if (act === 'LOGIN_SUCCESS') {
-      return { bg: 'rgba(34, 239, 126, 0.1)', border: 'rgba(34, 239, 126, 0.35)', color: '#22ef7e', label: 'LOGIN SUCCESS', icon: 'checkmark-circle' as const };
+      return { bg: 'rgba(34, 239, 126, 0.1)', border: 'rgba(34, 239, 126, 0.35)', color: '#173B70', label: 'LOGIN SUCCESS', icon: 'checkmark-circle' as const };
     }
     if (act === 'LOGIN_FAILED') {
-      return { bg: 'rgba(255, 82, 82, 0.12)', border: 'rgba(255, 82, 82, 0.35)', color: '#ff5252', label: 'LOGIN FAILED', icon: 'close-circle' as const };
+      return { bg: 'rgba(255, 82, 82, 0.12)', border: 'rgba(255, 82, 82, 0.35)', color: '#173B70', label: 'LOGIN FAILED', icon: 'close-circle' as const };
     }
     if (act === 'LOGIN_BLOCKED_SUSPENDED' || act.includes('SUSPEND')) {
-      return { bg: 'rgba(255, 82, 82, 0.15)', border: 'rgba(255, 82, 82, 0.45)', color: '#ff5252', label: 'LOGIN BLOCKED (SUSPENDED)', icon: 'ban' as const };
+      return { bg: 'rgba(255, 82, 82, 0.15)', border: 'rgba(255, 82, 82, 0.45)', color: '#173B70', label: 'LOGIN BLOCKED (SUSPENDED)', icon: 'ban' as const };
     }
     if (act === 'LOCKOUT_TRIGGERED') {
       return { bg: 'rgba(255, 145, 0, 0.12)', border: 'rgba(255, 145, 0, 0.4)', color: '#ff9100', label: 'LOCKOUT TRIGGERED', icon: 'lock-closed' as const };
     }
     if (act === 'PASSWORD_CHANGED' || act === 'RESET_DRIVER_PASSWORD') {
-      return { bg: 'rgba(254, 179, 0, 0.12)', border: 'rgba(254, 179, 0, 0.4)', color: '#feb300', label: 'PASSWORD RESET', icon: 'key' as const };
+      return { bg: 'rgba(254, 179, 0, 0.12)', border: 'rgba(254, 179, 0, 0.4)', color: '#173B70', label: 'PASSWORD RESET', icon: 'key' as const };
     }
     if (act === 'SESSION_AUTO_LOCKED' || act === 'LOGOUT') {
       return { bg: 'rgba(144, 202, 249, 0.1)', border: 'rgba(144, 202, 249, 0.3)', color: '#90caf9', label: 'SESSION LOGOUT', icon: 'log-out-outline' as const };
     }
     if (act === 'DRIVER_REGISTERED') {
-      return { bg: '#EFF6FF', border: '#EFF6FF', color: '#2563EB', label: 'DRIVER REGISTERED', icon: 'person-add' as const };
+      return { bg: '#F0F5FA', border: '#F0F5FA', color: '#173B70', label: 'DRIVER REGISTERED', icon: 'person-add' as const };
     }
     if (act === 'SUPERVISOR_REGISTERED') {
-      return { bg: 'rgba(254, 179, 0, 0.15)', border: 'rgba(254, 179, 0, 0.45)', color: '#feb300', label: 'SUPERVISOR REGISTERED', icon: 'shield-checkmark' as const };
+      return { bg: 'rgba(254, 179, 0, 0.15)', border: 'rgba(254, 179, 0, 0.45)', color: '#173B70', label: 'SUPERVISOR REGISTERED', icon: 'shield-checkmark' as const };
     }
     if (act === 'TRIP_STARTED') {
       return { bg: 'rgba(33, 150, 243, 0.15)', border: 'rgba(33, 150, 243, 0.45)', color: '#29b6f6', label: 'TRIP STARTED', icon: 'navigate' as const };
@@ -255,15 +255,15 @@ export default function AdminAuditScreen() {
       return { bg: 'rgba(0, 200, 160, 0.15)', border: 'rgba(0, 200, 160, 0.45)', color: '#26a69a', label: 'TRIP COMPLETED', icon: 'flag' as const };
     }
     if (act === 'TRIP_APPROVED') {
-      return { bg: 'rgba(34, 239, 126, 0.15)', border: 'rgba(34, 239, 126, 0.45)', color: '#22ef7e', label: 'TRIP APPROVED', icon: 'checkmark-done-circle' as const };
+      return { bg: 'rgba(34, 239, 126, 0.15)', border: 'rgba(34, 239, 126, 0.45)', color: '#173B70', label: 'TRIP APPROVED', icon: 'checkmark-done-circle' as const };
     }
     if (act === 'TRIP_REJECTED') {
-      return { bg: 'rgba(255, 82, 82, 0.16)', border: 'rgba(255, 82, 82, 0.5)', color: '#ff5252', label: 'TRIP REJECTED', icon: 'close-circle' as const };
+      return { bg: 'rgba(255, 82, 82, 0.16)', border: 'rgba(255, 82, 82, 0.5)', color: '#173B70', label: 'TRIP REJECTED', icon: 'close-circle' as const };
     }
     if (act === 'DRIVER_STATUS_UPDATED' || act === 'SUPERVISOR_STATUS_UPDATED') {
       return { bg: 'rgba(255, 179, 0, 0.15)', border: 'rgba(255, 179, 0, 0.45)', color: '#ffb300', label: act.replace(/_/g, ' '), icon: 'swap-horizontal' as const };
     }
-    return { bg: '#EFF6FF', border: '#EFF6FF', color: '#2563EB', label: action.replace(/_/g, ' '), icon: 'ellipse' as const };
+    return { bg: '#F0F5FA', border: '#F0F5FA', color: '#173B70', label: action.replace(/_/g, ' '), icon: 'ellipse' as const };
   };
 
   return (
@@ -272,7 +272,7 @@ export default function AdminAuditScreen() {
       <View style={[styles.header, { paddingTop: Math.max(topInset, 16) }]}>
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backBtn} activeOpacity={0.7}>
-            <Ionicons name="arrow-back" size={20} color="#2563EB" />
+            <Ionicons name="arrow-back" size={20} color="#173B70" />
           </TouchableOpacity>
           <View style={{ marginLeft: 10 }}>
             <Text style={styles.headerTitle}>System Audit Trail</Text>
@@ -281,7 +281,7 @@ export default function AdminAuditScreen() {
         </View>
 
         <View style={styles.lockBadge}>
-          <Ionicons name="shield-checkmark" size={13} color="#22ef7e" style={{ marginRight: 4 }} />
+          <Ionicons name="shield-checkmark" size={13} color="#173B70" style={{ marginRight: 4 }} />
           <Text style={styles.lockBadgeText}>SECURE LEDGER</Text>
         </View>
       </View>
@@ -290,19 +290,19 @@ export default function AdminAuditScreen() {
       <View style={styles.kpiRow}>
         <View style={styles.kpiCard}>
           <Text style={styles.kpiLabel}>TOTAL EVENTS</Text>
-          <Text style={[styles.kpiValue, { color: '#2563EB' }]}>{totalLogsCount}</Text>
+          <Text style={[styles.kpiValue, { color: '#173B70' }]}>{totalLogsCount}</Text>
           <Text style={styles.kpiSub}>System Ledger</Text>
         </View>
 
         <View style={styles.kpiCard}>
           <Text style={styles.kpiLabel}>DRIVER OPS</Text>
-          <Text style={[styles.kpiValue, { color: '#2563EB' }]}>{driverEventsCount}</Text>
+          <Text style={[styles.kpiValue, { color: '#173B70' }]}>{driverEventsCount}</Text>
           <Text style={styles.kpiSub}>Trips & Regs</Text>
         </View>
 
         <View style={styles.kpiCard}>
           <Text style={styles.kpiLabel}>SUPERVISORS</Text>
-          <Text style={[styles.kpiValue, { color: '#feb300' }]}>{supervisorEventsCount}</Text>
+          <Text style={[styles.kpiValue, { color: '#173B70' }]}>{supervisorEventsCount}</Text>
           <Text style={styles.kpiSub}>Approvals & Regs</Text>
         </View>
 
@@ -366,7 +366,7 @@ export default function AdminAuditScreen() {
       {/* ─── LOGS LIST CONTENT ─── */}
       {loading && !refreshing ? (
         <View style={styles.centerLoading}>
-          <ActivityIndicator size="large" color="#2563EB" />
+          <ActivityIndicator size="large" color="#173B70" />
           <Text style={styles.loadingText}>Loading system audit logs...</Text>
         </View>
       ) : (
@@ -379,7 +379,7 @@ export default function AdminAuditScreen() {
             },
           ]}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#2563EB" />
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#173B70" />
           }
           showsVerticalScrollIndicator={false}
         >
@@ -476,10 +476,10 @@ const styles = StyleSheet.create({
   },
   backBtn: {
     padding: 7,
-    backgroundColor: '#EFF6FF',
+    backgroundColor: '#F0F5FA',
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#EFF6FF',
+    borderColor: '#F0F5FA',
   },
   headerTitle: {
     fontSize: 17,
@@ -504,7 +504,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(34, 239, 126, 0.3)',
   },
   lockBadgeText: {
-    color: '#22ef7e',
+    color: '#173B70',
     fontSize: 9,
     fontWeight: '900',
     letterSpacing: 0.5,
@@ -581,8 +581,8 @@ const styles = StyleSheet.create({
     borderColor: '#1f3452',
   },
   filterPillActive: {
-    backgroundColor: '#2563EB',
-    borderColor: '#2563EB',
+    backgroundColor: '#173B70',
+    borderColor: '#173B70',
   },
   filterPillText: {
     color: '#849396',
@@ -603,7 +603,7 @@ const styles = StyleSheet.create({
     padding: 30,
   },
   loadingText: {
-    color: '#2563EB',
+    color: '#173B70',
     fontSize: 12,
     marginTop: 12,
     fontWeight: '700',

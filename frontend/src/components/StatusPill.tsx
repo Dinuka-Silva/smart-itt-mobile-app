@@ -44,6 +44,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#D0DEEB',
     gap: 6,
     alignSelf: 'flex-start',
   },
@@ -53,7 +55,7 @@ const styles = StyleSheet.create({
     borderRadius: 3,
   },
   text: {
-    fontWeight: '500',
+    fontWeight: '700',
     letterSpacing: 0.3,
   },
 });

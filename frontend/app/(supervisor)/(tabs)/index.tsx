@@ -323,7 +323,7 @@ export default function SupervisorHomeDashboard() {
           },
         ]}
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); loadDashboardData(); }} tintColor="#2563EB" />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); loadDashboardData(); }} tintColor="#173B70" />}
         keyboardShouldPersistTaps="handled"
       >
         {/* ─── A. SUPERVISOR HEADER ─── */}
@@ -338,23 +338,13 @@ export default function SupervisorHomeDashboard() {
                 <View style={styles.rolePill}>
                   <Text style={styles.rolePillText}>PORT OPERATIONS SUPERVISOR</Text>
                 </View>
-                <View style={[
-                  styles.supervisorPassBadge,
-                  isSupervisorPassExpired
-                    ? styles.supervisorPassBadgeExpired
-                    : isSupervisorPassRenewalDue
-                    ? styles.supervisorPassBadgeWarning
-                    : styles.supervisorPassBadgeValid,
-                ]}>
+                <View style={styles.supervisorPassBadge}>
                   <Ionicons
                     name="shield-checkmark"
                     size={11}
-                    color={isSupervisorPassExpired ? '#ff5252' : isSupervisorPassRenewalDue ? '#feb300' : '#22ef7e'}
+                    color="#173B70"
                   />
-                  <Text style={[
-                    styles.supervisorPassBadgeText,
-                    { color: isSupervisorPassExpired ? '#ff5252' : isSupervisorPassRenewalDue ? '#feb300' : '#22ef7e' },
-                  ]}>
+                  <Text style={styles.supervisorPassBadgeText}>
                     PORT PASS: {supervisorPassExpiry} ({isSupervisorPassExpired ? 'EXPIRED' : `${supervisorPassDaysLeft}d`})
                   </Text>
                 </View>
@@ -364,8 +354,20 @@ export default function SupervisorHomeDashboard() {
           </View>
 
           <View style={styles.headerRight}>
-            <TouchableOpacity style={styles.headerIconBtn} onPress={() => setNotificationsModalVisible(true)}>
-              <Ionicons name="notifications" size={18} color="#2563EB" />
+            <TouchableOpacity
+              style={styles.headerIconBtn}
+              onPress={() => router.push('/(supervisor)/(tabs)/profile')}
+              accessibilityLabel="Settings and Preferences"
+            >
+              <Ionicons name="settings-outline" size={18} color="#173B70" />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.headerIconBtn}
+              onPress={() => setNotificationsModalVisible(true)}
+              accessibilityLabel="Notifications"
+            >
+              <Ionicons name="notifications-outline" size={18} color="#173B70" />
               <View style={styles.unreadDot} />
             </TouchableOpacity>
 
@@ -375,8 +377,9 @@ export default function SupervisorHomeDashboard() {
                 logout();
                 router.replace('/(auth)/login');
               }}
+              accessibilityLabel="Log out"
             >
-              <Ionicons name="log-out-outline" size={18} color="#ff5252" />
+              <Ionicons name="log-out-outline" size={18} color="#173B70" />
             </TouchableOpacity>
           </View>
         </View>
@@ -385,27 +388,14 @@ export default function SupervisorHomeDashboard() {
         <View style={styles.supervisorPermitCard}>
           <View style={styles.supervisorPermitHeader}>
             <View style={styles.supervisorPermitIconWrap}>
-              <Ionicons name="shield-checkmark" size={22} color="#feb300" />
+              <Ionicons name="shield-checkmark" size={22} color="#173B70" />
             </View>
             <View style={{ flex: 1 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 6 }}>
                 <Text style={styles.supervisorPermitTitle}>SLPA SUPERVISOR CLEARANCE & GATE PASS</Text>
-                <View style={[
-                  styles.permitStatusPill,
-                  isSupervisorPassExpired
-                    ? { backgroundColor: 'rgba(255, 82, 82, 0.15)', borderColor: '#ff5252' }
-                    : isSupervisorPassRenewalDue
-                    ? { backgroundColor: 'rgba(254, 179, 0, 0.15)', borderColor: '#feb300' }
-                    : { backgroundColor: 'rgba(34, 239, 126, 0.15)', borderColor: '#22ef7e' },
-                ]}>
-                  <View style={[
-                    styles.permitStatusDot,
-                    { backgroundColor: isSupervisorPassExpired ? '#ff5252' : isSupervisorPassRenewalDue ? '#feb300' : '#22ef7e' }
-                  ]} />
-                  <Text style={[
-                    styles.permitStatusText,
-                    { color: isSupervisorPassExpired ? '#ff5252' : isSupervisorPassRenewalDue ? '#feb300' : '#22ef7e' }
-                  ]}>
+                <View style={styles.permitStatusPill}>
+                  <View style={styles.permitStatusDot} />
+                  <Text style={styles.permitStatusText}>
                     {isSupervisorPassExpired
                       ? 'EXPIRED'
                       : isSupervisorPassRenewalDue
@@ -445,13 +435,13 @@ export default function SupervisorHomeDashboard() {
             </View>
             <View style={[styles.supervisorPermitCol, { minWidth: isSmallMobile ? '48%' : '23%' }]}>
               <Text style={styles.supervisorPermitLabel}>PORT PASS EXPIRY</Text>
-              <Text style={[styles.supervisorPermitVal, { color: isSupervisorPassRenewalDue ? '#feb300' : '#22ef7e' }]}>
+              <Text style={styles.supervisorPermitVal}>
                 {supervisorPassExpiry}
               </Text>
             </View>
             <View style={[styles.supervisorPermitCol, { minWidth: isSmallMobile ? '48%' : '23%' }]}>
               <Text style={styles.supervisorPermitLabel}>TIME REMAINING</Text>
-              <Text style={[styles.supervisorPermitVal, { color: isSupervisorPassRenewalDue ? '#feb300' : '#2563EB' }]}>
+              <Text style={styles.supervisorPermitVal}>
                 {isSupervisorPassExpired ? 'Expired' : `${supervisorPassDaysLeft} Days Left`}
               </Text>
             </View>
@@ -459,9 +449,9 @@ export default function SupervisorHomeDashboard() {
 
           {isSupervisorPassRenewalDue && (
             <View style={styles.permitNoticeWrap}>
-              <Ionicons name="warning" size={16} color="#feb300" style={{ marginTop: 1 }} />
+              <Ionicons name="warning" size={16} color="#173B70" style={{ marginTop: 1 }} />
               <Text style={styles.permitNoticeText}>
-                <Text style={{ fontWeight: '800', color: '#feb300' }}>Renewal Advisory: </Text>
+                <Text style={{ fontWeight: '800', color: '#173B70' }}>Renewal Advisory: </Text>
                 Your supervisor port pass expires in {supervisorPassDaysLeft} days. Submit renewal form at SLPA Port Security Clearance Division to retain unrestricted multi-terminal oversight access.
               </Text>
             </View>
@@ -508,7 +498,7 @@ export default function SupervisorHomeDashboard() {
               <View style={styles.complianceHeaderRow}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
                   <View style={styles.complianceIconBox}>
-                    <Ionicons name="shield-half" size={18} color="#feb300" />
+                    <Ionicons name="shield-half" size={18} color="#173B70" />
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.complianceTitle}>FLEET COMPLIANCE & EXPIRY ADVISORY</Text>
@@ -554,7 +544,7 @@ export default function SupervisorHomeDashboard() {
               {(complianceTab === 'ALL' || complianceTab === 'VEHICLES') && dedupedVehicleRenewals.length > 0 && (
                 <View style={styles.complianceSectionBox}>
                   <View style={styles.complianceSectionHeader}>
-                    <Ionicons name="car-sport" size={14} color="#f59e0b" />
+                    <Ionicons name="car-sport" size={14} color="#173B70" />
                     <Text style={styles.complianceSectionTitle}>
                       VEHICLE REVENUE LICENSES DUE FOR RENEWAL ({dedupedVehicleRenewals.length} VEHICLES)
                     </Text>
@@ -569,7 +559,7 @@ export default function SupervisorHomeDashboard() {
                       return (
                         <View key={d.vehicleNumber || d.id} style={styles.complianceItemRow}>
                           <View style={styles.vehiclePlateBadge}>
-                            <Ionicons name="bus" size={12} color="#2563EB" style={{ marginRight: 4 }} />
+                            <Ionicons name="bus" size={12} color="#173B70" style={{ marginRight: 4 }} />
                             <Text style={styles.vehiclePlateBadgeText}>{d.vehicleNumber || 'LY-6439'}</Text>
                           </View>
 
@@ -578,9 +568,9 @@ export default function SupervisorHomeDashboard() {
                             <Text style={styles.complianceItemSub}>{opName} · CHE: {resolveCheNumber(d.vehicleNumber, d.chassisNumber)}</Text>
                           </View>
 
-                          <View style={[styles.complianceDaysPill, isExpired ? styles.complianceDaysPillExpired : styles.complianceDaysPillWarning]}>
-                            <Ionicons name={isExpired ? "alert-circle" : "time"} size={11} color={isExpired ? "#ff5252" : "#feb300"} style={{ marginRight: 3 }} />
-                            <Text style={[styles.complianceDaysText, { color: isExpired ? '#ff5252' : '#feb300' }]}>
+                          <View style={styles.complianceDaysPill}>
+                            <Ionicons name={isExpired ? "alert-circle" : "time"} size={11} color="#173B70" style={{ marginRight: 3 }} />
+                            <Text style={styles.complianceDaysText}>
                               {isExpired ? 'EXPIRED' : `${daysLeft}d left`}
                             </Text>
                           </View>
@@ -595,7 +585,7 @@ export default function SupervisorHomeDashboard() {
               {(complianceTab === 'ALL' || complianceTab === 'PORT_PASS') && expiringPassDrivers.length > 0 && (
                 <View style={styles.complianceSectionBox}>
                   <View style={styles.complianceSectionHeader}>
-                    <Ionicons name="card" size={14} color="#feb300" />
+                    <Ionicons name="card" size={14} color="#173B70" />
                     <Text style={styles.complianceSectionTitle}>
                       SLPA SECURITY GATE PASSES ({expiringPassDrivers.length} OPERATORS DUE)
                     </Text>
@@ -618,13 +608,13 @@ export default function SupervisorHomeDashboard() {
                           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                             <View style={styles.passBadgeWrap}>
                               <Text style={styles.passBadgeKey}>Driver Pass: </Text>
-                              <Text style={[styles.passBadgeVal, { color: d.drvDays <= 30 ? '#feb300' : '#22ef7e' }]}>
+                              <Text style={styles.passBadgeVal}>
                                 {d.drvPassExpiry} ({d.drvDays}d)
                               </Text>
                             </View>
                             <View style={styles.passBadgeWrap}>
                               <Text style={styles.passBadgeKey}>Truck Pass: </Text>
-                              <Text style={[styles.passBadgeVal, { color: d.vehDays <= 30 ? '#feb300' : '#22ef7e' }]}>
+                              <Text style={styles.passBadgeVal}>
                                 {d.vehPassExpiry} ({d.vehDays}d)
                               </Text>
                             </View>
@@ -658,57 +648,57 @@ export default function SupervisorHomeDashboard() {
 
         {/* ─── B. SUPERVISOR SUMMARY METRIC CARDS (LIVE BACKEND DATA) ─── */}
         <View style={styles.metricsGrid}>
-          <View style={[styles.metricCard, { width: metricCardWidth }]}>
+          <View style={[styles.metricCardDark, { width: metricCardWidth }]}>
             <View style={styles.metricCardHeader}>
-              <Text style={styles.metricLabel}>TOTAL TRIPS TODAY</Text>
-              <Ionicons name="layers" size={16} color="#2563EB" />
+              <Text style={styles.metricLabelDark}>TOTAL TRIPS TODAY</Text>
+              <Ionicons name="layers" size={16} color="#FFFFFF" />
             </View>
-            <Text style={[styles.metricValue, { color: '#2563EB' }]}>{stats.totalTripsToday}</Text>
-            <Text style={styles.metricSub}>Port Movements</Text>
+            <Text style={styles.metricValueDark}>{stats.totalTripsToday}</Text>
+            <Text style={styles.metricSubDark}>Port Movements</Text>
           </View>
 
           <View style={[styles.metricCard, { width: metricCardWidth }]}>
             <View style={styles.metricCardHeader}>
               <Text style={styles.metricLabel}>ACTIVE TRIPS</Text>
-              <Ionicons name="navigate" size={16} color="#22ef7e" />
+              <Ionicons name="navigate" size={16} color="#173B70" />
             </View>
-            <Text style={[styles.metricValue, { color: '#22ef7e' }]}>{stats.activeTrips}</Text>
+            <Text style={styles.metricValue}>{stats.activeTrips}</Text>
             <Text style={styles.metricSub}>In Transit</Text>
           </View>
 
-          <View style={[styles.metricCard, { borderColor: '#feb300', width: metricCardWidth }]}>
+          <View style={[styles.metricCard, { width: metricCardWidth }]}>
             <View style={styles.metricCardHeader}>
-              <Text style={[styles.metricLabel, { color: '#feb300' }]}>PENDING APPROVAL</Text>
-              <Ionicons name="time" size={16} color="#feb300" />
+              <Text style={styles.metricLabel}>PENDING APPROVAL</Text>
+              <Ionicons name="time" size={16} color="#173B70" />
             </View>
-            <Text style={[styles.metricValue, { color: '#feb300' }]}>{stats.tripsPendingApproval}</Text>
+            <Text style={styles.metricValue}>{stats.tripsPendingApproval}</Text>
             <Text style={styles.metricSub}>Needs Action</Text>
           </View>
 
           <View style={[styles.metricCard, { width: metricCardWidth }]}>
             <View style={styles.metricCardHeader}>
               <Text style={styles.metricLabel}>COMPLETED TODAY</Text>
-              <Ionicons name="checkmark-done" size={16} color="#22ef7e" />
+              <Ionicons name="checkmark-done" size={16} color="#173B70" />
             </View>
-            <Text style={[styles.metricValue, { color: '#22ef7e' }]}>{stats.completedTripsToday}</Text>
+            <Text style={styles.metricValue}>{stats.completedTripsToday}</Text>
             <Text style={styles.metricSub}>Discharged</Text>
           </View>
 
           <View style={[styles.metricCard, { width: metricCardWidth }]}>
             <View style={styles.metricCardHeader}>
               <Text style={styles.metricLabel}>CONTAINERS</Text>
-              <Ionicons name="cube" size={16} color="#2563EB" />
+              <Ionicons name="cube" size={16} color="#173B70" />
             </View>
-            <Text style={[styles.metricValue, { color: '#2563EB' }]}>{stats.totalContainersTransportedToday}</Text>
+            <Text style={styles.metricValue}>{stats.totalContainersTransportedToday}</Text>
             <Text style={styles.metricSub}>Loaded/Handed</Text>
           </View>
 
           <View style={[styles.metricCard, { width: metricCardWidth }]}>
             <View style={styles.metricCardHeader}>
               <Text style={styles.metricLabel}>REGISTERED DRIVERS</Text>
-              <Ionicons name="people" size={16} color="#849396" />
+              <Ionicons name="people" size={16} color="#173B70" />
             </View>
-            <Text style={[styles.metricValue, { color: '#1E293B' }]}>{stats.registeredDrivers}</Text>
+            <Text style={styles.metricValue}>{stats.registeredDrivers}</Text>
             <Text style={styles.metricSub}>{stats.activeDrivers} Active on Duty</Text>
           </View>
         </View>
@@ -716,15 +706,15 @@ export default function SupervisorHomeDashboard() {
         {/* ─── D. TRIP APPROVAL MANAGEMENT (PENDING APPROVALS SECTION) ─── */}
         <View style={styles.sectionWrap}>
           <View style={styles.sectionTitleRow}>
-            <Ionicons name="shield-checkmark" size={18} color="#feb300" />
-            <Text style={[styles.sectionTitle, { color: '#feb300' }]}>
+            <Ionicons name="shield-checkmark" size={18} color="#173B70" />
+            <Text style={styles.sectionTitle}>
               PENDING DELIVERY CONFIRMATION & APPROVALS ({pendingTrips.length})
             </Text>
           </View>
 
           {pendingTrips.length === 0 ? (
             <View style={styles.emptyPendingCard}>
-              <Ionicons name="checkmark-circle-outline" size={28} color="#22ef7e" />
+              <Ionicons name="checkmark-circle-outline" size={28} color="#173B70" />
               <Text style={styles.emptyPendingText}>ALL SUBMITTED TRIPS HAVE BEEN REVIEWED</Text>
               <Text style={styles.emptyPendingSub}>No ITT missions currently awaiting supervisor clearance.</Text>
             </View>
@@ -732,185 +722,168 @@ export default function SupervisorHomeDashboard() {
             pendingTrips.map((trip) => {
               const c20 = (trip.containers || []).filter((c: any) => c.size === '20FT' || c.size === 'FT_20').length;
               const c40 = (trip.containers || []).filter((c: any) => c.size === '40FT' || c.size === 'FT_40').length;
+              const timing = getTripTimingDetails(trip);
               return (
                 <View key={trip.id} style={styles.pendingCard}>
+                  {/* Card Header: Trip ID + Status Pill */}
                   <View style={styles.pendingCardHeader}>
-                    <View>
+                    <View style={{ flex: 1 }}>
                       <Text style={styles.pendingTripId}>{trip.tripNumber || `ITT-${trip.id?.slice(0, 6)}`}</Text>
                       <Text style={styles.pendingDriver}>
                         Driver: {trip.driverName || 'Kamal Perera'} · Truck: {trip.vehicleNumber || 'LY-6439'} · CHE: {resolveCheNumber(trip.vehicleNumber, trip.chassisNumber)}
                       </Text>
                     </View>
                     <View style={styles.pendingAwaitingTag}>
-                      <Text style={styles.pendingAwaitingTagText}>DELIVERY COMPLETED · AWAITING SIGN-OFF</Text>
+                      <Text style={styles.pendingAwaitingTagText}>AWAITING SIGN-OFF</Text>
                     </View>
                   </View>
 
-                  {/* Route & Cargo details */}
-                  <View style={styles.pendingSpecsRow}>
-                    <Text style={styles.pendingSpec}>
-                      Route: <Text style={styles.pendingSpecHighlight}>{trip.sourceTerminal} ➔ {getTripDischargeTerminal(trip)}</Text>
-                    </Text>
-                    <Text style={styles.pendingSpec}>
-                      Vessel: <Text style={styles.pendingSpecHighlight}>{trip.vesselName || 'MV Colombo Star'}</Text>
-                    </Text>
-                    <Text style={styles.pendingSpec}>
-                      CHE No: <Text style={styles.pendingSpecHighlight}>{resolveCheNumber(trip.vehicleNumber, trip.chassisNumber)}</Text>
-                    </Text>
-                    <Text style={styles.pendingSpec}>
-                      Operator: <Text style={styles.pendingSpecHighlight}>{resolveOperator(trip.vehicleNumber, trip.operator)}</Text>
-                    </Text>
-                    <Text style={styles.pendingSpec}>
-                      Containers: <Text style={styles.pendingSpecHighlight}>{c20}×20FT · {c40}×40FT</Text>
-                    </Text>
+                  {/* Section 1: Trip Info Grid */}
+                  <View style={styles.pendingInfoGrid}>
+                    <View style={styles.pendingInfoItem}>
+                      <Text style={styles.pendingInfoLabel}>ROUTE</Text>
+                      <Text style={styles.pendingInfoValue}>{trip.sourceTerminal} ➔ {getTripDischargeTerminal(trip)}</Text>
+                    </View>
+                    <View style={styles.pendingInfoItem}>
+                      <Text style={styles.pendingInfoLabel}>VESSEL</Text>
+                      <Text style={styles.pendingInfoValue}>{trip.vesselName || 'MV Colombo Star'}</Text>
+                    </View>
+                    <View style={styles.pendingInfoItem}>
+                      <Text style={styles.pendingInfoLabel}>CHE NO</Text>
+                      <Text style={styles.pendingInfoValue}>{resolveCheNumber(trip.vehicleNumber, trip.chassisNumber)}</Text>
+                    </View>
+                    <View style={styles.pendingInfoItem}>
+                      <Text style={styles.pendingInfoLabel}>OPERATOR</Text>
+                      <Text style={styles.pendingInfoValue}>{resolveOperator(trip.vehicleNumber, trip.operator)}</Text>
+                    </View>
+                    <View style={styles.pendingInfoItemFull}>
+                      <Text style={styles.pendingInfoLabel}>CONTAINERS</Text>
+                      <Text style={styles.pendingInfoValue}>{c20}×20FT · {c40}×40FT ({trip.containers?.length || 0} Total)</Text>
+                    </View>
                   </View>
 
-                  {/* ─── TRIP STARTED DATE TIME & END TIME DETAILS ─── */}
-                  {(() => {
-                    const timing = getTripTimingDetails(trip);
-                    return (
-                      <View style={styles.pendingTimingPanel}>
-                        <View style={styles.pendingTimingCol}>
-                          <View style={styles.pendingTimingHeader}>
-                            <Ionicons name="play-circle" size={12} color="#2563EB" />
-                            <Text style={styles.pendingTimingLabel}>STARTED DATE & TIME</Text>
-                          </View>
-                          <Text style={styles.pendingTimingDate}>{timing.startDate}</Text>
-                          <Text style={styles.pendingTimingTime}>{timing.startTime}</Text>
+                  {/* Section 2: Trip Timeline */}
+                  <View style={styles.pendingTimelineCard}>
+                    <View style={styles.pendingTimelineRow}>
+                      <View style={styles.pendingTimelineBlock}>
+                        <View style={styles.pendingTimelineHeader}>
+                          <Ionicons name="play-circle" size={13} color="#173B70" />
+                          <Text style={styles.pendingTimelineLabel}>STARTED DATE & TIME</Text>
                         </View>
-
-                        <View style={styles.pendingTimingDivider}>
-                          <Ionicons name="arrow-forward" size={13} color="#3a4756" />
-                          {timing.duration && (
-                            <View style={styles.pendingDurationPill}>
-                              <Ionicons name="timer-outline" size={10} color="#22ef7e" />
-                              <Text style={styles.pendingDurationText}>{timing.duration}</Text>
-                            </View>
-                          )}
-                        </View>
-
-                        <View style={styles.pendingTimingCol}>
-                          <View style={styles.pendingTimingHeader}>
-                            <Ionicons
-                              name={timing.isCompleted ? 'checkmark-circle' : timing.isPending ? 'time' : 'navigate-circle'}
-                              size={12}
-                              color={timing.statusColor}
-                            />
-                            <Text style={[styles.pendingTimingLabel, { color: timing.statusColor }]}>
-                              {timing.isCompleted ? 'COMPLETED DATE & TIME' : timing.isPending ? 'DISCHARGED (AWAITING SIGN-OFF)' : 'CURRENT STATUS'}
-                            </Text>
-                          </View>
-                          <Text style={[styles.pendingTimingDate, !timing.isCompleted && !timing.isPending && { color: '#849396' }]}>
-                            {timing.endDate}
-                          </Text>
-                          <Text style={[styles.pendingTimingTime, { color: timing.statusColor }]}>
-                            {timing.endTime}
-                          </Text>
-                        </View>
+                        <Text style={styles.pendingTimelineDate}>{timing.startDate}</Text>
+                        <Text style={styles.pendingTimelineTime}>{timing.startTime}</Text>
                       </View>
-                    );
-                  })()}
 
-                  {/* Containers manifest list */}
+                      <View style={styles.pendingTimelineArrowWrap}>
+                        <Ionicons name="arrow-forward" size={14} color="#173B70" />
+                        {timing.duration ? (
+                          <View style={styles.pendingDurationPill}>
+                            <Ionicons name="time-outline" size={11} color="#173B70" />
+                            <Text style={styles.pendingDurationText}>{timing.duration}</Text>
+                          </View>
+                        ) : null}
+                      </View>
+
+                      <View style={styles.pendingTimelineBlock}>
+                        <View style={styles.pendingTimelineHeader}>
+                          <Ionicons name="checkmark-circle" size={13} color="#173B70" />
+                          <Text style={styles.pendingTimelineLabel}>DISCHARGED DATE & TIME</Text>
+                        </View>
+                        <Text style={styles.pendingTimelineDate}>{timing.endDate}</Text>
+                        <Text style={styles.pendingTimelineTime}>{timing.endTime}</Text>
+                      </View>
+                    </View>
+                  </View>
+
+                  {/* Section 3: Container Info */}
                   {trip.containers && trip.containers.length > 0 && (
                     <View style={styles.pendingContainersList}>
                       {trip.containers.map((c: any, idx: number) => (
                         <View key={c.id || idx} style={styles.pendingContainerPill}>
-                          <Ionicons name="cube" size={12} color="#2563EB" />
+                          <Ionicons name="cube" size={14} color="#173B70" />
                           <Text style={styles.pendingContNum}>{c.containerNumber}</Text>
                           <Text style={styles.pendingContSize}>({c.size || '20FT'} ➔ {c.destTerminal || getTripDischargeTerminal(trip)})</Text>
-                          <Text style={styles.pendingContStatus}>Status: {c.status}</Text>
+                          <View style={styles.pendingContStatusBadge}>
+                            <Text style={styles.pendingContStatusText}>{c.status}</Text>
+                          </View>
                         </View>
                       ))}
                     </View>
                   )}
 
-                  {/* ─── DRIVER DISCHARGE & CARGO INSPECTION VERIFICATION PANEL ─── */}
+                  {/* Section 4: Driver Discharge Manifest */}
                   <View style={styles.pendingDischargeVerificationCard}>
                     <View style={styles.pendingDischargeVerificationHeader}>
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                        <Ionicons name="shield-checkmark" size={14} color="#2563EB" />
+                        <Ionicons name="shield-checkmark" size={15} color="#173B70" />
                         <Text style={styles.pendingDischargeVerificationTitle}>
                           DRIVER DISCHARGE & SEAL VERIFICATION MANIFEST
                         </Text>
                       </View>
                       <View style={styles.pendingRemarksAuditedBadge}>
-                        <Ionicons name="lock-closed" size={10} color="#22ef7e" />
+                        <Ionicons name="lock-closed" size={11} color="#173B70" />
                         <Text style={styles.pendingRemarksAuditedText}>SLPA AUDITED</Text>
                       </View>
                     </View>
 
-                    {/* Row 1: Bay / Slot, Seal Status, Cargo Condition (3 Columns) */}
+                    {/* Berth, Seal, Condition */}
                     <View style={styles.pendingDischargeMetricsRow}>
                       <View style={styles.pendingDischargeMetricBox}>
                         <Text style={styles.pendingDischargeGridLabel}>DISCHARGE BERTH / BAY</Text>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 3 }}>
-                          <Ionicons name="location" size={11} color="#feb300" />
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 }}>
+                          <Ionicons name="location" size={12} color="#173B70" />
                           <Text style={styles.pendingDischargeGridValue} numberOfLines={1}>
                             {getTripDischargeTerminal(trip)} · {trip.dischargeBay || 'Bay 04, Crane 02'}
                           </Text>
                         </View>
                       </View>
 
-                      <View style={[
-                        styles.pendingDischargeMetricBox,
-                        trip.sealStatus?.includes('DAMAGED') ? styles.pendingBoxRedBorder : styles.pendingBoxGreenBorder,
-                      ]}>
+                      <View style={styles.pendingDischargeMetricBox}>
                         <Text style={styles.pendingDischargeGridLabel}>SEAL INTEGRITY</Text>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 3 }}>
-                          <Ionicons
-                            name={trip.sealStatus?.includes('DAMAGED') ? 'warning' : 'shield-checkmark'}
-                            size={11}
-                            color={trip.sealStatus?.includes('DAMAGED') ? '#ff5252' : '#22ef7e'}
-                          />
-                          <Text style={[styles.pendingDischargeGridValue, { color: trip.sealStatus?.includes('DAMAGED') ? '#ff5252' : '#22ef7e' }]} numberOfLines={1}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 }}>
+                          <Ionicons name="shield-checkmark" size={12} color="#173B70" />
+                          <Text style={styles.pendingDischargeGridValue} numberOfLines={1}>
                             {trip.sealStatus || 'INTACT (VERIFIED)'}
                           </Text>
                         </View>
                       </View>
 
-                      <View style={[
-                        styles.pendingDischargeMetricBox,
-                        trip.damageStatus === 'DAMAGED' ? styles.pendingBoxRedBorder : styles.pendingBoxGreenBorder,
-                      ]}>
+                      <View style={styles.pendingDischargeMetricBox}>
                         <Text style={styles.pendingDischargeGridLabel}>CARGO CONDITION</Text>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 3 }}>
-                          <Ionicons
-                            name={trip.damageStatus === 'DAMAGED' ? 'alert-circle' : 'checkmark-circle'}
-                            size={11}
-                            color={trip.damageStatus === 'DAMAGED' ? '#ff5252' : '#22ef7e'}
-                          />
-                          <Text style={[styles.pendingDischargeGridValue, { color: trip.damageStatus === 'DAMAGED' ? '#ff5252' : '#22ef7e' }]} numberOfLines={1}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 }}>
+                          <Ionicons name="checkmark-circle" size={12} color="#173B70" />
+                          <Text style={styles.pendingDischargeGridValue} numberOfLines={1}>
                             {trip.damageStatus === 'DAMAGED' ? 'DAMAGED' : 'SOUND'}
                           </Text>
                         </View>
                       </View>
                     </View>
 
-                    {/* Row 2: Full-Width Driver Submission Remarks Box */}
+                    {/* Driver remarks quoted bubble */}
                     <View style={styles.pendingRemarksCallout}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 3 }}>
-                        <Ionicons name="chatbubble-ellipses" size={12} color="#2563EB" />
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 4 }}>
+                        <Ionicons name="chatbubble-ellipses" size={13} color="#173B70" />
                         <Text style={styles.pendingRemarksCalloutLabel}>DRIVER COMPLETION & HANDOVER REMARKS</Text>
                       </View>
                       <Text style={styles.pendingRemarksCalloutText}>
-                        "{trip.driverCompletionNotes || 'Containers discharged safely at destination berth. Seals inspected and verified intact.'}"
+                        &ldquo;{trip.driverCompletionNotes || 'Containers discharged safely at destination berth. Seals inspected and verified intact.'}&rdquo;
                       </Text>
                     </View>
 
-                    {/* Row 3: Security & Clearance Footer */}
+                    {/* Footer */}
                     <View style={styles.pendingClearanceFooter}>
-                      <Ionicons name="shield-checkmark-outline" size={11} color="#849396" />
+                      <Ionicons name="shield-checkmark-outline" size={12} color="#5A779D" />
                       <Text style={styles.pendingClearanceFooterText}>
                         SLPA Official Handover • Gate-In Authenticated at {getTripDischargeTerminal(trip)}
                       </Text>
                     </View>
                   </View>
 
-                  {/* Supervisor Decision Buttons */}
+                  {/* Section 5: Supervisor Decision Buttons */}
                   <View style={styles.decisionButtonsRow}>
                     <TouchableOpacity
                       style={styles.approveBtn}
+                      activeOpacity={0.85}
                       onPress={() => handleApproveTrip(trip)}
                     >
                       <Ionicons name="checkmark-circle" size={16} color="#FFFFFF" />
@@ -919,9 +892,10 @@ export default function SupervisorHomeDashboard() {
 
                     <TouchableOpacity
                       style={styles.rejectBtn}
+                      activeOpacity={0.85}
                       onPress={() => handleOpenRejectModal(trip)}
                     >
-                      <Ionicons name="close-circle" size={16} color="#ff5252" />
+                      <Ionicons name="close-circle" size={16} color="#173B70" />
                       <Text style={styles.rejectBtnText}>REJECT</Text>
                     </TouchableOpacity>
                   </View>
@@ -937,7 +911,7 @@ export default function SupervisorHomeDashboard() {
           >
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 }}>
               <View style={styles.viewAllTripsIconBox}>
-                <Ionicons name="list-circle" size={24} color="#2563EB" />
+                <Ionicons name="list-circle" size={24} color="#173B70" />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.viewAllTripsTitle}>VIEW COMPLETE TRIP DETAILS</Text>
@@ -946,7 +920,7 @@ export default function SupervisorHomeDashboard() {
                 </Text>
               </View>
             </View>
-            <Ionicons name="chevron-forward" size={18} color="#2563EB" />
+            <Ionicons name="chevron-forward" size={18} color="#173B70" />
           </TouchableOpacity>
         </View>
 
@@ -968,7 +942,7 @@ export default function SupervisorHomeDashboard() {
             return (
               <>
                 <View style={styles.sectionTitleRow}>
-                  <Ionicons name="people" size={18} color="#2563EB" />
+                  <Ionicons name="people" size={18} color="#173B70" />
                   <Text style={styles.sectionTitle}>
                     REGISTERED OPERATORS ({filteredOps.length} of {drivers.length})
                   </Text>
@@ -976,18 +950,18 @@ export default function SupervisorHomeDashboard() {
                     style={{ marginLeft: 'auto', flexDirection: 'row', alignItems: 'center', gap: 4 }}
                     onPress={() => router.push('/(supervisor)/(tabs)/drivers')}
                   >
-                    <Text style={{ color: '#2563EB', fontSize: 11, fontWeight: '800' }}>VIEW FULL FLEET</Text>
-                    <Ionicons name="chevron-forward" size={14} color="#2563EB" />
+                    <Text style={{ color: '#173B70', fontSize: 11, fontWeight: '800' }}>VIEW FULL FLEET</Text>
+                    <Ionicons name="chevron-forward" size={14} color="#173B70" />
                   </TouchableOpacity>
                 </View>
 
                 {/* Supervisor Dashboard Driver Search Bar */}
                 <View style={styles.supervisorSearchWrap}>
-                  <Ionicons name="search" size={16} color="#2563EB" style={{ marginRight: 8 }} />
+                  <Ionicons name="search" size={16} color="#173B70" style={{ marginRight: 8 }} />
                   <TextInput
                     style={styles.supervisorSearchInput}
                     placeholder="Search by driver name, code (DRV), vehicle plate (LY), CHE..."
-                    placeholderTextColor="#607d8b"
+                    placeholderTextColor="#5A779D"
                     value={driverSearchQuery}
                     onChangeText={setDriverSearchQuery}
                     autoCapitalize="none"
@@ -995,7 +969,7 @@ export default function SupervisorHomeDashboard() {
                   />
                   {driverSearchQuery.length > 0 && (
                     <TouchableOpacity onPress={() => setDriverSearchQuery('')}>
-                      <Ionicons name="close-circle" size={18} color="#90caf9" />
+                      <Ionicons name="close-circle" size={18} color="#173B70" />
                     </TouchableOpacity>
                   )}
                 </View>
@@ -1003,7 +977,7 @@ export default function SupervisorHomeDashboard() {
                 <View style={{ gap: 8 }}>
                   {filteredOps.length === 0 ? (
                     <View style={styles.emptyPendingCard}>
-                      <Ionicons name="search-outline" size={26} color="#849396" />
+                      <Ionicons name="search-outline" size={26} color="#173B70" />
                       <Text style={styles.emptyPendingText}>NO OPERATORS FOUND</Text>
                       <Text style={styles.emptyPendingSub}>
                         No driver matched &quot;{driverSearchQuery}&quot;. Clear search or check spelling.
@@ -1026,19 +1000,19 @@ export default function SupervisorHomeDashboard() {
                           <View style={{ flex: 1 }}>
                             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                               <Text style={styles.driverFullName}>{drv.fullName}</Text>
-                              <View style={[styles.operatorMiniBadge, isSdr ? styles.operatorMiniBadgeAmber : styles.operatorMiniBadgeCyan]}>
-                                <Text style={[styles.operatorMiniBadgeText, isSdr ? { color: '#feb300' } : { color: '#2563EB' }]}>
+                              <View style={styles.operatorMiniBadge}>
+                                <Text style={styles.operatorMiniBadgeText}>
                                   {isSdr ? 'SDR LINK' : 'SCK LOGISTICS'}
                                 </Text>
                               </View>
                             </View>
                             <Text style={styles.driverDetails}>
-                              Code: <Text style={{ color: '#2563EB', fontWeight: '800' }}>{drv.driverCode}</Text> · Truck: <Text style={{ color: '#feb300', fontWeight: '700' }}>{drv.vehicleNumber || 'LY-6439'}</Text> · CHE: {resolveCheNumber(drv.vehicleNumber, drv.chassisNumber)} · Tel: {drv.mobileNumber}
+                              Code: <Text style={{ color: '#173B70', fontWeight: '800' }}>{drv.driverCode}</Text> · Truck: <Text style={{ color: '#173B70', fontWeight: '700' }}>{drv.vehicleNumber || 'LY-6439'}</Text> · CHE: {resolveCheNumber(drv.vehicleNumber, drv.chassisNumber)} · Tel: {drv.mobileNumber}
                             </Text>
                           </View>
                           <View style={[styles.driverActivePill, isSuspended && styles.driverSuspendedPill]}>
-                            <View style={[styles.greenDot, isSuspended && { backgroundColor: '#feb300' }]} />
-                            <Text style={[styles.driverActivePillText, isSuspended && { color: '#feb300' }]}>{drv.status || 'ACTIVE'}</Text>
+                            <View style={[styles.greenDot, isSuspended && { backgroundColor: '#5A779D' }]} />
+                            <Text style={[styles.driverActivePillText, isSuspended && { color: '#5A779D' }]}>{drv.status || 'ACTIVE'}</Text>
                           </View>
                         </TouchableOpacity>
                       );
@@ -1054,7 +1028,7 @@ export default function SupervisorHomeDashboard() {
         <View style={styles.sectionWrap}>
           <View style={styles.sectionTitleRow}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-              <Ionicons name="business" size={18} color="#2563EB" />
+              <Ionicons name="business" size={18} color="#173B70" />
               <Text style={styles.sectionTitle}>SLPA 6-TERMINAL CONSOLIDATED TOTALS</Text>
             </View>
             <View style={styles.panelActivePeriodBadge}>
@@ -1115,12 +1089,12 @@ export default function SupervisorHomeDashboard() {
             </View>
             <View style={styles.panelSummaryDivider} />
             <View style={styles.panelSummaryItem}>
-              <Text style={[styles.panelSummaryNum, { color: '#feb300' }]}>{terminalWiseStats.grandTotalContainers}</Text>
+              <Text style={styles.panelSummaryNum}>{terminalWiseStats.grandTotalContainers}</Text>
               <Text style={styles.panelSummaryLabel}>Containers Moved</Text>
             </View>
             <View style={styles.panelSummaryDivider} />
             <View style={styles.panelSummaryItem}>
-              <Text style={[styles.panelSummaryNum, { color: '#22ef7e' }]}>6</Text>
+              <Text style={styles.panelSummaryNum}>6</Text>
               <Text style={styles.panelSummaryLabel}>Active Port Terminals</Text>
             </View>
           </View>
@@ -1144,7 +1118,7 @@ export default function SupervisorHomeDashboard() {
                   {/* Flow Sub-Metrics */}
                   <View style={styles.termFlowRow}>
                     <Text style={styles.termFlowText}>
-                      Out: <Text style={{ color: '#2563EB' }}>{data.originTrips}</Text> · In: <Text style={{ color: '#22ef7e' }}>{data.destTrips}</Text>
+                      Out: <Text style={{ color: '#173B70', fontWeight: '800' }}>{data.originTrips}</Text> · In: <Text style={{ color: '#173B70', fontWeight: '800' }}>{data.destTrips}</Text>
                     </Text>
                   </View>
                 </View>
@@ -1163,32 +1137,32 @@ export default function SupervisorHomeDashboard() {
           <Text style={styles.sectionTitle}>SUPERVISOR QUICK ACTIONS</Text>
           <View style={styles.quickGrid}>
             <TouchableOpacity style={styles.quickTile} onPress={() => router.push('/(supervisor)/(tabs)/approvals')}>
-              <Ionicons name="shield-checkmark" size={22} color="#feb300" />
+              <Ionicons name="shield-checkmark" size={22} color="#173B70" />
               <Text style={styles.quickTileText}>Pending Passes</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.quickTile} onPress={() => router.push('/(supervisor)/(tabs)/trips')}>
-              <Ionicons name="layers" size={22} color="#2563EB" />
+              <Ionicons name="layers" size={22} color="#173B70" />
               <Text style={styles.quickTileText}>Dispatcher Hub</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.quickTile} onPress={() => router.push('/(supervisor)/(tabs)/drivers')}>
-              <Ionicons name="people" size={22} color="#22ef7e" />
+              <Ionicons name="people" size={22} color="#173B70" />
               <Text style={styles.quickTileText}>Operators</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.quickTile} onPress={() => setReportModalVisible(true)}>
-              <Ionicons name="bar-chart" size={22} color="#2563EB" />
+              <Ionicons name="bar-chart" size={22} color="#173B70" />
               <Text style={styles.quickTileText}>Daily Report</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.quickTile} onPress={() => setDamageReviewModalVisible(true)}>
-              <Ionicons name="warning" size={22} color="#ff5252" />
+              <Ionicons name="warning" size={22} color="#173B70" />
               <Text style={styles.quickTileText}>Damage Review</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.quickTile} onPress={() => setNotificationsModalVisible(true)}>
-              <Ionicons name="notifications" size={22} color="#feb300" />
+              <Ionicons name="notifications" size={22} color="#173B70" />
               <Text style={styles.quickTileText}>Alerts</Text>
             </TouchableOpacity>
           </View>
@@ -1203,11 +1177,11 @@ export default function SupervisorHomeDashboard() {
           <View style={styles.modalCard}>
             <View style={styles.modalHeader}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <Ionicons name="alert-circle" size={20} color="#ff5252" />
-                <Text style={[styles.modalTitle, { color: '#ff5252' }]}>REJECT TRIP SUBMISSION</Text>
+                <Ionicons name="alert-circle" size={20} color="#173B70" />
+                <Text style={styles.modalTitle}>REJECT TRIP SUBMISSION</Text>
               </View>
               <TouchableOpacity onPress={() => setRejectModalVisible(false)}>
-                <Ionicons name="close" size={22} color="#849396" />
+                <Ionicons name="close" size={22} color="#173B70" />
               </TouchableOpacity>
             </View>
 
@@ -1220,7 +1194,7 @@ export default function SupervisorHomeDashboard() {
               <TextInput
                 style={[styles.modalInput, { height: 74 }]}
                 placeholder="e.g. Container seal mismatch, incorrect Chai No, incorrect destination terminal..."
-                placeholderTextColor="#849396"
+                placeholderTextColor="#5A779D"
                 multiline
                 value={rejectionReason}
                 onChangeText={setRejectionReason}
@@ -1228,7 +1202,7 @@ export default function SupervisorHomeDashboard() {
             </View>
 
             <TouchableOpacity
-              style={[styles.modalSubmitBtn, { backgroundColor: '#ff5252' }]}
+              style={styles.modalSubmitBtn}
               onPress={handleConfirmRejection}
               disabled={submittingDecision}
             >
@@ -1251,11 +1225,11 @@ export default function SupervisorHomeDashboard() {
           <View style={styles.modalCard}>
             <View style={styles.modalHeader}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <Ionicons name="document-text" size={20} color="#2563EB" />
+                <Ionicons name="document-text" size={20} color="#173B70" />
                 <Text style={styles.modalTitle}>OFFICIAL TERMINAL CONSOLIDATED REPORT</Text>
               </View>
               <TouchableOpacity onPress={() => setReportModalVisible(false)}>
-                <Ionicons name="close" size={22} color="#849396" />
+                <Ionicons name="close" size={22} color="#173B70" />
               </TouchableOpacity>
             </View>
 
@@ -1288,24 +1262,24 @@ export default function SupervisorHomeDashboard() {
           <View style={styles.modalCard}>
             <View style={styles.modalHeader}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <Ionicons name="notifications" size={20} color="#2563EB" />
+                <Ionicons name="notifications" size={20} color="#173B70" />
                 <Text style={styles.modalTitle}>SUPERVISOR OPERATIONS ALERTS</Text>
               </View>
               <TouchableOpacity onPress={() => setNotificationsModalVisible(false)}>
-                <Ionicons name="close" size={22} color="#849396" />
+                <Ionicons name="close" size={22} color="#173B70" />
               </TouchableOpacity>
             </View>
 
             <View style={{ gap: 10 }}>
               <View style={styles.notifItem}>
-                <Ionicons name="time" size={18} color="#feb300" />
+                <Ionicons name="time" size={18} color="#173B70" />
                 <View style={{ flex: 1 }}>
                   <Text style={styles.notifTitle}>New Trip Submission (ITT-00002)</Text>
                   <Text style={styles.notifSub}>Driver Kasun Chamara submitted for Gate Pass clearance.</Text>
                 </View>
               </View>
               <View style={styles.notifItem}>
-                <Ionicons name="checkmark-circle" size={18} color="#22ef7e" />
+                <Ionicons name="checkmark-circle" size={18} color="#173B70" />
                 <View style={{ flex: 1 }}>
                   <Text style={styles.notifTitle}>Handover Confirmed at ECT</Text>
                   <Text style={styles.notifSub}>Truck WP-BA-1234 completed container discharge.</Text>
@@ -1326,16 +1300,16 @@ export default function SupervisorHomeDashboard() {
           <View style={styles.modalCard}>
             <View style={styles.modalHeader}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <Ionicons name="warning" size={20} color="#ff5252" />
-                <Text style={[styles.modalTitle, { color: '#ff5252' }]}>CONTAINER DAMAGE INCIDENTS</Text>
+                <Ionicons name="warning" size={20} color="#173B70" />
+                <Text style={styles.modalTitle}>CONTAINER DAMAGE INCIDENTS</Text>
               </View>
               <TouchableOpacity onPress={() => setDamageReviewModalVisible(false)}>
-                <Ionicons name="close" size={22} color="#849396" />
+                <Ionicons name="close" size={22} color="#173B70" />
               </TouchableOpacity>
             </View>
 
             <View style={styles.notifItem}>
-              <Ionicons name="warning-outline" size={20} color="#ff5252" />
+              <Ionicons name="warning-outline" size={20} color="#173B70" />
               <View style={{ flex: 1 }}>
                 <Text style={styles.notifTitle}>MSCU-884192 (Dent on Left Corner)</Text>
                 <Text style={styles.notifSub}>Reported during transfer at CICT Bay 4. Inspected and approved for onward transit.</Text>
@@ -1355,7 +1329,7 @@ export default function SupervisorHomeDashboard() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: '#FFFFFF',
   },
   scroll: {
     flexGrow: 1,
@@ -1365,9 +1339,9 @@ const styles = StyleSheet.create({
   // ─── HEADER ───
   header: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 16,
+    borderRadius: 14,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: '#D0DEEB',
     padding: 14,
     flexDirection: 'row',
     alignItems: 'center',
@@ -1386,7 +1360,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: '#feb300',
+    backgroundColor: '#173B70',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -1396,7 +1370,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   supervisorNameText: {
-    color: '#1E293B',
+    color: '#173B70',
     fontWeight: '800',
     fontSize: 15,
   },
@@ -1408,18 +1382,20 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   rolePill: {
-    backgroundColor: 'rgba(254, 179, 0, 0.15)',
+    backgroundColor: '#F0F5FA',
     borderRadius: 4,
     paddingHorizontal: 6,
     paddingVertical: 1,
+    borderWidth: 1,
+    borderColor: '#D0DEEB',
   },
   rolePillText: {
-    color: '#feb300',
+    color: '#173B70',
     fontSize: 9,
     fontWeight: '800',
   },
   dateText: {
-    color: '#849396',
+    color: '#5A779D',
     fontSize: 9,
     fontWeight: '700',
   },
@@ -1433,10 +1409,10 @@ const styles = StyleSheet.create({
   headerIconBtn: {
     width: 38,
     height: 38,
-    borderRadius: radius.DEFAULT,
-    backgroundColor: '#F8FAFC',
+    borderRadius: 8,
+    backgroundColor: '#F0F5FA',
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: '#D0DEEB',
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
@@ -1448,15 +1424,15 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#2563EB',
+    backgroundColor: '#173B70',
   },
   headerLogoutBtn: {
     width: 38,
     height: 38,
-    borderRadius: radius.DEFAULT,
-    backgroundColor: 'rgba(255, 82, 82, 0.1)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 82, 82, 0.3)',
+    borderRadius: 8,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1.5,
+    borderColor: '#173B70',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -1470,30 +1446,33 @@ const styles = StyleSheet.create({
     paddingVertical: 1.5,
     borderRadius: 4,
     borderWidth: 1,
+    borderColor: '#D0DEEB',
+    backgroundColor: '#F0F5FA',
   },
   supervisorPassBadgeValid: {
-    backgroundColor: 'rgba(34, 239, 126, 0.12)',
-    borderColor: 'rgba(34, 239, 126, 0.35)',
+    backgroundColor: '#F0F5FA',
+    borderColor: '#D0DEEB',
   },
   supervisorPassBadgeWarning: {
-    backgroundColor: 'rgba(254, 179, 0, 0.12)',
-    borderColor: 'rgba(254, 179, 0, 0.35)',
+    backgroundColor: '#E8F1FA',
+    borderColor: '#173B70',
   },
   supervisorPassBadgeExpired: {
-    backgroundColor: 'rgba(255, 82, 82, 0.12)',
-    borderColor: 'rgba(255, 82, 82, 0.35)',
+    backgroundColor: '#E8F1FA',
+    borderColor: '#173B70',
   },
   supervisorPassBadgeText: {
     fontSize: 9,
     fontWeight: '800',
     letterSpacing: 0.5,
+    color: '#173B70',
   },
 
   supervisorPermitCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 16,
+    borderRadius: 14,
     borderWidth: 1,
-    borderColor: 'rgba(254, 179, 0, 0.35)',
+    borderColor: '#D0DEEB',
     padding: 14,
     gap: 12,
   },
@@ -1506,20 +1485,20 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 8,
-    backgroundColor: 'rgba(254, 179, 0, 0.15)',
+    backgroundColor: '#F0F5FA',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(254, 179, 0, 0.3)',
+    borderColor: '#D0DEEB',
   },
   supervisorPermitTitle: {
-    color: '#feb300',
+    color: '#173B70',
     fontSize: 11,
     fontWeight: '900',
     letterSpacing: 0.8,
   },
   supervisorPermitSub: {
-    color: '#849396',
+    color: '#5A779D',
     fontSize: 9,
     fontWeight: '700',
     marginTop: 2,
@@ -1531,42 +1510,46 @@ const styles = StyleSheet.create({
     gap: 5,
     paddingHorizontal: 8,
     paddingVertical: 2,
-    borderRadius: radius.pill,
+    borderRadius: 20,
     borderWidth: 1,
+    borderColor: '#D0DEEB',
+    backgroundColor: '#F0F5FA',
   },
   permitStatusDot: {
     width: 6,
     height: 6,
     borderRadius: 3,
+    backgroundColor: '#173B70',
   },
   permitStatusText: {
     fontSize: 9,
     fontWeight: '900',
     letterSpacing: 0.6,
+    color: '#173B70',
   },
   supervisorPermitGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 10,
-    backgroundColor: '#F8FAFC',
-    borderRadius: radius.sm,
+    backgroundColor: '#F0F5FA',
+    borderRadius: 8,
     padding: 10,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: '#D0DEEB',
   },
   supervisorPermitCol: {
     flex: 1,
     gap: 2,
   },
   supervisorPermitLabel: {
-    color: '#849396',
+    color: '#5A779D',
     fontSize: 8,
     fontWeight: '800',
     letterSpacing: 0.6,
     textTransform: 'uppercase',
   },
   supervisorPermitVal: {
-    color: '#1E293B',
+    color: '#173B70',
     fontSize: 12,
     fontWeight: '800',
     letterSpacing: 0.5,
@@ -1575,17 +1558,283 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: 8,
-    backgroundColor: 'rgba(254, 179, 0, 0.08)',
-    borderRadius: radius.sm,
+    backgroundColor: '#F0F5FA',
+    borderRadius: 8,
     padding: 8,
     borderWidth: 1,
-    borderColor: 'rgba(254, 179, 0, 0.25)',
+    borderColor: '#D0DEEB',
   },
   permitNoticeText: {
     flex: 1,
-    color: '#1E293B',
+    color: '#173B70',
     fontSize: 10,
     lineHeight: 14,
+  },
+  authorizedTerminalsWrap: {
+    backgroundColor: '#F0F5FA',
+    borderRadius: 8,
+    padding: 8,
+    gap: 6,
+    borderWidth: 1,
+    borderColor: '#D0DEEB',
+  },
+  authorizedTerminalsLabel: {
+    color: '#5A779D',
+    fontSize: 8.5,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
+  terminalBadgesRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 5,
+  },
+  terminalAuthBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#D0DEEB',
+    borderRadius: 4,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  termAuthDot: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#173B70',
+  },
+  terminalAuthText: {
+    color: '#173B70',
+    fontSize: 10,
+    fontWeight: '800',
+  },
+
+  // Compliance Center Card
+  complianceCenterCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: '#D0DEEB',
+    padding: 12,
+    gap: 10,
+    marginBottom: 4,
+  },
+  complianceHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  complianceIconBox: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    backgroundColor: '#F0F5FA',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#D0DEEB',
+  },
+  complianceTitle: {
+    color: '#173B70',
+    fontSize: 12,
+    fontWeight: '900',
+    letterSpacing: 0.5,
+  },
+  complianceSub: {
+    color: '#5A779D',
+    fontSize: 9.5,
+    marginTop: 1,
+  },
+  complianceCountPill: {
+    backgroundColor: '#F0F5FA',
+    borderWidth: 1,
+    borderColor: '#173B70',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+  },
+  complianceCountText: {
+    color: '#173B70',
+    fontSize: 10,
+    fontWeight: '900',
+  },
+  complianceTabRow: {
+    flexDirection: 'row',
+    gap: 6,
+    borderBottomWidth: 1,
+    borderBottomColor: '#D0DEEB',
+    paddingBottom: 8,
+  },
+  complianceTabBtn: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 6,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#D0DEEB',
+  },
+  complianceTabBtnActive: {
+    backgroundColor: '#173B70',
+    borderColor: '#173B70',
+  },
+  complianceTabText: {
+    color: '#5A779D',
+    fontSize: 9.5,
+    fontWeight: '700',
+  },
+  complianceTabTextActive: {
+    color: '#FFFFFF',
+    fontWeight: '900',
+  },
+  complianceSectionBox: {
+    backgroundColor: '#F0F5FA',
+    borderRadius: 8,
+    padding: 10,
+    borderWidth: 1,
+    borderColor: '#D0DEEB',
+    gap: 8,
+  },
+  complianceSectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 6,
+    borderBottomWidth: 1,
+    borderBottomColor: '#D0DEEB',
+    paddingBottom: 6,
+  },
+  complianceSectionTitle: {
+    color: '#173B70',
+    fontSize: 10,
+    fontWeight: '800',
+    flex: 1,
+  },
+  slpaTag: {
+    backgroundColor: '#173B70',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  slpaTagText: {
+    color: '#FFFFFF',
+    fontSize: 8.5,
+    fontWeight: '900',
+  },
+  complianceItemRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    padding: 8,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#D0DEEB',
+  },
+  vehiclePlateBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F0F5FA',
+    borderWidth: 1,
+    borderColor: '#D0DEEB',
+    borderRadius: 4,
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+  },
+  vehiclePlateBadgeText: {
+    color: '#173B70',
+    fontSize: 11,
+    fontWeight: '900',
+  },
+  complianceItemDriver: {
+    color: '#173B70',
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  complianceItemSub: {
+    color: '#5A779D',
+    fontSize: 9.5,
+    marginTop: 1,
+  },
+  complianceDaysPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: '#D0DEEB',
+    backgroundColor: '#F0F5FA',
+  },
+  complianceDaysPillWarning: {
+    backgroundColor: '#F0F5FA',
+    borderColor: '#D0DEEB',
+  },
+  complianceDaysPillExpired: {
+    backgroundColor: '#E8F1FA',
+    borderColor: '#173B70',
+  },
+  complianceDaysText: {
+    fontSize: 9.5,
+    fontWeight: '800',
+    color: '#173B70',
+  },
+  miniTruckBadge: {
+    backgroundColor: '#F0F5FA',
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    borderRadius: 3,
+    borderWidth: 1,
+    borderColor: '#D0DEEB',
+  },
+  miniTruckBadgeText: {
+    color: '#173B70',
+    fontSize: 9.5,
+    fontWeight: '800',
+  },
+  passBadgeWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F0F5FA',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: '#D0DEEB',
+  },
+  passBadgeKey: {
+    color: '#5A779D',
+    fontSize: 9,
+    fontWeight: '600',
+  },
+  passBadgeVal: {
+    fontSize: 9.5,
+    fontWeight: '800',
+    color: '#173B70',
+  },
+  complianceMoreNotice: {
+    color: '#173B70',
+    fontSize: 9.5,
+    fontWeight: '700',
+    textAlign: 'center',
+    paddingTop: 4,
+  },
+  complianceFleetBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: '#173B70',
+    borderRadius: 8,
+    paddingVertical: 10,
+    marginTop: 4,
+  },
+  complianceFleetBtnText: {
+    color: '#FFFFFF',
+    fontSize: 11,
+    fontWeight: '900',
+    letterSpacing: 0.3,
   },
 
   // ─── 6 SUMMARY METRIC CARDS ───
@@ -1594,14 +1843,41 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: 10,
   },
-  metricCard: {
-    width: '31%',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 14,
+  metricCardDark: {
+    backgroundColor: '#173B70',
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: '#173B70',
     padding: 12,
     gap: 4,
+    justifyContent: 'space-between',
+  },
+  metricLabelDark: {
+    color: '#FFFFFF',
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
+  metricValueDark: {
+    fontSize: 24,
+    fontWeight: '900',
+    color: '#FFFFFF',
+    marginTop: 2,
+    letterSpacing: -0.5,
+  },
+  metricSubDark: {
+    color: 'rgba(255, 255, 255, 0.8)',
+    fontSize: 10,
+    fontWeight: '600',
+  },
+  metricCard: {
+    backgroundColor: '#F0F5FA',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#D0DEEB',
+    padding: 12,
+    gap: 4,
+    justifyContent: 'space-between',
   },
   metricCardHeader: {
     flexDirection: 'row',
@@ -1609,19 +1885,20 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   metricLabel: {
-    color: '#78909c',
+    color: '#3A567F',
     fontSize: 10,
     fontWeight: '800',
     letterSpacing: 0.5,
   },
   metricValue: {
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: '900',
+    color: '#173B70',
     marginTop: 2,
     letterSpacing: -0.5,
   },
   metricSub: {
-    color: '#78909c',
+    color: '#5A779D',
     fontSize: 10,
     fontWeight: '600',
   },
@@ -1629,9 +1906,9 @@ const styles = StyleSheet.create({
   // ─── SECTION WRAPS ───
   sectionWrap: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 16,
+    borderRadius: 14,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: '#D0DEEB',
     padding: 14,
     gap: 12,
   },
@@ -1639,186 +1916,309 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    paddingBottom: 6,
+    paddingBottom: 8,
     borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0',
+    borderBottomColor: '#D0DEEB',
   },
   sectionTitle: {
-    color: '#1E293B',
-    fontSize: 11,
+    color: '#173B70',
+    fontSize: 12,
     fontWeight: '800',
     letterSpacing: 0.6,
   },
 
   // ─── PENDING APPROVALS ───
   emptyPendingCard: {
-    backgroundColor: '#EFF6FF',
+    backgroundColor: '#F0F5FA',
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: '#D0DEEB',
     padding: 16,
     alignItems: 'center',
     gap: 6,
   },
   emptyPendingText: {
-    color: '#1E293B',
-    fontSize: 11,
+    color: '#173B70',
+    fontSize: 12,
     fontWeight: '800',
   },
   emptyPendingSub: {
-    color: '#78909c',
-    fontSize: 9,
+    color: '#5A779D',
+    fontSize: 10,
     textAlign: 'center',
   },
   pendingCard: {
-    backgroundColor: '#EFF6FF',
-    borderRadius: 14,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
     borderWidth: 1.5,
-    borderColor: 'rgba(254, 179, 0, 0.4)',
-    padding: 12,
-    gap: 10,
+    borderColor: '#D0DEEB',
+    padding: 14,
+    gap: 12,
   },
   pendingCardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
+    gap: 8,
   },
   pendingTripId: {
-    color: '#feb300',
-    fontSize: 13,
+    color: '#173B70',
+    fontSize: 15,
     fontWeight: '900',
-      },
+  },
   pendingDriver: {
-    color: '#1E293B',
-    fontSize: 10,
+    color: '#3A567F',
+    fontSize: 11,
     marginTop: 2,
+    fontWeight: '600',
   },
   pendingAwaitingTag: {
-    backgroundColor: 'rgba(254, 179, 0, 0.15)',
+    backgroundColor: '#E8F1FA',
     paddingHorizontal: 8,
     paddingVertical: 3,
-    borderRadius: 4,
+    borderRadius: 6,
     borderWidth: 1,
-    borderColor: '#feb300',
+    borderColor: '#173B70',
   },
   pendingAwaitingTagText: {
-    color: '#feb300',
-    fontSize: 8,
+    color: '#173B70',
+    fontSize: 8.5,
     fontWeight: '900',
+    letterSpacing: 0.5,
   },
-  pendingSpecsRow: {
+  pendingInfoGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 10,
-    backgroundColor: '#FFFFFF',
-    padding: 8,
-    borderRadius: radius.sm,
+    gap: 8,
+    backgroundColor: '#F0F5FA',
+    padding: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#D0DEEB',
   },
-  pendingSpec: {
-    color: '#849396',
-    fontSize: 9,
+  pendingInfoItem: {
+    width: '48%',
+    gap: 2,
   },
-  pendingSpecHighlight: {
-    color: '#1E293B',
+  pendingInfoItemFull: {
+    width: '100%',
+    gap: 2,
+    marginTop: 2,
+  },
+  pendingInfoLabel: {
+    color: '#5A779D',
+    fontSize: 8.5,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
+  pendingInfoValue: {
+    color: '#173B70',
+    fontSize: 11,
     fontWeight: '700',
   },
-  pendingTimingPanel: {
+  pendingTimelineCard: {
+    backgroundColor: '#F0F5FA',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#D0DEEB',
+    padding: 10,
+  },
+  pendingTimelineRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#F8FAFC',
-    borderRadius: radius.sm,
-    borderWidth: 1,
-    borderColor: '#1e293b',
-    paddingHorizontal: 10,
-    paddingVertical: 8,
     gap: 8,
-    marginVertical: 4,
   },
-  pendingTimingCol: {
+  pendingTimelineBlock: {
     flex: 1,
-    gap: 1,
+    gap: 2,
   },
-  pendingTimingHeader: {
+  pendingTimelineHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
     marginBottom: 2,
   },
-  pendingTimingLabel: {
+  pendingTimelineLabel: {
     fontSize: 8.5,
     fontWeight: '800',
-    color: '#2563EB',
+    color: '#173B70',
     letterSpacing: 0.4,
   },
-  pendingTimingDate: {
+  pendingTimelineDate: {
     fontSize: 11,
     fontWeight: '700',
     color: '#1E293B',
   },
-  pendingTimingTime: {
+  pendingTimelineTime: {
     fontSize: 12,
     fontWeight: '900',
-    color: '#2563EB',
-    letterSpacing: 0.2,
+    color: '#173B70',
   },
-  pendingTimingDivider: {
+  pendingTimelineArrowWrap: {
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 3,
-    paddingHorizontal: 2,
+    gap: 4,
+    paddingHorizontal: 4,
   },
   pendingDurationPill: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 3,
-    backgroundColor: 'rgba(34, 239, 126, 0.12)',
-    paddingHorizontal: 5,
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 4,
     borderWidth: 1,
-    borderColor: 'rgba(34, 239, 126, 0.3)',
+    borderColor: '#D0DEEB',
   },
   pendingDurationText: {
     fontSize: 9,
     fontWeight: '800',
-    color: '#22ef7e',
+    color: '#173B70',
   },
   pendingContainersList: {
-    gap: 4,
+    gap: 6,
   },
   pendingContainerPill: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#FFFFFF',
-    padding: 6,
-    borderRadius: 4,
+    backgroundColor: '#F0F5FA',
+    padding: 8,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#D0DEEB',
   },
   pendingContNum: {
-    color: '#2563EB',
-        fontSize: 11,
-    fontWeight: '700',
+    color: '#173B70',
+    fontSize: 12,
+    fontWeight: '800',
   },
   pendingContSize: {
-    color: '#849396',
-    fontSize: 9,
+    color: '#5A779D',
+    fontSize: 10,
+    fontWeight: '600',
   },
-  pendingContStatus: {
-    color: '#22ef7e',
-    fontSize: 9,
+  pendingContStatusBadge: {
     marginLeft: 'auto',
+    backgroundColor: '#E8F1FA',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: '#D0DEEB',
+  },
+  pendingContStatusText: {
+    color: '#173B70',
+    fontSize: 9,
+    fontWeight: '800',
+  },
+  pendingDischargeVerificationCard: {
+    backgroundColor: '#F0F5FA',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#D0DEEB',
+    padding: 10,
+    gap: 8,
+  },
+  pendingDischargeVerificationHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingBottom: 6,
+    borderBottomWidth: 1,
+    borderBottomColor: '#D0DEEB',
+  },
+  pendingDischargeVerificationTitle: {
+    fontSize: 9.5,
+    fontWeight: '900',
+    color: '#173B70',
+    letterSpacing: 0.5,
+  },
+  pendingRemarksAuditedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: '#D0DEEB',
+  },
+  pendingRemarksAuditedText: {
+    fontSize: 8.5,
+    fontWeight: '800',
+    color: '#173B70',
+    letterSpacing: 0.4,
+  },
+  pendingDischargeMetricsRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  pendingDischargeMetricBox: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#D0DEEB',
+    padding: 8,
+  },
+  pendingDischargeGridLabel: {
+    fontSize: 8,
+    fontWeight: '800',
+    color: '#5A779D',
+    letterSpacing: 0.4,
+  },
+  pendingDischargeGridValue: {
+    fontSize: 10.5,
+    fontWeight: '800',
+    color: '#173B70',
+  },
+  pendingRemarksCallout: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 6,
+    borderLeftWidth: 3,
+    borderLeftColor: '#173B70',
+    borderWidth: 1,
+    borderColor: '#D0DEEB',
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+  },
+  pendingRemarksCalloutLabel: {
+    fontSize: 8.5,
+    fontWeight: '900',
+    color: '#173B70',
+    letterSpacing: 0.4,
+  },
+  pendingRemarksCalloutText: {
+    fontSize: 10.5,
+    color: '#173B70',
+    fontStyle: 'italic',
+    lineHeight: 15,
+  },
+  pendingClearanceFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingTop: 2,
+  },
+  pendingClearanceFooterText: {
+    fontSize: 8.5,
+    color: '#5A779D',
+    fontWeight: '600',
   },
   decisionButtonsRow: {
     flexDirection: 'row',
     gap: 10,
-    marginTop: 2,
+    marginTop: 4,
   },
   approveBtn: {
     flex: 1,
-    height: 40,
-    backgroundColor: '#2563EB',
-    borderRadius: radius.DEFAULT,
+    height: 44,
+    backgroundColor: '#173B70',
+    borderRadius: 8,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -1827,32 +2227,32 @@ const styles = StyleSheet.create({
   approveBtnText: {
     color: '#FFFFFF',
     fontWeight: '900',
-    fontSize: 11,
+    fontSize: 12,
+    letterSpacing: 0.5,
   },
   rejectBtn: {
-    paddingHorizontal: 16,
-    height: 40,
-    backgroundColor: '#EFF6FF',
-    borderRadius: radius.DEFAULT,
-    borderWidth: 1,
-    borderColor: '#ff5252',
+    paddingHorizontal: 20,
+    height: 44,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 8,
+    borderWidth: 1.5,
+    borderColor: '#173B70',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
   },
   rejectBtnText: {
-    color: '#ff5252',
-    fontWeight: '800',
-    fontSize: 10,
+    color: '#173B70',
+    fontWeight: '900',
+    fontSize: 12,
+    letterSpacing: 0.5,
   },
-
-  // ─── VIEW ALL TRIPS LINK ───
   viewAllTripsLink: {
-    backgroundColor: '#EFF6FF',
-    borderRadius: radius.DEFAULT,
+    backgroundColor: '#F0F5FA',
+    borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#EFF6FF',
+    borderColor: '#D0DEEB',
     padding: 12,
     flexDirection: 'row',
     alignItems: 'center',
@@ -1863,322 +2263,90 @@ const styles = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: 8,
-    backgroundColor: '#EFF6FF',
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#D0DEEB',
     alignItems: 'center',
     justifyContent: 'center',
   },
   viewAllTripsTitle: {
-    color: '#2563EB',
+    color: '#173B70',
     fontWeight: '800',
     fontSize: 12,
     letterSpacing: 0.5,
   },
   viewAllTripsSub: {
-    color: '#849396',
+    color: '#5A779D',
     fontSize: 10,
     marginTop: 2,
     lineHeight: 14,
   },
 
   // ─── SEARCH & FILTER CHIPS ───
-  searchBarWrap: {
+  supervisorSearchWrap: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F8FAFC',
-    borderRadius: radius.DEFAULT,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
-    paddingHorizontal: 12,
-    height: 42,
-  },
-  searchInput: {
-    flex: 1,
-    color: '#1E293B',
-    fontSize: 11,
-        ...(Platform.OS === 'web' ? { outlineStyle: 'none' } : {}),
-  } as any,
-  filterChipsScroll: {
-    gap: 6,
-  },
-  filterChip: {
+    borderColor: '#D0DEEB',
     paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: radius.sm,
-    backgroundColor: '#F8FAFC',
+    height: 40,
+    marginBottom: 4,
+  },
+  supervisorSearchInput: {
+    flex: 1,
+    color: '#173B70',
+    fontSize: 11.5,
+    paddingVertical: 0,
+    ...(Platform.OS === 'web' ? { outlineStyle: 'none' } : {}),
+  } as any,
+  operatorMiniBadge: {
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    borderRadius: 3,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    backgroundColor: '#FFFFFF',
+    borderColor: '#D0DEEB',
   },
-  filterChipActive: {
-    backgroundColor: 'rgba(254, 179, 0, 0.15)',
-    borderColor: '#feb300',
-  },
-  filterChipActiveCyan: {
-    backgroundColor: '#EFF6FF',
-    borderColor: '#2563EB',
-  },
-  filterChipText: {
-    color: '#849396',
-    fontSize: 9,
+  operatorMiniBadgeText: {
+    fontSize: 8.5,
     fontWeight: '800',
-      },
-  filterChipTextActive: {
-    color: '#feb300',
+    color: '#173B70',
   },
-  filterChipTextActiveCyan: {
-    color: '#2563EB',
-  },
-
-  // ─── MONITORING CARDS ───
-  monitoringCard: {
-    backgroundColor: '#F8FAFC',
-    borderRadius: radius.DEFAULT,
+  driverRowCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F0F5FA',
+    borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: '#D0DEEB',
     padding: 10,
-    gap: 6,
-  },
-  monHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  monTripId: {
-    color: '#2563EB',
-        fontSize: 12,
-    fontWeight: '900',
-  },
-  monStatusBadge: {
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
-  badgeGreen: { backgroundColor: 'rgba(34, 239, 126, 0.15)' },
-  badgeCyan: { backgroundColor: '#EFF6FF' },
-  badgeAmber: { backgroundColor: 'rgba(254, 179, 0, 0.15)' },
-  badgeDefault: { backgroundColor: '#EFF6FF' },
-  monStatusText: {
-    color: '#1E293B',
-    fontSize: 8,
-    fontWeight: '800',
-  },
-  monRouteBox: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  monRouteText: {
-    color: '#1E293B',
-    fontSize: 11,
-    fontWeight: '700',
-  },
-  monTime: {
-    color: '#849396',
-    fontSize: 9,
-      },
-  monSpecsRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  monSpecItem: {
-    color: '#849396',
-    fontSize: 9,
-  },
-  monSpecBold: {
-    color: '#1E293B',
-    fontWeight: '600',
-  },
-  monContainersRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingTop: 4,
-    borderTopWidth: 1,
-    borderTopColor: '#161c25',
-  },
-  monContainersText: {
-    color: '#2563EB',
-    fontSize: 9,
-      },
-
-  // ─── DATE-WISE MONITORING & DRIVERS STYLES ───
-  dateWiseCountPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: '#EFF6FF',
-    borderRadius: 4,
-    borderWidth: 1,
-    borderColor: '#2563EB',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-  },
-  dateWiseCountPillText: {
-    color: '#2563EB',
-    fontSize: 9,
-    fontWeight: '800',
-    letterSpacing: 0.5,
-  },
-  filterSubLabel: {
-    color: '#849396',
-    fontSize: 8,
-    fontWeight: '800',
-    letterSpacing: 0.6,
-    textTransform: 'uppercase',
-    marginTop: 2,
-  },
-  filterChipActiveDate: {
-    backgroundColor: '#2563EB',
-    borderColor: '#2563EB',
-  },
-  filterChipTextActiveDate: {
-    color: '#FFFFFF',
-    fontWeight: '900',
-  },
-  dateGroupWrap: {
-    gap: 4,
-  },
-  dateGroupHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#101721',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    borderRadius: radius.DEFAULT,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-  },
-  dateGroupTitle: {
-    color: '#1E293B',
-    fontSize: 10,
-    fontWeight: '900',
-    letterSpacing: 0.5,
-  },
-  todayPill: {
-    backgroundColor: '#2563EB',
-    paddingHorizontal: 5,
-    paddingVertical: 1,
-    borderRadius: 3,
-  },
-  todayPillText: {
-    color: '#FFFFFF',
-    fontSize: 8,
-    fontWeight: '900',
-  },
-  yesterdayPill: {
-    backgroundColor: 'rgba(254, 179, 0, 0.2)',
-    paddingHorizontal: 5,
-    paddingVertical: 1,
-    borderRadius: 3,
-    borderWidth: 1,
-    borderColor: '#feb300',
-  },
-  yesterdayPillText: {
-    color: '#feb300',
-    fontSize: 8,
-    fontWeight: '800',
-  },
-  dateGroupCountBadge: {
-    backgroundColor: '#F8FAFC',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 4,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-  },
-  dateGroupCountText: {
-    color: '#2563EB',
-    fontSize: 9,
-    fontWeight: '800',
-  },
-  monDriverThumb: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    borderWidth: 1.5,
-    borderColor: '#2563EB',
-  },
-  monDriverThumbFallback: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#101d30',
-    borderWidth: 1.5,
-    borderColor: '#2563EB',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  monDriverThumbText: {
-    color: '#2563EB',
-    fontWeight: '900',
-    fontSize: 12,
-  },
-  monDriverNameSmall: {
-    color: '#1E293B',
-    fontSize: 10,
-    fontWeight: '700',
-  },
-  monSpecBoldHighlight: {
-    color: '#feb300',
-    fontWeight: '800',
-  },
-  monSpecBoldCyan: {
-    color: '#2563EB',
-    fontWeight: '800',
-  },
-  monSpecBoldGreen: {
-    color: '#22ef7e',
-    fontWeight: '800',
+    gap: 10,
   },
   driverAvatarImg: {
     width: 36,
     height: 36,
     borderRadius: 18,
     borderWidth: 1.5,
-    borderColor: '#2563EB',
-  },
-
-  // ─── DRIVERS ROW ───
-  driverRowCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F8FAFC',
-    borderRadius: radius.DEFAULT,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    padding: 10,
-    gap: 10,
-  },
-  driverAvatar: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#2563EB',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  driverAvatarText: {
-    color: '#FFFFFF',
-    fontWeight: '900',
-    fontSize: 13,
+    borderColor: '#173B70',
   },
   driverFullName: {
-    color: '#1E293B',
+    color: '#173B70',
     fontSize: 11,
     fontWeight: '800',
   },
   driverDetails: {
-    color: '#849396',
+    color: '#5A779D',
     fontSize: 9,
     marginTop: 1,
   },
   driverActivePill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(34, 239, 126, 0.1)',
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#22ef7e',
+    borderColor: '#D0DEEB',
     borderRadius: 10,
     paddingHorizontal: 8,
     paddingVertical: 2,
@@ -2188,63 +2356,38 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: '#22ef7e',
+    backgroundColor: '#173B70',
   },
   driverActivePillText: {
-    color: '#22ef7e',
+    color: '#173B70',
     fontSize: 8,
     fontWeight: '800',
   },
+  driverSuspendedPill: {
+    borderColor: '#173B70',
+    backgroundColor: '#E8F1FA',
+  },
 
   // ─── TERMINALS REPORT GRID ───
-  terminalGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  terminalGridItem: {
-    width: '31%',
-    backgroundColor: '#F8FAFC',
-    borderRadius: radius.sm,
-    padding: 10,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    alignItems: 'center',
-    gap: 2,
-  },
-  termGridName: {
-    color: '#2563EB',
-    fontWeight: '900',
-    fontSize: 12,
-      },
-  termGridCount: {
-    color: '#1E293B',
-    fontWeight: '900',
-    fontSize: 16,
-      },
-  termGridSub: {
-    color: '#849396',
-    fontSize: 8,
-  },
   panelActivePeriodBadge: {
-    backgroundColor: '#EFF6FF',
+    backgroundColor: '#F0F5FA',
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: '#2563EB',
+    borderColor: '#173B70',
   },
   panelActivePeriodText: {
-    color: '#2563EB',
+    color: '#173B70',
     fontSize: 8,
     fontWeight: '900',
     letterSpacing: 0.5,
   },
   panelFilterBar: {
-    backgroundColor: '#0c131d',
-    borderRadius: radius.DEFAULT,
+    backgroundColor: '#F0F5FA',
+    borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: '#D0DEEB',
     padding: 10,
     gap: 10,
   },
@@ -2258,21 +2401,16 @@ const styles = StyleSheet.create({
     paddingVertical: 7,
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: '#D0DEEB',
     alignItems: 'center',
     justifyContent: 'center',
   },
   periodTabBtnActive: {
-    backgroundColor: '#2563EB',
-    borderColor: '#2563EB',
-    shadowColor: '#2563EB',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 3,
+    backgroundColor: '#173B70',
+    borderColor: '#173B70',
   },
   periodTabText: {
-    color: '#849396',
+    color: '#5A779D',
     fontSize: 9,
     fontWeight: '800',
     letterSpacing: 0.4,
@@ -2287,11 +2425,11 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingTop: 6,
     borderTopWidth: 1,
-    borderTopColor: '#1a2230',
+    borderTopColor: '#D0DEEB',
     flexWrap: 'wrap',
   },
   trafficTypeLabel: {
-    color: '#849396',
+    color: '#5A779D',
     fontSize: 8,
     fontWeight: '800',
     letterSpacing: 0.5,
@@ -2302,30 +2440,30 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: '#D0DEEB',
   },
   trafficTypeChipActive: {
-    backgroundColor: 'rgba(34, 239, 126, 0.15)',
-    borderColor: '#22ef7e',
+    backgroundColor: '#173B70',
+    borderColor: '#173B70',
   },
   trafficTypeChipText: {
-    color: '#849396',
+    color: '#5A779D',
     fontSize: 8,
     fontWeight: '700',
   },
   trafficTypeChipTextActive: {
-    color: '#22ef7e',
+    color: '#FFFFFF',
     fontWeight: '900',
   },
   panelSummaryStrip: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#F8FAFC',
-    borderRadius: radius.DEFAULT,
+    backgroundColor: '#F0F5FA',
+    borderRadius: 8,
     padding: 10,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: '#D0DEEB',
   },
   panelSummaryItem: {
     flex: 1,
@@ -2333,12 +2471,12 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   panelSummaryNum: {
-    color: '#2563EB',
+    color: '#173B70',
     fontSize: 16,
     fontWeight: '900',
   },
   panelSummaryLabel: {
-    color: '#849396',
+    color: '#5A779D',
     fontSize: 8,
     fontWeight: '700',
     textAlign: 'center',
@@ -2346,7 +2484,22 @@ const styles = StyleSheet.create({
   panelSummaryDivider: {
     width: 1,
     height: 24,
-    backgroundColor: '#242a34',
+    backgroundColor: '#D0DEEB',
+  },
+  terminalGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  terminalGridItem: {
+    width: '31%',
+    backgroundColor: '#F0F5FA',
+    borderRadius: 8,
+    padding: 10,
+    borderWidth: 1,
+    borderColor: '#D0DEEB',
+    alignItems: 'center',
+    gap: 2,
   },
   termHeaderRow: {
     flexDirection: 'row',
@@ -2357,25 +2510,39 @@ const styles = StyleSheet.create({
     width: 5,
     height: 5,
     borderRadius: 2.5,
-    backgroundColor: '#22ef7e',
+    backgroundColor: '#173B70',
+  },
+  termGridName: {
+    color: '#173B70',
+    fontWeight: '900',
+    fontSize: 12,
+  },
+  termGridCount: {
+    color: '#173B70',
+    fontWeight: '900',
+    fontSize: 16,
+  },
+  termGridSub: {
+    color: '#5A779D',
+    fontSize: 8,
   },
   termFlowRow: {
     marginTop: 2,
     paddingTop: 3,
     borderTopWidth: 1,
-    borderTopColor: '#161c25',
+    borderTopColor: '#D0DEEB',
     width: '100%',
     alignItems: 'center',
   },
   termFlowText: {
-    color: '#849396',
+    color: '#5A779D',
     fontSize: 7,
     fontWeight: '800',
   },
   exportReportBtn: {
     height: 44,
-    backgroundColor: '#2563EB',
-    borderRadius: radius.DEFAULT,
+    backgroundColor: '#173B70',
+    borderRadius: 8,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -2397,16 +2564,16 @@ const styles = StyleSheet.create({
   },
   quickTile: {
     width: '31%',
-    backgroundColor: '#F8FAFC',
-    borderRadius: radius.DEFAULT,
+    backgroundColor: '#F0F5FA',
+    borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: '#D0DEEB',
     padding: 12,
     alignItems: 'center',
     gap: 6,
   },
   quickTileText: {
-    color: '#1E293B',
+    color: '#173B70',
     fontSize: 9,
     fontWeight: '700',
     textAlign: 'center',
@@ -2415,7 +2582,7 @@ const styles = StyleSheet.create({
   // ─── MODAL STYLES ───
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(8, 14, 23, 0.94)',
+    backgroundColor: 'rgba(23, 59, 112, 0.45)',
     justifyContent: 'center',
     ...(Platform.OS === 'web'
       ? {
@@ -2431,9 +2598,9 @@ const styles = StyleSheet.create({
   },
   modalCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: radius.DEFAULT,
+    borderRadius: 12,
     borderWidth: 1.5,
-    borderColor: '#2563EB',
+    borderColor: '#173B70',
     padding: 16,
     gap: 12,
   },
@@ -2443,35 +2610,35 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingBottom: 8,
     borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0',
+    borderBottomColor: '#D0DEEB',
   },
   modalTitle: {
-    color: '#2563EB',
+    color: '#173B70',
     fontWeight: '900',
-    fontSize: 11,
+    fontSize: 12,
     letterSpacing: 0.8,
   },
   modalPrompt: {
     color: '#1E293B',
-    fontSize: 10,
-    lineHeight: 15,
+    fontSize: 11,
+    lineHeight: 16,
   },
   inputWrap: {
-    backgroundColor: '#F8FAFC',
-    borderRadius: radius.DEFAULT,
+    backgroundColor: '#F0F5FA',
+    borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: '#D0DEEB',
     paddingHorizontal: 12,
   },
   modalInput: {
-    color: '#1E293B',
+    color: '#173B70',
     fontSize: 11,
-        ...(Platform.OS === 'web' ? { outlineStyle: 'none' } : {}),
+    ...(Platform.OS === 'web' ? { outlineStyle: 'none' } : {}),
   } as any,
   modalSubmitBtn: {
     height: 44,
-    backgroundColor: '#2563EB',
-    borderRadius: radius.DEFAULT,
+    backgroundColor: '#173B70',
+    borderRadius: 8,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -2485,469 +2652,31 @@ const styles = StyleSheet.create({
     letterSpacing: 0.6,
   },
   repRow: {
-    color: '#849396',
+    color: '#3A567F',
     fontSize: 11,
   },
   repVal: {
-    color: '#2563EB',
+    color: '#173B70',
     fontWeight: '800',
-      },
+  },
   notifItem: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    backgroundColor: '#F8FAFC',
-    borderRadius: radius.sm,
+    backgroundColor: '#F0F5FA',
+    borderRadius: 8,
     padding: 10,
     gap: 10,
+    borderWidth: 1,
+    borderColor: '#D0DEEB',
   },
   notifTitle: {
-    color: '#1E293B',
+    color: '#173B70',
     fontSize: 11,
     fontWeight: '800',
   },
   notifSub: {
-    color: '#849396',
+    color: '#5A779D',
     fontSize: 9,
     marginTop: 2,
-  },
-  licenseAlertBanner: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    backgroundColor: '#261a06',
-    borderWidth: 1.5,
-    borderColor: '#f59e0b',
-    borderRadius: radius.md,
-    padding: 12,
-    marginBottom: 16,
-    gap: 12,
-    shadowColor: '#f59e0b',
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  licenseAlertIconWrap: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
-    backgroundColor: '#3d2806',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  licenseAlertTitle: {
-    color: '#fbbf24',
-    fontSize: 12,
-    fontWeight: '900',
-    letterSpacing: 0.5,
-    marginBottom: 4,
-  },
-  licenseAlertBody: {
-    color: '#fef3c7',
-    fontSize: 11,
-    lineHeight: 16,
-    fontWeight: '600',
-  },
-  authorizedTerminalsWrap: {
-    backgroundColor: '#F8FAFC',
-    borderRadius: radius.sm,
-    padding: 8,
-    gap: 6,
-    borderWidth: 1,
-    borderColor: '#1e293b',
-  },
-  authorizedTerminalsLabel: {
-    color: '#849396',
-    fontSize: 8.5,
-    fontWeight: '800',
-    letterSpacing: 0.5,
-  },
-  terminalBadgesRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 5,
-  },
-  terminalAuthBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: '#EFF6FF',
-    borderWidth: 1,
-    borderColor: '#EFF6FF',
-    borderRadius: 4,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-  },
-  termAuthDot: {
-    width: 4,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: '#2563EB',
-  },
-  terminalAuthText: {
-    color: '#2563EB',
-    fontSize: 10,
-    fontWeight: '800',
-  },
-
-  // Compliance Center Card
-  complianceCenterCard: {
-    backgroundColor: '#0b1626',
-    borderRadius: radius.md,
-    borderWidth: 1.5,
-    borderColor: 'rgba(254, 179, 0, 0.45)',
-    padding: 12,
-    gap: 10,
-    marginBottom: 4,
-  },
-  complianceHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  complianceIconBox: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
-    backgroundColor: 'rgba(254, 179, 0, 0.15)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(254, 179, 0, 0.3)',
-  },
-  complianceTitle: {
-    color: '#feb300',
-    fontSize: 12,
-    fontWeight: '900',
-    letterSpacing: 0.5,
-  },
-  complianceSub: {
-    color: '#90caf9',
-    fontSize: 9.5,
-    marginTop: 1,
-  },
-  complianceCountPill: {
-    backgroundColor: 'rgba(254, 179, 0, 0.2)',
-    borderWidth: 1,
-    borderColor: '#feb300',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
-  },
-  complianceCountText: {
-    color: '#feb300',
-    fontSize: 10,
-    fontWeight: '900',
-  },
-  complianceTabRow: {
-    flexDirection: 'row',
-    gap: 6,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0',
-    paddingBottom: 8,
-  },
-  complianceTabBtn: {
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 6,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-  },
-  complianceTabBtnActive: {
-    backgroundColor: 'rgba(254, 179, 0, 0.18)',
-    borderColor: '#feb300',
-  },
-  complianceTabText: {
-    color: '#849396',
-    fontSize: 9.5,
-    fontWeight: '700',
-  },
-  complianceTabTextActive: {
-    color: '#feb300',
-    fontWeight: '900',
-  },
-  complianceSectionBox: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 8,
-    padding: 10,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    gap: 8,
-  },
-  complianceSectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 6,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0',
-    paddingBottom: 6,
-  },
-  complianceSectionTitle: {
-    color: '#1E293B',
-    fontSize: 10,
-    fontWeight: '800',
-    flex: 1,
-  },
-  slpaTag: {
-    backgroundColor: '#feb300',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
-  slpaTagText: {
-    color: '#FFFFFF',
-    fontSize: 8.5,
-    fontWeight: '900',
-  },
-  complianceItemRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#0d1d33',
-    padding: 8,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-  },
-  vehiclePlateBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#EFF6FF',
-    borderWidth: 1,
-    borderColor: '#2563EB',
-    borderRadius: 4,
-    paddingHorizontal: 6,
-    paddingVertical: 3,
-  },
-  vehiclePlateBadgeText: {
-    color: '#2563EB',
-    fontSize: 11,
-    fontWeight: '900',
-  },
-  complianceItemDriver: {
-    color: '#1E293B',
-    fontSize: 11,
-    fontWeight: '700',
-  },
-  complianceItemSub: {
-    color: '#849396',
-    fontSize: 9.5,
-    marginTop: 1,
-  },
-  complianceDaysPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 6,
-    paddingVertical: 3,
-    borderRadius: 4,
-    borderWidth: 1,
-  },
-  complianceDaysPillWarning: {
-    backgroundColor: 'rgba(254, 179, 0, 0.15)',
-    borderColor: '#feb300',
-  },
-  complianceDaysPillExpired: {
-    backgroundColor: 'rgba(255, 82, 82, 0.15)',
-    borderColor: '#ff5252',
-  },
-  complianceDaysText: {
-    fontSize: 9.5,
-    fontWeight: '800',
-  },
-  miniTruckBadge: {
-    backgroundColor: '#EFF6FF',
-    paddingHorizontal: 5,
-    paddingVertical: 1,
-    borderRadius: 3,
-  },
-  miniTruckBadgeText: {
-    color: '#2563EB',
-    fontSize: 9.5,
-    fontWeight: '800',
-  },
-  passBadgeWrap: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
-  passBadgeKey: {
-    color: '#849396',
-    fontSize: 9,
-    fontWeight: '600',
-  },
-  passBadgeVal: {
-    fontSize: 9.5,
-    fontWeight: '800',
-  },
-  complianceMoreNotice: {
-    color: '#feb300',
-    fontSize: 9.5,
-    fontWeight: '700',
-    textAlign: 'center',
-    paddingTop: 4,
-  },
-  complianceFleetBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    backgroundColor: '#2563EB',
-    borderRadius: 6,
-    paddingVertical: 8,
-    marginTop: 4,
-  },
-  complianceFleetBtnText: {
-    color: '#FFFFFF',
-    fontSize: 11,
-    fontWeight: '900',
-    letterSpacing: 0.3,
-  },
-
-  // Supervisor Driver Search Wrap
-  supervisorSearchWrap: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#2563EB',
-    paddingHorizontal: 10,
-    height: 40,
-    marginBottom: 4,
-  },
-  supervisorSearchInput: {
-    flex: 1,
-    color: '#1E293B',
-    fontSize: 11.5,
-    paddingVertical: 0,
-    ...(Platform.OS === 'web' ? { outlineStyle: 'none' } : {}),
-  } as any,
-  operatorMiniBadge: {
-    paddingHorizontal: 5,
-    paddingVertical: 1,
-    borderRadius: 3,
-    borderWidth: 1,
-  },
-  operatorMiniBadgeCyan: {
-    backgroundColor: '#EFF6FF',
-    borderColor: '#2563EB',
-  },
-  operatorMiniBadgeAmber: {
-    backgroundColor: 'rgba(254, 179, 0, 0.12)',
-    borderColor: 'rgba(254, 179, 0, 0.3)',
-  },
-  operatorMiniBadgeText: {
-    fontSize: 8.5,
-    fontWeight: '800',
-  },
-  driverSuspendedPill: {
-    borderColor: '#feb300',
-    backgroundColor: 'rgba(254, 179, 0, 0.1)',
-  },
-
-  // ─── PENDING DISCHARGE & SEAL VERIFICATION MANIFEST ───
-  pendingDischargeVerificationCard: {
-    backgroundColor: '#0a101d',
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#EFF6FF',
-    padding: 11,
-    gap: 8,
-    marginTop: 4,
-  },
-  pendingDischargeVerificationHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingBottom: 6,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0',
-  },
-  pendingDischargeVerificationTitle: {
-    fontSize: 9.5,
-    fontWeight: '900',
-    color: '#2563EB',
-    letterSpacing: 0.5,
-  },
-  pendingRemarksAuditedBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: 'rgba(34, 239, 126, 0.12)',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-    borderWidth: 1,
-    borderColor: 'rgba(34, 239, 126, 0.3)',
-  },
-  pendingRemarksAuditedText: {
-    fontSize: 8.5,
-    fontWeight: '800',
-    color: '#22ef7e',
-    letterSpacing: 0.4,
-  },
-  pendingDischargeMetricsRow: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  pendingDischargeMetricBox: {
-    flex: 1,
-    backgroundColor: '#0f1726',
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    padding: 7,
-  },
-  pendingBoxGreenBorder: {
-    borderColor: 'rgba(34, 239, 126, 0.35)',
-    backgroundColor: 'rgba(34, 239, 126, 0.05)',
-  },
-  pendingBoxRedBorder: {
-    borderColor: 'rgba(255, 82, 82, 0.35)',
-    backgroundColor: 'rgba(255, 82, 82, 0.05)',
-  },
-  pendingDischargeGridLabel: {
-    fontSize: 8,
-    fontWeight: '800',
-    color: '#849396',
-    letterSpacing: 0.4,
-  },
-  pendingDischargeGridValue: {
-    fontSize: 10,
-    fontWeight: '800',
-    color: '#1E293B',
-  },
-  pendingRemarksCallout: {
-    backgroundColor: '#F8FAFC',
-    borderRadius: 6,
-    borderLeftWidth: 3,
-    borderLeftColor: '#2563EB',
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-  },
-  pendingRemarksCalloutLabel: {
-    fontSize: 8.5,
-    fontWeight: '900',
-    color: '#2563EB',
-    letterSpacing: 0.4,
-  },
-  pendingRemarksCalloutText: {
-    fontSize: 10,
-    color: '#1E293B',
-    fontStyle: 'italic',
-    lineHeight: 14,
-  },
-  pendingClearanceFooter: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    paddingTop: 2,
-  },
-  pendingClearanceFooterText: {
-    fontSize: 8.5,
-    color: '#849396',
-    fontWeight: '600',
   },
 });

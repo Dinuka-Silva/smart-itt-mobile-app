@@ -59,7 +59,7 @@ export function FormInput({
           <Ionicons
             name={leftIcon}
             size={18}
-            color={isFocused ? '#0F766E' : '#6B7C85'}
+            color={isFocused ? '#173B70' : '#6B7C85'}
             style={styles.leftIcon}
           />
         )}
@@ -119,7 +119,7 @@ const styles = StyleSheet.create({
     color: '#6B7C85',
   },
   requiredStar: {
-    color: '#B42318',
+    color: '#173B70',
     marginLeft: 3,
     fontSize: 13,
     fontWeight: '700',
@@ -135,10 +135,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
   },
   inputWrapFocused: {
-    borderColor: '#0F766E',
+    borderColor: '#173B70',
   },
   inputWrapError: {
-    borderColor: '#B42318',
+    borderColor: '#173B70',
   },
   leftIcon: {
     marginRight: 8,
@@ -155,7 +155,7 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 12,
-    color: '#B42318',
+    color: '#173B70',
     marginTop: 4,
   },
 });

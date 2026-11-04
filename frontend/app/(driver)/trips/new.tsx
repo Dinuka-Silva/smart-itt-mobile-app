@@ -911,7 +911,7 @@ export default function NewTripScreen() {
             </Text>
           </View>
 
-          {/* 11. Button: ONE solid #0F766E "Start Trip" at the bottom */}
+          {/* 11. Button: ONE solid #173B70 "Start Trip" at the bottom */}
           <View style={{ marginTop: 16 }}>
             <AppButton
               label="Start Trip"
@@ -1254,7 +1254,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.statusPendingBg,
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: '#F59E0B',
+    borderColor: '#173B70',
   },
   warningTitle: {
     fontSize: 12,

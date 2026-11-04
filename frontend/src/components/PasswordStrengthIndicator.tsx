@@ -47,7 +47,7 @@ export function PasswordStrengthIndicator({ password, showRules = true }: Passwo
               <Ionicons
                 name={rule.passed ? 'checkmark-circle' : 'ellipse-outline'}
                 size={14}
-                color={rule.passed ? '#10b981' : '#64748b'}
+                color={rule.passed ? '#173B70' : '#64748b'}
               />
               <Text style={[styles.ruleText, rule.passed && styles.ruleTextPassed]}>
                 {rule.label}

@@ -83,8 +83,8 @@ function VerifyBody(props: VerifyProps) {
         />
         {props.containers.map((c, i) => (
           <View key={`${c.containerNumber}-${i}`} style={styles.containerRow}>
-            <Ionicons name={c.isReturn ? "return-down-back" : "cube-outline"} size={16} color={c.isReturn ? "#feb300" : colors.accent} />
-            <Text style={[styles.containerText, c.isReturn && { color: '#feb300' }]}>
+            <Ionicons name={c.isReturn ? "return-down-back" : "cube-outline"} size={16} color={c.isReturn ? "#173B70" : colors.accent} />
+            <Text style={[styles.containerText, c.isReturn && { color: '#173B70' }]}>
               {c.containerNumber} · {c.size} · {c.destTerminal} {c.isReturn ? ' (🔄 RETURN CONTAINER)' : ''}
             </Text>
           </View>
@@ -122,9 +122,9 @@ function SentBody(props: SentProps) {
       <Text style={styles.subtitle}>
         Trip {props.tripNumber} with {props.containerCount} container(s) on {props.vesselName} is now active. Proceed safely to destination terminal.
       </Text>
-      <View style={[styles.pendingChip, { backgroundColor: '#EFF6FF', borderColor: '#2563EB', borderWidth: 1 }]}>
-        <View style={[styles.pendingDot, { backgroundColor: '#2563EB' }]} />
-        <Text style={[styles.pendingChipText, { color: '#2563EB' }]}>IN PROGRESS · LIVE TRANSIT</Text>
+      <View style={[styles.pendingChip, { backgroundColor: '#F0F5FA', borderColor: '#173B70', borderWidth: 1 }]}>
+        <View style={[styles.pendingDot, { backgroundColor: '#173B70' }]} />
+        <Text style={[styles.pendingChipText, { color: '#173B70' }]}>IN PROGRESS · LIVE TRANSIT</Text>
       </View>
       <Text style={styles.hint}>
         When you arrive and discharge at the destination, tap "Complete & Send to Supervisor" to update your completed trip count and earnings!

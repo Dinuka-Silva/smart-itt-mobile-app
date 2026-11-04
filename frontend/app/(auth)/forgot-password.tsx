@@ -40,7 +40,7 @@ export default function ForgotPasswordScreen() {
 
   // Determine role style dynamically from username
   const isSupervisor = username.trim().toUpperCase().startsWith('SUP');
-  const roleColor = isSupervisor ? '#8A5A00' : '#0F766E';
+  const roleColor = isSupervisor ? '#173B70' : '#173B70';
 
   const containerPadding = width > 768 ? 40 : 18;
   const contentMaxWidth = width > 768 ? 540 : '100%';
@@ -155,7 +155,7 @@ export default function ForgotPasswordScreen() {
             onPress={() => router.replace('/(auth)/login')}
             activeOpacity={0.7}
           >
-            <Ionicons name="arrow-back" size={18} color="#2563EB" />
+            <Ionicons name="arrow-back" size={18} color="#173B70" />
             <Text style={styles.backBtnText}>BACK TO LOGIN TERMINAL</Text>
           </TouchableOpacity>
 
@@ -175,18 +175,18 @@ export default function ForgotPasswordScreen() {
             <Text style={styles.quickBarLabel}>QUICK TEST AUTOFILL:</Text>
             <View style={{ flexDirection: 'row', gap: 8 }}>
               <TouchableOpacity
-                style={[styles.quickChip, { borderColor: '#EFF6FF' }]}
+                style={[styles.quickChip, { borderColor: '#F0F5FA' }]}
                 onPress={() => handleQuickAutofill('DRIVER')}
               >
-                <Ionicons name="car-sport" size={12} color="#2563EB" />
-                <Text style={[styles.quickChipText, { color: '#2563EB' }]}>DRIVER (DRV-00001)</Text>
+                <Ionicons name="car-sport" size={12} color="#173B70" />
+                <Text style={[styles.quickChipText, { color: '#173B70' }]}>DRIVER (DRV-00001)</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.quickChip, { borderColor: 'rgba(254, 179, 0, 0.4)' }]}
                 onPress={() => handleQuickAutofill('SUPERVISOR')}
               >
-                <Ionicons name="shield-checkmark" size={12} color="#feb300" />
-                <Text style={[styles.quickChipText, { color: '#feb300' }]}>SUPERVISOR (SUP-00001)</Text>
+                <Ionicons name="shield-checkmark" size={12} color="#173B70" />
+                <Text style={[styles.quickChipText, { color: '#173B70' }]}>SUPERVISOR (SUP-00001)</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -194,7 +194,7 @@ export default function ForgotPasswordScreen() {
           {/* Error Banner */}
           {errorMessage && (
             <View style={styles.errorBox}>
-              <Ionicons name="alert-circle" size={18} color="#ff5252" />
+              <Ionicons name="alert-circle" size={18} color="#173B70" />
               <Text style={styles.errorText}>{errorMessage}</Text>
             </View>
           )}
@@ -206,9 +206,9 @@ export default function ForgotPasswordScreen() {
               <Ionicons
                 name={isVerified ? 'checkmark-circle' : 'finger-print'}
                 size={18}
-                color={isVerified ? '#22ef7e' : roleColor}
+                color={isVerified ? '#173B70' : roleColor}
               />
-              <Text style={[styles.sectionHeaderText, isVerified && { color: '#22ef7e' }]}>
+              <Text style={[styles.sectionHeaderText, isVerified && { color: '#173B70' }]}>
                 1. USERNAME & REGISTRATION ID VERIFICATION
               </Text>
             </View>
@@ -299,7 +299,7 @@ export default function ForgotPasswordScreen() {
             {isVerified && (
               <View style={styles.verifiedSection}>
                 <View style={styles.verifiedBanner}>
-                  <Ionicons name="checkmark-circle" size={20} color="#22ef7e" />
+                  <Ionicons name="checkmark-circle" size={20} color="#173B70" />
                   <View style={{ flex: 1 }}>
                     <Text style={styles.verifiedTitle}>IDENTITY VERIFIED SUCCESSFULLY</Text>
                     <Text style={styles.verifiedSub}>
@@ -315,7 +315,7 @@ export default function ForgotPasswordScreen() {
                 </View>
 
                 <View style={[styles.sectionHeader, { marginTop: 18 }]}>
-                  <Ionicons name="lock-closed" size={18} color="#2563EB" />
+                  <Ionicons name="lock-closed" size={18} color="#173B70" />
                   <Text style={styles.sectionHeaderText}>2. ENTER NEW COCKPIT PASSWORD</Text>
                 </View>
 
@@ -323,7 +323,7 @@ export default function ForgotPasswordScreen() {
                 <View style={styles.fieldGroup}>
                   <Text style={styles.fieldLabel}>NEW PASSWORD (MIN 8 CHARS) *</Text>
                   <View style={styles.inputWrap}>
-                    <Ionicons name="key-outline" size={16} color="#2563EB" style={styles.inputIcon} />
+                    <Ionicons name="key-outline" size={16} color="#173B70" style={styles.inputIcon} />
                     <TextInput
                       style={[styles.input, { flex: 1 }]}
                       placeholder="Min 8 characters (A-Z, a-z, 0-9, symbol)"
@@ -350,7 +350,7 @@ export default function ForgotPasswordScreen() {
                 <View style={styles.fieldGroup}>
                   <Text style={styles.fieldLabel}>CONFIRM NEW PASSWORD *</Text>
                   <View style={styles.inputWrap}>
-                    <Ionicons name="key-outline" size={16} color="#2563EB" style={styles.inputIcon} />
+                    <Ionicons name="key-outline" size={16} color="#173B70" style={styles.inputIcon} />
                     <TextInput
                       style={[styles.input, { flex: 1 }]}
                       placeholder="Re-type new password"
@@ -368,7 +368,7 @@ export default function ForgotPasswordScreen() {
                     <Ionicons
                       name={newPassword.length >= 6 ? 'checkmark' : 'ellipse-outline'}
                       size={11}
-                      color={newPassword.length >= 6 ? '#22ef7e' : '#849396'}
+                      color={newPassword.length >= 6 ? '#173B70' : '#849396'}
                     />
                     <Text
                       style={[
@@ -397,7 +397,7 @@ export default function ForgotPasswordScreen() {
                       size={11}
                       color={
                         newPassword.length > 0 && newPassword === confirmPassword
-                          ? '#22ef7e'
+                          ? '#173B70'
                           : '#849396'
                       }
                     />
@@ -452,11 +452,11 @@ export default function ForgotPasswordScreen() {
         <View style={styles.modalOverlay}>
           <View style={styles.modalCard}>
             <View style={styles.modalIconCircle}>
-              <Ionicons name="shield-checkmark" size={36} color="#22ef7e" />
+              <Ionicons name="shield-checkmark" size={36} color="#173B70" />
             </View>
             <Text style={styles.modalTitle}>PASSWORD RESET SUCCESSFUL</Text>
             <Text style={styles.modalDesc}>
-              Your credentials for operator <Text style={{ color: '#2563EB', fontWeight: '800' }}>{username}</Text> have been updated.
+              Your credentials for operator <Text style={{ color: '#173B70', fontWeight: '800' }}>{username}</Text> have been updated.
               You must now sign in using your newly updated password. Your previous old password is no longer valid.
             </Text>
 
@@ -478,7 +478,7 @@ export default function ForgotPasswordScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: '#F7F9FA',
+    backgroundColor: '#FFFFFF',
   },
   scroll: {
     flexGrow: 1,
@@ -493,7 +493,7 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   backBtnText: {
-    color: '#0F766E',
+    color: '#173B70',
     fontSize: 13,
     fontWeight: '600',
   },
@@ -505,9 +505,9 @@ const styles = StyleSheet.create({
     width: 58,
     height: 58,
     borderRadius: 29,
-    backgroundColor: '#E3F4F1',
+    backgroundColor: '#F0F5FA',
     borderWidth: 1.5,
-    borderColor: '#0F766E',
+    borderColor: '#173B70',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 12,
@@ -515,14 +515,14 @@ const styles = StyleSheet.create({
   heroTitle: {
     fontSize: 22,
     fontWeight: '600',
-    color: '#1F2D33',
+    color: '#173B70',
     letterSpacing: -0.3,
     textAlign: 'center',
   },
   heroSubtitle: {
     fontSize: 13,
     fontWeight: '400',
-    color: '#6B7C85',
+    color: '#5A779D',
     marginTop: 4,
     textAlign: 'center',
   },
@@ -530,7 +530,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#E5EAEC',
+    borderColor: '#D0DEEB',
     padding: 10,
     marginBottom: 16,
     alignItems: 'center',
@@ -539,7 +539,7 @@ const styles = StyleSheet.create({
   quickBarLabel: {
     fontSize: 11,
     fontWeight: '500',
-    color: '#6B7C85',
+    color: '#5A779D',
   },
   quickChip: {
     flexDirection: 'row',
@@ -549,28 +549,28 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#E5EAEC',
-    backgroundColor: '#F7F9FA',
+    borderColor: '#D0DEEB',
+    backgroundColor: '#FFFFFF',
   },
   quickChipText: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#0F766E',
+    color: '#173B70',
   },
   errorBox: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: '#FDE8E8',
+    backgroundColor: '#F0F5FA',
     borderWidth: 1,
-    borderColor: '#FDE8E8',
+    borderColor: '#F0F5FA',
     borderRadius: 10,
     padding: 12,
     marginBottom: 16,
   },
   errorText: {
     flex: 1,
-    color: '#B42318',
+    color: '#173B70',
     fontSize: 13,
     fontWeight: '500',
   },
@@ -578,7 +578,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#E5EAEC',
+    borderColor: '#D0DEEB',
     padding: 20,
   },
   sectionHeader: {
@@ -641,16 +641,16 @@ const styles = StyleSheet.create({
     height: 48,
     borderRadius: 12,
     marginTop: 6,
-    backgroundColor: '#0F766E',
+    backgroundColor: '#173B70',
   },
   actionBtnCyan: {
-    backgroundColor: '#0F766E',
+    backgroundColor: '#173B70',
   },
   actionBtnAmber: {
-    backgroundColor: '#0F766E',
+    backgroundColor: '#173B70',
   },
   actionBtnSuccess: {
-    backgroundColor: '#0F766E',
+    backgroundColor: '#173B70',
   },
   btnDisabled: {
     opacity: 0.5,
@@ -704,12 +704,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 4,
-    backgroundColor: '#EFF6FF',
+    backgroundColor: '#F0F5FA',
   },
   changeIdBtnText: {
     fontSize: 9,
     fontWeight: '800',
-    color: '#2563EB',
+    color: '#173B70',
     letterSpacing: 0.5,
   },
   rulesRow: {
@@ -796,7 +796,7 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 48,
     borderRadius: 8,
-    backgroundColor: '#2563EB',
+    backgroundColor: '#173B70',
   },
   modalBtnText: {
     color: '#FFFFFF',

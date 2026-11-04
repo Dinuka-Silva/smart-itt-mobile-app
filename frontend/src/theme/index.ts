@@ -15,87 +15,87 @@ type Palette = (typeof Colors)['light'];
 function mapPalette(p: Palette) {
   return {
     surface: '#FFFFFF',
-    surfaceDim: '#F7F9FA',
+    surfaceDim: '#F0F5FA',
     surfaceBright: '#FFFFFF',
     surfaceContainerLowest: '#FFFFFF',
-    surfaceContainerLow: '#F7F9FA',
-    surfaceContainer: '#E3F4F1',
-    surfaceContainerHigh: '#E5EAEC',
-    surfaceContainerHighest: '#D5DCDE',
-    onSurface: '#1F2D33',
-    onSurfaceVariant: '#6B7C85',
-    inverseSurface: '#1F2D33',
-    inverseOnSurface: '#F7F9FA',
-    outline: '#E5EAEC',
-    outlineVariant: '#D5DCDE',
-    surfaceTint: '#0F766E',
-    accent: '#0F766E', // Primary Teal Accent
-    accentSoft: '#E3F4F1', // Soft Accent
-    primary: '#0F766E', // Primary Teal
+    surfaceContainerLow: '#F0F5FA',
+    surfaceContainer: '#E8F1FA',
+    surfaceContainerHigh: '#D0DEEB',
+    surfaceContainerHighest: '#B8CDE3',
+    onSurface: '#173B70',
+    onSurfaceVariant: '#3A567F',
+    inverseSurface: '#173B70',
+    inverseOnSurface: '#FFFFFF',
+    outline: '#D0DEEB',
+    outlineVariant: '#B8CDE3',
+    surfaceTint: '#173B70',
+    accent: '#173B70', // Primary Dark Navy Blue
+    accentSoft: '#E8F1FA', // Soft Light Blue
+    primary: '#173B70', // Primary Dark Navy Blue
     onPrimary: '#FFFFFF',
-    primaryContainer: '#E3F4F1',
-    onPrimaryContainer: '#0F766E',
-    inversePrimary: '#5EEAD4',
-    secondary: '#E3F4F1',
-    onSecondary: '#1F2D33',
-    secondaryContainer: '#CCFBF1',
-    onSecondaryContainer: '#134E4A',
-    tertiary: '#F7F9FA',
-    onTertiary: '#1F2D33',
-    tertiaryContainer: '#E5EAEC',
-    onTertiaryContainer: '#374151',
-    error: '#FDE8E8',
-    onError: '#B42318',
-    errorContainer: '#B42318',
-    onErrorContainer: '#FFFFFF',
-    primaryFixed: '#CCFBF1',
-    primaryFixedDim: '#99F6E4',
-    onPrimaryFixed: '#0F766E',
-    onPrimaryFixedVariant: '#115E59',
-    secondaryFixed: '#E3F4F1',
-    secondaryFixedDim: '#99F6E4',
-    onSecondaryFixed: '#134E4A',
-    onSecondaryFixedVariant: '#0F766E',
-    tertiaryFixed: '#F7F9FA',
-    tertiaryFixedDim: '#E5EAEC',
-    onTertiaryFixed: '#1F2D33',
-    onTertiaryFixedVariant: '#374151',
-    background: '#F7F9FA', // Page Background
-    onBackground: '#1F2D33', // Main Text
-    surfaceVariant: '#E3F4F1',
-    navy: '#1F2D33',
-    navyMid: '#374151',
-    navyLight: '#6B7C85',
-    surfaceAlt: '#F7F9FA',
-    surfaceTeal: '#E3F4F1',
+    primaryContainer: '#E8F1FA',
+    onPrimaryContainer: '#173B70',
+    inversePrimary: '#8BB0DE',
+    secondary: '#E8F1FA',
+    onSecondary: '#173B70',
+    secondaryContainer: '#F0F5FA',
+    onSecondaryContainer: '#173B70',
+    tertiary: '#F0F5FA',
+    onTertiary: '#173B70',
+    tertiaryContainer: '#D0DEEB',
+    onTertiaryContainer: '#3A567F',
+    error: '#F0F5FA',
+    onError: '#173B70',
+    errorContainer: '#F0F5FA',
+    onErrorContainer: '#173B70',
+    primaryFixed: '#E8F1FA',
+    primaryFixedDim: '#D0DEEB',
+    onPrimaryFixed: '#173B70',
+    onPrimaryFixedVariant: '#173B70',
+    secondaryFixed: '#E8F1FA',
+    secondaryFixedDim: '#D0DEEB',
+    onSecondaryFixed: '#173B70',
+    onSecondaryFixedVariant: '#173B70',
+    tertiaryFixed: '#F0F5FA',
+    tertiaryFixedDim: '#D0DEEB',
+    onTertiaryFixed: '#173B70',
+    onTertiaryFixedVariant: '#3A567F',
+    background: '#FFFFFF', // Page Background
+    onBackground: '#173B70', // Main Text
+    surfaceVariant: '#E8F1FA',
+    navy: '#173B70',
+    navyMid: '#3A567F',
+    navyLight: '#5E799E',
+    surfaceAlt: '#F0F5FA',
+    surfaceTeal: '#E8F1FA',
     card: '#FFFFFF', // Cards / Nav
     cardElevated: '#FFFFFF',
-    border: '#E5EAEC', // 1px Border
-    borderLight: '#F7F9FA',
-    borderAccent: '#0F766E',
-    text: '#1F2D33', // Main Text
-    textPrimary: '#1F2D33',
-    textSecondary: '#6B7C85', // Secondary Text
-    textMuted: '#A3B1B8', // Hint
-    textHint: '#A3B1B8',
+    border: '#D0DEEB', // 1px Border
+    borderLight: '#F0F5FA',
+    borderAccent: '#173B70',
+    text: '#173B70', // Main Text
+    textPrimary: '#173B70',
+    textSecondary: '#3A567F', // Secondary Text
+    textMuted: '#5E799E', // Hint
+    textHint: '#5E799E',
     textOnDark: '#FFFFFF',
-    teal: '#0F766E',
-    tealLight: '#E3F4F1',
-    tealMuted: '#CCFBF1',
-    cyan: '#0F766E',
-    amber: '#8A5A00',
-    lime: '#1E7A45',
-    crimson: '#B42318',
-    driver: '#0F766E',
-    driverMuted: '#E3F4F1',
-    supervisor: '#0F766E',
-    supervisorMuted: '#E3F4F1',
-    success: '#1E7A45',
-    successMuted: '#E6F6EC',
-    warning: '#8A5A00',
-    warningMuted: '#FFF4DB',
-    danger: '#B42318',
-    dangerMuted: '#FDE8E8',
+    teal: '#173B70',
+    tealLight: '#E8F1FA',
+    tealMuted: '#D0DEEB',
+    cyan: '#173B70',
+    amber: '#173B70',
+    lime: '#173B70',
+    crimson: '#173B70',
+    driver: '#173B70',
+    driverMuted: '#E8F1FA',
+    supervisor: '#173B70',
+    supervisorMuted: '#E8F1FA',
+    success: '#173B70',
+    successMuted: '#E8F1FA',
+    warning: '#173B70',
+    warningMuted: '#F4F8FC',
+    danger: '#173B70',
+    dangerMuted: '#F0F5FA',
     white: '#FFFFFF',
   };
 }
@@ -140,21 +140,21 @@ export const shadow = {
     elevation: 2,
   },
   button: {
-    shadowColor: '#0F766E',
+    shadowColor: '#173B70',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 1,
   },
   glow: {
-    shadowColor: '#0F766E',
+    shadowColor: '#173B70',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.08,
     shadowRadius: 6,
     elevation: 1,
   },
   warningGlow: {
-    shadowColor: '#8A5A00',
+    shadowColor: '#173B70',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.08,
     shadowRadius: 6,
@@ -177,10 +177,10 @@ export const shadow = {
 };
 
 /**
- * Clean status chip styling helper:
- * Approved / Active / Completed -> bg #E6F6EC, text #1E7A45
- * Pending / In Progress       -> bg #FFF4DB, text #8A5A00
- * Rejected / Suspended        -> bg #FDE8E8, text #B42318
+ * Two-Color status chip styling helper:
+ * Approved / Active / Completed -> bg #E8F1FA, text #173B70
+ * Pending / In Progress       -> bg #F4F8FC, text #173B70
+ * Rejected / Suspended        -> bg #F0F5FA, text #173B70
  */
 export function getStatusChipStyle(status: string): { bg: string; text: string; label: string } {
   const norm = (status || '').toUpperCase().trim();
@@ -188,19 +188,19 @@ export function getStatusChipStyle(status: string): { bg: string; text: string; 
     case 'COMPLETED':
     case 'APPROVED':
     case 'ACTIVE':
-      return { bg: '#E6F6EC', text: '#1E7A45', label: norm.replace(/_/g, ' ') };
+      return { bg: '#E8F1FA', text: '#173B70', label: norm.replace(/_/g, ' ') };
     case 'IN_PROGRESS':
     case 'PENDING_APPROVAL':
     case 'PENDING':
     case 'NOT_STARTED':
     case 'ARRIVED':
-      return { bg: '#FFF4DB', text: '#8A5A00', label: norm.replace(/_/g, ' ') };
+      return { bg: '#F4F8FC', text: '#173B70', label: norm.replace(/_/g, ' ') };
     case 'REJECTED':
     case 'SUSPENDED':
     case 'INACTIVE':
-      return { bg: '#FDE8E8', text: '#B42318', label: norm.replace(/_/g, ' ') };
+      return { bg: '#F0F5FA', text: '#173B70', label: norm.replace(/_/g, ' ') };
     default:
-      return { bg: '#F7F9FA', text: '#6B7C85', label: norm.replace(/_/g, ' ') || 'UNKNOWN' };
+      return { bg: '#F0F5FA', text: '#173B70', label: norm.replace(/_/g, ' ') || 'UNKNOWN' };
   }
 }
 
