@@ -506,44 +506,48 @@ public class TripService {
                         .orElse(null));
     }
 
-    public TripResponse mapToResponse(Trip trip) {
-        List<TripResponse.ContainerResponse> containers = trip.getContainers().stream()
-                .map(c -> {
-                    String photoUrl = null;
-                    String photoId = null;
-                    String photoStatus = "NONE";
-                    if (photoRepository != null && trip.getId() != null) {
-                        String cleanNum = c.getContainerNumber() != null ? c.getContainerNumber().trim().toUpperCase() : "";
-                        var photoOpt = photoRepository.findFirstByTripIdAndContainerNumberAndDeletedFalseOrderByUploadedAtDesc(
-                                trip.getId(), cleanNum);
-                        if (photoOpt.isPresent()) {
-                            var p = photoOpt.get();
-                            photoId = p.getId().toString();
-                            photoUrl = "/api/v1/container-photos/" + p.getId();
-                            photoStatus = p.getVerificationStatus() != null ? p.getVerificationStatus() : "PENDING";
-                        }
-                    }
-                    if ("NONE".equals(photoStatus) && Boolean.TRUE.equals(c.getIsVerified())) {
-                        photoStatus = "VERIFIED";
-                    }
+    private TripResponse.ContainerResponse mapContainerToResponse(Container c, UUID tripId) {
+        String photoUrl = null;
+        String photoId = null;
+        String photoStatus = "NONE";
+        if (photoRepository != null && tripId != null) {
+            String cleanNum = c.getContainerNumber() != null ? c.getContainerNumber().trim().toUpperCase() : "";
+            var photoOpt = photoRepository.findFirstByTripIdAndContainerNumberAndDeletedFalseOrderByUploadedAtDesc(
+                    tripId, cleanNum);
+            if (photoOpt.isPresent()) {
+                var p = photoOpt.get();
+                photoId = p.getId().toString();
+                photoUrl = "/api/v1/container-photos/" + p.getId();
+                photoStatus = p.getVerificationStatus() != null ? p.getVerificationStatus() : "PENDING";
+            }
+        }
+        if ("NONE".equals(photoStatus) && Boolean.TRUE.equals(c.getIsVerified())) {
+            photoStatus = "VERIFIED";
+        }
 
-                    return TripResponse.ContainerResponse.builder()
-                            .id(c.getId().toString())
-                            .containerNumber(c.getContainerNumber())
-                            .size(c.getSize() == ContainerSize.FT_20 ? "20FT" : "40FT")
-                            .sourceTerminal(c.getSourceTerminal())
-                            .destTerminal(c.getDestTerminal())
-                            .status(c.getStatus().name())
-                            .unloadedAt(c.getUnloadedAt())
-                            .isVerified(c.getIsVerified() != null ? c.getIsVerified() : true)
-                            .verifiedBy(c.getVerifiedBy())
-                            .verifiedAt(c.getVerifiedAt())
-                            .photoId(photoId)
-                            .photoUrl(photoUrl)
-                            .photoStatus(photoStatus)
-                            .build();
-                })
-                .collect(Collectors.toList());
+        return TripResponse.ContainerResponse.builder()
+                .id(c.getId() != null ? c.getId().toString() : null)
+                .containerNumber(c.getContainerNumber())
+                .size(c.getSize() == ContainerSize.FT_20 ? "20FT" : "40FT")
+                .sourceTerminal(c.getSourceTerminal())
+                .destTerminal(c.getDestTerminal())
+                .status(c.getStatus() != null ? c.getStatus().name() : "LOADED")
+                .unloadedAt(c.getUnloadedAt())
+                .isVerified(c.getIsVerified() != null ? c.getIsVerified() : true)
+                .verifiedBy(c.getVerifiedBy())
+                .verifiedAt(c.getVerifiedAt())
+                .photoId(photoId)
+                .photoUrl(photoUrl)
+                .photoStatus(photoStatus)
+                .build();
+    }
+
+    public TripResponse mapToResponse(Trip trip) {
+        List<TripResponse.ContainerResponse> containers = trip.getContainers() != null
+                ? trip.getContainers().stream()
+                        .map(c -> mapContainerToResponse(c, trip.getId()))
+                        .collect(Collectors.toList())
+                : java.util.Collections.emptyList();
 
         String driverName = getDriverNameForTrip(trip);
 
