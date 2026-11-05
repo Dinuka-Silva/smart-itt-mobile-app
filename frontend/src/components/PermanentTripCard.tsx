@@ -59,6 +59,7 @@ interface PermanentTripCardProps {
   role: 'DRIVER' | 'SUPERVISOR' | 'ADMIN';
   onPressDetails: (trip: TripCardData) => void;
   onPressAction?: (trip: TripCardData) => void; // e.g. "Complete Trip" for driver, "View & Verify" for supervisor
+  onPressStart?: (trip: TripCardData) => void; // e.g. "Start Trip" for driver
   onPressPhoto?: (photoUrl: string, containerNumber: string, trip: TripCardData) => void;
   updating?: boolean;
 }
@@ -68,6 +69,7 @@ export const PermanentTripCard: React.FC<PermanentTripCardProps> = ({
   role,
   onPressDetails,
   onPressAction,
+  onPressStart,
   onPressPhoto,
   updating,
 }) => {
@@ -84,6 +86,13 @@ export const PermanentTripCard: React.FC<PermanentTripCardProps> = ({
     trip.status === 'SUPERVISOR_CONFIRMED' || trip.status === 'APPROVED' || trip.status === 'COMPLETED';
   const isRejected = trip.status === 'SUPERVISOR_REJECTED' || trip.status === 'REJECTED';
   const isInProgress = trip.status === 'IN_PROGRESS';
+  const isUnstarted =
+    trip.status === 'DRAFT' ||
+    trip.status === 'SCHEDULED' ||
+    trip.status === 'ASSIGNED' ||
+    trip.status === 'PENDING_START' ||
+    trip.status === 'CREATED' ||
+    trip.status === 'READY';
 
   const copyTripId = async () => {
     try {
@@ -118,6 +127,14 @@ export const PermanentTripCard: React.FC<PermanentTripCardProps> = ({
         icon: 'close-circle' as const,
         badgeBg: '#F0F5FA',
         textColor: '#173B70',
+      };
+    }
+    if (isUnstarted) {
+      return {
+        label: 'READY TO START',
+        icon: 'play-outline' as const,
+        badgeBg: '#173B70',
+        textColor: '#FFFFFF',
       };
     }
     return {
@@ -309,6 +326,18 @@ export const PermanentTripCard: React.FC<PermanentTripCardProps> = ({
         </TouchableOpacity>
 
         {/* Role-Specific Context Action */}
+        {role === 'DRIVER' && isUnstarted && (onPressStart || onPressAction) && (
+          <TouchableOpacity
+            style={styles.primaryActionBtn}
+            onPress={() => (onPressStart ? onPressStart(trip) : onPressAction!(trip))}
+            disabled={updating}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="play" size={15} color="#FFFFFF" />
+            <Text style={styles.primaryActionBtnText}>Start Trip</Text>
+          </TouchableOpacity>
+        )}
+
         {role === 'DRIVER' && isInProgress && onPressAction && (
           <TouchableOpacity
             style={styles.primaryActionBtn}

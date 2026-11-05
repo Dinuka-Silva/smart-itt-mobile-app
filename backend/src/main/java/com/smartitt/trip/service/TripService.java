@@ -114,7 +114,7 @@ public class TripService {
                 .destTerminal(destTerm)
                 .status(initialStatus)
                 .notes(req.getNotes())
-                .startTime(LocalDateTime.now())
+                .startTime(initialStatus == TripStatus.IN_PROGRESS ? LocalDateTime.now() : null)
                 .build();
 
         List<Container> containerEntities = new java.util.ArrayList<>();
@@ -137,7 +137,7 @@ public class TripService {
                         .trip(trip)
                         .sourceTerminal(req.getSourceTerminal())
                         .destTerminal(ci.getDestTerminal() != null ? ci.getDestTerminal() : req.getDestTerminal())
-                        .status(ContainerStatus.LOADED)
+                        .status(initialStatus == TripStatus.IN_PROGRESS ? ContainerStatus.IN_TRANSIT : ContainerStatus.LOADED)
                         .isVerified(verified)
                         .build();
                 containerEntities.add(container);
@@ -318,6 +318,31 @@ public class TripService {
             return userRepository.findByIdentifier(supervisorIdStr).map(User::getFullName).orElse(supervisorIdStr);
         }
     }
+    @Transactional
+    public TripResponse startTrip(String id) {
+        Trip trip = tripRepository.findById(UUID.fromString(id))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Trip not found"));
+
+        if (trip.getStatus() == TripStatus.PENDING_SUPERVISOR_CONFIRMATION
+                || trip.getStatus() == TripStatus.SUPERVISOR_CONFIRMED
+                || trip.getStatus() == TripStatus.PENDING_APPROVAL
+                || trip.getStatus() == TripStatus.APPROVED) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Trip has already been completed and confirmed.");
+        }
+
+        trip.setStatus(TripStatus.IN_PROGRESS);
+        if (trip.getStartTime() == null) {
+            trip.setStartTime(LocalDateTime.now());
+        }
+        if (trip.getContainers() != null) {
+            trip.getContainers().forEach(c -> {
+                c.setStatus(ContainerStatus.IN_TRANSIT);
+                containerRepository.save(c);
+            });
+        }
+        return mapToResponse(tripRepository.save(trip));
+    }
+
 
     @Transactional
     public TripResponse completeTrip(String id, java.util.Map<String, Object> body) {

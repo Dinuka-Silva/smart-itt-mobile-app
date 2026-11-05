@@ -130,7 +130,10 @@ export default function DriverHomeDashboard() {
         tripsPendingApproval: pendingCount,
         approvedAllowance: completedCount * 2500,
         pendingAllowance: pendingCount * 2500,
-        activeTrip: list.find((t) => ['IN_PROGRESS', 'ARRIVED', 'PENDING_APPROVAL', 'PENDING_SUPERVISOR_CONFIRMATION', 'SUPERVISOR_REJECTED', 'REJECTED'].includes(t.status)) || null,
+        // Active mission resolution: in-progress first, then unstarted
+        activeTrip: list.find((t) => ['IN_PROGRESS', 'ARRIVED', 'PENDING_APPROVAL', 'PENDING_SUPERVISOR_CONFIRMATION', 'SUPERVISOR_REJECTED', 'REJECTED'].includes(t.status)) ||
+                    list.find((t) => ['DRAFT', 'SCHEDULED', 'ASSIGNED', 'PENDING_START', 'CREATED', 'READY'].includes(t.status)) ||
+                    null,
       });
 
       // 3. Fetch driver profile if available
@@ -199,6 +202,38 @@ export default function DriverHomeDashboard() {
   }, [vehicleLicenseRenewalDue, vehicleLicenseDaysLeft, driverPortPassRenewalDue, driverPortPassDaysLeft, vehiclePortPassRenewalDue, vehiclePortPassDaysLeft]);
 
 
+
+
+  // 1. START TRIP HANDLER
+  const handleStartTrip = async (tripId: string) => {
+    if (isSuspended) {
+      Alert.alert(
+        'Account Suspended',
+        'Your driver account has been suspended by Administration. You cannot start trips.'
+      );
+      return;
+    }
+    setActionInProgress(true);
+    try {
+      await tripService.startTrip(tripId);
+      if (Platform.OS === 'web') {
+        window.alert('Trip Started: Mission is now active. Drive safely.');
+      } else {
+        Alert.alert('Trip Started', 'Mission is now active. Drive safely.');
+      }
+      await loadData();
+    } catch (err: any) {
+      console.error('Failed to start trip:', err);
+      const msg = err?.response?.data?.message || err?.message || 'Server could not start trip. Please try again.';
+      if (Platform.OS === 'web') {
+        window.alert('Start Failed: ' + msg);
+      } else {
+        Alert.alert('Start Failed', msg);
+      }
+    } finally {
+      setActionInProgress(false);
+    }
+  };
 
   // 2. OPEN DISCHARGE MODAL
   const handleOpenDischargeModal = (trip: any) => {
@@ -426,7 +461,11 @@ export default function DriverHomeDashboard() {
           <View style={styles.card}>
             <View style={styles.cardHeader}>
               <View>
-                <Text style={styles.cardCategory}>ACTIVE MISSION</Text>
+                <Text style={styles.cardCategory}>
+                  {activeTrip && ['DRAFT', 'SCHEDULED', 'ASSIGNED', 'PENDING_START', 'CREATED', 'READY'].includes(activeTrip.status)
+                    ? 'MISSION READY TO START'
+                    : 'ACTIVE MISSION'}
+                </Text>
                 <Text style={styles.cardTitle}>
                   Trip #{activeTrip.tripNumber || activeTrip.id?.slice(0, 8)}
                 </Text>
@@ -469,6 +508,17 @@ export default function DriverHomeDashboard() {
 
             {/* ONE Primary Action Button based on status */}
             <View style={{ marginTop: 8 }}>
+              {/* Unstarted Mission Action */}
+              {activeTrip && ['DRAFT', 'SCHEDULED', 'ASSIGNED', 'PENDING_START', 'CREATED', 'READY'].includes(activeTrip.status) && (
+                <AppButton
+                  label="Start Trip"
+                  onPress={() => handleStartTrip(activeTrip.id)}
+                  variant="primary"
+                  iconName="play-circle-outline"
+                  loading={actionInProgress}
+                />
+              )}
+
               {(activeTrip.status === 'IN_PROGRESS' || activeTrip.status === 'ARRIVED') && (
                 <AppButton
                   label="Complete Trip"
@@ -896,6 +946,21 @@ export default function DriverHomeDashboard() {
                     </>
                   );
                 })()}
+              </View>
+            )}
+
+            {selectedReceiptTrip && ['DRAFT', 'SCHEDULED', 'ASSIGNED', 'PENDING_START', 'CREATED', 'READY'].includes(selectedReceiptTrip.status) && (
+              <View style={{ marginTop: 12 }}>
+                <AppButton
+                  label="Start Trip"
+                  variant="primary"
+                  onPress={() => {
+                    const id = selectedReceiptTrip.id;
+                    setReceiptModalVisible(false);
+                    handleStartTrip(id);
+                  }}
+                  iconName="play-circle-outline"
+                />
               </View>
             )}
 

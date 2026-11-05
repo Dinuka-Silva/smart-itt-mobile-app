@@ -8,6 +8,7 @@ import {
   ScrollView,
   Alert,
   Image,
+  Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -199,7 +200,7 @@ export default function NewTripScreen() {
   };
 
   // Submission handler
-  const handleStartTrip = async () => {
+  const handleStartTrip = async (initialStatus: 'IN_PROGRESS' | 'DRAFT' = 'IN_PROGRESS') => {
     const isValid = await validateForm();
     if (!isValid) return;
 
@@ -250,7 +251,7 @@ export default function NewTripScreen() {
       operator: assignedOp,
       notes: notes.trim() || undefined,
       containers: tripContainers,
-      status: 'IN_PROGRESS',
+      status: initialStatus,
     };
 
     try {
@@ -278,9 +279,16 @@ export default function NewTripScreen() {
         }).catch((e) => console.warn('C2 Photo upload error:', e));
       }
 
-      Alert.alert('Trip Started', 'Mission registered on live server. Drive safely.', [
-        { text: 'OK', onPress: () => router.replace('/(driver)/(tabs)') },
-      ]);
+      if (Platform.OS === 'web') {
+        window.alert(initialStatus === 'IN_PROGRESS' ? 'Trip Started: Mission registered on live server. Drive safely.' : 'Trip Saved: Mission entered and ready to start.');
+        router.replace('/(driver)/(tabs)');
+      } else {
+        Alert.alert(
+          initialStatus === 'IN_PROGRESS' ? 'Trip Started' : 'Trip Saved',
+          initialStatus === 'IN_PROGRESS' ? 'Mission registered on live server. Drive safely.' : 'Trip entered and saved. Ready to start from your dashboard.',
+          [{ text: 'OK', onPress: () => router.replace('/(driver)/(tabs)') }]
+        );
+      }
     } catch (err: any) {
       console.warn('Backend error registering trip:', err);
       // Save to recent quick-pick list
@@ -908,14 +916,21 @@ export default function NewTripScreen() {
             </Text>
           </View>
 
-          {/* 11. Button: ONE solid #173B70 "Start Trip" at the bottom */}
-          <View style={{ marginTop: 16 }}>
+          {/* 11. Buttons: "Start Trip Now" and "Save & Enter Trip" */}
+          <View style={{ marginTop: 16, gap: 10 }}>
             <AppButton
-              label="Start Trip"
+              label="Start Trip Now"
               variant="primary"
-              onPress={handleStartTrip}
+              onPress={() => handleStartTrip('IN_PROGRESS')}
               loading={loading}
               iconName="play-circle-outline"
+            />
+            <AppButton
+              label="Save & Enter Trip (Start Later)"
+              variant="outline"
+              onPress={() => handleStartTrip('DRAFT')}
+              loading={loading}
+              iconName="bookmark-outline"
             />
           </View>
         </View>

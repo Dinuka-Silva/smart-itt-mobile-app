@@ -13,6 +13,7 @@ import {
 import { useFocusEffect, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import apiClient from '../../../src/services/api';
+import { tripService } from '../../../src/services/tripService';
 import { NetworkErrorView } from '../../../src/components/NetworkErrorView';
 import { useAuthStore } from '../../../src/store/authStore';
 import { colors, radius, spacing } from '../../../src/theme';
@@ -108,13 +109,27 @@ export default function DriverJobQueue() {
   useEffect(() => { fetchTrips(); }, [fetchTrips]);
   useFocusEffect(useCallback(() => { fetchTrips(); }, [fetchTrips]));
 
+
+  const handleStartTrip = async (tripId: string) => {
+    try {
+      await tripService.startTrip(tripId);
+      showMessage('Trip Started', 'Mission is now active. Drive safely.');
+      await fetchTrips();
+    } catch (err: any) {
+      console.error('Failed to start trip:', err);
+      showMessage('Start Failed', err?.response?.data?.message || err?.message || 'Server could not start trip. Please try again.');
+    }
+  };
+
+  const unstartedCount = trips.filter((t) => ['DRAFT', 'SCHEDULED', 'ASSIGNED', 'PENDING_START', 'CREATED', 'READY'].includes(t.status)).length;
   const completedCount = trips.filter((t) => t.status === 'COMPLETED' || t.status === 'APPROVED' || t.status === 'SUPERVISOR_CONFIRMED').length;
   const inProgressCount = trips.filter((t) => t.status === 'IN_PROGRESS').length;
   const pendingCount = trips.filter((t) => t.status === 'PENDING_APPROVAL' || t.status === 'PENDING_SUPERVISOR_CONFIRMATION').length;
 
   const filteredTrips = trips.filter((t) => {
     if (filter === 'ALL') return true;
-    if (filter === 'ACTIVE') return t.status === 'IN_PROGRESS';
+    if (filter === 'TO_START') return ['DRAFT', 'SCHEDULED', 'ASSIGNED', 'PENDING_START', 'CREATED', 'READY'].includes(t.status);
+    if (filter === 'ACTIVE') return t.status === 'IN_PROGRESS' || ['DRAFT', 'SCHEDULED', 'ASSIGNED', 'PENDING_START', 'CREATED', 'READY'].includes(t.status);
     if (filter === 'PENDING') return t.status === 'PENDING_APPROVAL' || t.status === 'PENDING_SUPERVISOR_CONFIRMATION';
     if (filter === 'DONE') return t.status === 'COMPLETED' || t.status === 'APPROVED' || t.status === 'SUPERVISOR_CONFIRMED';
     return true;
@@ -181,6 +196,7 @@ export default function DriverJobQueue() {
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterPillsScroll}>
             {[
               { id: 'ALL', label: `ALL (${trips.length})` },
+              ...(unstartedCount > 0 ? [{ id: 'TO_START', label: `TO START (${unstartedCount})` }] : []),
               { id: 'ACTIVE', label: `ACTIVE (${inProgressCount})` },
               { id: 'PENDING', label: `PENDING (${pendingCount})` },
               { id: 'DONE', label: `DONE (${completedCount})` },
@@ -225,9 +241,16 @@ export default function DriverJobQueue() {
                 setSelectedTripDetails(tripItem);
                 setDetailsModalVisible(true);
               }}
+              onPressStart={(tripItem) => {
+                handleStartTrip(tripItem.id);
+              }}
               onPressAction={(tripItem) => {
-                setCompletionTrip(tripItem);
-                setCompletionModalVisible(true);
+                if (['DRAFT', 'SCHEDULED', 'ASSIGNED', 'PENDING_START', 'CREATED', 'READY'].includes(tripItem.status)) {
+                  handleStartTrip(tripItem.id);
+                } else {
+                  setCompletionTrip(tripItem);
+                  setCompletionModalVisible(true);
+                }
               }}
               onPressPhoto={(pUrl, cNum) => {
                 setLightboxPhotoUrl(pUrl);

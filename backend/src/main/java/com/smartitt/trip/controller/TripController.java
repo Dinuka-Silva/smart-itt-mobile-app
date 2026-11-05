@@ -66,6 +66,18 @@ public class TripController {
     /**
      * Driver finishes trip, records actual completion timestamp, discharge manifest and submits for supervisor confirmation
      */
+    @PostMapping("/{id}/start")
+    @Operation(summary = "Start a trip")
+    public ResponseEntity<TripResponse> startTripPost(@PathVariable String id) {
+        return ResponseEntity.ok(tripService.startTrip(id));
+    }
+
+    @PatchMapping("/{id}/start")
+    @Operation(summary = "Start a trip")
+    public ResponseEntity<TripResponse> startTripPatch(@PathVariable String id) {
+        return ResponseEntity.ok(tripService.startTrip(id));
+    }
+
     @PostMapping("/{id}/complete")
     @Operation(summary = "Complete trip with container discharge and submit for supervisor confirmation")
     public ResponseEntity<TripResponse> completeTripPost(

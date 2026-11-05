@@ -107,6 +107,15 @@ export const tripService = {
     return response.data;
   },
 
+  async startTrip(id: string): Promise<TripResponse> {
+    try {
+      const response = await apiClient.post<TripResponse>(`/trips/${id}/start`);
+      return response.data;
+    } catch {
+      return this.updateTripStatus(id, 'IN_PROGRESS');
+    }
+  },
+
   async completeTrip(id: string, details?: {
     dischargeBay?: string;
     dischargeTerminal?: string;

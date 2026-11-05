@@ -60,6 +60,27 @@ export const CompleteTripDetailsModal: React.FC<CompleteTripDetailsModalProps> =
   const isConfirmed =
     trip.status === 'SUPERVISOR_CONFIRMED' || trip.status === 'APPROVED' || trip.status === 'COMPLETED';
   const isRejected = trip.status === 'SUPERVISOR_REJECTED' || trip.status === 'REJECTED';
+  const isUnstarted =
+    trip.status === 'DRAFT' ||
+    trip.status === 'SCHEDULED' ||
+    trip.status === 'ASSIGNED' ||
+    trip.status === 'PENDING_START' ||
+    trip.status === 'CREATED' ||
+    trip.status === 'READY';
+
+  const handleDriverStartTrip = async () => {
+    setActionLoading(true);
+    try {
+      await tripService.startTrip(trip.id);
+      Alert.alert('Trip Started', 'Mission is now active and in progress. Drive safely.');
+      if (onTripUpdated) onTripUpdated();
+      onClose();
+    } catch (e: any) {
+      Alert.alert('Error', e?.message || 'Failed to start trip.');
+    } finally {
+      setActionLoading(false);
+    }
+  };
 
   const copyTripId = async () => {
     try {
@@ -488,6 +509,32 @@ export const CompleteTripDetailsModal: React.FC<CompleteTripDetailsModalProps> =
                 )}
               </View>
             </View>
+
+            {/* Driver Start Trip Action */}
+            {role === 'DRIVER' && isUnstarted && (
+              <View style={styles.supervisorDecisionCard}>
+                <Text style={styles.decisionTitle}>ITT MISSION READY TO START</Text>
+                <Text style={styles.decisionSub}>
+                  Containers are loaded on chassis. Begin transport movement.
+                </Text>
+
+                <TouchableOpacity
+                  style={styles.confirmTripBtn}
+                  onPress={handleDriverStartTrip}
+                  disabled={actionLoading}
+                  activeOpacity={0.8}
+                >
+                  {actionLoading ? (
+                    <ActivityIndicator size="small" color="#FFFFFF" />
+                  ) : (
+                    <>
+                      <Ionicons name="play" size={18} color="#FFFFFF" />
+                      <Text style={styles.confirmTripBtnText}>Start Trip Now</Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+              </View>
+            )}
 
             {/* Final Supervisor Decision Buttons (Only if pending) */}
             {role === 'SUPERVISOR' && isPending && (
