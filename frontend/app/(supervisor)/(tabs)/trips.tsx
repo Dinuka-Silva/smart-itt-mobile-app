@@ -17,11 +17,13 @@ import { Ionicons } from '@expo/vector-icons';
 import { Calendar } from 'react-native-calendars';
 import { useAuthStore } from '../../../src/store/authStore';
 import { tripService } from '../../../src/services/tripService';
+import { vehicleService, Vehicle } from '../../../src/services/vehicleService';
+import { driverService, DriverProfile } from '../../../src/services/driverService';
 import { photoService, PhotoUploadResponse } from '../../../src/services/photoService';
 import { adminService } from '../../../src/services/adminService';
 import { securityAuditService } from '../../../src/services/securityAuditService';
 import { colors, radius, spacing } from '../../../src/theme';
-import { resolveCheNumber, resolveOperator } from '../../../src/config/fleet';
+import { resolveCheNumber, resolveOperator, SCK_FLEET } from '../../../src/config/fleet';
 import { useResponsive } from '../../../src/hooks/useResponsive';
 import { getTripTimingDetails } from '../../../src/utils/tripDateUtils';
 import { getTripDischargeTerminal } from '../../../src/utils/tripTerminalUtils';
@@ -92,6 +94,13 @@ export default function SupervisorMissionDispatcher() {
   const [dateRangeStart, setDateRangeStart] = useState<string | null>(null);
   const [dateRangeEnd, setDateRangeEnd] = useState<string | null>(null);
   const [dateRangeModalVisible, setDateRangeModalVisible] = useState(false);
+
+  // Dynamic Fleet & Driver States
+  const [fleetVehicles, setFleetVehicles] = useState<Vehicle[]>([]);
+  const [vehicleLoading, setVehicleLoading] = useState(false);
+  const [vehicleModalVisible, setVehicleModalVisible] = useState(false);
+  const [vehicleSearchText, setVehicleSearchText] = useState('');
+  const [registeredDrivers, setRegisteredDrivers] = useState<DriverProfile[]>([]);
 
   // Helper date formatters
   const formatFriendlyDate = (iso: string | null) => {
@@ -208,6 +217,31 @@ export default function SupervisorMissionDispatcher() {
   const [rejectionReason, setRejectionReason] = useState('');
   const [submittingDecision, setSubmittingDecision] = useState(false);
 
+  const loadFleetVehicles = useCallback(async () => {
+    try {
+      setVehicleLoading(true);
+      const list = await vehicleService.getAllVehicles();
+      if (Array.isArray(list) && list.length > 0) {
+        setFleetVehicles(list);
+      }
+    } catch (e) {
+      console.warn('[SupervisorTrips] Failed to load vehicles:', e);
+    } finally {
+      setVehicleLoading(false);
+    }
+  }, []);
+
+  const loadRegisteredDrivers = useCallback(async () => {
+    try {
+      const list = await driverService.getAllDrivers();
+      if (Array.isArray(list) && list.length > 0) {
+        setRegisteredDrivers(list);
+      }
+    } catch (e) {
+      console.warn('[SupervisorTrips] Failed to load drivers:', e);
+    }
+  }, []);
+
   const loadTrips = useCallback(async () => {
     try {
       const apiTrips = await tripService.getTrips();
@@ -224,22 +258,136 @@ export default function SupervisorMissionDispatcher() {
 
   useEffect(() => {
     loadTrips();
-  }, [loadTrips]);
+    loadFleetVehicles();
+    loadRegisteredDrivers();
+  }, [loadTrips, loadFleetVehicles, loadRegisteredDrivers]);
 
   const onRefresh = () => {
     setRefreshing(true);
     loadTrips();
+    loadFleetVehicles();
+    loadRegisteredDrivers();
   };
 
-  // Trips filtered by Date Filter & Driver Filter (POWERS THE TRIP SUMMARY METRICS!)
-  const dateFilteredTrips = useMemo(() => {
+  // Dynamic Driver Options from registered drivers in backend
+  const driverOptions = useMemo(() => {
+    const opts: { id: string; label: string }[] = [{ id: 'ALL', label: 'ALL DRIVERS' }];
+    if (registeredDrivers.length > 0) {
+      registeredDrivers.forEach((d) => {
+        const id = d.id || d.driverCode || d.username;
+        const label = d.fullName || d.driverCode || 'Driver';
+        opts.push({ id, label });
+      });
+    } else {
+      opts.push(
+        { id: 'demo-driver', label: 'Kamal Perera' },
+        { id: 'drv-002', label: 'Saman Kumara' },
+        { id: 'drv-003', label: 'Nimal Fernando' },
+        { id: 'drv-004', label: 'Sunil Silva' }
+      );
+    }
+    return opts;
+  }, [registeredDrivers]);
+
+  // Dynamic vehicle options from registered backend fleet + fallback + active trips
+  const vehicleOptions = useMemo(() => {
+    const plateMap = new Map<string, string>();
+
+    // 1. All vehicles from backend fleet
+    fleetVehicles.forEach((v) => {
+      if (v.vehicleNumber && v.vehicleNumber.trim()) {
+        const clean = v.vehicleNumber.trim().toUpperCase();
+        const norm = clean.replace(/[^A-Z0-9]/g, '');
+        if (!plateMap.has(norm)) {
+          plateMap.set(norm, clean);
+        }
+      }
+    });
+
+    // 2. SCK_FLEET fallback if fleetVehicles is empty or has missing authoritative units
+    if (fleetVehicles.length === 0) {
+      SCK_FLEET.forEach((v) => {
+        if (v.vehicleNumber && v.vehicleNumber.trim()) {
+          const clean = v.vehicleNumber.trim().toUpperCase();
+          const norm = clean.replace(/[^A-Z0-9]/g, '');
+          if (!plateMap.has(norm)) {
+            plateMap.set(norm, clean);
+          }
+        }
+      });
+    }
+
+    // 3. Vehicles present on trips
+    trips.forEach((t) => {
+      if (t.vehicleNumber && t.vehicleNumber !== 'UNASSIGNED' && t.vehicleNumber.trim()) {
+        const clean = t.vehicleNumber.trim().toUpperCase();
+        const norm = clean.replace(/[^A-Z0-9]/g, '');
+        if (!plateMap.has(norm)) {
+          plateMap.set(norm, clean);
+        }
+      }
+    });
+
+    const sortedPlates = Array.from(plateMap.values()).sort((a, b) =>
+      a.localeCompare(b, undefined, { numeric: true })
+    );
+
+    return ['ALL', ...sortedPlates];
+  }, [fleetVehicles, trips]);
+
+  // Filtered vehicles for searchable modal
+  const filteredFleetModalVehicles = useMemo(() => {
+    const q = vehicleSearchText.trim().toLowerCase();
+    const qNorm = q.replace(/[^a-z0-9]/g, '');
+
+    const sourceList: any[] = fleetVehicles.length > 0 ? fleetVehicles : SCK_FLEET;
+
+    if (!q) return sourceList;
+
+    return sourceList.filter((v: any) => {
+      const vNum = (v.vehicleNumber || '').toLowerCase();
+      const vNorm = vNum.replace(/[^a-z0-9]/g, '');
+      const chas = (v.chassisNumber || v.cheNumber || '').toLowerCase();
+      const op = (v.operator || '').toLowerCase();
+      const drv = (v.driverName || v.assignedDriver?.driverName || '').toLowerCase();
+
+      return (
+        vNum.includes(q) ||
+        (qNorm.length > 0 && vNorm.includes(qNorm)) ||
+        chas.includes(q) ||
+        op.includes(q) ||
+        drv.includes(q)
+      );
+    });
+  }, [fleetVehicles, vehicleSearchText]);
+
+  // Scoped trips applying: Date Period / Custom Range, Driver, Vehicle Fleet, and Discharge Terminal.
+  // CRITICAL: POWERS THE TRIP SUMMARY METRICS IN REAL-TIME!
+  const scopedTrips = useMemo(() => {
     return trips.filter((t) => {
-      // 0. Driver Filter
+      // 1. Driver Filter
       if (selectedDriverFilter !== 'ALL') {
-        if (t.driverId !== selectedDriverFilter) return false;
+        if (t.driverId !== selectedDriverFilter && t.driverCode !== selectedDriverFilter) return false;
       }
 
-      // 0.1 Date Period / Range Filter
+      // 2. Vehicle Filter (with plate normalization)
+      if (selectedVehicle !== 'ALL') {
+        const vNorm = (t.vehicleNumber || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+        const targetVNorm = selectedVehicle.toUpperCase().replace(/[^A-Z0-9]/g, '');
+        if (vNorm !== targetVNorm) return false;
+      }
+
+      // 3. Discharge Terminal Filter
+      if (selectedTerminal !== 'ALL') {
+        const tripDest = getTripDischargeTerminal(t).toUpperCase();
+        const matchesDest = tripDest.includes(selectedTerminal.toUpperCase());
+        const matchesContainerDest = (t.containers || []).some(
+          (c: any) => (c.destTerminal || '').toUpperCase() === selectedTerminal.toUpperCase()
+        );
+        if (!matchesDest && !matchesContainerDest) return false;
+      }
+
+      // 4. Date Period / Range Filter
       if (selectedPeriodFilter !== 'ALL') {
         const rawDate = t.operationDate || t.startTime || t.createdAt;
         if (!rawDate) return false;
@@ -274,61 +422,35 @@ export default function SupervisorMissionDispatcher() {
 
       return true;
     });
-  }, [trips, selectedDriverFilter, selectedPeriodFilter, dateRangeStart, dateRangeEnd]);
+  }, [trips, selectedDriverFilter, selectedVehicle, selectedTerminal, selectedPeriodFilter, dateRangeStart, dateRangeEnd]);
 
-  // Trip Summary Metrics calculated from dateFilteredTrips
-  const countTotal = dateFilteredTrips.length;
-  const countInProgress = dateFilteredTrips.filter((t) => t.status === 'IN_PROGRESS').length;
-  const countPending = dateFilteredTrips.filter((t) => t.status === 'PENDING_APPROVAL').length;
-  const countCompleted = dateFilteredTrips.filter((t) => t.status === 'COMPLETED' || t.status === 'APPROVED').length;
-  const totalContainersDispatched = dateFilteredTrips.reduce((acc, t) => acc + (t.containers?.length || 1), 0);
+  // Trip Summary Metrics calculated from scopedTrips
+  const countTotal = scopedTrips.length;
+  const countInProgress = scopedTrips.filter((t) => t.status === 'IN_PROGRESS' || t.status === 'ARRIVED').length;
+  const countPending = scopedTrips.filter((t) => t.status === 'PENDING_APPROVAL' || t.status === 'PENDING_SUPERVISOR_CONFIRMATION').length;
+  const countCompleted = scopedTrips.filter((t) => t.status === 'COMPLETED' || t.status === 'APPROVED' || t.status === 'SUPERVISOR_CONFIRMED').length;
+  const totalContainersDispatched = scopedTrips.reduce((acc, t) => acc + (t.containers?.length || 1), 0);
 
-  // Vehicle options derived from trips & registered fleet
-  const vehicleOptions = useMemo(() => {
-    const plates = new Set<string>();
-    trips.forEach((t) => {
-      if (t.vehicleNumber && t.vehicleNumber !== 'UNASSIGNED') {
-        plates.add(t.vehicleNumber.toUpperCase().trim());
-      }
-    });
-    return ['ALL', ...Array.from(plates).sort()];
-  }, [trips]);
-
-  // Filtered trips for list view (includes Terminal, Vehicle, Status, Search)
+  // Filtered trips for list view (includes Segment, Status, and Search on top of scopedTrips)
   const filteredTrips = useMemo(() => {
-    return dateFilteredTrips.filter((t) => {
+    return scopedTrips.filter((t) => {
       // 0. Top segment filter
       if (activeSegment === 'PENDING') {
-        if (t.status !== 'PENDING_APPROVAL') return false;
+        if (t.status !== 'PENDING_APPROVAL' && t.status !== 'PENDING_SUPERVISOR_CONFIRMATION') return false;
       }
 
-      // 1. Discharge Terminal Filter
-      if (selectedTerminal !== 'ALL') {
-        const tripDest = getTripDischargeTerminal(t).toUpperCase();
-        const matchesDest = tripDest.includes(selectedTerminal.toUpperCase());
-        const matchesContainerDest = (t.containers || []).some(
-          (c: any) => (c.destTerminal || '').toUpperCase() === selectedTerminal.toUpperCase()
-        );
-        if (!matchesDest && !matchesContainerDest) return false;
-      }
-
-      // 2. Vehicle Filter (with plate normalization)
-      if (selectedVehicle !== 'ALL') {
-        const v = (t.vehicleNumber || '').toUpperCase().replace(/[\s-]/g, '');
-        const targetV = selectedVehicle.toUpperCase().replace(/[\s-]/g, '');
-        if (v !== targetV) return false;
-      }
-
-      // 3. Status Filter
+      // 1. Status Filter
       if (selectedStatus !== 'ALL') {
         if (selectedStatus === 'COMPLETED') {
-          if (t.status !== 'COMPLETED' && t.status !== 'APPROVED') return false;
+          if (t.status !== 'COMPLETED' && t.status !== 'APPROVED' && t.status !== 'SUPERVISOR_CONFIRMED') return false;
+        } else if (selectedStatus === 'PENDING_APPROVAL') {
+          if (t.status !== 'PENDING_APPROVAL' && t.status !== 'PENDING_SUPERVISOR_CONFIRMATION') return false;
         } else if (t.status !== selectedStatus) {
           return false;
         }
       }
 
-      // 4. Search query
+      // 2. Search query
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase().trim();
         const tripNum = (t.tripNumber || t.id || '').toLowerCase();
@@ -347,7 +469,28 @@ export default function SupervisorMissionDispatcher() {
 
       return true;
     });
-  }, [dateFilteredTrips, selectedTerminal, selectedVehicle, selectedStatus, searchQuery, activeSegment]);
+  }, [scopedTrips, activeSegment, selectedStatus, searchQuery]);
+
+  // Check if any non-default filter is currently applied
+  const hasActiveFilters =
+    selectedVehicle !== 'ALL' ||
+    selectedPeriodFilter !== 'DAILY' ||
+    dateRangeStart !== null ||
+    selectedDriverFilter !== 'ALL' ||
+    selectedTerminal !== 'ALL' ||
+    selectedStatus !== 'ALL' ||
+    searchQuery.trim() !== '';
+
+  const handleResetAllFilters = () => {
+    setSelectedVehicle('ALL');
+    setSelectedPeriodFilter('DAILY');
+    setDateRangeStart(null);
+    setDateRangeEnd(null);
+    setSelectedDriverFilter('ALL');
+    setSelectedTerminal('ALL');
+    setSelectedStatus('ALL');
+    setSearchQuery('');
+  };
 
   // Date-wise grouped trips
   const tripsByDate = useMemo(() => {
@@ -703,16 +846,28 @@ export default function SupervisorMissionDispatcher() {
                   activeSegment === 'ALL' && styles.topSegmentBtnTextActive,
                 ]}
               >
-                All Trips ({trips.length})
+                All Trips ({scopedTrips.length})
               </Text>
             </TouchableOpacity>
           </View>
 
-          <View style={styles.sectionTitleRow}>
-            <Ionicons name="pulse" size={18} color="#173B70" />
-            <Text style={styles.sectionTitle}>
-              INTER-TERMINAL TRIP MONITORING ({filteredTrips.length})
-            </Text>
+          <View style={[styles.sectionTitleRow, { justifyContent: 'space-between' }]}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <Ionicons name="pulse" size={18} color="#173B70" />
+              <Text style={styles.sectionTitle}>
+                INTER-TERMINAL TRIP MONITORING ({filteredTrips.length})
+              </Text>
+            </View>
+            {hasActiveFilters && (
+              <TouchableOpacity
+                onPress={handleResetAllFilters}
+                style={styles.resetAllFiltersBtn}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="refresh" size={11} color="#173B70" />
+                <Text style={styles.resetAllFiltersText}>RESET FILTERS</Text>
+              </TouchableOpacity>
+            )}
           </View>
 
           {/* Search bar */}
@@ -811,7 +966,7 @@ export default function SupervisorMissionDispatcher() {
           <View>
             <Text style={styles.filterGroupLabel}>DRIVER SELECTION FILTER</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterChipsScroll}>
-              {DRIVER_OPTIONS.map((d) => (
+              {driverOptions.map((d) => (
                 <TouchableOpacity
                   key={d.id}
                   style={[
@@ -859,29 +1014,93 @@ export default function SupervisorMissionDispatcher() {
             </ScrollView>
           </View>
 
-          {/* Vehicle Filters */}
+          {/* Vehicle Fleet Filters */}
           <View>
-            <Text style={styles.filterGroupLabel}>VEHICLE FLEET FILTER</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterChipsScroll}>
-              {vehicleOptions.map((veh) => (
-                <TouchableOpacity
-                  key={veh}
-                  style={[
-                    styles.filterChip,
-                    selectedVehicle === veh && styles.filterChipActiveCyan,
-                  ]}
-                  onPress={() => setSelectedVehicle(veh)}
-                >
-                  <Text
-                    style={[
-                      styles.filterChipText,
-                      selectedVehicle === veh && styles.filterChipTextActiveCyan,
-                    ]}
-                  >
-                    {veh === 'ALL' ? 'ALL VEHICLES' : veh}
+            <View style={styles.filterGroupHeaderRow}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <Text style={styles.filterGroupLabel}>VEHICLE FLEET FILTER</Text>
+                <View style={styles.vehicleCountPill}>
+                  <Text style={styles.vehicleCountPillText}>
+                    {vehicleOptions.length > 1 ? `${vehicleOptions.length - 1} FLEET UNITS` : 'FLEET'}
                   </Text>
+                </View>
+              </View>
+
+              <TouchableOpacity
+                style={styles.vehicleDropdownBtn}
+                onPress={() => {
+                  setVehicleSearchText('');
+                  setVehicleModalVisible(true);
+                }}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="search" size={11} color="#173B70" />
+                <Text style={styles.vehicleDropdownBtnText}>
+                  {selectedVehicle === 'ALL'
+                    ? `SELECT UNIT (${vehicleOptions.length > 1 ? vehicleOptions.length - 1 : 0}) ▾`
+                    : `${selectedVehicle} ▾`}
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Active Vehicle Banner */}
+            {selectedVehicle !== 'ALL' && (
+              <View style={styles.selectedVehicleBanner}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 }}>
+                  <Ionicons name="car-sport" size={14} color="#173B70" />
+                  <Text style={styles.selectedVehicleBannerText}>
+                    Active Fleet Filter: <Text style={{ fontWeight: '900', color: '#173B70' }}>{selectedVehicle}</Text>
+                    {(() => {
+                      const vNorm = selectedVehicle.toUpperCase().replace(/[^A-Z0-9]/g, '');
+                      const found = fleetVehicles.find(
+                        (v) => (v.vehicleNumber || '').toUpperCase().replace(/[^A-Z0-9]/g, '') === vNorm
+                      );
+                      if (!found) return '';
+                      return ` · ${found.chassisNumber || found.cheNumber || ''} (${found.operator || 'SCK'})`;
+                    })()}
+                  </Text>
+                </View>
+                <TouchableOpacity
+                  style={styles.clearVehicleBtn}
+                  onPress={() => setSelectedVehicle('ALL')}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                >
+                  <Ionicons name="close-circle" size={15} color="#173B70" />
+                  <Text style={styles.clearVehicleBtnText}>ALL UNITS</Text>
                 </TouchableOpacity>
-              ))}
+              </View>
+            )}
+
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterChipsScroll}>
+              {vehicleOptions.map((veh) => {
+                const isSelected = selectedVehicle === veh;
+                return (
+                  <TouchableOpacity
+                    key={veh}
+                    style={[
+                      styles.filterChip,
+                      isSelected && styles.filterChipActiveCyan,
+                    ]}
+                    onPress={() => setSelectedVehicle(veh)}
+                    activeOpacity={0.7}
+                  >
+                    <Ionicons
+                      name={veh === 'ALL' ? 'grid' : 'car-sport'}
+                      size={11}
+                      color={isSelected ? '#FFFFFF' : '#173B70'}
+                      style={{ marginRight: 4 }}
+                    />
+                    <Text
+                      style={[
+                        styles.filterChipText,
+                        isSelected && styles.filterChipTextActiveCyan,
+                      ]}
+                    >
+                      {veh === 'ALL' ? 'ALL VEHICLES' : veh}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
             </ScrollView>
           </View>
 
@@ -1528,6 +1747,185 @@ export default function SupervisorMissionDispatcher() {
           </View>
         </View>
       </Modal>
+
+      {/* ─── MODAL: DYNAMIC VEHICLE FLEET SELECTOR (SEARCHABLE DROPDOWN) ─── */}
+      <Modal visible={vehicleModalVisible} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalCard, { maxWidth: 540, maxHeight: '85%' }]}>
+            {/* Header */}
+            <View style={styles.modalHeader}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <View style={styles.modalHeaderIconWrap}>
+                  <Ionicons name="bus" size={18} color="#173B70" />
+                </View>
+                <View>
+                  <Text style={styles.modalTitle}>SELECT FLEET VEHICLE</Text>
+                  <Text style={styles.modalSubtitle}>
+                    {fleetVehicles.length > 0
+                      ? `${fleetVehicles.length} Registered Units in Fleet`
+                      : 'Select Prime Mover / Trailer Unit'}
+                  </Text>
+                </View>
+              </View>
+              <TouchableOpacity
+                onPress={() => setVehicleModalVisible(false)}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              >
+                <Ionicons name="close" size={22} color="#173B70" />
+              </TouchableOpacity>
+            </View>
+
+            {/* Instant Search Box */}
+            <View style={styles.modalSearchBox}>
+              <Ionicons name="search" size={16} color="#3A567F" style={{ marginRight: 8 }} />
+              <TextInput
+                style={styles.modalSearchInput}
+                placeholder="Search by Plate (LY-...), CHE, Operator, Driver..."
+                placeholderTextColor="#5A779D"
+                value={vehicleSearchText}
+                onChangeText={setVehicleSearchText}
+                autoCapitalize="characters"
+                autoCorrect={false}
+              />
+              {vehicleSearchText.length > 0 && (
+                <TouchableOpacity onPress={() => setVehicleSearchText('')}>
+                  <Ionicons name="close-circle" size={16} color="#3A567F" />
+                </TouchableOpacity>
+              )}
+            </View>
+
+            {/* List of Vehicles */}
+            <ScrollView style={{ maxHeight: 380 }} showsVerticalScrollIndicator={true}>
+              {/* Option: ALL FLEET VEHICLES */}
+              <TouchableOpacity
+                style={[
+                  styles.vehicleModalRow,
+                  selectedVehicle === 'ALL' && styles.vehicleModalRowActive,
+                ]}
+                onPress={() => {
+                  setSelectedVehicle('ALL');
+                  setVehicleModalVisible(false);
+                }}
+                activeOpacity={0.7}
+              >
+                <View
+                  style={[
+                    styles.vehicleModalPlateBox,
+                    selectedVehicle === 'ALL' && styles.vehicleModalPlateBoxActive,
+                  ]}
+                >
+                  <Ionicons
+                    name="grid"
+                    size={16}
+                    color={selectedVehicle === 'ALL' ? '#FFFFFF' : '#173B70'}
+                  />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text
+                    style={[
+                      styles.vehicleModalRowTitle,
+                      selectedVehicle === 'ALL' && styles.vehicleModalRowTitleActive,
+                    ]}
+                  >
+                    ALL FLEET VEHICLES
+                  </Text>
+                  <Text style={styles.vehicleModalRowSub}>
+                    View and monitor inter-terminal moves across the entire fleet
+                  </Text>
+                </View>
+                {selectedVehicle === 'ALL' && (
+                  <Ionicons name="checkmark-circle" size={20} color="#173B70" />
+                )}
+              </TouchableOpacity>
+
+              {/* Filtered Vehicles from authoritative fleet */}
+              {filteredFleetModalVehicles.length === 0 ? (
+                <View style={styles.emptyVehiclesBox}>
+                  <Ionicons name="alert-circle-outline" size={28} color="#3A567F" />
+                  <Text style={styles.emptyVehiclesText}>No vehicles match your search</Text>
+                </View>
+              ) : (
+                filteredFleetModalVehicles.map((v: any) => {
+                  const plate = v.vehicleNumber || '';
+                  const isSelected =
+                    selectedVehicle.toUpperCase().replace(/[^A-Z0-9]/g, '') ===
+                    plate.toUpperCase().replace(/[^A-Z0-9]/g, '');
+                  const che = v.chassisNumber || v.cheNumber || resolveCheNumber(plate, v.chassisNumber);
+                  const op = v.operator || resolveOperator(plate, v.operator);
+                  const drvName = v.driverName || v.assignedDriver?.driverName;
+
+                  return (
+                    <TouchableOpacity
+                      key={v.id || plate}
+                      style={[
+                        styles.vehicleModalRow,
+                        isSelected && styles.vehicleModalRowActive,
+                      ]}
+                      onPress={() => {
+                        setSelectedVehicle(plate);
+                        setVehicleModalVisible(false);
+                      }}
+                      activeOpacity={0.7}
+                    >
+                      <View
+                        style={[
+                          styles.vehicleModalPlateBox,
+                          isSelected && styles.vehicleModalPlateBoxActive,
+                        ]}
+                      >
+                        <Ionicons
+                          name="car-sport"
+                          size={16}
+                          color={isSelected ? '#FFFFFF' : '#173B70'}
+                        />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                          <Text
+                            style={[
+                              styles.vehicleModalRowTitle,
+                              isSelected && styles.vehicleModalRowTitleActive,
+                            ]}
+                          >
+                            {plate}
+                          </Text>
+                          <View style={styles.vehicleModalStatusBadge}>
+                            <Text style={styles.vehicleModalStatusText}>
+                              {v.status || 'ACTIVE'}
+                            </Text>
+                          </View>
+                          {v.trailerSize ? (
+                            <View style={styles.vehicleModalSizeBadge}>
+                              <Text style={styles.vehicleModalSizeText}>{v.trailerSize}</Text>
+                            </View>
+                          ) : null}
+                        </View>
+                        <Text style={styles.vehicleModalRowSub}>
+                          CHE: <Text style={{ fontWeight: '700', color: '#173B70' }}>{che}</Text> · {op}
+                          {drvName ? ` · Driver: ${drvName}` : ''}
+                        </Text>
+                      </View>
+                      {isSelected && (
+                        <Ionicons name="checkmark-circle" size={20} color="#173B70" />
+                      )}
+                    </TouchableOpacity>
+                  );
+                })
+              )}
+            </ScrollView>
+
+            {/* Modal Footer */}
+            <View style={styles.modalFooter}>
+              <TouchableOpacity
+                style={styles.modalCancelBtn}
+                onPress={() => setVehicleModalVisible(false)}
+              >
+                <Text style={styles.modalCancelBtnText}>CLOSE</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -1700,6 +2098,91 @@ const styles = StyleSheet.create({
     fontSize: 11,
     ...(Platform.OS === 'web' ? { outlineStyle: 'none' } : {}),
   } as any,
+  resetAllFiltersBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#E8F1FA',
+    borderWidth: 1,
+    borderColor: '#173B70',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: radius.sm,
+  },
+  resetAllFiltersText: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: '#173B70',
+    letterSpacing: 0.3,
+  },
+  filterGroupHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 6,
+  },
+  vehicleCountPill: {
+    backgroundColor: '#E8F1FA',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  vehicleCountPillText: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: '#173B70',
+    letterSpacing: 0.3,
+  },
+  vehicleDropdownBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#F0F5FA',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: radius.sm,
+    borderWidth: 1,
+    borderColor: '#D0DEEB',
+  },
+  vehicleDropdownBtnText: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: '#173B70',
+    letterSpacing: 0.2,
+  },
+  selectedVehicleBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#E8F1FA',
+    borderWidth: 1,
+    borderColor: '#173B70',
+    borderRadius: radius.sm,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    marginBottom: 8,
+  },
+  selectedVehicleBannerText: {
+    fontSize: 11,
+    color: '#24436E',
+    fontWeight: '500',
+  },
+  clearVehicleBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#173B70',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  clearVehicleBtnText: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: '#173B70',
+  },
   filterGroupLabel: {
     fontSize: 9,
     fontWeight: '800',
@@ -1711,19 +2194,21 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   filterChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: radius.sm,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: '#D0DEEB',
   },
   filterChipActive: {
-    backgroundColor: 'rgba(254, 179, 0, 0.15)',
+    backgroundColor: '#173B70',
     borderColor: '#173B70',
   },
   filterChipActiveCyan: {
-    backgroundColor: '#F0F5FA',
+    backgroundColor: '#173B70',
     borderColor: '#173B70',
   },
   filterChipText: {
@@ -1732,10 +2217,111 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   filterChipTextActive: {
-    color: '#173B70',
+    color: '#FFFFFF',
+    fontWeight: '800',
   },
   filterChipTextActiveCyan: {
+    color: '#FFFFFF',
+    fontWeight: '800',
+  },
+
+  // ─── VEHICLE SELECTOR MODAL STYLES ───
+  modalSearchBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F0F5FA',
+    borderWidth: 1,
+    borderColor: '#D0DEEB',
+    borderRadius: radius.DEFAULT,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    marginBottom: 10,
+  },
+  modalSearchInput: {
+    flex: 1,
+    fontSize: 12,
     color: '#173B70',
+    fontWeight: '600',
+    ...(Platform.OS === 'web' ? { outlineStyle: 'none' } : {}),
+  } as any,
+  vehicleModalRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#D0DEEB',
+    borderRadius: radius.DEFAULT,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginBottom: 6,
+  },
+  vehicleModalRowActive: {
+    backgroundColor: '#E8F1FA',
+    borderColor: '#173B70',
+    borderWidth: 1.5,
+  },
+  vehicleModalPlateBox: {
+    width: 32,
+    height: 32,
+    borderRadius: 6,
+    backgroundColor: '#F0F5FA',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#D0DEEB',
+  },
+  vehicleModalPlateBoxActive: {
+    backgroundColor: '#173B70',
+    borderColor: '#173B70',
+  },
+  vehicleModalRowTitle: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#173B70',
+  },
+  vehicleModalRowTitleActive: {
+    color: '#173B70',
+  },
+  vehicleModalRowSub: {
+    fontSize: 11,
+    color: '#3A567F',
+    marginTop: 2,
+  },
+  vehicleModalStatusBadge: {
+    backgroundColor: '#F0F5FA',
+    borderWidth: 1,
+    borderColor: '#D0DEEB',
+    borderRadius: 4,
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+  },
+  vehicleModalStatusText: {
+    fontSize: 9,
+    fontWeight: '700',
+    color: '#173B70',
+  },
+  vehicleModalSizeBadge: {
+    backgroundColor: '#173B70',
+    borderRadius: 4,
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+  },
+  vehicleModalSizeText: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: '#FFFFFF',
+  },
+  emptyVehiclesBox: {
+    paddingVertical: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+  },
+  emptyVehiclesText: {
+    fontSize: 12,
+    color: '#3A567F',
+    fontWeight: '600',
   },
 
   // ─── DATE-WISE GROUP STYLES ───
@@ -2083,6 +2669,43 @@ const styles = StyleSheet.create({
     color: '#bac9cc',
     fontSize: 11,
     lineHeight: 16,
+  },
+  modalHeaderIconWrap: {
+    width: 32,
+    height: 32,
+    borderRadius: 6,
+    backgroundColor: '#F0F5FA',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#D0DEEB',
+  },
+  modalSubtitle: {
+    color: '#3A567F',
+    fontSize: 10,
+    fontWeight: '600',
+    marginTop: 2,
+  },
+  modalFooter: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    marginTop: 10,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: '#D0DEEB',
+  },
+  modalCancelBtn: {
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: radius.sm,
+    backgroundColor: '#F0F5FA',
+    borderWidth: 1,
+    borderColor: '#D0DEEB',
+  },
+  modalCancelBtnText: {
+    color: '#173B70',
+    fontSize: 11,
+    fontWeight: '800',
   },
   rejectionInput: {
     backgroundColor: '#F8FAFC',

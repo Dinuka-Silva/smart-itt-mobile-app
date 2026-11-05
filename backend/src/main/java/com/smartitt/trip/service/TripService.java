@@ -202,7 +202,10 @@ public class TripService {
 
         if (vehicleNumber != null && !vehicleNumber.isBlank() && !"ALL".equalsIgnoreCase(vehicleNumber)) {
             String cleanVeh = normalizePlate(vehicleNumber);
-            trips = trips.stream().filter(t -> normalizePlate(t.getVehicleNumber()).contains(cleanVeh))
+            trips = trips.stream().filter(t -> {
+                String tripVeh = normalizePlate(t.getVehicleNumber());
+                return tripVeh.equals(cleanVeh) || tripVeh.contains(cleanVeh);
+            })
                     .collect(Collectors.toList());
         }
 

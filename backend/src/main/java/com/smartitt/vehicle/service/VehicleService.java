@@ -25,7 +25,36 @@ public class VehicleService {
 
     @Transactional(readOnly = true)
     public List<VehicleResponse> getAllVehicles() {
-        return vehicleRepository.findAllByOrderByChassisNumberAsc().stream()
+        return getAllVehicles(null, null, null);
+    }
+
+    @Transactional(readOnly = true)
+    public List<VehicleResponse> getAllVehicles(String status, String operator, String search) {
+        List<Vehicle> list = vehicleRepository.findAllByOrderByChassisNumberAsc();
+        if (status != null && !status.isBlank() && !"ALL".equalsIgnoreCase(status)) {
+            String sUpper = status.trim().toUpperCase();
+            list = list.stream()
+                    .filter(v -> v.getStatus() != null && v.getStatus().equalsIgnoreCase(sUpper))
+                    .collect(Collectors.toList());
+        }
+        if (operator != null && !operator.isBlank() && !"ALL".equalsIgnoreCase(operator)) {
+            String opUpper = operator.trim().toUpperCase();
+            list = list.stream()
+                    .filter(v -> v.getOperator() != null && v.getOperator().toUpperCase().contains(opUpper))
+                    .collect(Collectors.toList());
+        }
+        if (search != null && !search.isBlank()) {
+            String q = search.trim().toLowerCase();
+            String qNorm = q.replaceAll("[^a-zA-Z0-9]", "");
+            list = list.stream().filter(v -> {
+                String vNum = v.getVehicleNumber() != null ? v.getVehicleNumber().toLowerCase() : "";
+                String vNumNorm = vNum.replaceAll("[^a-zA-Z0-9]", "");
+                String chas = v.getChassisNumber() != null ? v.getChassisNumber().toLowerCase() : "";
+                String op = v.getOperator() != null ? v.getOperator().toLowerCase() : "";
+                return vNum.contains(q) || (!qNorm.isEmpty() && vNumNorm.contains(qNorm)) || chas.contains(q) || op.contains(q);
+            }).collect(Collectors.toList());
+        }
+        return list.stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
@@ -143,6 +172,12 @@ public class VehicleService {
                 .daysUntilExpiry(v.getDaysUntilExpiry())
                 .renewalDue(v.isRenewalDue())
                 .licenseStatus(v.getLicenseStatus())
+                .portPassNumber(v.getPortPassNumber())
+                .portPassIssuedDate(v.getPortPassIssuedDate())
+                .portPassExpiryDate(v.getPortPassExpiryDate())
+                .portPassDaysUntilExpiry(v.getPortPassDaysUntilExpiry())
+                .portPassRenewalDue(v.isPortPassRenewalDue())
+                .portPassStatus(v.getPortPassStatus())
                 .build();
     }
 }

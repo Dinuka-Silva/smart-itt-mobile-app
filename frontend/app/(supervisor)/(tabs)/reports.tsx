@@ -14,6 +14,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../../../src/store/authStore';
 import { tripService, TripResponse } from '../../../src/services/tripService';
 import { adminService } from '../../../src/services/adminService';
+import { vehicleService } from '../../../src/services/vehicleService';
+import { driverService } from '../../../src/services/driverService';
 import { colors, radius, spacing } from '../../../src/theme';
 import { useResponsive } from '../../../src/hooks/useResponsive';
 import {
@@ -56,8 +58,8 @@ export default function SharedReportsScreen() {
   const loadFilterOptions = useCallback(async () => {
     try {
       const [drivers, vehicles] = await Promise.all([
-        adminService.getDrivers().catch(() => []),
-        adminService.getVehicles().catch(() => []),
+        driverService.getAllDrivers().catch(() => []),
+        vehicleService.getAllVehicles().catch(() => []),
       ]);
 
       if (Array.isArray(drivers)) {

@@ -18,8 +18,11 @@ public class VehicleController {
     private final VehicleService vehicleService;
 
     @GetMapping
-    public ResponseEntity<List<VehicleResponse>> getAllVehicles() {
-        return ResponseEntity.ok(vehicleService.getAllVehicles());
+    public ResponseEntity<List<VehicleResponse>> getAllVehicles(
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String operator,
+            @RequestParam(required = false) String search) {
+        return ResponseEntity.ok(vehicleService.getAllVehicles(status, operator, search));
     }
 
     @GetMapping("/{id}")
