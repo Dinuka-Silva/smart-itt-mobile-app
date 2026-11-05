@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -21,8 +21,6 @@ import { photoService, StorageStatsResponse } from '../../../src/services/photoS
 import {
   getTripDischargeTerminal,
   getTripTimingInfo,
-  getContainerTimingInfo,
-  formatTripTime,
 } from '../../../src/utils/tripTerminalUtils';
 
 type DashboardSection = 'OVERVIEW' | 'TRIPS' | 'FLEET' | 'SUPERVISORS';

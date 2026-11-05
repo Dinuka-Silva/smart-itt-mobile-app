@@ -8,10 +8,8 @@ import {
   ActivityIndicator,
   TextInput,
   TouchableOpacity,
-  Alert,
   Modal,
   Platform,
-  Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Calendar } from 'react-native-calendars';
@@ -19,13 +17,9 @@ import { useAuthStore } from '../../../src/store/authStore';
 import { tripService } from '../../../src/services/tripService';
 import { vehicleService, Vehicle } from '../../../src/services/vehicleService';
 import { driverService, DriverProfile } from '../../../src/services/driverService';
-import { photoService, PhotoUploadResponse } from '../../../src/services/photoService';
-import { adminService } from '../../../src/services/adminService';
-import { securityAuditService } from '../../../src/services/securityAuditService';
-import { colors, radius, spacing } from '../../../src/theme';
+import { radius } from '../../../src/theme';
 import { resolveCheNumber, resolveOperator, SCK_FLEET } from '../../../src/config/fleet';
 import { useResponsive } from '../../../src/hooks/useResponsive';
-import { getTripTimingDetails } from '../../../src/utils/tripDateUtils';
 import { getTripDischargeTerminal } from '../../../src/utils/tripTerminalUtils';
 import {
   PermanentTripCard,
@@ -57,14 +51,6 @@ const PERIOD_OPTIONS = [
   { id: 'RANGE', label: 'CUSTOM RANGE 📅' },
 ] as const;
 
-const DRIVER_OPTIONS = [
-  { id: 'ALL', label: 'ALL DRIVERS' },
-  { id: 'demo-driver', label: 'Kamal Perera' },
-  { id: 'drv-002', label: 'Saman Kumara' },
-  { id: 'drv-003', label: 'Nimal Fernando' },
-  { id: 'drv-004', label: 'Sunil Silva' },
-] as const;
-
 const STATUS_OPTIONS = [
   { id: 'ALL', label: 'ALL TRIPS' },
   { id: 'IN_PROGRESS', label: 'IN PROGRESS' },
@@ -90,13 +76,6 @@ export default function SupervisorMissionDispatcher() {
   const [lightboxPhotoUrl, setLightboxPhotoUrl] = useState('');
   const [lightboxContainerNum, setLightboxContainerNum] = useState('');
 
-  // Photo Inspection Modal
-  const [photoModalVisible, setPhotoModalVisible] = useState(false);
-  const [activePhoto, setActivePhoto] = useState<any | null>(null);
-  const [loadingPhoto, setLoadingPhoto] = useState(false);
-  const [photoRejectNote, setPhotoRejectNote] = useState('');
-  const [showRejectNoteInput, setShowRejectNoteInput] = useState(false);
-
   // Filters & Search
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTerminal, setSelectedTerminal] = useState<string>('ALL');
@@ -110,7 +89,6 @@ export default function SupervisorMissionDispatcher() {
 
   // Dynamic Fleet & Driver States
   const [fleetVehicles, setFleetVehicles] = useState<Vehicle[]>([]);
-  const [vehicleLoading, setVehicleLoading] = useState(false);
   const [vehicleModalVisible, setVehicleModalVisible] = useState(false);
   const [vehicleSearchText, setVehicleSearchText] = useState('');
   const [registeredDrivers, setRegisteredDrivers] = useState<DriverProfile[]>([]);
@@ -224,23 +202,14 @@ export default function SupervisorMissionDispatcher() {
     }
   };
 
-  // Rejection modal
-  const [rejectModalVisible, setRejectModalVisible] = useState(false);
-  const [tripToReject, setTripToReject] = useState<any | null>(null);
-  const [rejectionReason, setRejectionReason] = useState('');
-  const [submittingDecision, setSubmittingDecision] = useState(false);
-
   const loadFleetVehicles = useCallback(async () => {
     try {
-      setVehicleLoading(true);
       const list = await vehicleService.getAllVehicles();
       if (Array.isArray(list) && list.length > 0) {
         setFleetVehicles(list);
       }
     } catch (e) {
       console.warn('[SupervisorTrips] Failed to load vehicles:', e);
-    } finally {
-      setVehicleLoading(false);
     }
   }, []);
 
@@ -590,142 +559,6 @@ export default function SupervisorMissionDispatcher() {
     return trips.filter((t) => t.status === 'PENDING_APPROVAL').length;
   }, [trips]);
 
-  const openPhotoModal = async (trip: any, container: any) => {
-    setLoadingPhoto(true);
-    setPhotoModalVisible(true);
-    setShowRejectNoteInput(false);
-    setPhotoRejectNote('');
-    try {
-      const p = await photoService.getPhotoByContainer(trip.id, container.containerNumber);
-      if (p) {
-        setActivePhoto(p);
-      } else {
-        setActivePhoto({
-          id: container.id || 'photo-' + Date.now(),
-          tripId: trip.id,
-          containerNumber: container.containerNumber,
-          verificationStatus: container.photoStatus || (container.isVerified ? 'VERIFIED' : 'PENDING'),
-          uri: container.photoUrl || null,
-        });
-      }
-    } catch {
-      setActivePhoto({
-        id: container.id || 'photo-' + Date.now(),
-        tripId: trip.id,
-        containerNumber: container.containerNumber,
-        verificationStatus: container.photoStatus || (container.isVerified ? 'VERIFIED' : 'PENDING'),
-        uri: container.photoUrl || null,
-      });
-    } finally {
-      setLoadingPhoto(false);
-    }
-  };
-
-  const checkPhotosAndProceed = (trip: any, actionFn: () => Promise<void>) => {
-    const hasUnverified = (trip.containers || []).some(
-      (c: any) => c.isVerified === false || (c.photoStatus && c.photoStatus !== 'VERIFIED')
-    );
-    if (hasUnverified) {
-      Alert.alert(
-        'Photo Verification Pending',
-        'Container photo is unverified or has not been approved. Approve trip anyway?',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          { text: 'Approve Anyway', style: 'destructive', onPress: () => { actionFn(); } },
-        ]
-      );
-    } else {
-      actionFn();
-    }
-  };
-
-  const handleDischargeAndComplete = async (trip: any) => {
-    const supName = user?.fullName || user?.name || 'Nimal Silva';
-    const supUser = user?.username || user?.employeeId || 'SUP001';
-    const tripNum = trip?.tripNumber || trip?.id || 'TRP';
-
-    try {
-      await tripService.approveTrip(trip.id, user?.id || 'sup-001', 'Container discharged and trip approved');
-
-      await securityAuditService.logEvent(
-        'TRIP_APPROVED',
-        supUser,
-        `Supervisor ${supName} (${supUser}) confirmed delivery & approved trip ${tripNum} (${trip?.driverName || trip?.driverId || 'Driver'}) · Discharge: ${trip?.destTerminal || 'ECT'}`,
-        'INFO',
-        'SUPERVISOR',
-        { tripId: trip?.id, tripNumber: tripNum, role: 'SUPERVISOR', driver: trip?.driverName, status: 'APPROVED' }
-      );
-
-      Alert.alert('Delivery Confirmed & Approved ✅', `Trip ${trip.tripNumber || trip.id} is confirmed. Driver completed container count (+1 towards 300 target) and main system metrics have been updated.`);
-      await loadTrips();
-    } catch (e: any) {
-      Alert.alert('Error', e?.response?.data?.message || e?.message || 'Failed to complete trip on server.');
-    }
-  };
-
-  // Approval actions
-  const handleApproveTrip = async (trip: any) => {
-    const supName = user?.fullName || user?.name || 'Nimal Silva';
-    const supUser = user?.username || user?.employeeId || 'SUP001';
-    const tripNum = trip?.tripNumber || trip?.id || 'TRP';
-
-    try {
-      await tripService.approveTrip(trip.id, user?.id || 'sup-001', 'Approved by Operations Supervisor');
-
-      await securityAuditService.logEvent(
-        'TRIP_APPROVED',
-        supUser,
-        `Supervisor ${supName} (${supUser}) approved gate movement for trip ${tripNum} (${trip?.driverName || 'Driver'})`,
-        'INFO',
-        'SUPERVISOR',
-        { tripId: trip?.id, tripNumber: tripNum, role: 'SUPERVISOR', driver: trip?.driverName, status: 'APPROVED' }
-      );
-
-      Alert.alert('Gate Pass Approved', `Trip ${trip.tripNumber || trip.id} is approved.`);
-      await loadTrips();
-    } catch (e: any) {
-      Alert.alert('Error', e?.response?.data?.message || e?.message || 'Failed to approve trip on server.');
-    }
-  };
-
-  const handleOpenRejectModal = (trip: any) => {
-    setTripToReject(trip);
-    setRejectionReason('');
-    setRejectModalVisible(true);
-  };
-
-  const handleConfirmRejection = async () => {
-    if (!rejectionReason.trim()) {
-      Alert.alert('Mandatory Reason', 'Please provide a reason for rejecting this trip submission.');
-      return;
-    }
-
-    setSubmittingDecision(true);
-    const supName = user?.fullName || user?.name || 'Nimal Silva';
-    const supUser = user?.username || user?.employeeId || 'SUP001';
-    const tripNum = tripToReject?.tripNumber || tripToReject?.id || 'TRP';
-
-    try {
-      await tripService.rejectTrip(tripToReject.id, user?.id || 'sup-001', rejectionReason.trim());
-
-      await securityAuditService.logEvent(
-        'TRIP_REJECTED',
-        supUser,
-        `Supervisor ${supName} (${supUser}) rejected trip ${tripNum} (${tripToReject?.driverName || 'Driver'}). Reason: ${rejectionReason.trim()}`,
-        'WARNING',
-        'SUPERVISOR',
-        { tripId: tripToReject?.id, tripNumber: tripNum, role: 'SUPERVISOR', reason: rejectionReason.trim(), status: 'REJECTED' }
-      );
-
-      setRejectModalVisible(false);
-      Alert.alert('Trip Rejected', `Trip ${tripToReject.tripNumber || tripToReject.id} rejected.`);
-      await loadTrips();
-    } catch (e: any) {
-      Alert.alert('Error', e?.response?.data?.message || e?.message || 'Failed to reject trip on server.');
-    } finally {
-      setSubmittingDecision(false);
-    }
-  };
 
   const supervisorName = user?.name || user?.fullName || 'Nimal Silva';
   const supervisorInitials = supervisorName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase();
@@ -1272,56 +1105,7 @@ export default function SupervisorMissionDispatcher() {
         <View style={{ height: 40 }} />
       </ScrollView>
 
-      {/* ─── MODAL: REJECT TRIP WITH MANDATORY REASON ─── */}
-      <Modal visible={rejectModalVisible} transparent animationType="fade">
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalCard}>
-            <View style={styles.modalHeader}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <Ionicons name="alert-circle" size={20} color="#173B70" />
-                <Text style={styles.modalTitle}>REJECT TRIP SUBMISSION</Text>
-              </View>
-              <TouchableOpacity onPress={() => setRejectModalVisible(false)}>
-                <Ionicons name="close" size={22} color="#3A567F" />
-              </TouchableOpacity>
-            </View>
-
-            <Text style={styles.modalDesc}>
-              Please specify the mandatory reason for rejecting Gate Pass for Trip{' '}
-              <Text style={{ color: '#173B70', fontWeight: '800' }}>
-                {tripToReject?.tripNumber || tripToReject?.id}
-              </Text>.
-            </Text>
-
-            <TextInput
-              style={styles.rejectionInput}
-              placeholder="e.g. Container seal mismatch, incorrect destination terminal..."
-              placeholderTextColor="#3A567F"
-              value={rejectionReason}
-              onChangeText={setRejectionReason}
-              multiline
-              numberOfLines={3}
-            />
-
-            <View style={{ flexDirection: 'row', gap: 10, marginTop: 12 }}>
-              <TouchableOpacity
-                style={[styles.modalSubmitBtn, { backgroundColor: '#173B70' }]}
-                onPress={handleConfirmRejection}
-                disabled={submittingDecision}
-              >
-                {submittingDecision ? (
-                  <ActivityIndicator color="#fff" />
-                ) : (
-                  <Text style={[styles.modalSubmitBtnText, { color: '#FFFFFF' }]}>
-                    CONFIRM REJECTION
-                  </Text>
-                )}
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
-
+      
       {/* ─── MODAL: CUSTOM DATE RANGE CALENDAR ─── */}
       <Modal visible={dateRangeModalVisible} transparent animationType="fade">
         <View style={styles.modalOverlay}>
@@ -1393,8 +1177,8 @@ export default function SupervisorMissionDispatcher() {
                   selectedDayBackgroundColor: '#173B70',
                   selectedDayTextColor: '#F8FAFC',
                   todayTextColor: '#173B70',
-                  dayTextColor: '#dde2f0',
-                  textDisabledColor: '#323f4b',
+                  dayTextColor: '#173B70',
+                  textDisabledColor: '#D0DEEB',
                   arrowColor: '#173B70',
                   monthTextColor: '#173B70',
                   indicatorColor: '#173B70',
@@ -1434,118 +1218,6 @@ export default function SupervisorMissionDispatcher() {
                 <Text style={styles.calendarApplyBtnText}>APPLY FILTER</Text>
               </TouchableOpacity>
             </View>
-          </View>
-        </View>
-      </Modal>
-
-      {/* ─── MODAL: CONTAINER PHOTO INSPECTION & VERIFICATION ─── */}
-      <Modal visible={photoModalVisible} transparent animationType="fade">
-        <View style={styles.modalOverlay}>
-          <View style={[styles.modalCard, { maxWidth: 480 }]}>
-            <View style={styles.modalHeader}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <Ionicons name="camera" size={20} color="#173B70" />
-                <Text style={styles.modalTitle}>CONTAINER PHOTO VERIFICATION</Text>
-              </View>
-              <TouchableOpacity onPress={() => setPhotoModalVisible(false)}>
-                <Ionicons name="close" size={22} color="#3A567F" />
-              </TouchableOpacity>
-            </View>
-
-            {loadingPhoto ? (
-              <ActivityIndicator size="large" color="#173B70" style={{ marginVertical: 30 }} />
-            ) : activePhoto ? (
-              <View style={{ gap: 12, marginTop: 10 }}>
-                <View style={{ height: 260, backgroundColor: '#F7F9FA', borderRadius: 8, overflow: 'hidden', borderWidth: 1, borderColor: '#E5EAEC', alignItems: 'center', justifyContent: 'center' }}>
-                  {activePhoto.viewUrl || activePhoto.uri ? (
-                    <Image
-                      source={{ uri: activePhoto.viewUrl || activePhoto.uri }}
-                      style={{ width: '100%', height: '100%' }}
-                      resizeMode="contain"
-                    />
-                  ) : (
-                    <View style={{ alignItems: 'center', gap: 6 }}>
-                      <Ionicons name="image-outline" size={36} color="#A3B1B8" />
-                      <Text style={{ fontSize: 12, color: '#6B7C85' }}>No photo file available on server</Text>
-                    </View>
-                  )}
-                </View>
-
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Text style={{ fontSize: 13, fontWeight: '700', color: '#1F2D33' }}>
-                    Container: {activePhoto.containerNumber || '-'}
-                  </Text>
-                  <View style={{
-                    backgroundColor: activePhoto.verificationStatus === 'VERIFIED' ? '#E6F6EC' : activePhoto.verificationStatus === 'REJECTED' ? '#F0F5FA' : '#F0F5FA',
-                    paddingHorizontal: 8,
-                    paddingVertical: 3,
-                    borderRadius: 12,
-                  }}>
-                    <Text style={{
-                      fontSize: 11,
-                      fontWeight: '700',
-                      color: activePhoto.verificationStatus === 'VERIFIED' ? '#1E7A45' : activePhoto.verificationStatus === 'REJECTED' ? '#173B70' : '#173B70',
-                    }}>
-                      {activePhoto.verificationStatus || 'PENDING'}
-                    </Text>
-                  </View>
-                </View>
-
-                {showRejectNoteInput && (
-                  <TextInput
-                    style={styles.rejectionInput}
-                    placeholder="Enter rejection reason (e.g. illegible number, wrong container)..."
-                    placeholderTextColor="#A3B1B8"
-                    value={photoRejectNote}
-                    onChangeText={setPhotoRejectNote}
-                  />
-                )}
-
-                <View style={{ flexDirection: 'row', gap: 10, marginTop: 6 }}>
-                  <TouchableOpacity
-                    style={[styles.modalSubmitBtn, { backgroundColor: '#1E7A45' }]}
-                    onPress={async () => {
-                      try {
-                        await photoService.verifyPhoto(activePhoto.id, { status: 'VERIFIED' });
-                        Alert.alert('Photo Verified', 'Container photo marked as Verified.');
-                        setPhotoModalVisible(false);
-                        await loadTrips();
-                      } catch (e: any) {
-                        Alert.alert('Error', e?.message || 'Failed to verify photo');
-                      }
-                    }}
-                  >
-                    <Ionicons name="checkmark-circle" size={16} color="#FFFFFF" />
-                    <Text style={[styles.modalSubmitBtnText, { color: '#FFFFFF' }]}>Verify Photo</Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={[styles.modalSubmitBtn, { backgroundColor: '#173B70' }]}
-                    onPress={async () => {
-                      if (!showRejectNoteInput) {
-                        setShowRejectNoteInput(true);
-                        return;
-                      }
-                      try {
-                        await photoService.verifyPhoto(activePhoto.id, { status: 'REJECTED', note: photoRejectNote });
-                        Alert.alert('Photo Rejected', 'Container photo rejected.');
-                        setPhotoModalVisible(false);
-                        setShowRejectNoteInput(false);
-                        setPhotoRejectNote('');
-                        await loadTrips();
-                      } catch (e: any) {
-                        Alert.alert('Error', e?.message || 'Failed to reject photo');
-                      }
-                    }}
-                  >
-                    <Ionicons name="close-circle" size={16} color="#FFFFFF" />
-                    <Text style={[styles.modalSubmitBtnText, { color: '#FFFFFF' }]}>Reject Photo</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            ) : (
-              <Text style={{ marginVertical: 20, textAlign: 'center', color: '#6B7C85' }}>No photo available</Text>
-            )}
           </View>
         </View>
       </Modal>

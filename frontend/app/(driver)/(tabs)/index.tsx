@@ -8,7 +8,6 @@ import {
   TextInput,
   Modal,
   RefreshControl,
-  ActivityIndicator,
   Alert,
   Platform,
   Image,
@@ -21,7 +20,6 @@ import { tripService } from '../../../src/services/tripService';
 import { dashboardService, DriverDashboardStats } from '../../../src/services/dashboardService';
 import { driverService } from '../../../src/services/driverService';
 import { Colors, Typography, Layout, Spacing } from '../../../src/constants/theme';
-import apiClient from '../../../src/services/api';
 import { useResponsive } from '../../../src/hooks/useResponsive';
 import { getTripTimingDetails } from '../../../src/utils/tripDateUtils';
 import { getTripDischargeTerminal } from '../../../src/utils/tripTerminalUtils';
@@ -200,20 +198,7 @@ export default function DriverHomeDashboard() {
     return null;
   }, [vehicleLicenseRenewalDue, vehicleLicenseDaysLeft, driverPortPassRenewalDue, driverPortPassDaysLeft, vehiclePortPassRenewalDue, vehiclePortPassDaysLeft]);
 
-  // 1. START TRIP HANDLER (for APPROVED trips)
-  const handleStartActiveTrip = async (tripId: string) => {
-    setActionInProgress(true);
-    try {
-      await apiClient.patch(`/trips/${tripId}/status`, { status: 'IN_PROGRESS' });
-      await loadData();
-      Alert.alert('Trip Started', 'Trip is now IN PROGRESS. Drive safely.');
-    } catch (err) {
-      console.error('Failed to start trip:', err);
-      Alert.alert('Error', 'Unable to start trip. Please check connection and try again.');
-    } finally {
-      setActionInProgress(false);
-    }
-  };
+
 
   // 2. OPEN DISCHARGE MODAL
   const handleOpenDischargeModal = (trip: any) => {

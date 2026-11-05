@@ -7,7 +7,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, AppState, AppStateStatus, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors } from '../theme';
 
 interface AppPrivacyShieldProps {
   enabled?: boolean;

@@ -5,11 +5,9 @@ import {
   StyleSheet,
   TouchableOpacity,
   Image,
-  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
-import { colors } from '../theme';
 import { resolveCheNumber } from '../config/fleet';
 import { photoService } from '../services/photoService';
 import { formatTripTime } from '../utils/tripTerminalUtils';
@@ -132,11 +130,6 @@ export const PermanentTripCard: React.FC<PermanentTripCardProps> = ({
 
   const statusBadge = getStatusBadge();
 
-  // Find first container with photo for card thumbnail
-  const containerWithPhoto = containers.find((c) => c.photoUrl || c.photoId);
-  const cardPhotoUrl = containerWithPhoto
-    ? photoService.getPhotoUrl(containerWithPhoto.photoUrl || containerWithPhoto.photoId)
-    : null;
 
   return (
     <View style={styles.cardContainer}>
@@ -695,3 +688,4 @@ const styles = StyleSheet.create({
     color: '#173B70',
   },
 });
+

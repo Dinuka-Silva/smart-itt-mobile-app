@@ -19,7 +19,7 @@ import apiClient from '../../../src/services/api';
 import { useAuthStore } from '../../../src/store/authStore';
 import { adminFleetStore } from '../../../src/store/adminFleetStore';
 import { securityAuditService } from '../../../src/services/securityAuditService';
-import { radius, spacing } from '../../../src/theme';
+import { radius } from '../../../src/theme';
 import { SCK_FLEET, resolveCheNumber, resolveOperator, findFleetVehicle } from '../../../src/config/fleet';
 import { useResponsive } from '../../../src/hooks/useResponsive';
 

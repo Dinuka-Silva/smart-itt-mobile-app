@@ -55,7 +55,6 @@ export async function captureContainerPhoto(): Promise<ProcessedPhoto | null> {
     const sourceUri = asset.uri;
 
     // Resize on device to max width 1280px, JPEG quality 0.7
-    const targetWidth = asset.width && asset.width > 1280 ? 1280 : asset.width || 1280;
     const actions: ImageManipulator.Action[] = [];
     if (asset.width && asset.width > 1280) {
       actions.push({ resize: { width: 1280 } });

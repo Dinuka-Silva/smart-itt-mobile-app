@@ -21,7 +21,6 @@ import { authService } from '../../../src/services/authService';
 import { PasswordStrengthIndicator } from '../../../src/components/PasswordStrengthIndicator';
 import { securityValidator } from '../../../src/utils/securityValidator';
 import { biometricService, BiometricStatus } from '../../../src/services/biometricService';
-import { securityAuditService } from '../../../src/services/securityAuditService';
 import { colors, radius, spacing, shadow } from '../../../src/theme';
 import { useResponsive } from '../../../src/hooks/useResponsive';
 
@@ -90,7 +89,7 @@ export default function DriverProfileScreen() {
   const setBiometricEnabled = useAuthStore((s) => s.setBiometricEnabled);
   const lockSession = useAuthStore((s) => s.lockSession);
   const router = useRouter();
-  const { width, topInset, bottomInset, contentMaxWidth, containerPaddingHorizontal, isSmallMobile } = useResponsive();
+  const { width, topInset, bottomInset, contentMaxWidth, isSmallMobile } = useResponsive();
 
   const [profile, setProfile] = useState<DriverProfile | null>(null);
   const [loading, setLoading] = useState(true);

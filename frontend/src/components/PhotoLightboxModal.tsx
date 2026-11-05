@@ -12,7 +12,6 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Linking from 'expo-linking';
-import { colors } from '../theme';
 
 interface PhotoLightboxModalProps {
   visible: boolean;
@@ -127,7 +126,7 @@ export const PhotoLightboxModal: React.FC<PhotoLightboxModalProps> = ({
               />
               <Text style={styles.statusText}>
                 EVIDENCE STATUS: {verificationStatus}
-                {verifiedBy ? ` · Inspected by ${verifiedBy}` : ''}
+                {verifiedBy ? ` · Inspected by ${verifiedBy}${verifiedAt ? ` on ${verifiedAt}` : ''}` : verifiedAt ? ` · Verified on ${verifiedAt}` : ''}
               </Text>
             </View>
             {rejectionNote ? (
@@ -332,3 +331,4 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
 });
+

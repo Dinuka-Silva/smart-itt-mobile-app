@@ -7,7 +7,6 @@ import {
   StyleSheet,
   ScrollView,
   ActivityIndicator,
-  Alert,
   Platform,
   Modal,
 } from 'react-native';
@@ -22,7 +21,7 @@ import { useAuthStore } from '../../src/store/authStore';
 import { credentialStore } from '../../src/services/credentialStore';
 import { adminFleetStore } from '../../src/store/adminFleetStore';
 import { securityAuditService } from '../../src/services/securityAuditService';
-import { colors, radius, spacing } from '../../src/theme';
+import { radius, spacing } from '../../src/theme';
 
 import {
   SCK_FLEET,
@@ -1241,8 +1240,6 @@ export default function DriverRegisterScreen() {
           <ScrollView contentContainerStyle={styles.modalScroll}>
             {(() => {
               const isSupervisorPass = registeredUser?.role === 'SUPERVISOR' || regRole === 'SUPERVISOR';
-              const termCode = registeredUser?.terminalCode || 'CICT';
-              const termObj = PORT_TERMINALS.find((t) => t.code === termCode) || PORT_TERMINALS[0];
 
               return (
                 <View style={styles.idCardContainer}>

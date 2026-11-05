@@ -82,7 +82,6 @@ interface MockTripState {
 }
 
 const now = new Date();
-const todayISO = now.toISOString();
 
 const todayTrip1Start = new Date(now.getTime() - 45 * 60 * 1000).toISOString();
 const todayTrip2Start = new Date(now.getTime() - 95 * 60 * 1000).toISOString();
@@ -101,7 +100,6 @@ const yesterdayISO = yesterdayStart1;
 const threeDaysAgo = new Date(now);
 threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
 const threeDaysAgoStart = new Date(new Date(threeDaysAgo).setHours(9, 20, 0, 0)).toISOString();
-const threeDaysAgoEnd = new Date(new Date(threeDaysAgo).setHours(10, 5, 0, 0)).toISOString();
 const threeDaysAgoISO = threeDaysAgoStart;
 
 const tenDaysAgo = new Date(now);

@@ -18,13 +18,11 @@ import {
   PermanentTripCard,
   CompleteTripDetailsModal,
   PhotoLightboxModal,
-  TripCardData,
 } from '../../../src/components';
 import {
   getTripDischargeTerminal,
   getTripTimingInfo,
   getContainerTimingInfo,
-  formatTripTime,
 } from '../../../src/utils/tripTerminalUtils';
 
 export default function AdminTripsScreen() {

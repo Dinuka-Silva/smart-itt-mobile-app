@@ -23,9 +23,11 @@ Thumbs.db
 # Build Outputs & Binaries
 backend/target/
 frontend/dist/
+frontend/dist-check/
 frontend/web-build/
 web/dist/
 dist/
+dist-*/
 .expo/
 *.class
 *.jar

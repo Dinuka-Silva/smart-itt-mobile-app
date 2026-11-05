@@ -17,7 +17,7 @@ import apiClient from '../../../src/services/api';
 import { NetworkErrorView } from '../../../src/components/NetworkErrorView';
 import { useAuthStore } from '../../../src/store/authStore';
 import { tripService } from '../../../src/services/tripService';
-import { radius, spacing } from '../../../src/theme';
+import { radius } from '../../../src/theme';
 import { resolveCheNumber, resolveOperator } from '../../../src/config/fleet';
 import { useResponsive } from '../../../src/hooks/useResponsive';
 import { getTripTimingDetails } from '../../../src/utils/tripDateUtils';

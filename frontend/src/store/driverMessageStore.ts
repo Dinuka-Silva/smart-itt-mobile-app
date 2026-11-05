@@ -251,7 +251,6 @@ export const useDriverMessageStore = create<DriverMessageState>((set, get) => ({
     trips.forEach((t) => {
       const tripNum = t.tripNumber || `TRP-${t.id?.slice(0, 6)}`;
       const route = `${t.sourceTerminal || 'CICT'} → ${t.destTerminal || 'JCT'}`;
-      const msgId = `trip-sync-${t.id}`;
 
       if (t.status === 'SUPERVISOR_CONFIRMED' || t.status === 'APPROVED') {
         const confId = `trip-conf-${t.id}`;

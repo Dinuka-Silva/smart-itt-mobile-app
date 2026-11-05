@@ -12,7 +12,7 @@ import type { ThemeColor } from '../constants/theme';
 
 type Palette = (typeof Colors)['light'];
 
-function mapPalette(p: Palette) {
+function mapPalette(_p: Palette) {
   return {
     surface: '#FFFFFF',
     surfaceDim: '#F0F5FA',

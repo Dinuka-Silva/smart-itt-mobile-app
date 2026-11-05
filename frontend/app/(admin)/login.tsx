@@ -20,7 +20,6 @@ import { authService } from '../../src/services/authService';
 import { credentialStore } from '../../src/services/credentialStore';
 import { biometricService, BiometricStatus } from '../../src/services/biometricService';
 import { securityAuditService } from '../../src/services/securityAuditService';
-import { colors, radius, spacing } from '../../src/theme';
 import { useResponsive } from '../../src/hooks/useResponsive';
 import { AppBackgroundOverlay } from '../../src/components/AppBackgroundOverlay';
 

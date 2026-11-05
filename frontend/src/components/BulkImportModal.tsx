@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import {
   Modal,
   View,
@@ -34,7 +34,6 @@ export const BulkImportModal: React.FC<BulkImportModalProps> = ({
   const [downloadingTemplate, setDownloadingTemplate] = useState(false);
   const [result, setResult] = useState<BulkImportResult | null>(null);
 
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const theme = Colors.light;
 
   const triggerFileSelect = () => {

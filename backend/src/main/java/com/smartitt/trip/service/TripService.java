@@ -4,7 +4,6 @@ import com.smartitt.container.entity.Container;
 import com.smartitt.container.entity.ContainerSize;
 import com.smartitt.container.entity.ContainerStatus;
 import com.smartitt.container.repository.ContainerRepository;
-import com.smartitt.container.photo.entity.ContainerPhoto;
 import com.smartitt.container.photo.repository.ContainerPhotoRepository;
 import com.smartitt.trip.dto.CreateTripRequest;
 import com.smartitt.trip.dto.TripResponse;

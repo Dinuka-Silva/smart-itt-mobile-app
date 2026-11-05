@@ -6,9 +6,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
-  ActivityIndicator,
   Alert,
-  Platform,
   Image,
 } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -22,7 +20,6 @@ import { resolveCheNumber, resolveOperator } from '../../../src/config/fleet';
 import {
   validateContainerNumber,
   normalize,
-  suggestValidContainerNumber,
   getRecentContainerNumbers,
   saveRecentContainerNumber,
   ContainerValidationResult,

@@ -13,7 +13,6 @@ import { Ionicons } from '@expo/vector-icons';
 import apiClient from '../../../src/services/api';
 import { NetworkErrorView } from '../../../src/components/NetworkErrorView';
 import { useAuthStore } from '../../../src/store/authStore';
-import { colors } from '../../../src/theme';
 import { useFocusEffect } from 'expo-router';
 import { useResponsive } from '../../../src/hooks/useResponsive';
 

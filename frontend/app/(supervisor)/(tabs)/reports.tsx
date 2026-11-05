@@ -11,9 +11,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuthStore } from '../../../src/store/authStore';
 import { tripService, TripResponse } from '../../../src/services/tripService';
-import { adminService } from '../../../src/services/adminService';
 import { vehicleService } from '../../../src/services/vehicleService';
 import { driverService } from '../../../src/services/driverService';
 import { colors, radius, spacing } from '../../../src/theme';
@@ -27,7 +25,6 @@ import { StatusPill } from '../../../src/components/StatusPill';
 import {
   formatDateColombo,
   formatTimeColombo,
-  formatDateTimeColombo,
   formatDurationText,
 } from '../../../src/utils/tripDateUtils';
 
@@ -35,7 +32,6 @@ export type GroupByOption = 'NONE' | 'DRIVER' | 'VEHICLE' | 'DATE';
 
 export default function SharedReportsScreen() {
   const { topInset, bottomInset, contentMaxWidth, containerPaddingHorizontal } = useResponsive();
-  const user = useAuthStore((s) => s.user);
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);

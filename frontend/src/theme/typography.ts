@@ -1,4 +1,3 @@
-import React from 'react';
 import { Text as RNText, TextInput as RNTextInput, TextProps, TextInputProps, StyleSheet } from 'react-native';
 
 /**

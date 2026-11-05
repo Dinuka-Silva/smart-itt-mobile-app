@@ -16,10 +16,7 @@ import apiClient from '../../../src/services/api';
 import { NetworkErrorView } from '../../../src/components/NetworkErrorView';
 import { useAuthStore } from '../../../src/store/authStore';
 import { colors, radius, spacing } from '../../../src/theme';
-import { securityAuditService } from '../../../src/services/securityAuditService';
 import { useResponsive } from '../../../src/hooks/useResponsive';
-import { getTripTimingDetails } from '../../../src/utils/tripDateUtils';
-import { getTripDischargeTerminal } from '../../../src/utils/tripTerminalUtils';
 import {
   PermanentTripCard,
   CompleteTripDetailsModal,
@@ -28,7 +25,6 @@ import {
   TripCardData,
 } from '../../../src/components';
 
-const TERMINALS = ['CWIT', 'JCT', 'ECT', 'UCT', 'SAGT', 'CICT'];
 
 function showMessage(title: string, message: string) {
   if (Platform.OS === 'web') {
@@ -47,7 +43,6 @@ export default function DriverJobQueue() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [filter, setFilter] = useState('ALL');
-  const [updatingId, setUpdatingId] = useState<string | null>(null);
 
   // Permanent Trip Details & Completion Modals
   const [selectedTripDetails, setSelectedTripDetails] = useState<TripCardData | null>(null);
@@ -57,10 +52,8 @@ export default function DriverJobQueue() {
   const [lightboxVisible, setLightboxVisible] = useState(false);
   const [lightboxPhotoUrl, setLightboxPhotoUrl] = useState('');
   const [lightboxContainerNum, setLightboxContainerNum] = useState('');
-  const [arrivedTrips, setArrivedTrips] = useState<Set<string>>(new Set());
   const [networkError, setNetworkError] = useState(false);
 
-  const [unloadSelections, setUnloadSelections] = useState<Record<string, string>>({});
   const prevStatusRef = useRef<Record<string, string>>({});
   const notifiedRef = useRef<Set<string>>(new Set());
 
@@ -114,79 +107,6 @@ export default function DriverJobQueue() {
 
   useEffect(() => { fetchTrips(); }, [fetchTrips]);
   useFocusEffect(useCallback(() => { fetchTrips(); }, [fetchTrips]));
-
-  const handleStartTrip = async (tripId: string) => {
-    setUpdatingId(tripId);
-    const targetTrip = trips.find((t) => t.id === tripId);
-    const tripNum = targetTrip?.tripNumber || `TRP-${tripId.slice(0, 6)}`;
-    const driverUser = user?.username || user?.driverCode || user?.employeeId || 'DRIVER';
-
-    try {
-      await apiClient.patch(`/trips/${tripId}/status`, { status: 'IN_PROGRESS' });
-      await securityAuditService.logEvent(
-        'TRIP_STARTED',
-        driverUser,
-        `Driver ${user?.name || driverUser} started trip ${tripNum} (${targetTrip?.sourceTerminal || 'Gate'} → ${targetTrip?.destTerminal || 'ECT'}) · Truck ${targetTrip?.vehicleNumber || user?.vehicleNumber || 'LY-6439'}`,
-        'INFO',
-        'DRIVER',
-        { tripId, tripNumber: tripNum, role: 'DRIVER', status: 'IN_PROGRESS', vehicleNumber: targetTrip?.vehicleNumber || user?.vehicleNumber }
-      );
-      showMessage('Trip Started', 'Gate pass validated. Trip is now IN PROGRESS.');
-      fetchTrips();
-    } catch {
-      showMessage('Trip Update', 'Trip status updated.');
-      fetchTrips();
-    } finally {
-      setUpdatingId(null);
-    }
-  };
-
-  const handleCompleteTrip = async (tripId: string) => {
-    setUpdatingId(tripId);
-    const driverUser = user?.username || user?.driverCode || user?.employeeId || 'DRIVER';
-
-    try {
-      const trip = trips.find((t) => t.id === tripId);
-      const tripNum = trip?.tripNumber || `TRP-${tripId.slice(0, 6)}`;
-      const selTerm = (trip?.containers || []).map((c: any) => unloadSelections[c.id]).filter(Boolean)[0] || trip?.destTerminal || 'ECT';
-      const dischargeBay = trip?.dischargeBay || 'Bay 04, Crane 02';
-      const sealStatus = trip?.sealStatus || 'INTACT (VERIFIED)';
-      const damageStatus = trip?.damageStatus || 'NONE';
-      const driverNotes = trip?.driverCompletionNotes || 'Containers discharged safely at destination terminal berth. Seals verified.';
-
-      await apiClient.post(`/trips/${tripId}/complete`, {
-        dischargeTerminal: selTerm,
-        dischargeBay,
-        sealStatus,
-        damageStatus,
-        driverNotes,
-      }).catch(() => {});
-
-      await securityAuditService.logEvent(
-        'TRIP_COMPLETED',
-        driverUser,
-        `Driver ${user?.name || driverUser} completed trip ${tripNum} · Discharged at ${selTerm} (${dischargeBay}) · Submitted for supervisor approval`,
-        'INFO',
-        'DRIVER',
-        { tripId, tripNumber: tripNum, dischargeTerminal: selTerm, dischargeBay, role: 'DRIVER', status: 'PENDING_APPROVAL' }
-      );
-
-      showMessage(
-        'Trip Submitted to Supervisor! 📋',
-        'Discharge details & seal status submitted to Port Operations Supervisor to confirm delivery and credit your 300 Containers target (+1)!'
-      );
-      fetchTrips();
-    } catch {
-      showMessage('Trip Submitted to Supervisor! 📋', 'Discharge submitted to Port Operations Supervisor for clearance.');
-      fetchTrips();
-    } finally {
-      setUpdatingId(null);
-    }
-  };
-
-  const handleDirectCompleteTrip = async (tripId: string) => {
-    handleCompleteTrip(tripId);
-  };
 
   const completedCount = trips.filter((t) => t.status === 'COMPLETED' || t.status === 'APPROVED' || t.status === 'SUPERVISOR_CONFIRMED').length;
   const inProgressCount = trips.filter((t) => t.status === 'IN_PROGRESS').length;

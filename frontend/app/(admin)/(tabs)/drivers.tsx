@@ -16,7 +16,6 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from 'expo-router';
 import { adminService } from '../../../src/services/adminService';
-import { credentialStore } from '../../../src/services/credentialStore';
 import { adminFleetStore, AdminVehicle } from '../../../src/store/adminFleetStore';
 import { useResponsive } from '../../../src/hooks/useResponsive';
 import { AdminSignOutModal } from '../../../src/components/AdminSignOutModal';
@@ -310,21 +309,7 @@ export default function AdminDriversScreen() {
     }
   };
 
-  const handleResetPassword = async () => {
-    if (!selectedDriver) return;
-    try {
-      const res = await adminService.resetDriverPassword(selectedDriver.id || selectedDriver.driverCode);
-      setActionModalVisible(false);
-      setTempCredsModal({
-        visible: true,
-        username: selectedDriver.username || selectedDriver.driverCode,
-        temporaryPassword: res?.temporaryPassword || 'Generated',
-      });
-    } catch (err: any) {
-      Alert.alert('Error', err?.message || 'Failed to reset password');
-    }
-  };
-
+  
   return (
     <View style={styles.root}>
       {/* Top Header */}

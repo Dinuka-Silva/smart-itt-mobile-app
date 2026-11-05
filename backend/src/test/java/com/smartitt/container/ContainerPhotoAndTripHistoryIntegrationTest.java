@@ -6,7 +6,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 
-import java.util.Map;
 
 import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -191,3 +190,4 @@ class ContainerPhotoAndTripHistoryIntegrationTest extends BaseIntegrationTest {
                 .andExpect(jsonPath("$.verificationNote", is("Blurry image, seal number illegible")));
     }
 }
+

@@ -495,7 +495,7 @@ export const credentialStore = {
   async verifyOffline(
     rawUsername: string,
     testPassword: string,
-    role?: 'DRIVER' | 'SUPERVISOR' | 'ADMIN'
+    _role?: 'DRIVER' | 'SUPERVISOR' | 'ADMIN'
   ): Promise<{
     valid: boolean;
     isOldPassword?: boolean;

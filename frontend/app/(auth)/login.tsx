@@ -6,7 +6,6 @@ import {
   StyleSheet,
   Alert,
   ActivityIndicator,
-  Platform,
   ScrollView,
   Text,
   Image,
@@ -20,7 +19,7 @@ import { storage } from '../../src/services/storage';
 import { biometricService, BiometricStatus } from '../../src/services/biometricService';
 import { securityAuditService } from '../../src/services/securityAuditService';
 import { ForceChangePasswordModal } from '../../src/components/ForceChangePasswordModal';
-import { colors, radius, spacing } from '../../src/theme';
+import { radius } from '../../src/theme';
 import { useResponsive } from '../../src/hooks/useResponsive';
 
 export default function LoginScreen() {
@@ -40,7 +39,6 @@ export default function LoginScreen() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [biometricStatus, setBiometricStatus] = useState<BiometricStatus | null>(null);
   const [lockoutSeconds, setLockoutSeconds] = useState<number>(0);
-  const [isBioEnabledForUser, setIsBioEnabledForUser] = useState(false);
   const [forceChangePasswordVisible, setForceChangePasswordVisible] = useState(false);
   const [pendingUserSession, setPendingUserSession] = useState<{ user: any; passwordEntered: string } | null>(null);
 
@@ -94,8 +92,6 @@ export default function LoginScreen() {
       if (lockout.isLocked) {
         setLockoutSeconds(lockout.remainingSeconds);
       }
-      const bioEnabled = await biometricService.isUserBiometricEnabled(clean);
-      setIsBioEnabledForUser(bioEnabled);
     };
     checkUserSecurityStatus();
   }, [username]);

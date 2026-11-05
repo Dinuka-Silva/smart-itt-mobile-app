@@ -9,7 +9,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, radius, spacing, shadow } from '../theme';
+import { colors, radius, spacing } from '../theme';
 
 export type OverlayContainer = {
   containerNumber: string;
