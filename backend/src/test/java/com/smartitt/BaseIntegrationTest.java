@@ -55,5 +55,9 @@ public abstract class BaseIntegrationTest {
         headers.setContentType(MediaType.APPLICATION_JSON);
         return headers;
     }
+
+    protected String extractJsonValue(String json, String field) throws Exception {
+        return objectMapper.readTree(json).get(field).asText();
+    }
 }
 

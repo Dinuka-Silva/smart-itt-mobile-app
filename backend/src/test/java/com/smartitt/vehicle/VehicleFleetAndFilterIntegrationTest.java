@@ -76,3 +76,4 @@ public class VehicleFleetAndFilterIntegrationTest extends BaseIntegrationTest {
                 .andExpect(jsonPath("$", isA(java.util.List.class)));
     }
 }
+

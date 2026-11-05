@@ -210,7 +210,8 @@ public class ContainerPhotoService {
 
         // Access check: Drivers may only see photos of their own trips
         if (callerUsername != null) {
-            Optional<User> userOpt = userRepository.findByUsername(callerUsername);
+            Optional<User> userOpt = userRepository.findByIdentifier(callerUsername)
+                    .or(() -> userRepository.findByEmail(callerUsername));
             if (userOpt.isPresent()) {
                 User u = userOpt.get();
                 if (u.getRole() == Role.DRIVER) {

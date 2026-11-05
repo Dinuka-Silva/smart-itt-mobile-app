@@ -27,6 +27,12 @@ import { resolveCheNumber, resolveOperator, SCK_FLEET } from '../../../src/confi
 import { useResponsive } from '../../../src/hooks/useResponsive';
 import { getTripTimingDetails } from '../../../src/utils/tripDateUtils';
 import { getTripDischargeTerminal } from '../../../src/utils/tripTerminalUtils';
+import {
+  PermanentTripCard,
+  CompleteTripDetailsModal,
+  PhotoLightboxModal,
+  TripCardData,
+} from '../../../src/components';
 
 const DRIVER_PHOTO_POOL = [
   'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80',
@@ -43,12 +49,12 @@ const DRIVER_PHOTO_POOL = [
 
 const TERMINALS = ['ALL', 'CICT', 'CWIT', 'ECT', 'JCT', 'UCT', 'SAGT'] as const;
 const PERIOD_OPTIONS = [
+  { id: 'ALL', label: 'ALL TIME' },
   { id: 'DAILY', label: 'TODAY' },
   { id: 'YESTERDAY', label: 'YESTERDAY' },
   { id: 'WEEKLY', label: 'WEEK (7D)' },
   { id: 'MONTHLY', label: 'MONTH (30D)' },
   { id: 'RANGE', label: 'CUSTOM RANGE 📅' },
-  { id: 'ALL', label: 'ALL TIME' },
 ] as const;
 
 const DRIVER_OPTIONS = [
@@ -75,7 +81,14 @@ export default function SupervisorMissionDispatcher() {
   const [refreshing, setRefreshing] = useState(false);
 
   // Top Segments: Pending Approval | All Trips
-  const [activeSegment, setActiveSegment] = useState<'PENDING' | 'ALL'>('PENDING');
+  const [activeSegment, setActiveSegment] = useState<'PENDING' | 'ALL'>('ALL');
+
+  // Permanent Trip Details & Lightbox Modals
+  const [selectedTripDetails, setSelectedTripDetails] = useState<TripCardData | null>(null);
+  const [tripDetailsModalVisible, setTripDetailsModalVisible] = useState(false);
+  const [lightboxVisible, setLightboxVisible] = useState(false);
+  const [lightboxPhotoUrl, setLightboxPhotoUrl] = useState('');
+  const [lightboxContainerNum, setLightboxContainerNum] = useState('');
 
   // Photo Inspection Modal
   const [photoModalVisible, setPhotoModalVisible] = useState(false);
@@ -90,7 +103,7 @@ export default function SupervisorMissionDispatcher() {
   const [selectedVehicle, setSelectedVehicle] = useState<string>('ALL');
   const [selectedStatus, setSelectedStatus] = useState<string>('ALL');
   const [selectedDriverFilter, setSelectedDriverFilter] = useState<string>('ALL');
-  const [selectedPeriodFilter, setSelectedPeriodFilter] = useState<string>('DAILY');
+  const [selectedPeriodFilter, setSelectedPeriodFilter] = useState<string>('ALL');
   const [dateRangeStart, setDateRangeStart] = useState<string | null>(null);
   const [dateRangeEnd, setDateRangeEnd] = useState<string | null>(null);
   const [dateRangeModalVisible, setDateRangeModalVisible] = useState(false);
@@ -247,6 +260,10 @@ export default function SupervisorMissionDispatcher() {
       const apiTrips = await tripService.getTrips();
       const list = Array.isArray(apiTrips) ? apiTrips : [];
       setTrips(list);
+      setSelectedTripDetails((curr) => {
+        if (!curr) return null;
+        return list.find((t) => t.id === curr.id) || curr;
+      });
     } catch (e) {
       console.warn('[SupervisorTrips] Error loading trips:', e);
       setTrips([]);
@@ -269,32 +286,46 @@ export default function SupervisorMissionDispatcher() {
     loadRegisteredDrivers();
   };
 
-  // Dynamic Driver Options from registered drivers in backend
+  // Dynamic Driver Options from registered drivers in backend and trips
   const driverOptions = useMemo(() => {
     const opts: { id: string; label: string }[] = [{ id: 'ALL', label: 'ALL DRIVERS' }];
+    const seenNames = new Set<string>();
+
     if (registeredDrivers.length > 0) {
       registeredDrivers.forEach((d) => {
-        const id = d.id || d.driverCode || d.username;
         const label = d.fullName || d.driverCode || 'Driver';
-        opts.push({ id, label });
+        if (!seenNames.has(label.toLowerCase())) {
+          seenNames.add(label.toLowerCase());
+          opts.push({ id: label, label });
+        }
       });
-    } else {
-      opts.push(
-        { id: 'demo-driver', label: 'Kamal Perera' },
-        { id: 'drv-002', label: 'Saman Kumara' },
-        { id: 'drv-003', label: 'Nimal Fernando' },
-        { id: 'drv-004', label: 'Sunil Silva' }
-      );
+    }
+
+    // Include drivers actively present on trips
+    trips.forEach((t) => {
+      if (t.driverName && t.driverName.trim()) {
+        const name = t.driverName.trim();
+        if (!seenNames.has(name.toLowerCase())) {
+          seenNames.add(name.toLowerCase());
+          opts.push({ id: name, label: name });
+        }
+      }
+    });
+
+    if (opts.length === 1) {
+      ['Kamal Perera', 'Saman Kumara', 'Nimal Fernando', 'Sunil Silva'].forEach((name) => {
+        opts.push({ id: name, label: name });
+      });
     }
     return opts;
-  }, [registeredDrivers]);
+  }, [registeredDrivers, trips]);
 
-  // Dynamic vehicle options from registered backend fleet + fallback + active trips
+  // Dynamic vehicle options from registered backend fleet + authoritative fleet + active trips
   const vehicleOptions = useMemo(() => {
     const plateMap = new Map<string, string>();
 
-    // 1. All vehicles from backend fleet
-    fleetVehicles.forEach((v) => {
+    // 1. Authoritative SCK and SDR Link fleet units
+    SCK_FLEET.forEach((v) => {
       if (v.vehicleNumber && v.vehicleNumber.trim()) {
         const clean = v.vehicleNumber.trim().toUpperCase();
         const norm = clean.replace(/[^A-Z0-9]/g, '');
@@ -304,18 +335,16 @@ export default function SupervisorMissionDispatcher() {
       }
     });
 
-    // 2. SCK_FLEET fallback if fleetVehicles is empty or has missing authoritative units
-    if (fleetVehicles.length === 0) {
-      SCK_FLEET.forEach((v) => {
-        if (v.vehicleNumber && v.vehicleNumber.trim()) {
-          const clean = v.vehicleNumber.trim().toUpperCase();
-          const norm = clean.replace(/[^A-Z0-9]/g, '');
-          if (!plateMap.has(norm)) {
-            plateMap.set(norm, clean);
-          }
+    // 2. All vehicles from backend fleet
+    fleetVehicles.forEach((v) => {
+      if (v.vehicleNumber && v.vehicleNumber.trim()) {
+        const clean = v.vehicleNumber.trim().toUpperCase();
+        const norm = clean.replace(/[^A-Z0-9]/g, '');
+        if (!plateMap.has(norm)) {
+          plateMap.set(norm, clean);
         }
-      });
-    }
+      }
+    });
 
     // 3. Vehicles present on trips
     trips.forEach((t) => {
@@ -367,7 +396,11 @@ export default function SupervisorMissionDispatcher() {
     return trips.filter((t) => {
       // 1. Driver Filter
       if (selectedDriverFilter !== 'ALL') {
-        if (t.driverId !== selectedDriverFilter && t.driverCode !== selectedDriverFilter) return false;
+        const target = selectedDriverFilter.toLowerCase();
+        const matchesId = t.driverId && t.driverId.toLowerCase() === target;
+        const matchesCode = t.driverCode && t.driverCode.toLowerCase() === target;
+        const matchesName = t.driverName && t.driverName.toLowerCase() === target;
+        if (!matchesId && !matchesCode && !matchesName) return false;
       }
 
       // 2. Vehicle Filter (with plate normalization)
@@ -474,7 +507,7 @@ export default function SupervisorMissionDispatcher() {
   // Check if any non-default filter is currently applied
   const hasActiveFilters =
     selectedVehicle !== 'ALL' ||
-    selectedPeriodFilter !== 'DAILY' ||
+    selectedPeriodFilter !== 'ALL' ||
     dateRangeStart !== null ||
     selectedDriverFilter !== 'ALL' ||
     selectedTerminal !== 'ALL' ||
@@ -483,7 +516,7 @@ export default function SupervisorMissionDispatcher() {
 
   const handleResetAllFilters = () => {
     setSelectedVehicle('ALL');
-    setSelectedPeriodFilter('DAILY');
+    setSelectedPeriodFilter('ALL');
     setDateRangeStart(null);
     setDateRangeEnd(null);
     setSelectedDriverFilter('ALL');
@@ -896,7 +929,7 @@ export default function SupervisorMissionDispatcher() {
               {selectedPeriodFilter === 'RANGE' && dateRangeStart && (
                 <TouchableOpacity
                   onPress={() => {
-                    setSelectedPeriodFilter('DAILY');
+                    setSelectedPeriodFilter('ALL');
                     setDateRangeStart(null);
                     setDateRangeEnd(null);
                   }}
@@ -1136,11 +1169,50 @@ export default function SupervisorMissionDispatcher() {
               <ActivityIndicator size="large" color="#173B70" style={{ marginVertical: 20 }} />
             ) : tripsByDate.length === 0 ? (
               <View style={styles.emptyPendingCard}>
-                <Ionicons name="file-tray-outline" size={28} color="#3A567F" />
-                <Text style={styles.emptyPendingText}>NO MATCHING TRIPS</Text>
-                <Text style={styles.emptyPendingSub}>
-                  No active or completed inter-terminal moves found for this filter criteria.
-                </Text>
+                {activeSegment === 'PENDING' ? (
+                  <>
+                    <View style={styles.emptyCheckCircle}>
+                      <Ionicons name="checkmark-done-circle" size={40} color="#173B70" />
+                    </View>
+                    <Text style={styles.emptyPendingText}>ALL TRIPS UP TO DATE</Text>
+                    <Text style={styles.emptyPendingSub}>
+                      There are currently no trips awaiting supervisor confirmation. All trips have been verified and processed.
+                    </Text>
+                    {trips.length > 0 && (
+                      <TouchableOpacity
+                        style={styles.viewAllTripsBtn}
+                        onPress={() => {
+                          setActiveSegment('ALL');
+                          setSelectedStatus('ALL');
+                        }}
+                        activeOpacity={0.8}
+                      >
+                        <Ionicons name="list" size={14} color="#FFFFFF" style={{ marginRight: 6 }} />
+                        <Text style={styles.viewAllTripsBtnText}>
+                          VIEW ALL TRIPS ({trips.length})
+                        </Text>
+                      </TouchableOpacity>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <Ionicons name="file-tray-outline" size={32} color="#3A567F" />
+                    <Text style={styles.emptyPendingText}>NO MATCHING TRIPS</Text>
+                    <Text style={styles.emptyPendingSub}>
+                      No active or completed inter-terminal moves found for this filter criteria.
+                    </Text>
+                    {hasActiveFilters && (
+                      <TouchableOpacity
+                        style={styles.viewAllTripsBtn}
+                        onPress={handleResetAllFilters}
+                        activeOpacity={0.8}
+                      >
+                        <Ionicons name="refresh" size={14} color="#FFFFFF" style={{ marginRight: 6 }} />
+                        <Text style={styles.viewAllTripsBtnText}>RESET ALL FILTERS</Text>
+                      </TouchableOpacity>
+                    )}
+                  </>
+                )}
               </View>
             ) : (
               tripsByDate.map((group) => (
@@ -1170,296 +1242,26 @@ export default function SupervisorMissionDispatcher() {
 
                   {/* Trips List for this Date */}
                   <View style={{ gap: 10, marginTop: 8 }}>
-                    {group.trips.map((t) => {
-                      const count20 = (t.containers || []).filter((c: any) => (c.size || '').includes('20')).length;
-                      const count40 = (t.containers || []).filter((c: any) => (c.size || '').includes('40')).length;
-                      const isPending = t.status === 'PENDING_APPROVAL';
-
-                      return (
-                        <View key={t.id} style={styles.monitoringCard}>
-                          {/* Header with Driver Photo */}
-                          <View style={styles.monHeader}>
-                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                              {t.driverPhoto ? (
-                                <Image source={{ uri: t.driverPhoto }} style={styles.monDriverThumb} />
-                              ) : (
-                                <View style={styles.monDriverThumbFallback}>
-                                  <Text style={styles.monDriverThumbText}>{(t.driverName || 'K')[0]}</Text>
-                                </View>
-                              )}
-                              <View>
-                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                                  {t.status === 'IN_PROGRESS' && <View style={styles.greenPulseDot} />}
-                                  <Text style={styles.monTripId}>
-                                    {t.tripNumber || `ITT-${t.id?.slice(0, 6)}`}
-                                  </Text>
-                                </View>
-                                <Text style={styles.monDriverNameSmall}>
-                                  {t.driverName || 'Kamal Perera'} {t.driverCode ? `(${t.driverCode})` : ''}
-                                </Text>
-                              </View>
-                            </View>
-
-                            <View
-                              style={[
-                                styles.monStatusBadge,
-                                t.status === 'IN_PROGRESS' && styles.badgeGreen,
-                                t.status === 'PENDING_APPROVAL' && styles.badgeAmber,
-                                t.status === 'APPROVED' && styles.badgeCyan,
-                                t.status === 'COMPLETED' && styles.badgeCyan,
-                                t.status === 'REJECTED' && styles.badgeRed,
-                              ]}
-                            >
-                              <Text style={styles.monStatusText}>{t.status?.replace(/_/g, ' ')}</Text>
-                            </View>
-                          </View>
-
-                          {/* Route Row */}
-                          <View style={styles.monRouteBox}>
-                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                              <Ionicons name="boat" size={13} color="#173B70" />
-                              <Text style={styles.monRouteText}>
-                                {t.sourceTerminal || 'CICT'}
-                              </Text>
-                              <Ionicons name="arrow-forward" size={13} color="#173B70" />
-                              <Text style={styles.monRouteText}>
-                                {getTripDischargeTerminal(t)}
-                              </Text>
-                            </View>
-                            <View style={styles.monRouteTag}>
-                              <Text style={styles.monRouteTagText}>ITT CORRIDOR</Text>
-                            </View>
-                          </View>
-
-                          {/* ─── TRIP STARTED DATE TIME & END TIME DETAILS ─── */}
-                          {(() => {
-                            const timing = getTripTimingDetails(t);
-                            return (
-                              <View style={styles.monTimingPanel}>
-                                <View style={styles.monTimingCol}>
-                                  <View style={styles.monTimingHeader}>
-                                    <Ionicons name="play-circle" size={12} color="#173B70" />
-                                    <Text style={styles.monTimingLabel}>STARTED DATE & TIME</Text>
-                                  </View>
-                                  <Text style={styles.monTimingDate}>{timing.startDate}</Text>
-                                  <Text style={styles.monTimingTime}>{timing.startTime}</Text>
-                                </View>
-
-                                <View style={styles.monTimingDivider}>
-                                  <Ionicons name="arrow-forward" size={13} color="#3a4756" />
-                                  {timing.duration && (
-                                    <View style={styles.monDurationPill}>
-                                      <Ionicons name="timer-outline" size={10} color="#173B70" />
-                                      <Text style={styles.monDurationText}>{timing.duration}</Text>
-                                    </View>
-                                  )}
-                                </View>
-
-                                <View style={styles.monTimingCol}>
-                                  <View style={styles.monTimingHeader}>
-                                    <Ionicons
-                                      name={timing.isCompleted ? 'checkmark-circle' : timing.isPending ? 'time' : 'navigate-circle'}
-                                      size={12}
-                                      color={timing.statusColor}
-                                    />
-                                    <Text style={[styles.monTimingLabel, { color: timing.statusColor }]}>
-                                      {timing.isCompleted ? 'COMPLETED DATE & TIME' : timing.isPending ? 'DISCHARGED' : 'CURRENT STATUS'}
-                                    </Text>
-                                  </View>
-                                  <Text style={[styles.monTimingDate, !timing.isCompleted && !timing.isPending && { color: '#3A567F' }]}>
-                                    {timing.endDate}
-                                  </Text>
-                                  <Text style={[styles.monTimingTime, { color: timing.statusColor }]}>
-                                    {timing.endTime}
-                                  </Text>
-                                </View>
-                              </View>
-                            );
-                          })()}
-
-                          {/* Specs Row */}
-                          <View style={styles.monSpecsRow}>
-                            <Text style={styles.monSpecItem}>
-                              Truck: <Text style={styles.monSpecBoldHighlight}>{t.vehicleNumber || 'LY-6439'}</Text>
-                            </Text>
-                            <Text style={styles.monSpecItem}>
-                              CHE: <Text style={styles.monSpecBoldCyan}>{resolveCheNumber(t.vehicleNumber, t.chassisNumber || t.chaiNumber)}</Text>
-                            </Text>
-                            <Text style={styles.monSpecItem}>
-                              Operator: <Text style={styles.monSpecBoldCyan}>{resolveOperator(t.vehicleNumber, t.operator)}</Text>
-                            </Text>
-                            <Text style={styles.monSpecItem}>
-                              Vessel: <Text style={styles.monSpecBold}>{t.vesselName || 'MV Colombo Star'}</Text>
-                            </Text>
-                            <Text style={styles.monSpecItem}>
-                              Cargo: <Text style={styles.monSpecBoldGreen}>{count20 > 0 ? `${count20}×20FT ` : ''}{count40 > 0 ? `${count40}×40FT` : ''}</Text>
-                            </Text>
-                          </View>
-
-                          {/* Container Manifest Chips */}
-                          {t.containers && t.containers.length > 0 && (
-                            <View style={{ gap: 6, marginTop: 4 }}>
-                              {t.containers.map((c: any, cIdx: number) => (
-                                <View key={c.id || cIdx} style={styles.monContainerCard}>
-                                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 }}>
-                                    <Ionicons name="cube-outline" size={14} color="#173B70" />
-                                    <Text style={styles.monContainerNumber}>{c.containerNumber}</Text>
-                                    <Text style={styles.monContainerSize}>{c.size || '20FT'}</Text>
-                                    {c.isVerified === false && (
-                                      <View style={styles.monUnverifiedBadge}>
-                                        <Text style={styles.monUnverifiedText}>Unverified</Text>
-                                      </View>
-                                    )}
-                                    {c.isVerified === true && (
-                                      <View style={styles.monVerifiedBadge}>
-                                        <Text style={styles.monVerifiedText}>Verified ✓</Text>
-                                      </View>
-                                    )}
-                                  </View>
-
-                                  <TouchableOpacity
-                                    style={styles.inspectPhotoBtn}
-                                    onPress={() => openPhotoModal(t, c)}
-                                    activeOpacity={0.7}
-                                  >
-                                    <Ionicons name="camera-outline" size={13} color="#173B70" />
-                                    <Text style={styles.inspectPhotoBtnText}>Inspect Photo</Text>
-                                  </TouchableOpacity>
-                                </View>
-                              ))}
-                            </View>
-                          )}
-
-                          {/* Driver Discharge Manifest if Pending Approval */}
-                          {isPending && (
-                            <View style={{
-                              backgroundColor: '#0a101d',
-                              borderRadius: 10,
-                              borderWidth: 1,
-                              borderColor: '#F0F5FA',
-                              padding: 10,
-                              gap: 8,
-                              marginTop: 6,
-                            }}>
-                              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingBottom: 4, borderBottomWidth: 1, borderBottomColor: '#E2E8F0' }}>
-                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
-                                  <Ionicons name="shield-checkmark" size={13} color="#173B70" />
-                                  <Text style={{ fontSize: 9.5, fontWeight: '900', color: '#173B70', letterSpacing: 0.4 }}>
-                                    DRIVER DISCHARGE & SEAL VERIFICATION
-                                  </Text>
-                                </View>
-                                <View style={{
-                                  backgroundColor: 'rgba(34, 239, 126, 0.12)',
-                                  paddingHorizontal: 5,
-                                  paddingVertical: 1.5,
-                                  borderRadius: 4,
-                                  borderWidth: 1,
-                                  borderColor: 'rgba(34, 239, 126, 0.3)',
-                                }}>
-                                  <Text style={{ fontSize: 8, fontWeight: '800', color: '#173B70' }}>SLPA AUDITED</Text>
-                                </View>
-                              </View>
-
-                              <View style={{ flexDirection: 'row', gap: 6 }}>
-                                <View style={{ flex: 1, backgroundColor: '#0f1726', borderRadius: 6, borderWidth: 1, borderColor: '#E2E8F0', padding: 6 }}>
-                                  <Text style={{ fontSize: 8, fontWeight: '800', color: '#3A567F' }}>BAY / BERTH</Text>
-                                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
-                                    <Ionicons name="location" size={11} color="#173B70" />
-                                    <Text style={{ fontSize: 9.5, fontWeight: '800', color: '#173B70' }} numberOfLines={1}>
-                                      {getTripDischargeTerminal(t)} · {t.dischargeBay || 'Bay 04, Crane 02'}
-                                    </Text>
-                                  </View>
-                                </View>
-
-                                <View style={{
-                                  flex: 1,
-                                  backgroundColor: '#0f1726',
-                                  borderRadius: 6,
-                                  borderWidth: 1,
-                                  borderColor: t.sealStatus?.includes('DAMAGED') ? 'rgba(255, 82, 82, 0.35)' : 'rgba(34, 239, 126, 0.35)',
-                                  padding: 6,
-                                }}>
-                                  <Text style={{ fontSize: 8, fontWeight: '800', color: '#3A567F' }}>SEAL STATUS</Text>
-                                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
-                                    <Ionicons
-                                      name={t.sealStatus?.includes('DAMAGED') ? 'warning' : 'shield-checkmark'}
-                                      size={11}
-                                      color={t.sealStatus?.includes('DAMAGED') ? '#173B70' : '#173B70'}
-                                    />
-                                    <Text style={{ fontSize: 9.5, fontWeight: '800', color: t.sealStatus?.includes('DAMAGED') ? '#173B70' : '#173B70' }} numberOfLines={1}>
-                                      {t.sealStatus || 'INTACT (VERIFIED)'}
-                                    </Text>
-                                  </View>
-                                </View>
-
-                                <View style={{
-                                  flex: 1,
-                                  backgroundColor: '#0f1726',
-                                  borderRadius: 6,
-                                  borderWidth: 1,
-                                  borderColor: t.damageStatus === 'DAMAGED' ? 'rgba(255, 82, 82, 0.35)' : 'rgba(34, 239, 126, 0.35)',
-                                  padding: 6,
-                                }}>
-                                  <Text style={{ fontSize: 8, fontWeight: '800', color: '#3A567F' }}>CARGO</Text>
-                                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
-                                    <Ionicons
-                                      name={t.damageStatus === 'DAMAGED' ? 'alert-circle' : 'checkmark-circle'}
-                                      size={11}
-                                      color={t.damageStatus === 'DAMAGED' ? '#173B70' : '#173B70'}
-                                    />
-                                    <Text style={{ fontSize: 9.5, fontWeight: '800', color: t.damageStatus === 'DAMAGED' ? '#173B70' : '#173B70' }} numberOfLines={1}>
-                                      {t.damageStatus === 'DAMAGED' ? 'DAMAGED' : 'SOUND'}
-                                    </Text>
-                                  </View>
-                                </View>
-                              </View>
-
-                              {/* Full width remarks */}
-                              <View style={{
-                                backgroundColor: '#F8FAFC',
-                                borderRadius: 6,
-                                borderLeftWidth: 3,
-                                borderLeftColor: '#173B70',
-                                paddingHorizontal: 8,
-                                paddingVertical: 6,
-                              }}>
-                                <Text style={{ fontSize: 7.5, fontWeight: '900', color: '#173B70', letterSpacing: 0.4, marginBottom: 2 }}>
-                                  DRIVER COMPLETION REMARKS
-                                </Text>
-                                <Text style={{ fontSize: 9.5, color: '#1E293B', fontStyle: 'italic', lineHeight: 13 }}>
-                                  "{t.driverCompletionNotes || 'Containers discharged safely at destination berth. Seals inspected and verified intact.'}"
-                                </Text>
-                              </View>
-                            </View>
-                          )}
-
-                          {/* Decision Action Buttons if Pending Approval or In Progress */}
-                          {(isPending || t.status === 'IN_PROGRESS') && (
-                            <View style={styles.decisionButtonsRow}>
-                              <TouchableOpacity
-                                style={styles.approveBtn}
-                                onPress={() => checkPhotosAndProceed(t, () => handleDischargeAndComplete(t))}
-                              >
-                                <Ionicons name="shield-checkmark" size={14} color="#FFFFFF" />
-                                <Text style={styles.approveBtnText}>
-                                  {isPending ? 'APPROVE & DISCHARGE GATE PASS' : 'DISCHARGE & COMPLETE TRIP'}
-                                </Text>
-                              </TouchableOpacity>
-
-                              {isPending && (
-                                <TouchableOpacity
-                                  style={styles.rejectBtn}
-                                  onPress={() => handleOpenRejectModal(t)}
-                                >
-                                  <Ionicons name="close-circle" size={14} color="#173B70" />
-                                  <Text style={styles.rejectBtnText}>REJECT</Text>
-                                </TouchableOpacity>
-                              )}
-                            </View>
-                          )}
-                        </View>
-                      );
-                    })}
+                    {group.trips.map((t) => (
+                      <PermanentTripCard
+                        key={t.id}
+                        trip={t}
+                        role="SUPERVISOR"
+                        onPressDetails={(tripItem) => {
+                          setSelectedTripDetails(tripItem);
+                          setTripDetailsModalVisible(true);
+                        }}
+                        onPressAction={(tripItem) => {
+                          setSelectedTripDetails(tripItem);
+                          setTripDetailsModalVisible(true);
+                        }}
+                        onPressPhoto={(pUrl, cNum) => {
+                          setLightboxPhotoUrl(pUrl);
+                          setLightboxContainerNum(cNum);
+                          setLightboxVisible(true);
+                        }}
+                      />
+                    ))}
                   </View>
                 </View>
               ))
@@ -1926,6 +1728,28 @@ export default function SupervisorMissionDispatcher() {
           </View>
         </View>
       </Modal>
+
+      <CompleteTripDetailsModal
+        visible={tripDetailsModalVisible}
+        onClose={() => setTripDetailsModalVisible(false)}
+        trip={selectedTripDetails}
+        role="SUPERVISOR"
+        supervisorId={user?.employeeId || user?.username || 'SUPERVISOR'}
+        onTripUpdated={loadTrips}
+        onOpenPhotoLightbox={(pUrl, cNum) => {
+          setLightboxPhotoUrl(pUrl);
+          setLightboxContainerNum(cNum);
+          setLightboxVisible(true);
+        }}
+      />
+
+      <PhotoLightboxModal
+        visible={lightboxVisible}
+        onClose={() => setLightboxVisible(false)}
+        photoUrl={lightboxPhotoUrl}
+        containerNumber={lightboxContainerNum}
+        tripId={selectedTripDetails?.tripNumber || selectedTripDetails?.id}
+      />
     </View>
   );
 }
@@ -2592,6 +2416,31 @@ const styles = StyleSheet.create({
     color: '#3A567F',
     fontSize: 9,
     textAlign: 'center',
+  },
+  emptyCheckCircle: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#E8F1FA',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 4,
+  },
+  viewAllTripsBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#173B70',
+    borderRadius: radius.sm,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    marginTop: 10,
+  },
+  viewAllTripsBtnText: {
+    color: '#FFFFFF',
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 0.5,
   },
 
   // ─── DECISION ACTION BUTTONS ───

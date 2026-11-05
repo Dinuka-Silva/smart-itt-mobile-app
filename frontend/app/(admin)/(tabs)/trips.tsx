@@ -15,6 +15,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { adminService } from '../../../src/services/adminService';
 import { useResponsive } from '../../../src/hooks/useResponsive';
 import {
+  PermanentTripCard,
+  CompleteTripDetailsModal,
+  PhotoLightboxModal,
+  TripCardData,
+} from '../../../src/components';
+import {
   getTripDischargeTerminal,
   getTripTimingInfo,
   getContainerTimingInfo,
@@ -37,6 +43,12 @@ export default function AdminTripsScreen() {
   const [modalVisible, setModalVisible] = useState(false);
   const [actionReason, setActionReason] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
+
+  // Permanent Trip Details & Photo Lightbox
+  const [completeModalVisible, setCompleteModalVisible] = useState(false);
+  const [lightboxVisible, setLightboxVisible] = useState(false);
+  const [lightboxPhotoUrl, setLightboxPhotoUrl] = useState('');
+  const [lightboxContainerNum, setLightboxContainerNum] = useState('');
 
   const fetchTrips = useCallback(async () => {
     try {
@@ -83,6 +95,10 @@ export default function AdminTripsScreen() {
         });
       }
       setTrips(list);
+      setSelectedTrip((curr: any) => {
+        if (!curr) return null;
+        return list.find((t: any) => t.id === curr.id) || curr;
+      });
     } catch (e) {
       console.warn('[AdminTrips] Error fetching trips:', e);
       setTrips([]);
@@ -235,150 +251,22 @@ export default function AdminTripsScreen() {
               <Text style={styles.emptyCardText}>No ITT trips match your current filters.</Text>
             </View>
           ) : (
-            trips.map((trip) => {
-              const timing = getTripTimingInfo(trip);
-              return (
-                <TouchableOpacity
-                  key={trip.id || trip.tripNumber}
-                  style={styles.tripCard}
-                  onPress={() => {
-                    setSelectedTrip(trip);
-                    setModalVisible(true);
-                  }}
-                  activeOpacity={0.8}
-                >
-                  <View style={styles.tripTopRow}>
-                    <View>
-                      <Text style={styles.tripNumberText}>{trip.tripNumber}</Text>
-                      <Text style={styles.vesselText}>{trip.vesselName || 'ITT Harbor Transfer'}</Text>
-                    </View>
-
-                    <View
-                      style={[
-                        styles.statusBadge,
-                        trip.status === 'COMPLETED' || trip.status === 'APPROVED'
-                          ? styles.statusApproved
-                          : trip.status === 'PENDING_APPROVAL'
-                          ? styles.statusPending
-                          : trip.status === 'REJECTED'
-                          ? styles.statusRejected
-                          : styles.statusInProgress,
-                      ]}
-                    >
-                      <Text style={styles.statusBadgeText}>{trip.status}</Text>
-                    </View>
-                  </View>
-
-                  {/* Route */}
-                  <View style={styles.routeRow}>
-                    <View style={styles.terminalBox}>
-                      <Text style={styles.terminalBoxText}>{trip.sourceTerminal}</Text>
-                    </View>
-                    <Ionicons name="arrow-forward" size={16} color="#173B70" style={{ marginHorizontal: 8 }} />
-                    <View style={styles.terminalBox}>
-                      <Text style={styles.terminalBoxText}>{getTripDischargeTerminal(trip)}</Text>
-                    </View>
-                    <Text style={styles.vehicleFleetText}>
-                      • {trip.vehicleNumber} ({trip.chassisNumber || 'CHE'})
-                    </Text>
-                  </View>
-
-                  {/* Driver & Dispatch Info */}
-                  <View style={styles.driverBar}>
-                    <Text style={styles.driverText}>
-                      👤 {trip.driverName || 'Kamal Perera'} {trip.driverCode ? `(${trip.driverCode})` : ''}
-                    </Text>
-                    <Text style={styles.driverGateText}>
-                      Gate: {trip.dispatchTime ? `Dispatched ${formatTripTime(trip.dispatchTime)}` : 'Logged'}
-                    </Text>
-                  </View>
-
-                  {/* ⏱️ OPERATIONAL TIMING & DURATION BREAKDOWN */}
-                  <View style={styles.timingCard}>
-                    <View style={styles.timingCol}>
-                      <View style={styles.timingLabelRow}>
-                        <Ionicons name="arrow-down-circle" size={11} color="#173B70" />
-                        <Text style={styles.timingLabel}>LOADED</Text>
-                      </View>
-                      <Text style={styles.timingTime}>{timing.loadTime}</Text>
-                      <Text style={styles.timingTerminal}>{trip.sourceTerminal || 'CICT'}</Text>
-                    </View>
-
-                    <View style={styles.timingDivider} />
-
-                    <View style={styles.timingCol}>
-                      <View style={styles.timingLabelRow}>
-                        <Ionicons name="flag" size={11} color={timing.isDischarged ? "#173B70" : "#173B70"} />
-                        <Text style={styles.timingLabel}>DISCHARGED</Text>
-                      </View>
-                      <Text style={[styles.timingTime, { color: timing.isDischarged ? '#173B70' : '#173B70' }]}>
-                        {timing.dischargeTime}
-                      </Text>
-                      <Text style={styles.timingTerminal}>{getTripDischargeTerminal(trip)}</Text>
-                    </View>
-
-                    <View style={styles.timingDivider} />
-
-                    <View style={styles.timingCol}>
-                      <View style={styles.timingLabelRow}>
-                        <Ionicons name="time" size={11} color="#ffd54f" />
-                        <Text style={styles.timingLabel}>TIME SPENT</Text>
-                      </View>
-                      <Text style={[styles.timingTime, { color: '#ffd54f' }]}>{timing.timeSpent}</Text>
-                      <Text style={styles.timingTerminal}>
-                        {timing.isCompleted ? 'Turnaround' : 'In Transit'}
-                      </Text>
-                    </View>
-                  </View>
-
-                  {/* Containers Preview with per-container timing */}
-                  {trip.containers && trip.containers.length > 0 ? (
-                    <View style={styles.containersWrap}>
-                      {trip.containers.map((c: any, idx: number) => {
-                        const cTiming = getContainerTimingInfo(c, trip, idx);
-                        return (
-                          <View key={idx} style={styles.containerTagEnhanced}>
-                            <View style={styles.cTopRow}>
-                              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                                <Ionicons name="cube" size={12} color="#173B70" />
-                                <Text style={styles.cNumText}>{cTiming.containerNumber}</Text>
-                                <View style={styles.cSizeBadge}>
-                                  <Text style={styles.cSizeText}>{cTiming.size}</Text>
-                                </View>
-                              </View>
-                              <View
-                                style={[
-                                  styles.cStatusPill,
-                                  cTiming.isDischarged ? styles.cStatusDischarged : styles.cStatusTransit,
-                                ]}
-                              >
-                                <Text style={styles.cStatusText}>
-                                  {cTiming.isDischarged ? 'DISCHARGED' : 'IN TRANSIT'}
-                                </Text>
-                              </View>
-                            </View>
-
-                            <View style={styles.cTimingDetailsRow}>
-                              <Text style={styles.cTimeText}>
-                                📥 Load: <Text style={styles.cTimeHighlight}>{cTiming.loadTime}</Text>
-                              </Text>
-                              <Text style={styles.cTimeArrow}>➔</Text>
-                              <Text style={styles.cTimeText}>
-                                📤 Disch:{' '}
-                                <Text style={[styles.cTimeHighlight, { color: cTiming.isDischarged ? '#173B70' : '#173B70' }]}>
-                                  {cTiming.dischargeTime} ({cTiming.destTerminal})
-                                </Text>
-                              </Text>
-                              <Text style={styles.cSpentBadge}>⏱️ {cTiming.timeSpent}</Text>
-                            </View>
-                          </View>
-                        );
-                      })}
-                    </View>
-                  ) : null}
-                </TouchableOpacity>
-              );
-            })
+            trips.map((trip) => (
+              <PermanentTripCard
+                key={trip.id || trip.tripNumber}
+                trip={trip}
+                role="ADMIN"
+                onPressDetails={(tripItem) => {
+                  setSelectedTrip(tripItem);
+                  setCompleteModalVisible(true);
+                }}
+                onPressPhoto={(pUrl, cNum) => {
+                  setLightboxPhotoUrl(pUrl);
+                  setLightboxContainerNum(cNum);
+                  setLightboxVisible(true);
+                }}
+              />
+            ))
           )}
         </ScrollView>
       )}
@@ -563,6 +451,27 @@ export default function AdminTripsScreen() {
           </View>
         </View>
       </Modal>
+
+      <CompleteTripDetailsModal
+        visible={completeModalVisible}
+        onClose={() => setCompleteModalVisible(false)}
+        trip={selectedTrip}
+        role="ADMIN"
+        onTripUpdated={fetchTrips}
+        onOpenPhotoLightbox={(pUrl, cNum) => {
+          setLightboxPhotoUrl(pUrl);
+          setLightboxContainerNum(cNum);
+          setLightboxVisible(true);
+        }}
+      />
+
+      <PhotoLightboxModal
+        visible={lightboxVisible}
+        onClose={() => setLightboxVisible(false)}
+        photoUrl={lightboxPhotoUrl}
+        containerNumber={lightboxContainerNum}
+        tripId={selectedTrip?.tripNumber || selectedTrip?.id}
+      />
     </View>
   );
 }

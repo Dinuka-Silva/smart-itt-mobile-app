@@ -56,7 +56,17 @@ public class ContainerPhotoController {
         return ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType(entity.getContentType()))
                 .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"container-" + id + ".jpg\"")
+                .header(HttpHeaders.CACHE_CONTROL, "public, max-age=86400")
                 .body(resource);
+    }
+
+    @GetMapping("/view/{id}")
+    @Operation(summary = "View container verification photo stream by ID")
+    public ResponseEntity<Resource> viewPhoto(
+            @PathVariable String id,
+            Authentication auth
+    ) {
+        return getPhoto(id, auth);
     }
 
     @GetMapping("/trip/{tripId}")

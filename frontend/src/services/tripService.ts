@@ -27,6 +27,7 @@ export interface Container {
   isVerified?: boolean;
   verifiedBy?: string;
   verifiedAt?: string;
+  photoId?: string;
   photoStatus?: 'PENDING' | 'VERIFIED' | 'REJECTED' | 'NONE';
   photoUrl?: string;
 }

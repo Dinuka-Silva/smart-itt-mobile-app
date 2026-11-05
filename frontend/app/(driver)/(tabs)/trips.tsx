@@ -20,6 +20,13 @@ import { securityAuditService } from '../../../src/services/securityAuditService
 import { useResponsive } from '../../../src/hooks/useResponsive';
 import { getTripTimingDetails } from '../../../src/utils/tripDateUtils';
 import { getTripDischargeTerminal } from '../../../src/utils/tripTerminalUtils';
+import {
+  PermanentTripCard,
+  CompleteTripDetailsModal,
+  PhotoLightboxModal,
+  DriverTripCompletionModal,
+  TripCardData,
+} from '../../../src/components';
 
 const TERMINALS = ['CWIT', 'JCT', 'ECT', 'UCT', 'SAGT', 'CICT'];
 
@@ -41,6 +48,15 @@ export default function DriverJobQueue() {
   const [refreshing, setRefreshing] = useState(false);
   const [filter, setFilter] = useState('ALL');
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+
+  // Permanent Trip Details & Completion Modals
+  const [selectedTripDetails, setSelectedTripDetails] = useState<TripCardData | null>(null);
+  const [detailsModalVisible, setDetailsModalVisible] = useState(false);
+  const [completionTrip, setCompletionTrip] = useState<TripCardData | null>(null);
+  const [completionModalVisible, setCompletionModalVisible] = useState(false);
+  const [lightboxVisible, setLightboxVisible] = useState(false);
+  const [lightboxPhotoUrl, setLightboxPhotoUrl] = useState('');
+  const [lightboxContainerNum, setLightboxContainerNum] = useState('');
   const [arrivedTrips, setArrivedTrips] = useState<Set<string>>(new Set());
   const [networkError, setNetworkError] = useState(false);
 
@@ -280,403 +296,58 @@ export default function DriverJobQueue() {
             <Text style={styles.emptySub}>All movements completed or awaiting dispatch from tower.</Text>
           </View>
         ) : (
-          filteredTrips.map((trip) => {
-            const tripNum = trip.tripNumber || `TRP-${trip.id?.slice(0, 6)}`;
-            const isApproved = trip.status === 'APPROVED';
-            const isProgress = trip.status === 'IN_PROGRESS';
-            const isPending = trip.status === 'PENDING_APPROVAL';
-            const isDone = trip.status === 'COMPLETED';
-
-            const statusColor = isDone
-              ? '#173B70'
-              : isProgress
-              ? '#173B70'
-              : isApproved
-              ? '#173B70'
-              : '#173B70';
-
-            return (
-              <View key={trip.id} style={styles.jobCard}>
-                <View style={[styles.jobBorderIndicator, { backgroundColor: statusColor }]} />
-
-                <View style={styles.jobCardContent}>
-                  {/* Card Header */}
-                  <View style={styles.jobHeader}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                      <Text style={styles.jobNumText}>{tripNum}</Text>
-                      <View style={[styles.statusTag, { backgroundColor: `${statusColor}22` }]}>
-                        <Text style={[styles.statusTagText, { color: statusColor }]}>
-                          {isPending
-                            ? 'DELIVERY COMPLETED (PENDING SIGN-OFF)'
-                            : isDone || isApproved
-                            ? 'COMPLETED & CONFIRMED'
-                            : trip.status?.replace(/_/g, ' ')}
-                        </Text>
-                      </View>
-                    </View>
-                    <Text style={styles.jobTimeText}>{trip.createdAt?.slice(11, 16) || 'NOW'}</Text>
-                  </View>
-
-                  {/* Vessel & Route */}
-                  <Text style={styles.vesselText}>{trip.vesselName || 'PORT LOGISTICS HAUL'}</Text>
-
-                  <View style={styles.routeRow}>
-                    <View style={styles.termBox}>
-                      <Text style={styles.termLabel}>ORIGIN</Text>
-                      <Text style={styles.termCode}>{trip.sourceTerminal || 'ECT'}</Text>
-                    </View>
-                    <View style={styles.routeArrow}>
-                      <Ionicons name="arrow-forward" size={16} color={colors.primaryContainer} />
-                      <Text style={styles.routeDist}>2.4 KM</Text>
-                    </View>
-                    <View style={styles.termBox}>
-                      <Text style={styles.termLabel}>DESTINATION</Text>
-                      <Text style={styles.termCode}>{getTripDischargeTerminal(trip)}</Text>
-                    </View>
-                  </View>
-
-                  {/* ─── TRIP STARTED DATE TIME & END TIME DETAILS ─── */}
-                  {(() => {
-                    const timing = getTripTimingDetails(trip);
-                    return (
-                      <View style={styles.timingCard}>
-                        {/* Started Date & Time */}
-                        <View style={styles.timingCol}>
-                          <View style={styles.timingColHeader}>
-                            <Ionicons name="play-circle" size={13} color="#173B70" />
-                            <Text style={styles.timingColLabel}>TRIP STARTED</Text>
-                          </View>
-                          <Text style={styles.timingDateVal}>{timing.startDate}</Text>
-                          <Text style={styles.timingTimeVal}>{timing.startTime}</Text>
-                        </View>
-
-                        {/* Middle Arrow & Duration */}
-                        <View style={styles.timingDividerCol}>
-                          <Ionicons name="arrow-forward" size={14} color="#3a4756" />
-                          {timing.duration && (
-                            <View style={styles.durationPill}>
-                              <Ionicons name="timer-outline" size={10} color="#173B70" />
-                              <Text style={styles.durationPillText}>{timing.duration}</Text>
-                            </View>
-                          )}
-                        </View>
-
-                        {/* End Date & Time */}
-                        <View style={styles.timingCol}>
-                          <View style={styles.timingColHeader}>
-                            <Ionicons
-                              name={timing.isCompleted ? 'checkmark-circle' : timing.isPending ? 'time' : 'navigate-circle'}
-                              size={13}
-                              color={timing.statusColor}
-                            />
-                            <Text style={[styles.timingColLabel, { color: timing.statusColor }]}>
-                              {timing.isCompleted ? 'TRIP COMPLETED' : timing.isPending ? 'DISCHARGED' : 'EST. ARRIVAL'}
-                            </Text>
-                          </View>
-                          <Text style={[styles.timingDateVal, !timing.isCompleted && !timing.isPending && { color: '#3A567F' }]}>
-                            {timing.endDate}
-                          </Text>
-                          <Text style={[styles.timingTimeVal, { color: timing.statusColor }]}>
-                            {timing.endTime}
-                          </Text>
-                        </View>
-                      </View>
-                    );
-                  })()}
-
-                  {/* Containers List */}
-                  <View style={styles.containersBox}>
-                    {/* Multi/Dual Terminal Discharge Indicator */}
-                    {(() => {
-                      const termStr = getTripDischargeTerminal(trip);
-                      const isDual = termStr.includes('&');
-                      return (
-                        <View
-                          style={{
-                            flexDirection: 'row',
-                            alignItems: 'center',
-                            gap: 6,
-                            backgroundColor: isDual ? '#F0F5FA' : 'rgba(34, 239, 126, 0.08)',
-                            borderWidth: 1,
-                            borderColor: isDual ? '#F0F5FA' : 'rgba(34, 239, 126, 0.25)',
-                            borderRadius: 6,
-                            paddingHorizontal: 8,
-                            paddingVertical: 4,
-                            marginBottom: 8,
-                          }}
-                        >
-                          <Ionicons
-                            name={isDual ? 'swap-horizontal' : 'checkmark-circle'}
-                            size={12}
-                            color={isDual ? '#173B70' : '#173B70'}
-                          />
-                          <Text style={{ fontSize: 10, fontWeight: '700', color: isDual ? '#173B70' : '#173B70', flex: 1 }}>
-                            {isDual ? `DUAL DISCHARGE TERMINALS: ${termStr}` : `DISCHARGE TERMINAL: ${termStr}`}
-                          </Text>
-                        </View>
-                      );
-                    })()}
-
-                    {(trip.containers || []).map((c: any, cIdx: number) => {
-                      const sel = unloadSelections[c.id] || c.unloadedTerminal || c.destTerminal || trip.destTerminal;
-                      const cDest = c.destTerminal || getTripDischargeTerminal(trip);
-                      return (
-                        <View key={c.id || cIdx} style={styles.containerItem}>
-                          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                              <Ionicons name="cube" size={14} color={colors.primaryContainer} />
-                              <Text style={styles.containerNumText}>{c.containerNumber || 'MSKU-88219-0'}</Text>
-                            </View>
-                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                              <Text style={styles.isoType}>{c.size || c.isoType || '20FT'}</Text>
-                              <View style={{ backgroundColor: '#F0F5FA', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, borderWidth: 1, borderColor: '#173B70' }}>
-                                <Text style={{ color: '#173B70', fontSize: 10, fontWeight: '800' }}>
-                                  ➔ {cDest}
-                                </Text>
-                              </View>
-                            </View>
-                          </View>
-
-                          {/* Unload Terminal Selector if in progress and arrived */}
-                          {isProgress && arrivedTrips.has(trip.id) && (
-                            <View style={styles.unloadRow}>
-                              <Text style={styles.unloadLabel}>UNLOAD BAY / BERTH:</Text>
-                              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 4 }}>
-                                {TERMINALS.map((term) => (
-                                  <TouchableOpacity
-                                    key={term}
-                                    style={[styles.termChoice, sel === term && styles.termChoiceActive]}
-                                    onPress={() => setUnloadSelections({ ...unloadSelections, [c.id]: term })}
-                                  >
-                                    <Text style={[styles.termChoiceText, sel === term && styles.termChoiceTextActive]}>
-                                      {term}
-                                    </Text>
-                                  </TouchableOpacity>
-                                ))}
-                              </ScrollView>
-                            </View>
-                          )}
-                        </View>
-                      );
-                    })}
-                  </View>
-
-                  {/* ─── State 1: PENDING APPROVAL ─── */}
-                  {isPending && (
-                    <View style={{ gap: 8 }}>
-                      <View style={styles.pendingNoticeBox}>
-                        <Ionicons name="time-outline" size={16} color="#173B70" />
-                        <Text style={styles.pendingNoticeText}>
-                          Cargo discharged at {getTripDischargeTerminal(trip)}. Submitted to Port Operations Supervisor for delivery verification & sign-off.
-                        </Text>
-                      </View>
-
-                      {/* Discharge Manifest Summary */}
-                      <View style={{
-                        backgroundColor: '#F8FAFC',
-                        borderRadius: 8,
-                        borderWidth: 1,
-                        borderColor: 'rgba(254, 179, 0, 0.35)',
-                        padding: 10,
-                        gap: 8,
-                      }}>
-                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingBottom: 4, borderBottomWidth: 1, borderBottomColor: '#E2E8F0' }}>
-                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
-                            <Ionicons name="shield-checkmark" size={13} color="#173B70" />
-                            <Text style={{ fontSize: 9.5, fontWeight: '900', color: '#173B70', letterSpacing: 0.4 }}>
-                              SLPA PORT CLEARANCE MANIFEST
-                            </Text>
-                          </View>
-                          <View style={{
-                            backgroundColor: 'rgba(34, 239, 126, 0.12)',
-                            paddingHorizontal: 5,
-                            paddingVertical: 1.5,
-                            borderRadius: 4,
-                            borderWidth: 1,
-                            borderColor: 'rgba(34, 239, 126, 0.3)',
-                          }}>
-                            <Text style={{ fontSize: 8, fontWeight: '800', color: '#173B70' }}>LOGGED</Text>
-                          </View>
-                        </View>
-
-                        <View style={{ flexDirection: 'row', gap: 6 }}>
-                          <View style={{ flex: 1, backgroundColor: '#0d1625', borderRadius: 6, borderWidth: 1, borderColor: '#242a34', padding: 6 }}>
-                            <Text style={{ fontSize: 8, fontWeight: '800', color: '#3A567F' }}>BAY / SLOT</Text>
-                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
-                              <Ionicons name="location" size={11} color="#173B70" />
-                              <Text style={{ fontSize: 9.5, fontWeight: '800', color: '#173B70' }} numberOfLines={1}>
-                                {trip.destTerminal} · {trip.dischargeBay || 'Bay 04, Crane 02'}
-                              </Text>
-                            </View>
-                          </View>
-
-                          <View style={{
-                            flex: 1,
-                            backgroundColor: '#0d1625',
-                            borderRadius: 6,
-                            borderWidth: 1,
-                            borderColor: trip.sealStatus?.includes('DAMAGED') ? 'rgba(255, 82, 82, 0.35)' : 'rgba(34, 239, 126, 0.35)',
-                            padding: 6,
-                          }}>
-                            <Text style={{ fontSize: 8, fontWeight: '800', color: '#3A567F' }}>SEAL STATUS</Text>
-                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
-                              <Ionicons
-                                name={trip.sealStatus?.includes('DAMAGED') ? 'warning' : 'shield-checkmark'}
-                                size={11}
-                                color={trip.sealStatus?.includes('DAMAGED') ? '#173B70' : '#173B70'}
-                              />
-                              <Text style={{ fontSize: 9.5, fontWeight: '800', color: trip.sealStatus?.includes('DAMAGED') ? '#173B70' : '#173B70' }} numberOfLines={1}>
-                                {trip.sealStatus || 'INTACT (VERIFIED)'}
-                              </Text>
-                            </View>
-                          </View>
-
-                          <View style={{
-                            flex: 1,
-                            backgroundColor: '#0d1625',
-                            borderRadius: 6,
-                            borderWidth: 1,
-                            borderColor: trip.damageStatus === 'DAMAGED' ? 'rgba(255, 82, 82, 0.35)' : 'rgba(34, 239, 126, 0.35)',
-                            padding: 6,
-                          }}>
-                            <Text style={{ fontSize: 8, fontWeight: '800', color: '#3A567F' }}>CARGO</Text>
-                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
-                              <Ionicons
-                                name={trip.damageStatus === 'DAMAGED' ? 'alert-circle' : 'checkmark-circle'}
-                                size={11}
-                                color={trip.damageStatus === 'DAMAGED' ? '#173B70' : '#173B70'}
-                              />
-                              <Text style={{ fontSize: 9.5, fontWeight: '800', color: trip.damageStatus === 'DAMAGED' ? '#173B70' : '#173B70' }} numberOfLines={1}>
-                                {trip.damageStatus === 'DAMAGED' ? 'DAMAGED' : 'SOUND'}
-                              </Text>
-                            </View>
-                          </View>
-                        </View>
-
-                        {/* Full width remarks */}
-                        <View style={{
-                          backgroundColor: '#F8FAFC',
-                          borderRadius: 6,
-                          borderLeftWidth: 3,
-                          borderLeftColor: '#173B70',
-                          paddingHorizontal: 8,
-                          paddingVertical: 6,
-                        }}>
-                          <Text style={{ fontSize: 7.5, fontWeight: '900', color: '#173B70', letterSpacing: 0.4, marginBottom: 2 }}>
-                            DRIVER COMPLETION NOTES
-                          </Text>
-                          <Text style={{ fontSize: 9.5, color: '#1E293B', fontStyle: 'italic', lineHeight: 13 }}>
-                            "{trip.driverCompletionNotes || 'Containers discharged safely at destination terminal berth. Seals inspected and verified intact.'}"
-                          </Text>
-                        </View>
-
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, paddingTop: 2 }}>
-                          <Ionicons name="lock-closed" size={10} color="#3A567F" />
-                          <Text style={{ fontSize: 8.5, color: '#3A567F' }}>
-                            SLPA Digital Handover Audit • Transmitted to Port Supervisor
-                          </Text>
-                        </View>
-                      </View>
-
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, justifyContent: 'center', paddingVertical: 4 }}>
-                        <ActivityIndicator size="small" color="#173B70" />
-                        <Text style={{ fontSize: 10, fontWeight: '700', color: '#173B70' }}>
-                          Awaiting supervisor approval to credit container quota (+1)...
-                        </Text>
-                      </View>
-                    </View>
-                  )}
-
-                  {/* ─── State 2: GATE PASS APPROVED -> START TRIP ─── */}
-                  {isApproved && (
-                    <View style={{ gap: 8 }}>
-                      <View style={styles.approvedNoticeBox}>
-                        <Ionicons name="shield-checkmark" size={16} color="#173B70" />
-                        <Text style={styles.approvedNoticeText}>
-                          Gate Pass Cleared. You are authorized to depart {trip.sourceTerminal || 'Origin'}.
-                        </Text>
-                      </View>
-                      <TouchableOpacity
-                        style={[styles.completeBtn, { backgroundColor: '#173B70' }]}
-                        onPress={() => handleStartTrip(trip.id)}
-                        disabled={updatingId === trip.id}
-                      >
-                        {updatingId === trip.id ? (
-                          <ActivityIndicator size="small" color="#FFFFFF" />
-                        ) : (
-                          <>
-                            <Ionicons name="navigate" size={18} color="#FFFFFF" />
-                            <Text style={styles.completeBtnText}>START TRIP / DEPART TERMINAL</Text>
-                          </>
-                        )}
-                      </TouchableOpacity>
-                    </View>
-                  )}
-
-                  {/* ─── State 3: IN PROGRESS -> ARRIVED AT DESTINATION ─── */}
-                  {isProgress && !arrivedTrips.has(trip.id) && (
-                    <TouchableOpacity
-                      style={[styles.completeBtn, { backgroundColor: '#173B70' }]}
-                      onPress={() => {
-                        const next = new Set(arrivedTrips);
-                        next.add(trip.id);
-                        setArrivedTrips(next);
-                      }}
-                    >
-                      <Ionicons name="location" size={18} color="#FFFFFF" />
-                      <Text style={styles.completeBtnText}>ARRIVED AT DESTINATION TERMINAL ({getTripDischargeTerminal(trip)})</Text>
-                    </TouchableOpacity>
-                  )}
-
-                  {/* ─── State 4: ARRIVED -> DISCHARGE & SUBMIT FOR SUPERVISOR APPROVAL ─── */}
-                  {isProgress && arrivedTrips.has(trip.id) && (
-                    <View style={{ gap: 8 }}>
-                      <View style={styles.arrivedNoticeBox}>
-                        <Ionicons name="pin" size={16} color="#173B70" />
-                        <Text style={styles.arrivedNoticeText}>
-                          Arrived at {getTripDischargeTerminal(trip)}. Confirm discharge bay and submit mission for supervisor approval.
-                        </Text>
-                      </View>
-
-                      <TouchableOpacity
-                        style={[styles.completeBtn, { backgroundColor: '#173B70' }]}
-                        onPress={() => handleCompleteTrip(trip.id)}
-                        disabled={updatingId === trip.id}
-                      >
-                        {updatingId === trip.id ? (
-                          <ActivityIndicator size="small" color="#FFFFFF" />
-                        ) : (
-                          <>
-                            <Ionicons name="paper-plane" size={16} color="#FFFFFF" />
-                            <Text style={[styles.completeBtnText, { color: '#FFFFFF' }]}>
-                              DISCHARGE & SUBMIT FOR SUPERVISOR APPROVAL
-                            </Text>
-                          </>
-                        )}
-                      </TouchableOpacity>
-                    </View>
-                  )}
-
-                  {/* ─── State 5: COMPLETED -> STORED IN MY TRIPS ─── */}
-                  {isDone && (
-                    <View style={styles.completedNoticeBox}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                        <Ionicons name="checkmark-circle" size={16} color="#173B70" />
-                        <Text style={styles.completedNoticeText}>STORED IN MY TRIPS ARCHIVE</Text>
-                      </View>
-                      <Text style={styles.completedNoticeSub}>
-                        Containers successfully discharged at {getTripDischargeTerminal(trip)}. Trip record archived.
-                      </Text>
-                    </View>
-                  )}
-                </View>
-              </View>
-            );
-          })
+          filteredTrips.map((trip) => (
+            <PermanentTripCard
+              key={trip.id}
+              trip={trip}
+              role="DRIVER"
+              onPressDetails={(tripItem) => {
+                setSelectedTripDetails(tripItem);
+                setDetailsModalVisible(true);
+              }}
+              onPressAction={(tripItem) => {
+                setCompletionTrip(tripItem);
+                setCompletionModalVisible(true);
+              }}
+              onPressPhoto={(pUrl, cNum) => {
+                setLightboxPhotoUrl(pUrl);
+                setLightboxContainerNum(cNum);
+                setLightboxVisible(true);
+              }}
+            />
+          ))
         )}
 
         <View style={{ height: 40 }} />
       </ScrollView>
+
+      <CompleteTripDetailsModal
+        visible={detailsModalVisible}
+        onClose={() => setDetailsModalVisible(false)}
+        trip={selectedTripDetails}
+        role="DRIVER"
+        onTripUpdated={fetchTrips}
+        onOpenPhotoLightbox={(pUrl, cNum) => {
+          setLightboxPhotoUrl(pUrl);
+          setLightboxContainerNum(cNum);
+          setLightboxVisible(true);
+        }}
+      />
+
+      <DriverTripCompletionModal
+        visible={completionModalVisible}
+        onClose={() => setCompletionModalVisible(false)}
+        trip={completionTrip}
+        onTripCompleted={fetchTrips}
+      />
+
+      <PhotoLightboxModal
+        visible={lightboxVisible}
+        onClose={() => setLightboxVisible(false)}
+        photoUrl={lightboxPhotoUrl}
+        containerNumber={lightboxContainerNum}
+        tripId={selectedTripDetails?.tripNumber || selectedTripDetails?.id}
+      />
     </View>
   );
 }

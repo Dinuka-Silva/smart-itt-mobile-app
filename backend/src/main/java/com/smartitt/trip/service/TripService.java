@@ -511,6 +511,7 @@ public class TripService {
         List<TripResponse.ContainerResponse> containers = trip.getContainers().stream()
                 .map(c -> {
                     String photoUrl = null;
+                    String photoId = null;
                     String photoStatus = "NONE";
                     if (photoRepository != null && trip.getId() != null) {
                         String cleanNum = c.getContainerNumber() != null ? c.getContainerNumber().trim().toUpperCase() : "";
@@ -518,6 +519,7 @@ public class TripService {
                                 trip.getId(), cleanNum);
                         if (photoOpt.isPresent()) {
                             var p = photoOpt.get();
+                            photoId = p.getId().toString();
                             photoUrl = "/api/v1/container-photos/" + p.getId();
                             photoStatus = p.getVerificationStatus() != null ? p.getVerificationStatus() : "PENDING";
                         }
@@ -537,6 +539,7 @@ public class TripService {
                             .isVerified(c.getIsVerified() != null ? c.getIsVerified() : true)
                             .verifiedBy(c.getVerifiedBy())
                             .verifiedAt(c.getVerifiedAt())
+                            .photoId(photoId)
                             .photoUrl(photoUrl)
                             .photoStatus(photoStatus)
                             .build();

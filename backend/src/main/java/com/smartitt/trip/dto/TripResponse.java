@@ -53,6 +53,7 @@ public class TripResponse {
         private Boolean isVerified;
         private String verifiedBy;
         private LocalDateTime verifiedAt;
+        private String photoId;
         private String photoStatus;
         private String photoUrl;
     }

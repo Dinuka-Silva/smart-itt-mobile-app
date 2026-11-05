@@ -39,6 +39,13 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         if (StringUtils.hasText(authHeader) && authHeader.startsWith("Bearer ")) {
             token = authHeader.substring(7);
+        } else if (StringUtils.hasText(request.getParameter("token"))) {
+            token = request.getParameter("token");
+        } else if (StringUtils.hasText(request.getParameter("access_token"))) {
+            token = request.getParameter("access_token");
+        }
+
+        if (StringUtils.hasText(token)) {
             if ("demo-token-xyz".equals(token) || token.startsWith("demo-")) {
                 identifier = "DRV-00001";
             } else {

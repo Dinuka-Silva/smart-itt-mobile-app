@@ -8,3 +8,8 @@ export type { FilterState, FilterOptionItem, DateFilterOption, StatusFilterOptio
 export { ScreenHeader } from './ScreenHeader';
 export { AdaptiveScreen } from './AdaptiveScreen';
 export { NetworkErrorView } from './NetworkErrorView';
+export { PermanentTripCard } from './PermanentTripCard';
+export type { TripCardData } from './PermanentTripCard';
+export { CompleteTripDetailsModal } from './CompleteTripDetailsModal';
+export { PhotoLightboxModal } from './PhotoLightboxModal';
+export { DriverTripCompletionModal } from './DriverTripCompletionModal';
