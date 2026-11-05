@@ -96,17 +96,15 @@ export const photoService = {
         formData.append('file', blob, filename);
       } catch {
         // Fallback if fetch fails
-        // @ts-ignore
-        formData.append('file', { uri: params.uri, name: filename, type });
+        formData.append('file', { uri: params.uri, name: filename, type } as unknown as Blob);
       }
     } else {
       // React Native native FormData format
-      // @ts-ignore
       formData.append('file', {
         uri: params.uri,
         name: filename,
         type,
-      });
+      } as unknown as Blob);
     }
 
     // On web, do not specify Content-Type so browser sets boundary.
