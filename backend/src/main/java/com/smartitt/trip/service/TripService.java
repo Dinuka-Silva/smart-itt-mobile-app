@@ -546,6 +546,17 @@ public class TripService {
                 .build();
     }
 
+        private Long calculateTripDuration(Trip trip) {
+        if (trip == null) return null;
+        if (trip.getDurationMinutes() != null) {
+            return trip.getDurationMinutes();
+        }
+        if (trip.getStartTime() != null && trip.getEndTime() != null) {
+            return Math.max(0L, java.time.Duration.between(trip.getStartTime(), trip.getEndTime()).toMinutes());
+        }
+        return null;
+    }
+
     public TripResponse mapToResponse(Trip trip) {
         List<TripResponse.ContainerResponse> containers = trip.getContainers() != null
                 ? trip.getContainers().stream()
@@ -554,14 +565,10 @@ public class TripService {
                 : java.util.Collections.emptyList();
 
         String driverName = getDriverNameForTrip(trip);
-
-        Long duration = trip.getDurationMinutes();
-        if (duration == null && trip.getStartTime() != null && trip.getEndTime() != null) {
-            duration = Math.max(0L, java.time.Duration.between(trip.getStartTime(), trip.getEndTime()).toMinutes());
-        }
+        Long tripDuration = calculateTripDuration(trip);
 
         return TripResponse.builder()
-                .id(trip.getId().toString())
+                .id(trip.getId() != null ? trip.getId().toString() : null)
                 .tripNumber(trip.getTripNumber())
                 .driverId(trip.getDriverId() != null ? trip.getDriverId().toString() : null)
                 .driverName(driverName)
@@ -570,11 +577,11 @@ public class TripService {
                 .chassisNumber(trip.getChassisNumber())
                 .sourceTerminal(trip.getSourceTerminal())
                 .destTerminal(trip.getDestTerminal())
-                .status(trip.getStatus().name())
+                .status(trip.getStatus() != null ? trip.getStatus().name() : "IN_PROGRESS")
                 .notes(trip.getNotes())
                 .startTime(trip.getStartTime())
                 .endTime(trip.getEndTime())
-                .durationMinutes(duration)
+                .durationMinutes(tripDuration)
                 .dischargeBay(trip.getDischargeBay())
                 .sealStatus(trip.getSealStatus())
                 .damageStatus(trip.getDamageStatus())

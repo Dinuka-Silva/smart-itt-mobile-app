@@ -96,6 +96,30 @@ public class Trip {
         if (startTime == null) startTime = LocalDateTime.now();
     }
 
+        public Long getDurationMinutes() {
+        return durationMinutes;
+    }
+
+    public void setDurationMinutes(Long durationMinutes) {
+        this.durationMinutes = durationMinutes;
+    }
+
+    public LocalDateTime getStartTime() {
+        return startTime;
+    }
+
+    public void setStartTime(LocalDateTime startTime) {
+        this.startTime = startTime;
+    }
+
+    public LocalDateTime getEndTime() {
+        return endTime;
+    }
+
+    public void setEndTime(LocalDateTime endTime) {
+        this.endTime = endTime;
+    }
+
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
