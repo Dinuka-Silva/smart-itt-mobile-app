@@ -4,6 +4,7 @@ import com.smartitt.container.entity.Container;
 import com.smartitt.container.entity.ContainerSize;
 import com.smartitt.container.entity.ContainerStatus;
 import com.smartitt.container.repository.ContainerRepository;
+import com.smartitt.container.photo.entity.ContainerPhoto;
 import com.smartitt.container.photo.repository.ContainerPhotoRepository;
 import com.smartitt.trip.dto.CreateTripRequest;
 import com.smartitt.trip.dto.TripResponse;
@@ -22,6 +23,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -512,12 +514,14 @@ public class TripService {
         String photoStatus = "NONE";
         if (photoRepository != null && tripId != null) {
             String cleanNum = c.getContainerNumber() != null ? c.getContainerNumber().trim().toUpperCase() : "";
-            var photoOpt = photoRepository.findFirstByTripIdAndContainerNumberAndDeletedFalseOrderByUploadedAtDesc(
+            Optional<ContainerPhoto> photoOpt = photoRepository.findFirstByTripIdAndContainerNumberAndDeletedFalseOrderByUploadedAtDesc(
                     tripId, cleanNum);
             if (photoOpt.isPresent()) {
-                var p = photoOpt.get();
-                photoId = p.getId().toString();
-                photoUrl = "/api/v1/container-photos/" + p.getId();
+                ContainerPhoto p = photoOpt.get();
+                if (p.getId() != null) {
+                    photoId = p.getId().toString();
+                    photoUrl = "/api/v1/container-photos/" + photoId;
+                }
                 photoStatus = p.getVerificationStatus() != null ? p.getVerificationStatus() : "PENDING";
             }
         }
