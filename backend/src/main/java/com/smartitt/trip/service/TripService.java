@@ -1,5 +1,7 @@
 package com.smartitt.trip.service;
 
+import com.smartitt.audit.service.AuditLogService;
+
 import com.smartitt.container.entity.Container;
 import com.smartitt.container.entity.ContainerSize;
 import com.smartitt.container.entity.ContainerStatus;
@@ -36,6 +38,7 @@ public class TripService {
     private final UserRepository userRepository;
     private final DriverRepository driverRepository;
     private final ContainerPhotoRepository photoRepository;
+    private final AuditLogService auditLogService;
 
     public UUID resolveDriverUuid(String driverIdStr) {
         if (driverIdStr == null || driverIdStr.isBlank() || "ALL".equalsIgnoreCase(driverIdStr)) {
@@ -75,7 +78,7 @@ public class TripService {
             }
         }
 
-        // Driver loads containers → confirms trip → waits for supervisor
+        // Driver loads containers â†’ confirms trip â†’ waits for supervisor
         String vesselName = (req.getVesselName() != null && !req.getVesselName().isBlank())
                 ? req.getVesselName().trim()
                 : "MV Colombo Express";
@@ -392,6 +395,19 @@ public class TripService {
         });
 
         Trip saved = tripRepository.save(trip);
+        try {
+            auditLogService.logAction(
+                    trip.getDriverId(),
+                    "DRIVER",
+                    "TRIP_SUBMITTED",
+                    "TRIP",
+                    trip.getId().toString(),
+                    "Driver submitted trip " + trip.getTripNumber() + " for supervisor/admin verification",
+                    "IN_PROGRESS",
+                    "PENDING_VERIFICATION",
+                    null
+            );
+        } catch (Exception ignored) {}
         return mapToResponse(saved);
     }
 
@@ -460,7 +476,7 @@ public class TripService {
                 containerRepository.save(c);
             });
         } else if (status == TripStatus.COMPLETED) {
-            trip.setStatus(TripStatus.SUPERVISOR_CONFIRMED);
+            trip.setStatus(TripStatus.PENDING_SUPERVISOR_CONFIRMATION);
             if (trip.getEndTime() == null) {
                 trip.setEndTime(LocalDateTime.now());
             }
@@ -567,6 +583,7 @@ public class TripService {
                 .verifiedAt(c.getVerifiedAt())
                 .photoId(photoId)
                 .photoUrl(photoUrl)
+                .thumbnailUrl(photoId != null ? "/api/v1/container-photos/" + photoId + "/thumbnail" : null)
                 .photoStatus(photoStatus)
                 .build();
     }
@@ -615,8 +632,385 @@ public class TripService {
                 .supervisorName(trip.getSupervisorName())
                 .confirmedAt(trip.getConfirmedAt())
                 .rejectionReason(trip.getRejectionReason())
+                .rejectReason(trip.getRejectReason() != null ? trip.getRejectReason() : trip.getRejectionReason())
+                .verifiedBy(trip.getVerifiedBy())
+                .verifiedByRole(trip.getVerifiedByRole())
+                .verifiedAt(trip.getVerifiedAt())
+                .evidenceVerified(Boolean.TRUE.equals(trip.getEvidenceVerified()))
+                .verificationStatus(trip.getStatus() == TripStatus.SUPERVISOR_CONFIRMED ? "CONFIRMED" :
+                        trip.getStatus() == TripStatus.SUPERVISOR_REJECTED ? "REJECTED" :
+                        Boolean.TRUE.equals(trip.getEvidenceVerified()) ? "EVIDENCE_VERIFIED" : "PENDING_VERIFICATION")
                 .createdAt(trip.getCreatedAt())
                 .containers(containers)
                 .build();
     }
+
+    private UUID parseTripUuid(String id) {
+        if (id == null || id.trim().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Trip ID cannot be blank");
+        }
+        try {
+            return UUID.fromString(id.trim());
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid trip UUID format: " + id);
+        }
+    }
+
+    public boolean isTripEvidenceVerified(Trip trip) {
+        if (Boolean.TRUE.equals(trip.getEvidenceVerified())) {
+            return true;
+        }
+        return trip.getContainers() != null && !trip.getContainers().isEmpty()
+                && trip.getContainers().stream().allMatch(c -> Boolean.TRUE.equals(c.getIsVerified()));
+    }
+
+    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // TWO-STAGE SUPERVISOR WORKFLOW
+    // Stage A: verifyTripEvidence (Verify container photos / seals)
+    // Stage B: confirmTrip (Approve & Confirm completed trip)
+    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+    /**
+     * Stage A: Verify container photo evidence.
+     * Validates trip exists, driver has completed it, and required container evidence exists.
+     * Records evidence verification permanently in the database without prematurely confirming the trip.
+     */
+    @Transactional
+    public TripResponse verifyTripEvidence(String id, String reviewerId, String reviewerRole) {
+        UUID tripUuid = parseTripUuid(id);
+        Trip trip = tripRepository.findById(tripUuid)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Trip not found with ID: " + id));
+
+        TripStatus current = trip.getStatus();
+        if (current == TripStatus.SUPERVISOR_CONFIRMED || current == TripStatus.CONFIRMED || current == TripStatus.APPROVED) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Trip has already been confirmed and completed.");
+        }
+        if (current == TripStatus.SUPERVISOR_REJECTED || current == TripStatus.REJECTED) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Trip has already been rejected.");
+        }
+        if (current != TripStatus.PENDING_SUPERVISOR_CONFIRMATION
+                && current != TripStatus.PENDING_VERIFICATION
+                && current != TripStatus.PENDING_APPROVAL) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Evidence verification is only allowed for trips completed by the driver awaiting verification. Current status: " + current);
+        }
+
+        // Validate that required container evidence exists
+        List<com.smartitt.container.entity.Container> containers = trip.getContainers();
+        boolean hasContainerEvidence = containers != null && !containers.isEmpty() && containers.stream().anyMatch(c ->
+                Boolean.TRUE.equals(c.getIsVerified())
+        );
+
+        boolean hasPhotoRecords = false;
+        try {
+            hasPhotoRecords = !photoRepository.findByTripIdAndDeletedFalseOrderByUploadedAtDesc(trip.getId()).isEmpty();
+        } catch (Exception ignored) {}
+
+        if (!hasContainerEvidence && !hasPhotoRecords) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Cannot verify evidence: required container photo evidence has not been submitted by the driver.");
+        }
+
+        UUID reviewerUuid = resolveSupervisorUuid(reviewerId);
+        String resolvedName = resolveSupervisorName(reviewerId);
+        String roleStr = (reviewerRole != null && !reviewerRole.isBlank()) ? reviewerRole.trim().toUpperCase() : "SUPERVISOR";
+        LocalDateTime now = LocalDateTime.now();
+
+        trip.setEvidenceVerified(true);
+        trip.setVerifiedBy(resolvedName);
+        trip.setVerifiedByRole(roleStr);
+        trip.setVerifiedAt(now);
+
+        if (containers != null) {
+            containers.forEach(c -> {
+                c.setIsVerified(true);
+                c.setVerifiedBy(resolvedName);
+                c.setVerifiedAt(now);
+                containerRepository.save(c);
+            });
+        }
+
+        try {
+            var photos = photoRepository.findByTripIdAndDeletedFalseOrderByUploadedAtDesc(trip.getId());
+            photos.forEach(p -> {
+                p.setVerificationStatus("VERIFIED");
+                p.setVerifiedBy(resolvedName);
+                p.setVerifiedAt(now);
+                photoRepository.save(p);
+            });
+        } catch (Exception ignored) {}
+
+        Trip saved = tripRepository.save(trip);
+
+        try {
+            auditLogService.logAction(
+                    reviewerUuid,
+                    roleStr,
+                    "TRIP_EVIDENCE_VERIFIED",
+                    "TRIP",
+                    trip.getId().toString(),
+                    "Container evidence verified for trip " + trip.getTripNumber() + " by " + roleStr + " (" + resolvedName + ")",
+                    current.name(),
+                    "EVIDENCE_VERIFIED",
+                    null
+            );
+        } catch (Exception ignored) {}
+
+        return mapToResponse(saved);
+    }
+
+    /**
+     * Stage B: Approve and confirm trip completion.
+     * Enforces that container evidence has been verified first.
+     */
+    @Transactional
+    public TripResponse confirmTrip(String id, String reviewerId, String reviewerRole) {
+        UUID tripUuid = parseTripUuid(id);
+        Trip trip = tripRepository.findById(tripUuid)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Trip not found with ID: " + id));
+
+        TripStatus current = trip.getStatus();
+        if (current == TripStatus.SUPERVISOR_CONFIRMED || current == TripStatus.CONFIRMED || current == TripStatus.APPROVED) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Trip has already been confirmed.");
+        }
+        if (current == TripStatus.SUPERVISOR_REJECTED || current == TripStatus.REJECTED) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Trip has already been rejected.");
+        }
+        if (current != TripStatus.PENDING_SUPERVISOR_CONFIRMATION
+                && current != TripStatus.PENDING_VERIFICATION
+                && current != TripStatus.PENDING_APPROVAL) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Trip cannot be confirmed until driver completes it. Current status: " + current);
+        }
+
+        // CRITICAL: Stage 2 requires evidence to be verified first!
+        if (!isTripEvidenceVerified(trip)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Cannot confirm trip: container photo evidence must be verified before final approval.");
+        }
+
+        UUID reviewerUuid = resolveSupervisorUuid(reviewerId);
+        String resolvedName = resolveSupervisorName(reviewerId);
+        String roleStr = (reviewerRole != null && !reviewerRole.isBlank()) ? reviewerRole.trim().toUpperCase() : "SUPERVISOR";
+        LocalDateTime now = LocalDateTime.now();
+
+        trip.setStatus(TripStatus.SUPERVISOR_CONFIRMED);
+        trip.setConfirmedAt(now);
+        trip.setSupervisorId(reviewerUuid);
+        trip.setSupervisorName(resolvedName);
+        trip.setRejectionReason(null);
+        trip.setRejectReason(null);
+        if (trip.getEndTime() == null) trip.setEndTime(now);
+
+        if (trip.getContainers() != null) {
+            trip.getContainers().forEach(c -> {
+                c.setStatus(com.smartitt.container.entity.ContainerStatus.DISCHARGED);
+                c.setIsVerified(true);
+                if (c.getVerifiedBy() == null) c.setVerifiedBy(resolvedName);
+                if (c.getVerifiedAt() == null) c.setVerifiedAt(now);
+                if (c.getUnloadedAt() == null) c.setUnloadedAt(now.toString());
+                containerRepository.save(c);
+            });
+        }
+
+        if (trip.getStartTime() != null && trip.getEndTime() != null) {
+            trip.setDurationMinutes(
+                    Math.max(0L, java.time.Duration.between(trip.getStartTime(), trip.getEndTime()).toMinutes()));
+        }
+
+        Trip saved = tripRepository.save(trip);
+
+        try {
+            auditLogService.logAction(
+                    reviewerUuid,
+                    roleStr,
+                    "TRIP_APPROVED",
+                    "TRIP",
+                    trip.getId().toString(),
+                    "Trip " + trip.getTripNumber() + " approved and confirmed by " + roleStr + " (" + resolvedName + ")",
+                    "PENDING_VERIFICATION",
+                    "CONFIRMED",
+                    null
+            );
+        } catch (Exception ignored) {}
+
+        return mapToResponse(saved);
+    }
+
+    /**
+     * Reject trip with mandatory rejection reason.
+     */
+    @Transactional
+    public TripResponse rejectTrip(String id, String reviewerId, String reviewerRole, String rejectReason) {
+        UUID tripUuid = parseTripUuid(id);
+        Trip trip = tripRepository.findById(tripUuid)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Trip not found with ID: " + id));
+
+        TripStatus current = trip.getStatus();
+        if (current == TripStatus.SUPERVISOR_CONFIRMED || current == TripStatus.CONFIRMED || current == TripStatus.APPROVED) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Trip has already been confirmed and cannot be rejected.");
+        }
+        if (current == TripStatus.SUPERVISOR_REJECTED || current == TripStatus.REJECTED) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Trip has already been rejected.");
+        }
+
+        if (rejectReason == null || rejectReason.trim().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "A mandatory rejection reason is required to reject a trip.");
+        }
+
+        UUID reviewerUuid = resolveSupervisorUuid(reviewerId);
+        String resolvedName = resolveSupervisorName(reviewerId);
+        String roleStr = (reviewerRole != null && !reviewerRole.isBlank()) ? reviewerRole.trim().toUpperCase() : "SUPERVISOR";
+        LocalDateTime now = LocalDateTime.now();
+
+        String cleanReason = rejectReason.trim();
+        trip.setStatus(TripStatus.SUPERVISOR_REJECTED);
+        trip.setRejectionReason(cleanReason);
+        trip.setRejectReason(cleanReason);
+        trip.setConfirmedAt(now);
+        trip.setVerifiedBy(resolvedName);
+        trip.setVerifiedByRole(roleStr);
+        trip.setVerifiedAt(now);
+        trip.setSupervisorId(reviewerUuid);
+        trip.setSupervisorName(resolvedName);
+
+        Trip saved = tripRepository.save(trip);
+
+        try {
+            auditLogService.logAction(
+                    reviewerUuid,
+                    roleStr,
+                    "TRIP_REJECTED",
+                    "TRIP",
+                    trip.getId().toString(),
+                    "Trip " + trip.getTripNumber() + " rejected by " + roleStr + " (" + resolvedName + "). Reason: " + cleanReason,
+                    current.name(),
+                    "REJECTED",
+                    null
+            );
+        } catch (Exception ignored) {}
+
+        return mapToResponse(saved);
+    }
+
+    /**
+     * Unified verify dispatcher supporting Stage A (Verify Evidence), Stage B (Confirm Trip), or Reject.
+     */
+    @Transactional
+    public TripResponse verifyTrip(String id, String actionOrDecision, String reviewerId, String reviewerRole, String rejectReason) {
+        if ("APPROVE".equalsIgnoreCase(actionOrDecision) || "CONFIRM".equalsIgnoreCase(actionOrDecision) || "SUPERVISOR_CONFIRMED".equalsIgnoreCase(actionOrDecision)) {
+            return confirmTrip(id, reviewerId, reviewerRole);
+        } else if ("REJECT".equalsIgnoreCase(actionOrDecision) || "SUPERVISOR_REJECTED".equalsIgnoreCase(actionOrDecision)) {
+            return rejectTrip(id, reviewerId, reviewerRole, rejectReason);
+        } else {
+            // Default action: Verify container evidence
+            return verifyTripEvidence(id, reviewerId, reviewerRole);
+        }
+    }
+
+    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // RESUBMIT â€“ Driver corrects and resubmits a rejected trip
+    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+        @Transactional
+    public TripResponse resubmitTrip(String id, java.util.Map<String, Object> body, String actorUsername) {
+        Trip trip = tripRepository.findById(UUID.fromString(id))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Trip not found"));
+
+        if (trip.getStatus() != TripStatus.SUPERVISOR_REJECTED
+                && trip.getStatus() != TripStatus.REJECTED) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Only REJECTED trips can be resubmitted. Current status: " + trip.getStatus());
+        }
+
+        String oldContainer = !trip.getContainers().isEmpty() ? trip.getContainers().get(0).getContainerNumber() : "-";
+
+        // Update container number if supplied
+        if (body != null && body.get("containerNumber") != null) {
+            String newNum = body.get("containerNumber").toString().trim().toUpperCase();
+            if (!newNum.isBlank() && !trip.getContainers().isEmpty()) {
+                Container c = trip.getContainers().get(0);
+                c.setContainerNumber(newNum);
+                c.setIsVerified(com.smartitt.container.service.Iso6346Validator.isValidCheckDigit(newNum));
+                containerRepository.save(c);
+            }
+        }
+
+        // Update driver notes if supplied
+        if (body != null && body.get("notes") != null) {
+            trip.setDriverCompletionNotes(body.get("notes").toString());
+        }
+
+        // Reset status back to pending verification
+        trip.setStatus(TripStatus.PENDING_SUPERVISOR_CONFIRMATION);
+        trip.setRejectionReason(null);
+        trip.setRejectReason(null);
+        trip.setSupervisorId(null);
+        trip.setSupervisorName(null);
+        trip.setVerifiedBy(null);
+        trip.setVerifiedByRole(null);
+        trip.setVerifiedAt(null);
+        trip.setConfirmedAt(null);
+        trip.getContainers().forEach(c -> {
+            c.setStatus(com.smartitt.container.entity.ContainerStatus.DISCHARGED);
+            containerRepository.save(c);
+        });
+
+        Trip saved = tripRepository.save(trip);
+
+        try {
+            auditLogService.logAction(
+                    trip.getDriverId(),
+                    "DRIVER",
+                    "TRIP_RESUBMITTED",
+                    "TRIP",
+                    trip.getId().toString(),
+                    "Driver corrected and resubmitted trip " + trip.getTripNumber() + " for verification (Container: " + oldContainer + " -> " + (!trip.getContainers().isEmpty() ? trip.getContainers().get(0).getContainerNumber() : "-") + ")",
+                    "REJECTED",
+                    "PENDING_VERIFICATION",
+                    null
+            );
+        } catch (Exception ignored) {}
+
+        return mapToResponse(saved);
+    }
+
+    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // GET PENDING VERIFICATION â€“ for supervisor/admin queue
+    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+        public List<TripResponse> getPendingVerificationTrips(
+            String driverId, String vehicleNumber, String terminal, String startDate, String endDate, String search) {
+        List<TripResponse> all = getAllTrips(driverId, "PENDING_VERIFICATION", vehicleNumber, terminal, startDate, endDate, search, null, null);
+        return all;
+    }
+
+
+    private String resolveVerificationStatus(Trip trip) {
+        if (trip.getStatus() == null) return null;
+        switch (trip.getStatus()) {
+            case PENDING_SUPERVISOR_CONFIRMATION:
+            case PENDING_VERIFICATION:
+            case PENDING_APPROVAL:
+                return "PENDING_VERIFICATION";
+            case SUPERVISOR_CONFIRMED:
+            case CONFIRMED:
+            case APPROVED:
+            case COMPLETED:
+                return "CONFIRMED";
+            case SUPERVISOR_REJECTED:
+            case REJECTED:
+                return "REJECTED";
+            default:
+                return null;
+        }
+    }
+
+    private String resolveVerifiedByRole(Trip trip) {
+        if (trip.getSupervisorName() == null) return null;
+        if (trip.getSupervisorName().contains("[ADMIN]")) return "ADMIN";
+        if (trip.getSupervisorName().contains("[SUPERVISOR]")) return "SUPERVISOR";
+        return "SUPERVISOR"; // default
+    }
+
 }

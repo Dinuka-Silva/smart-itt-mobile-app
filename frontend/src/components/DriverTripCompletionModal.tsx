@@ -40,6 +40,20 @@ export const DriverTripCompletionModal: React.FC<DriverTripCompletionModalProps>
   // Container photo mapping: containerId/Number -> ProcessedPhoto
   const [containerPhotos, setContainerPhotos] = useState<Record<string, ProcessedPhoto>>({});
 
+  // Editable container numbers for resubmission
+  const isRejected = trip?.status === 'REJECTED' || trip?.status === 'SUPERVISOR_REJECTED';
+  const [editedContainers, setEditedContainers] = useState<Record<string, string>>({});
+
+  React.useEffect(() => {
+    if (trip?.containers) {
+      const initial: Record<string, string> = {};
+      trip.containers.forEach((c) => {
+        initial[c.id || c.containerNumber] = c.containerNumber;
+      });
+      setEditedContainers(initial);
+    }
+  }, [trip]);
+
   if (!trip) return null;
 
   const displayTripId = trip.tripNumber || `TRP-${trip.id.slice(0, 8).toUpperCase()}`;

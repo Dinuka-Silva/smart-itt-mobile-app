@@ -37,6 +37,12 @@ export interface TripCardData {
   confirmedAt?: string;
   createdAt?: string;
   rejectionReason?: string;
+  verifiedBy?: string;
+  verifiedByRole?: string;
+  verifiedAt?: string;
+  rejectReason?: string;
+  verificationStatus?: string;
+  evidenceVerified?: boolean;
   containers?: Array<{
     id?: string;
     containerNumber: string;
@@ -51,6 +57,7 @@ export interface TripCardData {
     photoId?: string;
     photoStatus?: string;
     photoUrl?: string;
+    thumbnailUrl?: string;
   }>;
 }
 
@@ -107,15 +114,16 @@ export const PermanentTripCard: React.FC<PermanentTripCardProps> = ({
   const getStatusBadge = () => {
     if (isPending) {
       return {
-        label: 'PENDING CONFIRMATION',
+        label: role === 'DRIVER' ? 'WAITING FOR VERIFICATION' : 'PENDING VERIFICATION',
         icon: 'time-outline' as const,
         badgeBg: '#173B70',
         textColor: '#FFFFFF',
       };
     }
     if (isConfirmed) {
+      const verifier = trip.verifiedByRole ? `VERIFIED BY ${trip.verifiedByRole}` : 'CONFIRMED';
       return {
-        label: 'SUPERVISOR CONFIRMED',
+        label: verifier,
         icon: 'checkmark-circle' as const,
         badgeBg: '#E8F1FA',
         textColor: '#173B70',
@@ -123,8 +131,8 @@ export const PermanentTripCard: React.FC<PermanentTripCardProps> = ({
     }
     if (isRejected) {
       return {
-        label: 'SUPERVISOR REJECTED',
-        icon: 'close-circle' as const,
+        label: 'REJECTED · RESUBMIT',
+        icon: 'alert-circle' as const,
         badgeBg: '#F0F5FA',
         textColor: '#173B70',
       };
@@ -258,7 +266,10 @@ export const PermanentTripCard: React.FC<PermanentTripCardProps> = ({
 
           <View style={styles.containersList}>
             {containers.map((c, idx) => {
-              const pUrl = c.photoUrl || c.photoId ? photoService.getPhotoUrl(c.photoUrl || c.photoId) : null;
+              const fullUrl = c.photoUrl || c.photoId ? photoService.getPhotoUrl(c.photoUrl || c.photoId) : null;
+              const thumbUrl = c.thumbnailUrl
+                ? photoService.getThumbnailUrl(c.thumbnailUrl)
+                : fullUrl;
               return (
                 <View key={c.id || idx} style={styles.containerChip}>
                   <View style={styles.containerInfoWrap}>
@@ -270,13 +281,13 @@ export const PermanentTripCard: React.FC<PermanentTripCardProps> = ({
                   </View>
 
                   {/* Photo Evidence Thumbnail or Indicator */}
-                  {pUrl ? (
+                  {thumbUrl ? (
                     <TouchableOpacity
                       style={styles.photoThumbTouch}
-                      onPress={() => onPressPhoto && onPressPhoto(pUrl, c.containerNumber, trip)}
+                      onPress={() => onPressPhoto && onPressPhoto(fullUrl || thumbUrl, c.containerNumber, trip)}
                       activeOpacity={0.8}
                     >
-                      <Image source={{ uri: pUrl }} style={styles.photoThumbImg} />
+                      <Image source={{ uri: thumbUrl }} style={styles.photoThumbImg} />
                       <View style={styles.photoIndicator}>
                         <Ionicons name="expand" size={10} color="#FFFFFF" />
                       </View>
@@ -350,7 +361,7 @@ export const PermanentTripCard: React.FC<PermanentTripCardProps> = ({
           </TouchableOpacity>
         )}
 
-        {role === 'SUPERVISOR' && isPending && onPressAction && (
+        {(role === 'SUPERVISOR' || role === 'ADMIN') && isPending && onPressAction && (
           <TouchableOpacity
             style={styles.primaryActionBtn}
             onPress={() => onPressAction(trip)}
@@ -362,7 +373,19 @@ export const PermanentTripCard: React.FC<PermanentTripCardProps> = ({
           </TouchableOpacity>
         )}
 
-        {role === 'ADMIN' && (
+        {role === 'DRIVER' && isRejected && onPressAction && (
+          <TouchableOpacity
+            style={styles.primaryActionBtn}
+            onPress={() => onPressAction(trip)}
+            disabled={updating}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="create-outline" size={15} color="#FFFFFF" />
+            <Text style={styles.primaryActionBtnText}>Edit & Resubmit</Text>
+          </TouchableOpacity>
+        )}
+
+        {role === 'ADMIN' && !isPending && (
           <TouchableOpacity
             style={styles.secondaryActionBtn}
             onPress={() => onPressDetails(trip)}

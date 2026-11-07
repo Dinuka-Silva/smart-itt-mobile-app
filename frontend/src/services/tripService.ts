@@ -30,6 +30,7 @@ export interface Container {
   photoId?: string;
   photoStatus?: 'PENDING' | 'VERIFIED' | 'REJECTED' | 'NONE';
   photoUrl?: string;
+  thumbnailUrl?: string;
 }
 
 export interface CreateTripRequest {
@@ -72,6 +73,12 @@ export interface TripResponse {
   approvedBy?: string;
   approvedAt?: string;
   rejectionReason?: string;
+  verifiedBy?: string;
+  verifiedByRole?: string;
+  verifiedAt?: string;
+  rejectReason?: string;
+  verificationStatus?: string;
+  evidenceVerified?: boolean;
 }
 
 export interface ApproveTripRequest {
@@ -142,6 +149,31 @@ export const tripService = {
       supervisorId,
       reason,
     });
+    return response.data;
+  },
+
+  async verifyTripEvidence(id: string): Promise<TripResponse> {
+    const response = await apiClient.post<TripResponse>(`/trips/${id}/verify`, {
+      action: 'VERIFY_EVIDENCE',
+    });
+    return response.data;
+  },
+
+  async verifyTrip(id: string, decision: 'APPROVE' | 'REJECT', rejectReason?: string): Promise<TripResponse> {
+    const response = await apiClient.post<TripResponse>(`/trips/${id}/verify`, {
+      decision,
+      rejectReason,
+    });
+    return response.data;
+  },
+
+  async resubmitTrip(id: string, data: { containerNumber?: string; notes?: string }): Promise<TripResponse> {
+    const response = await apiClient.post<TripResponse>(`/trips/${id}/resubmit`, data);
+    return response.data;
+  },
+
+  async getPendingVerification(params?: TripFilterParams): Promise<TripResponse[]> {
+    const response = await apiClient.get<TripResponse[]>('/trips/pending-verification', { params });
     return response.data;
   },
 

@@ -80,6 +80,22 @@ public class Trip {
     @Column(name = "rejection_reason", columnDefinition = "TEXT")
     private String rejectionReason;
 
+    @Column(name = "verified_by")
+    private String verifiedBy;
+
+    @Column(name = "verified_by_role", length = 30)
+    private String verifiedByRole;
+
+    @Column(name = "verified_at")
+    private LocalDateTime verifiedAt;
+
+    @Column(name = "reject_reason", columnDefinition = "TEXT")
+    private String rejectReason;
+
+    @Column(name = "evidence_verified")
+    @Builder.Default
+    private Boolean evidenceVerified = false;
+
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 

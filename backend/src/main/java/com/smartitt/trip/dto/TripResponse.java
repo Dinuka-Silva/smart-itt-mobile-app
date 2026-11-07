@@ -35,6 +35,12 @@ public class TripResponse {
     private String supervisorName;
     private LocalDateTime confirmedAt;
     private String rejectionReason;
+    private String verificationStatus; // "PENDING_VERIFICATION" | "CONFIRMED" | "REJECTED" | null
+    private String verifiedBy;
+    private String verifiedByRole; // "SUPERVISOR" | "ADMIN"
+    private LocalDateTime verifiedAt;
+    private Boolean evidenceVerified;
+    private String rejectReason;
     private LocalDateTime createdAt;
     private List<ContainerResponse> containers;
 
@@ -56,5 +62,6 @@ public class TripResponse {
         private String photoId;
         private String photoStatus;
         private String photoUrl;
+        private String thumbnailUrl;
     }
 }

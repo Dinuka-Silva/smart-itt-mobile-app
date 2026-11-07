@@ -82,6 +82,43 @@ public class ContainerPhotoService {
     /**
      * Checks magic bytes to verify genuine JPEG or PNG image signature.
      */
+
+    private void generateThumbnail(Path originalFile, Path thumbFile) {
+        try {
+            java.awt.image.BufferedImage original = javax.imageio.ImageIO.read(originalFile.toFile());
+            if (original == null) return;
+
+            int originalWidth = original.getWidth();
+            int originalHeight = original.getHeight();
+            int maxDim = 300;
+
+            int newWidth = originalWidth;
+            int newHeight = originalHeight;
+            if (originalWidth > maxDim || originalHeight > maxDim) {
+                if (originalWidth > originalHeight) {
+                    newWidth = maxDim;
+                    newHeight = (int) (((double) originalHeight / originalWidth) * maxDim);
+                } else {
+                    newHeight = maxDim;
+                    newWidth = (int) (((double) originalWidth / originalHeight) * maxDim);
+                }
+            }
+
+            java.awt.image.BufferedImage thumbnail = new java.awt.image.BufferedImage(newWidth, newHeight, java.awt.image.BufferedImage.TYPE_INT_RGB);
+            java.awt.Graphics2D g2d = thumbnail.createGraphics();
+            g2d.setRenderingHint(java.awt.RenderingHints.KEY_INTERPOLATION, java.awt.RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+            g2d.setRenderingHint(java.awt.RenderingHints.KEY_RENDERING, java.awt.RenderingHints.VALUE_RENDER_QUALITY);
+            g2d.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING, java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
+            g2d.drawImage(original, 0, 0, newWidth, newHeight, null);
+            g2d.dispose();
+
+            javax.imageio.ImageIO.write(thumbnail, "jpg", thumbFile.toFile());
+            log.info("[PhotoService] Generated thumbnail at: {}", thumbFile);
+        } catch (Exception e) {
+            log.warn("[PhotoService] Could not generate thumbnail: {}", e.getMessage());
+        }
+    }
+
     private boolean isValidImageSignature(byte[] header) {
         if (header == null || header.length < 4) return false;
 
@@ -171,8 +208,9 @@ public class ContainerPhotoService {
 
             // Save file to disk
             Files.copy(file.getInputStream(), targetFile, StandardCopyOption.REPLACE_EXISTING);
-            log.info("[PhotoService] Saved container photo to: {} (Size: {} bytes, SHA-256: {})",
-                    targetFile, file.getSize(), sha256);
+            log.info("[PhotoService] Saved container photo to: {} (Size: {} bytes, SHA-256: {})", targetFile, file.getSize(), sha256);
+            Path thumbFile = targetDir.resolve(fileUuid + "-thumb.jpg");
+            generateThumbnail(targetFile, thumbFile);
         } catch (Exception e) {
             log.error("[PhotoService] Failed to write image file to disk: {}", e.getMessage(), e);
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to save photo to storage");
@@ -197,6 +235,59 @@ public class ContainerPhotoService {
         photo = photoRepository.save(photo);
 
         return mapToResponse(photo);
+    }
+
+
+    public Resource loadThumbnailResource(String photoIdStr, String callerUsername) {
+        UUID photoUuid = UUID.fromString(photoIdStr);
+        ContainerPhoto photo = photoRepository.findById(photoUuid)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Photo record not found"));
+
+        if (Boolean.TRUE.equals(photo.getDeleted())) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Photo has been removed");
+        }
+
+        checkPhotoAccess(photo, callerUsername);
+
+        Path fullPath = Paths.get(photo.getFilePath());
+        String filename = fullPath.getFileName().toString();
+        int dot = filename.lastIndexOf('.');
+        String base = dot > 0 ? filename.substring(0, dot) : filename;
+        Path thumbPath = fullPath.getParent().resolve(base + "-thumb.jpg");
+
+        if (Files.exists(thumbPath) && Files.isReadable(thumbPath)) {
+            return new FileSystemResource(thumbPath.toFile());
+        }
+
+        return new FileSystemResource(fullPath.toFile());
+    }
+
+    public List<PhotoUploadResponse> getPhotoHistory(String tripIdStr, String containerNumber) {
+        UUID tripUuid = UUID.fromString(tripIdStr);
+        String clean = containerNumber != null ? containerNumber.trim().toUpperCase() : null;
+        List<ContainerPhoto> list;
+        if (clean != null && !clean.isBlank()) {
+            list = photoRepository.findByTripIdAndContainerNumberAndDeletedFalseOrderByUploadedAtDesc(tripUuid, clean);
+        } else {
+            list = photoRepository.findByTripIdAndDeletedFalseOrderByUploadedAtDesc(tripUuid);
+        }
+        return list.stream().map(this::mapToResponse).collect(Collectors.toList());
+    }
+
+    private void checkPhotoAccess(ContainerPhoto photo, String callerUsername) {
+        if (callerUsername != null) {
+            Optional<User> userOpt = userRepository.findByIdentifier(callerUsername)
+                    .or(() -> userRepository.findByEmail(callerUsername));
+            if (userOpt.isPresent()) {
+                User u = userOpt.get();
+                if (u.getRole() == Role.DRIVER) {
+                    Trip trip = tripRepository.findById(photo.getTripId()).orElse(null);
+                    if (trip != null && trip.getDriverId() != null && !trip.getDriverId().equals(u.getId())) {
+                        throw new AccessDeniedException("Access denied: You may only view photos for your own trips.");
+                    }
+                }
+            }
+        }
     }
 
     public Resource loadPhotoResource(String photoIdStr, String callerUsername) {
@@ -368,6 +459,7 @@ public class ContainerPhotoService {
                 .containerId(photo.getContainerId() != null ? photo.getContainerId().toString() : null)
                 .containerNumber(photo.getContainerNumber())
                 .photoUrl("/api/v1/container-photos/" + photo.getId())
+                .thumbnailUrl("/api/v1/container-photos/" + photo.getId() + "/thumbnail")
                 .sizeBytes(photo.getSizeBytes())
                 .contentType(photo.getContentType())
                 .sha256Hash(photo.getSha256Hash())

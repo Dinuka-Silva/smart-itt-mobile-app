@@ -17,6 +17,7 @@ public class PhotoUploadResponse {
     private String containerId;
     private String containerNumber;
     private String photoUrl;
+    private String thumbnailUrl;
     private Long sizeBytes;
     private String contentType;
     private String sha256Hash;

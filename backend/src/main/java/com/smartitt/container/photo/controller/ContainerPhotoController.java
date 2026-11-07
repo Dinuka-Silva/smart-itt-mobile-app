@@ -43,6 +43,31 @@ public class ContainerPhotoController {
                 .body(photoService.uploadPhoto(tripId, containerId, containerNumber, file, actor));
     }
 
+
+    @GetMapping("/{id}/thumbnail")
+    @Operation(summary = "Get container photo thumbnail (Authenticated, lightweight)")
+    public ResponseEntity<Resource> getThumbnail(
+            @PathVariable String id,
+            Authentication auth
+    ) {
+        String actor = auth != null ? auth.getName() : null;
+        Resource resource = photoService.loadThumbnailResource(id, actor);
+        return ResponseEntity.ok()
+                .contentType(MediaType.IMAGE_JPEG)
+                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"thumb-" + id + ".jpg\"")
+                .header(HttpHeaders.CACHE_CONTROL, "public, max-age=86400")
+                .body(resource);
+    }
+
+    @GetMapping("/trip/{tripId}/history")
+    @Operation(summary = "List photo upload history for a trip (including prior rejected attempts)")
+    public ResponseEntity<List<PhotoUploadResponse>> getTripPhotoHistory(
+            @PathVariable String tripId,
+            @RequestParam(required = false) String containerNumber
+    ) {
+        return ResponseEntity.ok(photoService.getPhotoHistory(tripId, containerNumber));
+    }
+
     @GetMapping("/{id}")
     @Operation(summary = "Get container verification photo by ID (Authenticated; Driver sees own trips only)")
     public ResponseEntity<Resource> getPhoto(

@@ -19,6 +19,7 @@ export interface PhotoUploadResponse {
   verifiedAt?: string;
   verificationNote?: string;
   photoUrl: string;
+  thumbnailUrl?: string;
   viewUrl?: string;
 }
 
@@ -71,6 +72,32 @@ export const photoService = {
       return `${fullUrl}${separator}token=${encodeURIComponent(token)}`;
     }
     return fullUrl;
+  },
+
+  /**
+   * Constructs an authenticated thumbnail URL for lightweight previews.
+   */
+  getThumbnailUrl(photoIdOrPath: string | undefined | null, explicitToken?: string): string {
+    if (!photoIdOrPath) return '';
+    const clean = photoIdOrPath.trim();
+    if (clean.includes('/thumbnail')) {
+      return this.getPhotoUrl(clean, explicitToken);
+    }
+    const token = explicitToken || useAuthStore.getState().user?.token || '';
+    const base = getBaseUrl().replace(/\/api\/v1\/?$/, '');
+    let url = '';
+    if (clean.startsWith('http://') || clean.startsWith('https://')) {
+      url = `${clean}/thumbnail`;
+    } else if (clean.startsWith('/')) {
+      url = `${base}${clean}/thumbnail`;
+    } else {
+      url = `${base}/api/v1/container-photos/${clean}/thumbnail`;
+    }
+    if (token && !url.includes('token=')) {
+      const separator = url.includes('?') ? '&' : '?';
+      return `${url}${separator}token=${encodeURIComponent(token)}`;
+    }
+    return url;
   },
 
   async uploadPhoto(params: {
@@ -148,6 +175,21 @@ export const photoService = {
       return null;
     } catch {
       return null;
+    }
+  },
+
+  async getPhotoHistory(tripId: string, containerNumber: string): Promise<PhotoUploadResponse[]> {
+    try {
+      const response = await apiClient.get<PhotoUploadResponse[]>(
+        `/container-photos/trip/${tripId}/history`,
+        { params: { containerNumber } }
+      );
+      return (response.data || []).map((p) => ({
+        ...p,
+        viewUrl: this.getPhotoUrl(p.photoUrl || p.id),
+      }));
+    } catch {
+      return [];
     }
   },
 

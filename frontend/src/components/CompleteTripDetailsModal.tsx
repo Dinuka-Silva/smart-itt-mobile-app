@@ -39,6 +39,13 @@ export const CompleteTripDetailsModal: React.FC<CompleteTripDetailsModalProps> =
   onTripUpdated,
   onOpenPhotoLightbox,
 }) => {
+  const [localTrip, setLocalTrip] = useState<TripCardData | null>(trip);
+
+  React.useEffect(() => {
+    setLocalTrip(trip);
+  }, [trip]);
+
+  const activeTrip = localTrip || trip;
   const [actionLoading, setActionLoading] = useState(false);
   const [rejectionModalVisible, setRejectionModalVisible] = useState(false);
   const [tripRejectionReason, setTripRejectionReason] = useState('');
@@ -49,29 +56,33 @@ export const CompleteTripDetailsModal: React.FC<CompleteTripDetailsModalProps> =
 
   const [copied, setCopied] = useState(false);
 
-  if (!trip) return null;
+  if (!activeTrip) return null;
 
-  const displayTripId = trip.tripNumber || `TRP-${trip.id.slice(0, 8).toUpperCase()}`;
-  const cheNum = trip.chassisNumber || resolveCheNumber(trip.vehicleNumber) || 'CHE-PORT-01';
-  const containers = trip.containers || [];
+  const displayTripId = activeTrip.tripNumber || `TRP-${activeTrip.id.slice(0, 8).toUpperCase()}`;
+  const cheNum = activeTrip.chassisNumber || resolveCheNumber(activeTrip.vehicleNumber) || 'CHE-PORT-01';
+  const containers = activeTrip.containers || [];
 
   const isPending =
-    trip.status === 'PENDING_APPROVAL' || trip.status === 'PENDING_SUPERVISOR_CONFIRMATION';
+    activeTrip.status === 'PENDING_APPROVAL' || activeTrip.status === 'PENDING_SUPERVISOR_CONFIRMATION';
   const isConfirmed =
-    trip.status === 'SUPERVISOR_CONFIRMED' || trip.status === 'APPROVED' || trip.status === 'COMPLETED';
-  const isRejected = trip.status === 'SUPERVISOR_REJECTED' || trip.status === 'REJECTED';
+    activeTrip.status === 'SUPERVISOR_CONFIRMED' || activeTrip.status === 'APPROVED' || activeTrip.status === 'COMPLETED';
+  const isRejected = activeTrip.status === 'SUPERVISOR_REJECTED' || activeTrip.status === 'REJECTED';
   const isUnstarted =
-    trip.status === 'DRAFT' ||
-    trip.status === 'SCHEDULED' ||
-    trip.status === 'ASSIGNED' ||
-    trip.status === 'PENDING_START' ||
-    trip.status === 'CREATED' ||
-    trip.status === 'READY';
+    activeTrip.status === 'DRAFT' ||
+    activeTrip.status === 'SCHEDULED' ||
+    activeTrip.status === 'ASSIGNED' ||
+    activeTrip.status === 'PENDING_START' ||
+    activeTrip.status === 'CREATED' ||
+    activeTrip.status === 'READY';
+
+  const isEvidenceVerified =
+    activeTrip.evidenceVerified === true ||
+    (containers.length > 0 && containers.every((c: any) => c.isVerified === true));
 
   const handleDriverStartTrip = async () => {
     setActionLoading(true);
     try {
-      await tripService.startTrip(trip.id);
+      await tripService.startTrip(activeTrip.id);
       Alert.alert('Trip Started', 'Mission is now active and in progress. Drive safely.');
       if (onTripUpdated) onTripUpdated();
       onClose();
@@ -92,15 +103,28 @@ export const CompleteTripDetailsModal: React.FC<CompleteTripDetailsModalProps> =
     }
   };
 
-  // Supervisor: Verify Container Evidence
-  const handleVerifyEvidence = async (photoId: string, containerNumber: string) => {
+  // Supervisor: Verify Container Evidence (Stage A)
+  const handleVerifyEvidence = async (photoId?: string, containerNumber?: string) => {
+    if (actionLoading) return;
     setActionLoading(true);
     try {
-      await photoService.verifyPhoto(photoId, { status: 'VERIFIED' });
-      Alert.alert('Evidence Verified', `Container ${containerNumber} photo approved.`);
+      const updated = await tripService.verifyTripEvidence(activeTrip.id);
+      if (photoId) {
+        try {
+          await photoService.verifyPhoto(photoId, { status: 'VERIFIED' });
+        } catch {
+          // ignore
+        }
+      }
+      setLocalTrip(updated as TripCardData);
+      Alert.alert(
+        'Evidence Verified! ✅',
+        `Container ${containerNumber ? `${containerNumber} ` : ''}photo evidence and seal status verified successfully. You may now approve and confirm trip completion.`
+      );
       if (onTripUpdated) onTripUpdated();
     } catch (e: any) {
-      Alert.alert('Error', e?.message || 'Failed to verify container evidence.');
+      const msg = e?.response?.data?.message || e?.message || 'Failed to verify container evidence.';
+      Alert.alert('Verification Error', msg);
     } finally {
       setActionLoading(false);
     }
@@ -130,44 +154,67 @@ export const CompleteTripDetailsModal: React.FC<CompleteTripDetailsModalProps> =
     }
   };
 
-  // Supervisor: Confirm entire trip
+  // Supervisor or Admin: Confirm entire trip (Stage B)
   const handleConfirmTripCompletion = async () => {
+    if (!isEvidenceVerified) {
+      Alert.alert(
+        'Evidence Verification Required',
+        'You must verify container photo evidence above before granting final confirmation.'
+      );
+      return;
+    }
+    if (actionLoading) return;
     setActionLoading(true);
     try {
-      await tripService.approveTrip(trip.id, supervisorId || 'SUPERVISOR');
+      const updated = await tripService.approveTrip(activeTrip.id, supervisorId || 'SUPERVISOR');
+      setLocalTrip(updated as TripCardData);
       Alert.alert(
         'Trip Confirmed! 🚢',
-        `Trip ${displayTripId} has been confirmed. Target containers credited.`
+        `Trip ${displayTripId} has been verified and confirmed. Target containers credited.`
       );
       if (onTripUpdated) onTripUpdated();
       onClose();
     } catch (e: any) {
-      Alert.alert('Confirmation Error', e?.message || 'Failed to confirm trip completion.');
+      if (e?.response?.status === 409 || e?.message?.includes('already')) {
+        Alert.alert('Action Locked', 'This trip has already been approved or rejected by another reviewer.');
+      } else {
+        const msg = e?.response?.data?.message || e?.message || 'Failed to confirm trip completion.';
+        Alert.alert('Confirmation Error', msg);
+      }
+      if (onTripUpdated) onTripUpdated();
     } finally {
       setActionLoading(false);
     }
   };
 
-  // Supervisor: Reject entire trip
+  // Supervisor or Admin: Reject entire trip
   const handleRejectTripSubmit = async () => {
     if (!tripRejectionReason.trim()) {
       Alert.alert('Rejection Reason Required', 'Please enter a clear reason for rejecting the trip.');
       return;
     }
+    if (actionLoading) return;
     setActionLoading(true);
     try {
-      await tripService.rejectTrip(
-        trip.id,
-        supervisorId || 'SUPERVISOR',
+      const updated = await tripService.verifyTrip(
+        activeTrip.id,
+        'REJECT',
         tripRejectionReason.trim()
       );
-      Alert.alert('Trip Rejected', `Trip ${displayTripId} has been marked as REJECTED.`);
+      setLocalTrip(updated as TripCardData);
+      Alert.alert('Trip Rejected', `Trip ${displayTripId} has been marked as REJECTED. The driver has been notified to resubmit.`);
       setRejectionModalVisible(false);
       setTripRejectionReason('');
       if (onTripUpdated) onTripUpdated();
       onClose();
     } catch (e: any) {
-      Alert.alert('Rejection Error', e?.message || 'Failed to reject trip.');
+      if (e?.response?.status === 409 || e?.message?.includes('already')) {
+        Alert.alert('Action Locked', 'This trip has already been approved or rejected by another reviewer.');
+      } else {
+        const msg = e?.response?.data?.message || e?.message || 'Failed to reject trip.';
+        Alert.alert('Rejection Error', msg);
+      }
+      if (onTripUpdated) onTripUpdated();
     } finally {
       setActionLoading(false);
     }
@@ -240,28 +287,28 @@ export const CompleteTripDetailsModal: React.FC<CompleteTripDetailsModalProps> =
                     isPending && { color: '#FFFFFF' },
                   ]}
                 >
-                  STATUS: {trip.status}
+                  STATUS: {activeTrip.status}
                 </Text>
               </View>
-              {trip.confirmedAt ? (
+              {activeTrip.confirmedAt ? (
                 <Text
                   style={[
                     styles.statusStripSub,
                     isPending && { color: '#D0DEEB' },
                   ]}
                 >
-                  {formatTripTime(trip.confirmedAt)}
+                  {formatTripTime(activeTrip.confirmedAt)}
                 </Text>
               ) : null}
             </View>
 
             {/* Rejection Note If Any */}
-            {isRejected && trip.rejectionReason ? (
+            {isRejected && activeTrip.rejectionReason ? (
               <View style={styles.rejectionBox}>
                 <Ionicons name="warning-outline" size={18} color="#173B70" />
                 <View style={{ flex: 1 }}>
                   <Text style={styles.rejectionBoxTitle}>REJECTION RECORD</Text>
-                  <Text style={styles.rejectionBoxBody}>{trip.rejectionReason}</Text>
+                  <Text style={styles.rejectionBoxBody}>{activeTrip.rejectionReason}</Text>
                 </View>
               </View>
             ) : null}
@@ -276,7 +323,7 @@ export const CompleteTripDetailsModal: React.FC<CompleteTripDetailsModalProps> =
               <View style={styles.routeBox}>
                 <View style={styles.terminalCol}>
                   <Text style={styles.terminalLabel}>ORIGIN TERMINAL</Text>
-                  <Text style={styles.terminalValue}>{trip.sourceTerminal || 'JCT'}</Text>
+                  <Text style={styles.terminalValue}>{activeTrip.sourceTerminal || 'JCT'}</Text>
                 </View>
                 <View style={styles.routeArrowCol}>
                   <View style={styles.routeDash} />
@@ -285,14 +332,14 @@ export const CompleteTripDetailsModal: React.FC<CompleteTripDetailsModalProps> =
                 </View>
                 <View style={styles.terminalCol}>
                   <Text style={styles.terminalLabel}>DISCHARGE TERMINAL</Text>
-                  <Text style={styles.terminalValue}>{trip.destTerminal || 'CICT'}</Text>
+                  <Text style={styles.terminalValue}>{activeTrip.destTerminal || 'CICT'}</Text>
                 </View>
               </View>
 
               <View style={styles.grid2}>
                 <View style={styles.metaItem}>
                   <Text style={styles.metaLabel}>Assigned Truck</Text>
-                  <Text style={styles.metaValue}>{trip.vehicleNumber || 'LY-6439'}</Text>
+                  <Text style={styles.metaValue}>{activeTrip.vehicleNumber || 'LY-6439'}</Text>
                 </View>
                 <View style={styles.metaItem}>
                   <Text style={styles.metaLabel}>Container Handling (CHE)</Text>
@@ -300,11 +347,11 @@ export const CompleteTripDetailsModal: React.FC<CompleteTripDetailsModalProps> =
                 </View>
                 <View style={styles.metaItem}>
                   <Text style={styles.metaLabel}>Vessel Name</Text>
-                  <Text style={styles.metaValue}>{trip.vesselName || 'EVER GIVEN'}</Text>
+                  <Text style={styles.metaValue}>{activeTrip.vesselName || 'EVER GIVEN'}</Text>
                 </View>
                 <View style={styles.metaItem}>
                   <Text style={styles.metaLabel}>Driver in Charge</Text>
-                  <Text style={styles.metaValue}>{trip.driverName || 'Kamal Perera'}</Text>
+                  <Text style={styles.metaValue}>{activeTrip.driverName || 'Kamal Perera'}</Text>
                 </View>
               </View>
             </View>
@@ -390,31 +437,46 @@ export const CompleteTripDetailsModal: React.FC<CompleteTripDetailsModalProps> =
                             </View>
                           )}
 
-                          {/* Supervisor Evidence Actions */}
-                          {role === 'SUPERVISOR' && isPending && c.photoId && (
+                          {/* Supervisor / Admin Evidence Actions */}
+                          {(role === 'SUPERVISOR' || role === 'ADMIN') && isPending && (
                             <View style={styles.evidenceActionRow}>
-                              <TouchableOpacity
-                                style={styles.verifyEvidenceBtn}
-                                onPress={() => handleVerifyEvidence(c.photoId!, c.containerNumber)}
-                                disabled={actionLoading}
-                                activeOpacity={0.7}
-                              >
-                                <Ionicons name="checkmark-done" size={14} color="#FFFFFF" />
-                                <Text style={styles.verifyEvidenceBtnText}>Verify Evidence</Text>
-                              </TouchableOpacity>
+                              {!c.isVerified && !isEvidenceVerified ? (
+                                <TouchableOpacity
+                                  style={styles.verifyEvidenceBtn}
+                                  onPress={() => handleVerifyEvidence(c.photoId, c.containerNumber)}
+                                  disabled={actionLoading}
+                                  activeOpacity={0.7}
+                                >
+                                  {actionLoading ? (
+                                    <ActivityIndicator size="small" color="#FFFFFF" />
+                                  ) : (
+                                    <>
+                                      <Ionicons name="checkmark-done" size={14} color="#FFFFFF" />
+                                      <Text style={styles.verifyEvidenceBtnText}>Verify Evidence</Text>
+                                    </>
+                                  )}
+                                </TouchableOpacity>
+                              ) : (
+                                <View style={styles.verifiedTagRow}>
+                                  <Ionicons name="shield-checkmark" size={14} color="#173B70" />
+                                  <Text style={styles.verifiedTagText}>Evidence Verified</Text>
+                                </View>
+                              )}
 
-                              <TouchableOpacity
-                                style={styles.rejectEvidenceBtn}
-                                onPress={() => {
-                                  setRejectingPhotoId(c.photoId!);
-                                  setPhotoRejectionNote('');
-                                }}
-                                disabled={actionLoading}
-                                activeOpacity={0.7}
-                              >
-                                <Ionicons name="close" size={14} color="#173B70" />
-                                <Text style={styles.rejectEvidenceBtnText}>Reject Evidence</Text>
-                              </TouchableOpacity>
+                              {!isEvidenceVerified && (
+                                <TouchableOpacity
+                                  style={styles.rejectEvidenceBtn}
+                                  onPress={() => {
+                                    setRejectingPhotoId(c.photoId || c.containerNumber);
+                                    setPhotoRejectionNote('');
+                                  }}
+                                  disabled={actionLoading}
+                                  activeOpacity={0.7}
+                                >
+                                  <Ionicons name="close" size={14} color="#173B70" />
+                                  <Text style={styles.rejectEvidenceBtnText}>Reject Evidence</Text>
+                                </TouchableOpacity>
+                              )}
                             </View>
                           )}
                         </View>
@@ -442,15 +504,15 @@ export const CompleteTripDetailsModal: React.FC<CompleteTripDetailsModalProps> =
               <View style={styles.grid2}>
                 <View style={styles.metaItem}>
                   <Text style={styles.metaLabel}>Discharge Bay</Text>
-                  <Text style={styles.metaValue}>{trip.dischargeBay || 'Bay 04, Crane 02'}</Text>
+                  <Text style={styles.metaValue}>{activeTrip.dischargeBay || 'Bay 04, Crane 02'}</Text>
                 </View>
                 <View style={styles.metaItem}>
                   <Text style={styles.metaLabel}>Seal Status</Text>
-                  <Text style={styles.metaValue}>{trip.sealStatus || 'INTACT (VERIFIED)'}</Text>
+                  <Text style={styles.metaValue}>{activeTrip.sealStatus || 'INTACT (VERIFIED)'}</Text>
                 </View>
                 <View style={styles.metaItem}>
                   <Text style={styles.metaLabel}>Damage Status</Text>
-                  <Text style={styles.metaValue}>{trip.damageStatus || 'NONE'}</Text>
+                  <Text style={styles.metaValue}>{activeTrip.damageStatus || 'NONE'}</Text>
                 </View>
                 <View style={styles.metaItem}>
                   <Text style={styles.metaLabel}>Discharge Bay Crane</Text>
@@ -458,10 +520,10 @@ export const CompleteTripDetailsModal: React.FC<CompleteTripDetailsModalProps> =
                 </View>
               </View>
 
-              {trip.driverCompletionNotes ? (
+              {activeTrip.driverCompletionNotes ? (
                 <View style={styles.driverNotesBox}>
                   <Text style={styles.driverNotesLabel}>Driver Discharge Notes:</Text>
-                  <Text style={styles.driverNotesText}>{trip.driverCompletionNotes}</Text>
+                  <Text style={styles.driverNotesText}>{activeTrip.driverCompletionNotes}</Text>
                 </View>
               ) : null}
             </View>
@@ -479,30 +541,30 @@ export const CompleteTripDetailsModal: React.FC<CompleteTripDetailsModalProps> =
                   <View style={styles.auditContent}>
                     <Text style={styles.auditLabel}>Trip Created & Dispatched</Text>
                     <Text style={styles.auditTime}>
-                      {formatTripTime(trip.startTime || trip.createdAt)}
+                      {formatTripTime(activeTrip.startTime || activeTrip.createdAt)}
                     </Text>
                   </View>
                 </View>
 
-                {trip.endTime && (
+                {activeTrip.endTime && (
                   <View style={styles.auditRow}>
                     <View style={styles.auditDot} />
                     <View style={styles.auditContent}>
                       <Text style={styles.auditLabel}>Driver Delivery & Photo Submission</Text>
-                      <Text style={styles.auditTime}>{formatTripTime(trip.endTime)}</Text>
+                      <Text style={styles.auditTime}>{formatTripTime(activeTrip.endTime)}</Text>
                     </View>
                   </View>
                 )}
 
-                {trip.confirmedAt && (
+                {(activeTrip.confirmedAt || activeTrip.verifiedAt) && (
                   <View style={styles.auditRow}>
                     <View style={[styles.auditDot, { backgroundColor: '#173B70' }]} />
                     <View style={styles.auditContent}>
                       <Text style={styles.auditLabel}>
-                        Supervisor {isConfirmed ? 'Confirmation' : 'Rejection'}
+                        {isConfirmed ? 'Verified & Approved' : isRejected ? 'Verification Rejected' : 'Review Decision'}
                       </Text>
                       <Text style={styles.auditTime}>
-                        {formatTripTime(trip.confirmedAt)} by {trip.supervisorName || 'Supervisor'}
+                        {formatTripTime(activeTrip.verifiedAt || activeTrip.confirmedAt)} by {activeTrip.verifiedBy || activeTrip.supervisorName || 'Reviewer'}{activeTrip.verifiedByRole ? ` (${activeTrip.verifiedByRole})` : ''}
                       </Text>
                     </View>
                   </View>
@@ -536,27 +598,54 @@ export const CompleteTripDetailsModal: React.FC<CompleteTripDetailsModalProps> =
               </View>
             )}
 
-            {/* Final Supervisor Decision Buttons (Only if pending) */}
-            {role === 'SUPERVISOR' && isPending && (
+            {/* Final Reviewer Decision Buttons (Supervisor or Admin, Only if pending) */}
+            {(role === 'SUPERVISOR' || role === 'ADMIN') && isPending && (
               <View style={styles.supervisorDecisionCard}>
-                <Text style={styles.decisionTitle}>SUPERVISOR FINAL CONFIRMATION</Text>
-                <Text style={styles.decisionSub}>
-                  Ensure all container evidence and seal conditions have been inspected.
+                <Text style={styles.decisionTitle}>
+                  {role === 'ADMIN' ? 'ADMIN VERIFICATION DECISION' : 'SUPERVISOR FINAL CONFIRMATION'}
                 </Text>
+                <Text style={styles.decisionSub}>
+                  {isEvidenceVerified
+                    ? 'Container evidence has been verified. Final confirmation will close the trip and credit container discharge.'
+                    : 'Step 1: Review container photo and tap "Verify Evidence" above before final confirmation can be granted.'}
+                </Text>
+
+                {!isEvidenceVerified && (
+                  <View style={styles.verificationNoticeBox}>
+                    <Ionicons name="information-circle-outline" size={16} color="#173B70" />
+                    <Text style={styles.verificationNoticeText}>
+                      Evidence verification required above before confirming trip completion.
+                    </Text>
+                  </View>
+                )}
 
                 <View style={styles.decisionBtnRow}>
                   <TouchableOpacity
-                    style={styles.confirmTripBtn}
+                    style={[
+                      styles.confirmTripBtn,
+                      !isEvidenceVerified && styles.confirmTripBtnDisabled,
+                    ]}
                     onPress={handleConfirmTripCompletion}
-                    disabled={actionLoading}
+                    disabled={actionLoading || !isEvidenceVerified}
                     activeOpacity={0.8}
                   >
                     {actionLoading ? (
                       <ActivityIndicator size="small" color="#FFFFFF" />
                     ) : (
                       <>
-                        <Ionicons name="checkmark-done-circle" size={18} color="#FFFFFF" />
-                        <Text style={styles.confirmTripBtnText}>Confirm Trip Completion</Text>
+                        <Ionicons
+                          name="checkmark-done-circle"
+                          size={18}
+                          color={isEvidenceVerified ? '#FFFFFF' : '#8BA6C9'}
+                        />
+                        <Text
+                          style={[
+                            styles.confirmTripBtnText,
+                            !isEvidenceVerified && { color: '#8BA6C9' },
+                          ]}
+                        >
+                          Approve & Confirm Trip
+                        </Text>
                       </>
                     )}
                   </TouchableOpacity>
@@ -570,6 +659,27 @@ export const CompleteTripDetailsModal: React.FC<CompleteTripDetailsModalProps> =
                     <Ionicons name="close-circle-outline" size={16} color="#173B70" />
                     <Text style={styles.rejectTripBtnText}>Reject Trip</Text>
                   </TouchableOpacity>
+                </View>
+              </View>
+            )}
+
+            {/* Locked Verification Card when confirmed or rejected */}
+            {(isConfirmed || isRejected) && (
+              <View style={styles.lockedVerificationCard}>
+                <Ionicons
+                  name={isConfirmed ? 'shield-checkmark' : 'close-circle'}
+                  size={20}
+                  color={isConfirmed ? '#2ECC71' : '#E74C3C'}
+                />
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.lockedVerificationTitle}>
+                    {isConfirmed ? 'VERIFICATION COMPLETED' : 'TRIP REJECTED'}
+                  </Text>
+                  <Text style={styles.lockedVerificationText}>
+                    {isConfirmed
+                      ? `Approved by ${activeTrip.verifiedBy || activeTrip.supervisorName || 'Reviewer'}${activeTrip.verifiedByRole ? ` (${activeTrip.verifiedByRole})` : ''} on ${formatTripTime(activeTrip.verifiedAt || activeTrip.confirmedAt)}. Double-action guard is locked.`
+                      : `Rejected by ${activeTrip.verifiedBy || activeTrip.supervisorName || 'Reviewer'}${activeTrip.verifiedByRole ? ` (${activeTrip.verifiedByRole})` : ''} on ${formatTripTime(activeTrip.verifiedAt || activeTrip.confirmedAt)}. Reason: ${activeTrip.rejectReason || activeTrip.rejectionReason || 'Discrepancy'}. Resubmission required.`}
+                  </Text>
                 </View>
               </View>
             )}
@@ -1234,6 +1344,68 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '800',
     color: '#FFFFFF',
+  },
+  lockedVerificationCard: {
+    backgroundColor: '#F0F5FA',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#D0DEEB',
+    padding: 14,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 12,
+    marginTop: 6,
+    marginBottom: 10,
+  },
+  lockedVerificationTitle: {
+    color: '#173B70',
+    fontSize: 13,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
+  lockedVerificationText: {
+    color: '#34495E',
+    fontSize: 12,
+    lineHeight: 17,
+    marginTop: 3,
+  },
+  confirmTripBtnDisabled: {
+    backgroundColor: '#F0F5FA',
+    borderColor: '#D0DEEB',
+    borderWidth: 1,
+  },
+  verificationNoticeBox: {
+    backgroundColor: '#F0F5FA',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#D0DEEB',
+    padding: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 10,
+  },
+  verificationNoticeText: {
+    color: '#173B70',
+    fontSize: 11,
+    fontWeight: '600',
+    flex: 1,
+  },
+  verifiedTagRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#E8F1FA',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#173B70',
+  },
+  verifiedTagText: {
+    color: '#173B70',
+    fontSize: 11,
+    fontWeight: '800',
   },
 });
 

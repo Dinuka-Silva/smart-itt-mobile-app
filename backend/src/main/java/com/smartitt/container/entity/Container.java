@@ -48,7 +48,7 @@ public class Container {
 
     @Column(name = "is_verified")
     @Builder.Default
-    private Boolean isVerified = true;
+    private Boolean isVerified = false;
 
     @Column(name = "verified_by")
     private String verifiedBy;
@@ -65,7 +65,7 @@ public class Container {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
         if (status == null) status = ContainerStatus.LOADED;
-        if (isVerified == null) isVerified = true;
+        if (isVerified == null) isVerified = false;
     }
 
     @PreUpdate

@@ -33,6 +33,7 @@ public class DataInitializer implements CommandLineRunner {
     private final DriverRepository driverRepository;
     private final SupervisorRepository supervisorRepository;
     private final VehicleRepository vehicleRepository;
+    private final com.smartitt.trip.repository.TripRepository tripRepository;
     private final com.smartitt.audit.repository.AuditLogRepository auditLogRepository;
     private final PasswordEncoder passwordEncoder;
     private final org.springframework.core.env.Environment environment;
@@ -64,7 +65,8 @@ public class DataInitializer implements CommandLineRunner {
         seedVehicles();
         seedDemoUsers();
         bootstrapAdminAccount(false);
-        seedAuditLogs();
+                    migrateExistingTrips();
+            seedAuditLogs();
     }
 
     private void seedTerminals() {
@@ -323,6 +325,59 @@ public class DataInitializer implements CommandLineRunner {
             userRepository.save(admin);
             log.info("[DataInitializer] Initial Admin account created successfully.");
         }
+    }
+
+
+    private void migrateExistingTrips() {
+        log.info("[DataInitializer] Migrating existing trips to populate verification fields...");
+        List<com.smartitt.trip.entity.Trip> trips = tripRepository.findAll();
+        int migrated = 0;
+        for (com.smartitt.trip.entity.Trip trip : trips) {
+            boolean modified = false;
+            if (trip.getStatus() == com.smartitt.trip.entity.TripStatus.COMPLETED
+                    || trip.getStatus() == com.smartitt.trip.entity.TripStatus.APPROVED
+                    || trip.getStatus() == com.smartitt.trip.entity.TripStatus.SUPERVISOR_CONFIRMED
+                    || trip.getStatus() == com.smartitt.trip.entity.TripStatus.CONFIRMED) {
+                if (trip.getStatus() != com.smartitt.trip.entity.TripStatus.SUPERVISOR_CONFIRMED && trip.getStatus() != com.smartitt.trip.entity.TripStatus.CONFIRMED) {
+                    trip.setStatus(com.smartitt.trip.entity.TripStatus.SUPERVISOR_CONFIRMED);
+                    modified = true;
+                }
+                if (trip.getVerifiedBy() == null) {
+                    trip.setVerifiedBy(trip.getSupervisorName() != null ? trip.getSupervisorName() : "Nimal Silva");
+                    modified = true;
+                }
+                if (trip.getVerifiedByRole() == null) {
+                    trip.setVerifiedByRole("SUPERVISOR");
+                    modified = true;
+                }
+                if (trip.getVerifiedAt() == null) {
+                    trip.setVerifiedAt(trip.getConfirmedAt() != null ? trip.getConfirmedAt() : java.time.LocalDateTime.now());
+                    modified = true;
+                }
+                if (trip.getEvidenceVerified() == null || !trip.getEvidenceVerified()) {
+                    trip.setEvidenceVerified(true);
+                    modified = true;
+                }
+                if (trip.getContainers() != null) {
+                    trip.getContainers().forEach(c -> {
+                        if (c.getIsVerified() == null || !c.getIsVerified()) {
+                            c.setIsVerified(true);
+                        }
+                    });
+                }
+            } else if (trip.getStatus() == com.smartitt.trip.entity.TripStatus.REJECTED
+                    || trip.getStatus() == com.smartitt.trip.entity.TripStatus.SUPERVISOR_REJECTED) {
+                if (trip.getRejectReason() == null && trip.getRejectionReason() != null) {
+                    trip.setRejectReason(trip.getRejectionReason());
+                    modified = true;
+                }
+            }
+            if (modified) {
+                tripRepository.save(trip);
+                migrated++;
+            }
+        }
+        log.info("[DataInitializer] Trip verification migration complete. Updated {} existing records.", migrated);
     }
 
     private void seedAuditLogs() {

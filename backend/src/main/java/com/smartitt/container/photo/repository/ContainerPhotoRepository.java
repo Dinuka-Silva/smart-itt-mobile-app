@@ -18,6 +18,8 @@ public interface ContainerPhotoRepository extends JpaRepository<ContainerPhoto, 
 
     Optional<ContainerPhoto> findFirstByTripIdAndContainerNumberAndDeletedFalseOrderByUploadedAtDesc(UUID tripId, String containerNumber);
 
+    List<ContainerPhoto> findByTripIdAndContainerNumberAndDeletedFalseOrderByUploadedAtDesc(UUID tripId, String containerNumber);
+
     List<ContainerPhoto> findByDeletedFalseOrderByUploadedAtDesc();
 
     long countByDeletedFalse();
