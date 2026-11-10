@@ -136,10 +136,11 @@ export const tripService = {
   },
 
   async approveTrip(id: string, requestOrSupervisorId: ApproveTripRequest | string, reason?: string): Promise<TripResponse> {
+    const cleanId = (id || '').trim();
     const payload: ApproveTripRequest = typeof requestOrSupervisorId === 'string'
-      ? { status: 'SUPERVISOR_CONFIRMED', supervisorId: requestOrSupervisorId, reason }
+      ? { status: 'APPROVED', supervisorId: requestOrSupervisorId, reason }
       : requestOrSupervisorId;
-    const response = await apiClient.post<TripResponse>(`/trips/${id}/approve`, payload);
+    const response = await apiClient.post<TripResponse>(`/trips/${cleanId}/approve`, payload);
     return response.data;
   },
 

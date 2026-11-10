@@ -154,13 +154,18 @@ export const CompleteTripDetailsModal: React.FC<CompleteTripDetailsModalProps> =
     }
   };
 
-  // Supervisor or Admin: Confirm entire trip (Stage B)
+  // Supervisor or Admin: Approve completed trip
   const handleConfirmTripCompletion = async () => {
-    if (!isEvidenceVerified) {
-      Alert.alert(
-        'Evidence Verification Required',
-        'You must verify container photo evidence above before granting final confirmation.'
-      );
+    if (!activeTrip || !activeTrip.id) {
+      Alert.alert('Error', 'Invalid trip ID.');
+      return;
+    }
+    if (isConfirmed) {
+      Alert.alert('Action Locked', 'This trip has already been approved.');
+      return;
+    }
+    if (isRejected) {
+      Alert.alert('Action Locked', 'This trip has already been rejected.');
       return;
     }
     if (actionLoading) return;
@@ -169,8 +174,8 @@ export const CompleteTripDetailsModal: React.FC<CompleteTripDetailsModalProps> =
       const updated = await tripService.approveTrip(activeTrip.id, supervisorId || 'SUPERVISOR');
       setLocalTrip(updated as TripCardData);
       Alert.alert(
-        'Trip Confirmed! 🚢',
-        `Trip ${displayTripId} has been verified and confirmed. Target containers credited.`
+        'Trip Approved! ✅',
+        `Trip ${displayTripId} has been successfully approved and updated in the system.`
       );
       if (onTripUpdated) onTripUpdated();
       onClose();
@@ -178,8 +183,8 @@ export const CompleteTripDetailsModal: React.FC<CompleteTripDetailsModalProps> =
       if (e?.response?.status === 409 || e?.message?.includes('already')) {
         Alert.alert('Action Locked', 'This trip has already been approved or rejected by another reviewer.');
       } else {
-        const msg = e?.response?.data?.message || e?.message || 'Failed to confirm trip completion.';
-        Alert.alert('Confirmation Error', msg);
+        const msg = e?.response?.data?.message || e?.message || 'Failed to approve trip.';
+        Alert.alert('Approval Error', msg);
       }
       if (onTripUpdated) onTripUpdated();
     } finally {
@@ -602,31 +607,17 @@ export const CompleteTripDetailsModal: React.FC<CompleteTripDetailsModalProps> =
             {(role === 'SUPERVISOR' || role === 'ADMIN') && isPending && (
               <View style={styles.supervisorDecisionCard}>
                 <Text style={styles.decisionTitle}>
-                  {role === 'ADMIN' ? 'ADMIN VERIFICATION DECISION' : 'SUPERVISOR FINAL CONFIRMATION'}
+                  {role === 'ADMIN' ? 'ADMIN APPROVAL DECISION' : 'SUPERVISOR TRIP APPROVAL'}
                 </Text>
                 <Text style={styles.decisionSub}>
-                  {isEvidenceVerified
-                    ? 'Container evidence has been verified. Final confirmation will close the trip and credit container discharge.'
-                    : 'Step 1: Review container photo and tap "Verify Evidence" above before final confirmation can be granted.'}
+                  Review the container manifest, seal status, and delivery details. Approving will update the trip to APPROVED and credit container discharge.
                 </Text>
-
-                {!isEvidenceVerified && (
-                  <View style={styles.verificationNoticeBox}>
-                    <Ionicons name="information-circle-outline" size={16} color="#173B70" />
-                    <Text style={styles.verificationNoticeText}>
-                      Evidence verification required above before confirming trip completion.
-                    </Text>
-                  </View>
-                )}
 
                 <View style={styles.decisionBtnRow}>
                   <TouchableOpacity
-                    style={[
-                      styles.confirmTripBtn,
-                      !isEvidenceVerified && styles.confirmTripBtnDisabled,
-                    ]}
+                    style={styles.confirmTripBtn}
                     onPress={handleConfirmTripCompletion}
-                    disabled={actionLoading || !isEvidenceVerified}
+                    disabled={actionLoading}
                     activeOpacity={0.8}
                   >
                     {actionLoading ? (
@@ -634,17 +625,12 @@ export const CompleteTripDetailsModal: React.FC<CompleteTripDetailsModalProps> =
                     ) : (
                       <>
                         <Ionicons
-                          name="checkmark-done-circle"
+                          name="checkmark-circle"
                           size={18}
-                          color={isEvidenceVerified ? '#FFFFFF' : '#8BA6C9'}
+                          color="#FFFFFF"
                         />
-                        <Text
-                          style={[
-                            styles.confirmTripBtnText,
-                            !isEvidenceVerified && { color: '#8BA6C9' },
-                          ]}
-                        >
-                          Approve & Confirm Trip
+                        <Text style={styles.confirmTripBtnText}>
+                          Approve Trip
                         </Text>
                       </>
                     )}

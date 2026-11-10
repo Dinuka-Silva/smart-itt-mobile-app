@@ -191,11 +191,11 @@ public class TripService {
                 String st = t.getStatus().name();
                 if (st.equalsIgnoreCase(sUpper))
                     return true;
-                if (("PENDING".equals(sUpper) || "PENDING_APPROVAL".equals(sUpper) || "PENDING_SUPERVISOR_CONFIRMATION".equals(sUpper))
-                        && (st.equals("PENDING_APPROVAL") || st.equals("PENDING_SUPERVISOR_CONFIRMATION")))
+                if (("PENDING".equals(sUpper) || "PENDING_APPROVAL".equals(sUpper) || "PENDING_SUPERVISOR_CONFIRMATION".equals(sUpper) || "PENDING_VERIFICATION".equals(sUpper))
+                        && (st.equals("PENDING_APPROVAL") || st.equals("PENDING_SUPERVISOR_CONFIRMATION") || st.equals("PENDING_VERIFICATION")))
                     return true;
-                if (("APPROVED".equals(sUpper) || "SUPERVISOR_CONFIRMED".equals(sUpper) || "COMPLETED".equals(sUpper))
-                        && (st.equals("APPROVED") || st.equals("SUPERVISOR_CONFIRMED") || st.equals("COMPLETED")))
+                if (("APPROVED".equals(sUpper) || "SUPERVISOR_CONFIRMED".equals(sUpper) || "CONFIRMED".equals(sUpper) || "COMPLETED".equals(sUpper))
+                        && (st.equals("APPROVED") || st.equals("SUPERVISOR_CONFIRMED") || st.equals("CONFIRMED") || st.equals("COMPLETED")))
                     return true;
                 if (("REJECTED".equals(sUpper) || "SUPERVISOR_REJECTED".equals(sUpper))
                         && (st.equals("REJECTED") || st.equals("SUPERVISOR_REJECTED")))
@@ -637,8 +637,8 @@ public class TripService {
                 .verifiedByRole(trip.getVerifiedByRole())
                 .verifiedAt(trip.getVerifiedAt())
                 .evidenceVerified(Boolean.TRUE.equals(trip.getEvidenceVerified()))
-                .verificationStatus(trip.getStatus() == TripStatus.SUPERVISOR_CONFIRMED ? "CONFIRMED" :
-                        trip.getStatus() == TripStatus.SUPERVISOR_REJECTED ? "REJECTED" :
+                .verificationStatus(trip.getStatus() == TripStatus.SUPERVISOR_CONFIRMED || trip.getStatus() == TripStatus.APPROVED || trip.getStatus() == TripStatus.CONFIRMED ? "CONFIRMED" :
+                        trip.getStatus() == TripStatus.SUPERVISOR_REJECTED || trip.getStatus() == TripStatus.REJECTED ? "REJECTED" :
                         Boolean.TRUE.equals(trip.getEvidenceVerified()) ? "EVIDENCE_VERIFIED" : "PENDING_VERIFICATION")
                 .createdAt(trip.getCreatedAt())
                 .containers(containers)
@@ -761,17 +761,21 @@ public class TripService {
 
     /**
      * Stage B: Approve and confirm trip completion.
-     * Enforces that container evidence has been verified first.
      */
     @Transactional
     public TripResponse confirmTrip(String id, String reviewerId, String reviewerRole) {
+        return confirmTrip(id, reviewerId, reviewerRole, TripStatus.APPROVED);
+    }
+
+    @Transactional
+    public TripResponse confirmTrip(String id, String reviewerId, String reviewerRole, TripStatus targetStatus) {
         UUID tripUuid = parseTripUuid(id);
         Trip trip = tripRepository.findById(tripUuid)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Trip not found with ID: " + id));
 
         TripStatus current = trip.getStatus();
         if (current == TripStatus.SUPERVISOR_CONFIRMED || current == TripStatus.CONFIRMED || current == TripStatus.APPROVED) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Trip has already been confirmed.");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Trip has already been approved.");
         }
         if (current == TripStatus.SUPERVISOR_REJECTED || current == TripStatus.REJECTED) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Trip has already been rejected.");
@@ -780,13 +784,7 @@ public class TripService {
                 && current != TripStatus.PENDING_VERIFICATION
                 && current != TripStatus.PENDING_APPROVAL) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "Trip cannot be confirmed until driver completes it. Current status: " + current);
-        }
-
-        // CRITICAL: Stage 2 requires evidence to be verified first!
-        if (!isTripEvidenceVerified(trip)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "Cannot confirm trip: container photo evidence must be verified before final approval.");
+                    "Supervisors should approve only completed trips. Current status: " + current);
         }
 
         UUID reviewerUuid = resolveSupervisorUuid(reviewerId);
@@ -794,10 +792,15 @@ public class TripService {
         String roleStr = (reviewerRole != null && !reviewerRole.isBlank()) ? reviewerRole.trim().toUpperCase() : "SUPERVISOR";
         LocalDateTime now = LocalDateTime.now();
 
-        trip.setStatus(TripStatus.SUPERVISOR_CONFIRMED);
+        TripStatus finalStatus = targetStatus != null ? targetStatus : TripStatus.APPROVED;
+        trip.setStatus(finalStatus);
         trip.setConfirmedAt(now);
+        trip.setVerifiedAt(now);
+        trip.setVerifiedBy(resolvedName);
+        trip.setVerifiedByRole(roleStr);
         trip.setSupervisorId(reviewerUuid);
         trip.setSupervisorName(resolvedName);
+        trip.setEvidenceVerified(true);
         trip.setRejectionReason(null);
         trip.setRejectReason(null);
         if (trip.getEndTime() == null) trip.setEndTime(now);
@@ -812,6 +815,16 @@ public class TripService {
                 containerRepository.save(c);
             });
         }
+
+        try {
+            var photos = photoRepository.findByTripIdAndDeletedFalseOrderByUploadedAtDesc(trip.getId());
+            photos.forEach(p -> {
+                p.setVerificationStatus("VERIFIED");
+                p.setVerifiedBy(resolvedName);
+                p.setVerifiedAt(now);
+                photoRepository.save(p);
+            });
+        } catch (Exception ignored) {}
 
         if (trip.getStartTime() != null && trip.getEndTime() != null) {
             trip.setDurationMinutes(
@@ -828,8 +841,8 @@ public class TripService {
                     "TRIP",
                     trip.getId().toString(),
                     "Trip " + trip.getTripNumber() + " approved and confirmed by " + roleStr + " (" + resolvedName + ")",
-                    "PENDING_VERIFICATION",
-                    "CONFIRMED",
+                    current.name(),
+                    finalStatus.name(),
                     null
             );
         } catch (Exception ignored) {}
@@ -899,7 +912,8 @@ public class TripService {
     @Transactional
     public TripResponse verifyTrip(String id, String actionOrDecision, String reviewerId, String reviewerRole, String rejectReason) {
         if ("APPROVE".equalsIgnoreCase(actionOrDecision) || "CONFIRM".equalsIgnoreCase(actionOrDecision) || "SUPERVISOR_CONFIRMED".equalsIgnoreCase(actionOrDecision)) {
-            return confirmTrip(id, reviewerId, reviewerRole);
+            TripStatus st = "SUPERVISOR_CONFIRMED".equalsIgnoreCase(actionOrDecision) ? TripStatus.SUPERVISOR_CONFIRMED : TripStatus.APPROVED;
+            return confirmTrip(id, reviewerId, reviewerRole, st);
         } else if ("REJECT".equalsIgnoreCase(actionOrDecision) || "SUPERVISOR_REJECTED".equalsIgnoreCase(actionOrDecision)) {
             return rejectTrip(id, reviewerId, reviewerRole, rejectReason);
         } else {

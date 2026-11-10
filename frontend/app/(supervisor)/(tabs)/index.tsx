@@ -23,6 +23,9 @@ import { resolveCheNumber, resolveOperator } from '../../../src/config/fleet';
 import { useResponsive } from '../../../src/hooks/useResponsive';
 import { getTripTimingDetails } from '../../../src/utils/tripDateUtils';
 import { getTripDischargeTerminal } from '../../../src/utils/tripTerminalUtils';
+import { CompleteTripDetailsModal } from '../../../src/components/CompleteTripDetailsModal';
+import { PhotoLightboxModal } from '../../../src/components/PhotoLightboxModal';
+import { TripCardData } from '../../../src/components/PermanentTripCard';
 
 
 const DRIVER_PHOTO_POOL = [
@@ -86,6 +89,14 @@ export default function SupervisorHomeDashboard() {
   const [tripToReject, setTripToReject] = useState<any | null>(null);
   const [rejectionReason, setRejectionReason] = useState('');
   const [submittingDecision, setSubmittingDecision] = useState(false);
+  const [processingTripId, setProcessingTripId] = useState<string | null>(null);
+
+  // Complete Trip Details & Lightbox Modal States
+  const [selectedTripDetails, setSelectedTripDetails] = useState<TripCardData | null>(null);
+  const [detailsModalVisible, setDetailsModalVisible] = useState(false);
+  const [lightboxVisible, setLightboxVisible] = useState(false);
+  const [lightboxPhotoUrl, setLightboxPhotoUrl] = useState('');
+  const [lightboxContainerNum, setLightboxContainerNum] = useState('');
 
   const [notificationsModalVisible, setNotificationsModalVisible] = useState(false);
   const [reportModalVisible, setReportModalVisible] = useState(false);
@@ -270,15 +281,19 @@ export default function SupervisorHomeDashboard() {
 
   // Approval actions
   const handleApproveTrip = async (trip: any) => {
+    if (!trip || !trip.id || processingTripId) return;
+    setProcessingTripId(trip.id);
     try {
       await tripService.approveTrip(trip.id, user?.id || 'sup-001', 'Delivery confirmed & trip approved by Operations Supervisor');
       Alert.alert(
-        'Trip Delivery Confirmed & Approved ✅',
-        `Trip ${trip.tripNumber || trip.id} is confirmed. Driver completed container count (+1 towards 300 target) and main system metrics have been updated!`
+        'Trip Approved! ✅',
+        `Trip ${trip.tripNumber || trip.id} has been successfully approved.`
       );
       await loadDashboardData();
     } catch (e: any) {
       Alert.alert('Approval Error', e?.response?.data?.message || e?.message || 'Failed to approve trip on server.');
+    } finally {
+      setProcessingTripId(null);
     }
   };
 
@@ -725,17 +740,27 @@ export default function SupervisorHomeDashboard() {
               return (
                 <View key={trip.id} style={styles.pendingCard}>
                   {/* Card Header: Trip ID + Status Pill */}
-                  <View style={styles.pendingCardHeader}>
+                  <TouchableOpacity
+                    style={styles.pendingCardHeader}
+                    activeOpacity={0.7}
+                    onPress={() => {
+                      setSelectedTripDetails(trip);
+                      setDetailsModalVisible(true);
+                    }}
+                  >
                     <View style={{ flex: 1 }}>
                       <Text style={styles.pendingTripId}>{trip.tripNumber || `ITT-${trip.id?.slice(0, 6)}`}</Text>
                       <Text style={styles.pendingDriver}>
                         Driver: {trip.driverName || 'Kamal Perera'} · Truck: {trip.vehicleNumber || 'LY-6439'} · CHE: {resolveCheNumber(trip.vehicleNumber, trip.chassisNumber)}
                       </Text>
                     </View>
-                    <View style={styles.pendingAwaitingTag}>
-                      <Text style={styles.pendingAwaitingTagText}>AWAITING SIGN-OFF</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <View style={styles.pendingAwaitingTag}>
+                        <Text style={styles.pendingAwaitingTagText}>AWAITING SIGN-OFF</Text>
+                      </View>
+                      <Ionicons name="chevron-forward" size={16} color="#173B70" />
                     </View>
-                  </View>
+                  </TouchableOpacity>
 
                   {/* Section 1: Trip Info Grid */}
                   <View style={styles.pendingInfoGrid}>
@@ -881,17 +906,37 @@ export default function SupervisorHomeDashboard() {
                   {/* Section 5: Supervisor Decision Buttons */}
                   <View style={styles.decisionButtonsRow}>
                     <TouchableOpacity
-                      style={styles.approveBtn}
+                      style={styles.viewDetailsBtn}
+                      activeOpacity={0.8}
+                      onPress={() => {
+                        setSelectedTripDetails(trip);
+                        setDetailsModalVisible(true);
+                      }}
+                    >
+                      <Ionicons name="eye-outline" size={15} color="#173B70" />
+                      <Text style={styles.viewDetailsBtnText}>DETAILS</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={[styles.approveBtn, processingTripId === trip.id && { opacity: 0.5 }]}
                       activeOpacity={0.85}
+                      disabled={processingTripId === trip.id}
                       onPress={() => handleApproveTrip(trip)}
                     >
-                      <Ionicons name="checkmark-circle" size={16} color="#FFFFFF" />
-                      <Text style={styles.approveBtnText}>CONFIRM TRIP</Text>
+                      {processingTripId === trip.id ? (
+                        <ActivityIndicator color="#FFFFFF" size="small" />
+                      ) : (
+                        <>
+                          <Ionicons name="checkmark-circle" size={16} color="#FFFFFF" />
+                          <Text style={styles.approveBtnText}>APPROVE TRIP</Text>
+                        </>
+                      )}
                     </TouchableOpacity>
 
                     <TouchableOpacity
                       style={styles.rejectBtn}
                       activeOpacity={0.85}
+                      disabled={processingTripId === trip.id}
                       onPress={() => handleOpenRejectModal(trip)}
                     >
                       <Ionicons name="close-circle" size={16} color="#173B70" />
@@ -1321,6 +1366,31 @@ export default function SupervisorHomeDashboard() {
           </View>
         </View>
       </Modal>
+
+      {/* ─── COMPLETE TRIP DETAILS MODAL ─── */}
+      <CompleteTripDetailsModal
+        visible={detailsModalVisible}
+        onClose={() => setDetailsModalVisible(false)}
+        trip={selectedTripDetails}
+        role="SUPERVISOR"
+        supervisorId={user?.supervisorId || user?.id || 'SUP001'}
+        onTripUpdated={() => {
+          loadDashboardData();
+        }}
+        onOpenPhotoLightbox={(url, cNum) => {
+          setLightboxPhotoUrl(url);
+          setLightboxContainerNum(cNum);
+          setLightboxVisible(true);
+        }}
+      />
+
+      {/* ─── PHOTO LIGHTBOX MODAL ─── */}
+      <PhotoLightboxModal
+        visible={lightboxVisible}
+        onClose={() => setLightboxVisible(false)}
+        photoUrl={lightboxPhotoUrl}
+        containerNumber={lightboxContainerNum}
+      />
     </View>
   );
 }
@@ -2210,8 +2280,26 @@ const styles = StyleSheet.create({
   },
   decisionButtonsRow: {
     flexDirection: 'row',
-    gap: 10,
+    gap: 8,
     marginTop: 4,
+  },
+  viewDetailsBtn: {
+    paddingHorizontal: 12,
+    height: 44,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1.5,
+    borderColor: '#173B70',
+    borderRadius: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 5,
+  },
+  viewDetailsBtnText: {
+    color: '#173B70',
+    fontWeight: '800',
+    fontSize: 11,
+    letterSpacing: 0.4,
   },
   approveBtn: {
     flex: 1,

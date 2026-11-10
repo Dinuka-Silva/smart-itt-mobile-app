@@ -21,6 +21,9 @@ import { radius } from '../../../src/theme';
 import { resolveCheNumber, resolveOperator } from '../../../src/config/fleet';
 import { useResponsive } from '../../../src/hooks/useResponsive';
 import { getTripTimingDetails } from '../../../src/utils/tripDateUtils';
+import { CompleteTripDetailsModal } from '../../../src/components/CompleteTripDetailsModal';
+import { PhotoLightboxModal } from '../../../src/components/PhotoLightboxModal';
+import { TripCardData } from '../../../src/components/PermanentTripCard';
 
 export default function SupervisorApprovals() {
   const { topInset, bottomInset, contentMaxWidth, containerPaddingHorizontal } = useResponsive();
@@ -29,6 +32,13 @@ export default function SupervisorApprovals() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [processingId, setProcessingId] = useState<string | null>(null);
+
+  // Complete Trip Details & Lightbox Modal States
+  const [selectedTripDetails, setSelectedTripDetails] = useState<TripCardData | null>(null);
+  const [detailsModalVisible, setDetailsModalVisible] = useState(false);
+  const [lightboxVisible, setLightboxVisible] = useState(false);
+  const [lightboxPhotoUrl, setLightboxPhotoUrl] = useState('');
+  const [lightboxContainerNum, setLightboxContainerNum] = useState('');
 
   // Rejection modal
   const [rejectModalVisible, setRejectModalVisible] = useState(false);
@@ -70,12 +80,13 @@ export default function SupervisorApprovals() {
   }).toUpperCase();
 
   const handleApprove = async (tripId: string) => {
+    if (processingId) return;
     setProcessingId(tripId);
     try {
-      await tripService.approveTrip(tripId, user?.supervisorId || user?.id || 'sup-001', 'Delivery confirmed & approved by Operations Supervisor');
+      await tripService.approveTrip(tripId, user?.supervisorId || user?.id || 'SUP001', 'Delivery confirmed & approved by Operations Supervisor');
       Alert.alert(
-        'Trip Confirmed & Completed! ✅',
-        `Trip ${tripId} delivery has been approved. Driver completed container count (+1 towards 300 target) and main system metrics have been updated.`
+        'Trip Approved! ✅',
+        `Trip ${tripId} has been successfully approved.`
       );
       fetchPending();
     } catch (e: any) {
@@ -187,16 +198,26 @@ export default function SupervisorApprovals() {
               return (
                 <View key={trip.id} style={styles.pendingCard}>
                   {/* Card Header */}
-                  <View style={styles.cardHeader}>
+                  <TouchableOpacity
+                    style={styles.cardHeader}
+                    activeOpacity={0.7}
+                    onPress={() => {
+                      setSelectedTripDetails(trip);
+                      setDetailsModalVisible(true);
+                    }}
+                  >
                     <View style={{ gap: 2 }}>
                       <Text style={styles.cardTripId}>{tripNum}</Text>
                       <Text style={styles.driverSubText}>Driver: <Text style={{ color: '#1E293B', fontWeight: '800' }}>{driverName}</Text></Text>
                     </View>
 
-                    <View style={styles.awaitingBadge}>
-                      <Text style={styles.awaitingBadgeText}>DELIVERED · PENDING SIGN-OFF</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <View style={styles.awaitingBadge}>
+                        <Text style={styles.awaitingBadgeText}>DELIVERED · PENDING SIGN-OFF</Text>
+                      </View>
+                      <Ionicons name="chevron-forward" size={16} color="#173B70" />
                     </View>
-                  </View>
+                  </TouchableOpacity>
 
                   {/* Route Box */}
                   <View style={styles.routeBox}>
@@ -370,6 +391,18 @@ export default function SupervisorApprovals() {
                   {/* Decision Buttons */}
                   <View style={styles.btnRow}>
                     <TouchableOpacity
+                      style={styles.viewDetailsBtn}
+                      activeOpacity={0.7}
+                      onPress={() => {
+                        setSelectedTripDetails(trip);
+                        setDetailsModalVisible(true);
+                      }}
+                    >
+                      <Ionicons name="eye-outline" size={15} color="#173B70" />
+                      <Text style={styles.viewDetailsBtnText}>DETAILS</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
                       style={[styles.approveBtn, isProcessing && { opacity: 0.5 }]}
                       disabled={isProcessing}
                       onPress={() => handleApprove(trip.id)}
@@ -378,8 +411,8 @@ export default function SupervisorApprovals() {
                         <ActivityIndicator color="#FFFFFF" size="small" />
                       ) : (
                         <>
-                          <Ionicons name="checkmark-done-circle" size={17} color="#FFFFFF" />
-                          <Text style={styles.approveBtnText}>CONFIRM TRIP</Text>
+                          <Ionicons name="checkmark-circle" size={17} color="#FFFFFF" />
+                          <Text style={styles.approveBtnText}>APPROVE TRIP</Text>
                         </>
                       )}
                     </TouchableOpacity>
@@ -444,6 +477,30 @@ export default function SupervisorApprovals() {
           </View>
         </View>
       </Modal>
+      {/* ─── COMPLETE TRIP DETAILS MODAL ─── */}
+      <CompleteTripDetailsModal
+        visible={detailsModalVisible}
+        onClose={() => setDetailsModalVisible(false)}
+        trip={selectedTripDetails}
+        role="SUPERVISOR"
+        supervisorId={user?.supervisorId || user?.id || 'SUP001'}
+        onTripUpdated={() => {
+          fetchPending();
+        }}
+        onOpenPhotoLightbox={(url, cNum) => {
+          setLightboxPhotoUrl(url);
+          setLightboxContainerNum(cNum);
+          setLightboxVisible(true);
+        }}
+      />
+
+      {/* ─── PHOTO LIGHTBOX MODAL ─── */}
+      <PhotoLightboxModal
+        visible={lightboxVisible}
+        onClose={() => setLightboxVisible(false)}
+        photoUrl={lightboxPhotoUrl}
+        containerNumber={lightboxContainerNum}
+      />
     </View>
   );
 }
@@ -743,13 +800,31 @@ const styles = StyleSheet.create({
 
   btnRow: {
     flexDirection: 'row',
-    gap: 10,
+    gap: 8,
     marginTop: 4,
+  },
+  viewDetailsBtn: {
+    paddingHorizontal: 12,
+    height: 44,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1.5,
+    borderColor: '#173B70',
+    borderRadius: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 5,
+  },
+  viewDetailsBtnText: {
+    color: '#173B70',
+    fontWeight: '800',
+    fontSize: 11,
+    letterSpacing: 0.4,
   },
   approveBtn: {
     flex: 1,
     height: 44,
-    backgroundColor: '#00e676',
+    backgroundColor: '#173B70',
     borderRadius: 10,
     flexDirection: 'row',
     alignItems: 'center',

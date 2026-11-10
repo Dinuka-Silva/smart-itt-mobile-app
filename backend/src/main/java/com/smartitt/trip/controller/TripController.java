@@ -6,6 +6,7 @@ import org.springframework.security.core.GrantedAuthority;
 
 import com.smartitt.trip.dto.CreateTripRequest;
 import com.smartitt.trip.dto.TripResponse;
+import com.smartitt.trip.entity.TripStatus;
 import com.smartitt.trip.service.TripService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -167,7 +168,8 @@ public class TripController {
         if ("REJECTED".equalsIgnoreCase(status) || "SUPERVISOR_REJECTED".equalsIgnoreCase(status) || "REJECT".equalsIgnoreCase(status)) {
             return ResponseEntity.ok(tripService.rejectTrip(id, supervisorId, actorRole, reason));
         }
-        return ResponseEntity.ok(tripService.confirmTrip(id, supervisorId, actorRole));
+        TripStatus targetStatus = "SUPERVISOR_CONFIRMED".equalsIgnoreCase(status) ? TripStatus.SUPERVISOR_CONFIRMED : TripStatus.APPROVED;
+        return ResponseEntity.ok(tripService.confirmTrip(id, supervisorId, actorRole, targetStatus));
     }
 
     /**

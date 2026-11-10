@@ -171,16 +171,36 @@ class SupervisorVerificationTwoStageIntegrationTest extends BaseIntegrationTest 
     }
 
     @Test
-    @DisplayName("6. Final confirmation is blocked if container evidence is NOT yet verified (HTTP 400)")
+    @DisplayName("6. Confirmation of uncompleted trip is blocked (HTTP 400 Bad Request)")
     void testConfirmationBlockedBeforeEvidenceVerification() throws Exception {
         String driverToken = obtainToken("DRV-00001", "driver");
         String supervisorToken = obtainToken("supervisor@smartitt.lk", "supervisor");
 
-        String tripId = createAndCompleteTrip(driverToken, true);
+        // Create trip but do NOT complete it (remains IN_PROGRESS)
+        CreateTripRequest req = new CreateTripRequest();
+        req.setDriverId("DRV-00001");
+        req.setSourceTerminal("CICT");
+        req.setDestTerminal("JCT");
+        req.setVesselName("MV Colombo Express");
+        req.setVehicleNumber("LY-6439");
 
-        // Attempting to confirm before verifyEvidence
+        CreateTripRequest.ContainerInput c1 = new CreateTripRequest.ContainerInput();
+        c1.setContainerNumber("CSQU8822331");
+        c1.setSize("40FT");
+        c1.setIsVerified(false);
+        req.setContainers(List.of(c1));
+
+        MvcResult createResult = mockMvc.perform(post("/api/v1/trips")
+                        .headers(authHeader(driverToken))
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        String tripId = objectMapper.readTree(createResult.getResponse().getContentAsString()).get("id").asText();
+
+        // Attempting to confirm before driver completes it
         Map<String, String> confirmBody = Map.of(
-                "status", "SUPERVISOR_CONFIRMED",
+                "status", "APPROVED",
                 "supervisorId", "SUP001"
         );
 
