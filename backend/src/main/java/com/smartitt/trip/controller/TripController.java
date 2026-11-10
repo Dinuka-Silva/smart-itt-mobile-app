@@ -81,7 +81,8 @@ public class TripController {
     }
 
     private String resolveRole(Authentication auth) {
-        if (auth == null) return "SUPERVISOR";
+        if (auth == null)
+            return "SUPERVISOR";
         return auth.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
                 .filter(a -> a.contains("ADMIN") || a.contains("SUPERVISOR"))
@@ -101,15 +102,18 @@ public class TripController {
         String rejectReason = null;
         if (body != null) {
             decision = body.get("decision");
-            if (decision == null) decision = body.get("action");
-            if (decision == null) decision = body.get("status");
+            if (decision == null)
+                decision = body.get("action");
+            if (decision == null)
+                decision = body.get("status");
             if ("SUPERVISOR_CONFIRMED".equalsIgnoreCase(decision) || "CONFIRMED".equalsIgnoreCase(decision)) {
                 decision = "APPROVE";
             } else if ("SUPERVISOR_REJECTED".equalsIgnoreCase(decision) || "REJECTED".equalsIgnoreCase(decision)) {
                 decision = "REJECT";
             }
             rejectReason = body.get("rejectReason");
-            if (rejectReason == null) rejectReason = body.get("reason");
+            if (rejectReason == null)
+                rejectReason = body.get("reason");
         }
         String actor = auth != null ? auth.getName() : "SUPERVISOR";
         String actorRole = resolveRole(auth);
@@ -147,7 +151,8 @@ public class TripController {
             @RequestParam(required = false) String startDate,
             @RequestParam(required = false) String endDate,
             @RequestParam(required = false) String search) {
-        return ResponseEntity.ok(tripService.getPendingVerificationTrips(driverId, vehicleNumber, terminal, startDate, endDate, search));
+        return ResponseEntity.ok(
+                tripService.getPendingVerificationTrips(driverId, vehicleNumber, terminal, startDate, endDate, search));
     }
 
     @PostMapping("/{id}/approve")
@@ -158,17 +163,22 @@ public class TripController {
             @RequestBody(required = false) Map<String, String> body,
             Authentication auth) {
         String status = body != null ? body.get("status") : null;
-        if (status == null && body != null) status = body.get("decision");
+        if (status == null && body != null)
+            status = body.get("decision");
         String supervisorId = body != null ? body.get("supervisorId") : null;
-        if (supervisorId == null && auth != null) supervisorId = auth.getName();
+        if (supervisorId == null && auth != null)
+            supervisorId = auth.getName();
         String reason = body != null ? body.get("reason") : null;
-        if (reason == null && body != null) reason = body.get("rejectReason");
+        if (reason == null && body != null)
+            reason = body.get("rejectReason");
         String actorRole = resolveRole(auth);
 
-        if ("REJECTED".equalsIgnoreCase(status) || "SUPERVISOR_REJECTED".equalsIgnoreCase(status) || "REJECT".equalsIgnoreCase(status)) {
+        if ("REJECTED".equalsIgnoreCase(status) || "SUPERVISOR_REJECTED".equalsIgnoreCase(status)
+                || "REJECT".equalsIgnoreCase(status)) {
             return ResponseEntity.ok(tripService.rejectTrip(id, supervisorId, actorRole, reason));
         }
-        TripStatus targetStatus = "SUPERVISOR_CONFIRMED".equalsIgnoreCase(status) ? TripStatus.SUPERVISOR_CONFIRMED : TripStatus.APPROVED;
+        TripStatus targetStatus = "SUPERVISOR_CONFIRMED".equalsIgnoreCase(status) ? TripStatus.SUPERVISOR_CONFIRMED
+                : TripStatus.APPROVED;
         return ResponseEntity.ok(tripService.confirmTrip(id, supervisorId, actorRole, targetStatus));
     }
 
