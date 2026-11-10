@@ -17,9 +17,11 @@ function resolveHostIp(): string | null {
 
   // 2. Fallback to debuggerHost across various Expo manifest versions
   const debuggerHost =
+    (Constants as any)?.expoGoConfig?.debuggerHost ||
     (Constants.expoConfig as any)?.debuggerHost ||
     (Constants.manifest as any)?.debuggerHost ||
-    (Constants as any)?.manifest2?.extra?.expoGo?.debuggerHost;
+    (Constants as any)?.manifest2?.extra?.expoGo?.debuggerHost ||
+    (Constants as any)?.manifest2?.extra?.expoClient?.hostUri;
   if (typeof debuggerHost === 'string' && debuggerHost) {
     const ip = debuggerHost.split(':')[0];
     if (ip && ip !== 'localhost' && ip !== '127.0.0.1') {
@@ -66,13 +68,8 @@ export const getBaseUrl = (): string => {
     return `http://${hostIp}:8080/api/v1`;
   }
 
-  // 3. Android Emulator fallback to host loopback alias (10.0.2.2)
-  if (Platform.OS === 'android') {
-    return 'http://10.0.2.2:8080/api/v1';
-  }
-
-  // 4. Default fallback
-  return 'http://localhost:8080/api/v1';
+  // 3. Fallback to development machine LAN IP for physical devices or emulator
+  return 'http://192.168.1.136:8080/api/v1';
 };
 
 const API_BASE_URL = getBaseUrl();

@@ -109,12 +109,14 @@ export default function RootLayout() {
     ionicons: require('@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/Ionicons.ttf'),
     Ionicons: require('@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/Ionicons.ttf'),
   });
+  const [forceReady, setForceReady] = React.useState(false);
 
   useEffect(() => {
-    // Hide native splash screen once font resources are loaded, with a 2s safety safeguard
+    // Hide native splash screen once font resources are loaded, with a 2.5s safety safeguard
     const timer = setTimeout(() => {
+      setForceReady(true);
       SplashScreen.hideAsync().catch(() => {});
-    }, 2000);
+    }, 2500);
 
     if (fontsLoaded || fontError) {
       clearTimeout(timer);
@@ -124,7 +126,7 @@ export default function RootLayout() {
     return () => clearTimeout(timer);
   }, [fontsLoaded, fontError]);
 
-  if (!fontsLoaded && !fontError) {
+  if (!fontsLoaded && !fontError && !forceReady) {
     return <View style={{ flex: 1, backgroundColor: '#FFFFFF' }} />;
   }
 
